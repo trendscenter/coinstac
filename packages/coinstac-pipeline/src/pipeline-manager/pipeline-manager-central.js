@@ -19,12 +19,10 @@ const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const mv = pify(require('mv'));
 const Store = require('../io-store');
-const {splitFilesFromStream, extractTar, getFilesAndDirs} = require('./helpers')
+const { splitFilesFromStream, extractTar, getFilesAndDirs } = require('./helpers')
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
-
-
 
 const {
   unlink,
@@ -58,12 +56,10 @@ module.exports = {
     logger,
     operatingDirectory = './',
     mode,
-    remotePathname = '/transfer',
     remotePort = 3300,
     remoteProtocol = 'http:',
     mqttRemotePort = 1883,
     mqttRemoteProtocol = 'mqtt:',
-    remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
   }) {
@@ -78,139 +74,6 @@ module.exports = {
     logger = logger || defaultLogger;
     debugProfileClient.log = l => logger.info(`PROFILING: ${l}`);
     debugProfile.log = l => logger.info(`PROFILING: ${l}`);
-    /**
-     * exponential backout for GET
-     * consider file batching here if server load is too high
-     */
-    const exponentialRequest = (
-      method,
-      factor,
-      file,
-      clientId,
-      runId,
-      directory,
-      compressed = false,
-      files = []
-    ) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (method === 'get') {
-            request.get(
-              `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}&files=${encodeURIComponent(JSON.stringify(files))}`,
-              (res) => {
-                if (res.statusCode !== 200) {
-                  return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
-                }
-                const wstream = fs.createWriteStream(
-                  path.join(directory, file)
-                );
-                res.pipe(wstream);
-                wstream.on('close', () => {
-                  resolve(file);
-                });
-                wstream.on('error', (e) => {
-                  reject(e);
-                });
-                res.on('error', (e) => {
-                  reject(e);
-                });
-              }
-            );
-          } else if (method === 'post') {
-            logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
-            const form = new FormData();
-            form.append('filename', file);
-            form.append('compressed', compressed.toString());
-            form.append('files', JSON.stringify(files));
-            form.append('clientId', clientId);
-            form.append('runId', runId);
-            form.append('file', fs.createReadStream(
-              path.join(directory, file),
-              {
-                headers: { 'transfer-encoding': 'chunked' },
-                knownSize: NaN,
-              }
-            ));
-            form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
-              (err, res) => {
-                if (err) return reject(err);
-                res.resume();
-                res.on('end', () => {
-                  if (!res.complete) {
-                    return reject(new Error('File post connection broken'));
-                  }
-                  if (res.statusCode !== 200) {
-                    return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
-                  }
-                  resolve();
-                });
-                res.on('error', (e) => {
-                  reject(e);
-                });
-              });
-          }
-        }, 5000 * factor);
-      });
-    };
-
-    /**
-     *  transfer a file to or from the remote
-     * @param  {string} method   POST or GET
-     * @param  {integer} limit   retry limit for an unreachable host
-     * @param  {Array} files     files to send or receive
-     * @param  {string} clientId this clients id
-     * @param  {string} runId    the run context for the files
-     * @return {Promise}         Promise when the files are received,
-     *                           the action fails besides ECONNREFUSED,
-     *                           or the limit is reached
-     */
-    const transferFiles = async (method, limit, files, clientId, runId, directory) => {
-      logger.silly(`Sending ${files.length} files`);
-      return Promise.all(files.reduce((memo, file, index) => {
-        memo.push((async () => {
-          let retryLimit = 0;
-          let success = false;
-          let partFile;
-          // retry 1000 times w/ backout
-          while (retryLimit < limit) {
-            try {
-              partFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
-                method,
-                retryLimit,
-                file,
-                clientId,
-                runId,
-                directory,
-                true
-              );
-              success = true;
-              break;
-            } catch (e) {
-              logger.silly(JSON.stringify(e));
-              if ((e.code
-                && (
-                  e.code === 'ECONNREFUSED'
-                  || e.code === 'EPIPE'
-                  || e.code === 'ECONNRESET'
-                  || e.code === 'EAGAIN'
-                ))
-                || (e.message && e.message.includes('EPIPE'))
-              ) {
-                retryLimit += 1;
-                logger.silly(`Retrying file request: ${file}`);
-                logger.silly(`File request failed with: ${e.message}`);
-              } else {
-                throw e;
-              }
-            }
-          }
-          if (!success) throw new Error('Service down, file retry limit reached');
-          logger.silly(`Successfully sent file ${index}`);
-          return partFile;
-        })());
-        return memo;
-      }, []));
-    };
 
     /**
      * Perform final cleanup on a specified pipeline
@@ -597,7 +460,7 @@ module.exports = {
       }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
-        if (mode === 'remote') pipelineStartTime = Date.now();
+        pipelineStartTime = Date.now();
         if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
           throw new Error('Duplicate pipeline started');
         }
@@ -655,10 +518,7 @@ module.exports = {
           );
         });
 
-        if (mode === 'local') {
-          activePipelines[runId].registered = false;
-          publishData('register', { id: clientId, runId });
-        }
+
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
          * @param  {Object} pipeline pipeline to preform the messaging on
@@ -666,252 +526,123 @@ module.exports = {
          */
         activePipelines[runId].communicate = async (pipeline, success, messageIteration) => {
           const message = store.getAndRemove(pipeline.id, clientId);
-          if (mode === 'remote') {
-            if (message instanceof Error) {
-              const runError = Object.assign(
-                message,
-                {
-                  error: `Pipeline error from central node\n Error details: ${message.error}`,
-                  message: `Pipeline error from central node\n Error details: ${message.message}`,
-                  stack: message.stack,
-                }
-              );
-              activePipelines[pipeline.id].state = 'error';
-              activePipelines[pipeline.id].stateStatus = 'Central node error';
-              activePipelines[pipeline.id].error = runError;
-              activePipelines[pipeline.id].remote.reject(runError);
-              clientPublish(
-                activePipelines[pipeline.id].clients,
-                { runId: pipeline.id, error: runError }
-              );
-            } else {
-              logger.silly('############ Sending out remote data');
-              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                .then((data) => {
-                  return Promise.all([
-                    ...data.files.map((file) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, file),
-                        path.join(activePipelines[pipeline.id].systemDirectory, file)
-                      );
-                    }),
-                    ...data.directories.map((dir) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        { mkdirp: true }
-                      );
-                    }),
-                  ]).then(() => data);
-                })
-                .then((data) => {
-                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
-                    const archive = archiver('tar', {
-                      gzip: true,
-                      gzipOptions: {
-                        level: 9,
-                      },
-                    });
-                    const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
-                    const splitProm = splitFilesFromStream(
-                      archive, // stream
-                      path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
-                      22428800 // 20MB chunk size
-                    );
-                    data.files.forEach((file) => {
-                      archive.append(
-                        fs.createReadStream(
-                          path.join(activePipelines[pipeline.id].systemDirectory, file)
-                        ),
-                        { name: file }
-                      );
-                    });
-                    data.directories.forEach((dir) => {
-                      archive.directory(
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        dir
-                      );
-                    });
-                    archive.finalize();
-                    return splitProm.then((files) => {
-                      if (success) {
-                        activePipelines[pipeline.id].finalTransferList = new Set();
-                      }
-                      clientPublish(
-                        activePipelines[pipeline.id].clients,
-                        {
-                          runId: pipeline.id,
-                          output: message,
-                          success,
-                          files: [...files],
-                          iteration: messageIteration,
-                          debug: { sent: Date.now() },
-                        },
-                        {
-                          success,
-                          limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                          owner: activePipelines[pipeline.id].owner,
-                        }
-                      );
-                    });
-                  }
-                  clientPublish(
-                    activePipelines[pipeline.id].clients,
-                    {
-                      runId: pipeline.id,
-                      output: message,
-                      success,
-                      iteration: messageIteration,
-                      debug: { sent: Date.now() },
-                    },
-                    {
-                      success,
-                      limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                      owner: activePipelines[pipeline.id].owner,
-                    }
 
-                  );
-                }).catch((e) => {
-                  logger.error(e);
-                  publishData('run', {
-                    id: clientId,
-                    runId: pipeline.id,
-                    error: `Error from central node ${e}`,
-                    debug: { sent: Date.now() },
-                  });
-                });
-            }
-            // local client
+          if (message instanceof Error) {
+            const runError = Object.assign(
+              message,
+              {
+                error: `Pipeline error from central node\n Error details: ${message.error}`,
+                message: `Pipeline error from central node\n Error details: ${message.message}`,
+                stack: message.stack,
+              }
+            );
+            activePipelines[pipeline.id].state = 'error';
+            activePipelines[pipeline.id].stateStatus = 'Central node error';
+            activePipelines[pipeline.id].error = runError;
+            activePipelines[pipeline.id].remote.reject(runError);
+            clientPublish(
+              activePipelines[pipeline.id].clients,
+              { runId: pipeline.id, error: runError }
+            );
           } else {
-            if (message instanceof Error) { // eslint-disable-line no-lonely-if
-              if (!activePipelines[pipeline.id].registered) {
-                activePipelines[pipeline.id].stashedOutput = message;
-              } else {
+            logger.silly('############ Sending out remote data');
+            await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
+              .then((data) => {
+                return Promise.all([
+                  ...data.files.map((file) => {
+                    return mv(
+                      path.join(activePipelines[pipeline.id].transferDirectory, file),
+                      path.join(activePipelines[pipeline.id].systemDirectory, file)
+                    );
+                  }),
+                  ...data.directories.map((dir) => {
+                    return mv(
+                      path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                      path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                      { mkdirp: true }
+                    );
+                  }),
+                ]).then(() => data);
+              })
+              .then((data) => {
+                if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
+                  const archive = archiver('tar', {
+                    gzip: true,
+                    gzipOptions: {
+                      level: 9,
+                    },
+                  });
+                  const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
+                  const splitProm = splitFilesFromStream(
+                    archive, // stream
+                    path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
+                    22428800 // 20MB chunk size
+                  );
+                  data.files.forEach((file) => {
+                    archive.append(
+                      fs.createReadStream(
+                        path.join(activePipelines[pipeline.id].systemDirectory, file)
+                      ),
+                      { name: file }
+                    );
+                  });
+                  data.directories.forEach((dir) => {
+                    archive.directory(
+                      path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                      dir
+                    );
+                  });
+                  archive.finalize();
+                  return splitProm.then((files) => {
+                    if (success) {
+                      activePipelines[pipeline.id].finalTransferList = new Set();
+                    }
+                    clientPublish(
+                      activePipelines[pipeline.id].clients,
+                      {
+                        runId: pipeline.id,
+                        output: message,
+                        success,
+                        files: [...files],
+                        iteration: messageIteration,
+                        debug: { sent: Date.now() },
+                      },
+                      {
+                        success,
+                        limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
+                        owner: activePipelines[pipeline.id].owner,
+                      }
+                    );
+                  });
+                }
+                clientPublish(
+                  activePipelines[pipeline.id].clients,
+                  {
+                    runId: pipeline.id,
+                    output: message,
+                    success,
+                    iteration: messageIteration,
+                    debug: { sent: Date.now() },
+                  },
+                  {
+                    success,
+                    limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
+                    owner: activePipelines[pipeline.id].owner,
+                  }
+
+                );
+              }).catch((e) => {
+                logger.error(e);
                 publishData('run', {
                   id: clientId,
                   runId: pipeline.id,
-                  error: message,
+                  error: `Error from central node ${e}`,
                   debug: { sent: Date.now() },
                 });
-                activePipelines[pipeline.id].stashedOutput = undefined;
-              }
-            } else {
-              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                .then((data) => {
-                  return Promise.all([
-                    ...data.files.map((file) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, file),
-                        path.join(activePipelines[pipeline.id].systemDirectory, file)
-                      );
-                    }),
-                    ...data.directories.map((dir) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        { mkdirp: true }
-                      );
-                    }),
-                  ]).then(() => data);
-                })
-                .then((data) => {
-                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
-                    if (!activePipelines[pipeline.id].registered) {
-                      activePipelines[pipeline.id].stashedOutput = message;
-                    } else {
-                      const archive = archiver('tar', {
-                        gzip: true,
-                        gzipOptions: {
-                          level: 9,
-                        },
-                      });
-
-                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
-                      const splitProm = splitFilesFromStream(
-                        archive,
-                        path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
-                        22428800 // 20MB chunk size
-                      );
-                      data.files.forEach((file) => {
-                        archive.append(
-                          fs.createReadStream(
-                            path.join(activePipelines[pipeline.id].systemDirectory, file)
-                          ),
-                          { name: file }
-                        );
-                      });
-                      data.directories.forEach((dir) => {
-                        archive.directory(
-                          path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                          dir
-                        );
-                      });
-                      archive.finalize();
-                      return splitProm.then((files) => {
-                        logger.debug('############# Local client sending out data with files');
-                        publishData('run', {
-                          id: clientId,
-                          runId: pipeline.id,
-                          output: message,
-                          files: [...files],
-                          iteration: messageIteration,
-                          debug: { sent: Date.now() },
-                        });
-                        activePipelines[pipeline.id].stashedOutput = undefined;
-                        transferFiles(
-                          'post',
-                          100,
-                          [...files],
-                          clientId,
-                          pipeline.id,
-                          activePipelines[pipeline.id].systemDirectory
-                        ).catch((e) => {
-                          // files failed to send, bail
-                          logger.error(`Client file send error: ${e}`);
-                          publishData('run', {
-                            id: clientId,
-                            runId: pipeline.id,
-                            error: { stack: e.stack, message: e.message },
-                            debug: { sent: Date.now() },
-                          }, 1);
-                        });
-                      }).catch((e) => {
-                        publishData('run', {
-                          id: clientId,
-                          runId: pipeline.id,
-                          error: e,
-                          debug: { sent: Date.now() },
-                        });
-                        throw e;
-                      });
-                    }
-                  } else {
-                    if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
-                      activePipelines[pipeline.id].stashedOutput = message;
-                    } else {
-                      logger.debug('############# Local client sending out data');
-                      publishData('run', {
-                        id: clientId,
-                        runId: pipeline.id,
-                        output: message,
-                        iteration: messageIteration,
-                        debug: { sent: Date.now() },
-                      }, 1);
-                      activePipelines[pipeline.id].stashedOutput = undefined;
-                    }
-                  }
-                })
-                .catch((e) => {
-                  publishData('run', {
-                    id: clientId,
-                    runId: pipeline.id,
-                    error: e,
-                    debug: { sent: Date.now() },
-                  });
-                  throw e;
-                });
-            }
+              });
           }
+
+
         };
 
         /**
@@ -941,7 +672,7 @@ module.exports = {
               callback();
             }
 
-            if (mode === 'remote') activePipelines[runId].state = 'running';
+            activePipelines[runId].state = 'running';
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
             Object.keys(activePipelines[runId].clients).forEach((clientId) => {
@@ -970,16 +701,16 @@ module.exports = {
                 return res;
               });
           }).then((res) => {
-            if (mode === 'remote') {
-              debugProfile('**************************** Profiling totals ***************************');
-              const totalTime = Date.now() - pipelineStartTime;
-              Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-                Object.keys(remoteClients[clientId][runId].debug.profiling).forEach((task) => {
-                  debugProfile(`Total ${task} time for ${clientId} took: ${remoteClients[clientId][runId].debug.profiling[task]}ms`);
-                });
+
+            debugProfile('**************************** Profiling totals ***************************');
+            const totalTime = Date.now() - pipelineStartTime;
+            Object.keys(activePipelines[runId].clients).forEach((clientId) => {
+              Object.keys(remoteClients[clientId][runId].debug.profiling).forEach((task) => {
+                debugProfile(`Total ${task} time for ${clientId} took: ${remoteClients[clientId][runId].debug.profiling[task]}ms`);
               });
-              debugProfile(`Total pipeline time: ${totalTime}ms`);
-            }
+            });
+            debugProfile(`Total pipeline time: ${totalTime}ms`);
+
             if (!activePipelines[runId].finalTransferList
               || Object.keys(activePipelines[runId].clients)
                 .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
@@ -988,7 +719,7 @@ module.exports = {
                 && activePipelines[runId].finalTransferList.has(activePipelines[runId].owner)
               )
               // allow locals to cleanup in sim
-              || mode === 'local'
+
             ) {
               return cleanupPipeline(runId)
                 .then(() => { return res; });
@@ -997,23 +728,14 @@ module.exports = {
             return res;
           })
           .catch((err) => {
-            if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
-              if (mode === 'remote') {
-                clientPublish(
-                  activePipelines[runId].clients,
-                  { runId, error: err }
-                );
-              }
-              return cleanupPipeline(runId)
-                .then(() => {
-                  throw err;
-                });
-            }
-            // local pipeline user stop error, or other uncaught error
-            publishData('run', {
-              id: clientId, runId, error: { message: err.message, stack: err.stack },
-            }, 1);
-            cleanupPipeline(runId)
+
+
+            clientPublish(
+              activePipelines[runId].clients,
+              { runId, error: err }
+            );
+
+            return cleanupPipeline(runId)
               .then(() => {
                 throw err;
               });

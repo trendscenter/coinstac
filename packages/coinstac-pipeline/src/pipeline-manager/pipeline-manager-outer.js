@@ -11,7 +11,6 @@ const FormData = require('form-data');
 const archiver = require('archiver');
 const Emitter = require('events');
 const winston = require('winston');
-const uuid = require('uuid/v4');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
@@ -78,7 +77,7 @@ module.exports = {
         debugProfileClient.log = l => logger.info(`PROFILING: ${l}`);
         debugProfile.log = l => logger.info(`PROFILING: ${l}`);
 
-        
+
         /**
          * exponential backout for GET
          * consider file batching here if server load is too high
@@ -229,21 +228,6 @@ module.exports = {
                         delete remoteClients[clientId][runId];
                     }
                 });
-            });
-        };
-
-        const clientPublish = (clients, data, opts) => {
-            Object.keys(clients).forEach((clientId) => {
-                if (opts && opts.success && opts.limitOutputToOwner) {
-                    if (clientId === opts.owner) {
-                        mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
-                    } else {
-                        const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-                        mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
-                    }
-                } else {
-                    mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
-                }
             });
         };
 
@@ -427,8 +411,6 @@ module.exports = {
                 default:
             }
         });
-        
-
 
         return {
             activePipelines,
@@ -458,10 +440,8 @@ module.exports = {
                 alternateInputDirectory,
                 saveState,
             }) {
-                let pipelineStartTime;
-                
+
                 store.put(`${runId}-profiling`, clientId, {});
-                if (mode === 'remote') pipelineStartTime = Date.now();
                 if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
                     throw new Error('Duplicate pipeline started');
                 }
@@ -519,10 +499,10 @@ module.exports = {
                     );
                 });
 
-                if (mode === 'local') {
-                    activePipelines[runId].registered = false;
-                    publishData('register', { id: clientId, runId });
-                }
+
+                activePipelines[runId].registered = false;
+                publishData('register', { id: clientId, runId });
+
                 /**
                  * Communicate with the with node(s), clients to remote or remote to clients
                  * @param  {Object} pipeline pipeline to preform the messaging on
@@ -530,55 +510,53 @@ module.exports = {
                  */
                 activePipelines[runId].communicate = async (pipeline, success, messageIteration) => {
                     const message = store.getAndRemove(pipeline.id, clientId);
-                    if (mode === 'remote') {
-                        if (message instanceof Error) {
-                            const runError = Object.assign(
-                                message,
-                                {
-                                    error: `Pipeline error from central node\n Error details: ${message.error}`,
-                                    message: `Pipeline error from central node\n Error details: ${message.message}`,
-                                    stack: message.stack,
-                                }
-                            );
-                            activePipelines[pipeline.id].state = 'error';
-                            activePipelines[pipeline.id].stateStatus = 'Central node error';
-                            activePipelines[pipeline.id].error = runError;
-                            activePipelines[pipeline.id].remote.reject(runError);
-                            clientPublish(
-                                activePipelines[pipeline.id].clients,
-                                { runId: pipeline.id, error: runError }
-                            );
+
+                    if (message instanceof Error) { // eslint-disable-line no-lonely-if
+                        if (!activePipelines[pipeline.id].registered) {
+                            activePipelines[pipeline.id].stashedOutput = message;
                         } else {
-                            logger.silly('############ Sending out remote data');
-                            await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                                .then((data) => {
-                                    return Promise.all([
-                                        ...data.files.map((file) => {
-                                            return mv(
-                                                path.join(activePipelines[pipeline.id].transferDirectory, file),
-                                                path.join(activePipelines[pipeline.id].systemDirectory, file)
-                                            );
-                                        }),
-                                        ...data.directories.map((dir) => {
-                                            return mv(
-                                                path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                                                path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                                                { mkdirp: true }
-                                            );
-                                        }),
-                                    ]).then(() => data);
-                                })
-                                .then((data) => {
-                                    if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
+                            publishData('run', {
+                                id: clientId,
+                                runId: pipeline.id,
+                                error: message,
+                                debug: { sent: Date.now() },
+                            });
+                            activePipelines[pipeline.id].stashedOutput = undefined;
+                        }
+                    } else {
+                        await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
+                            .then((data) => {
+                                return Promise.all([
+                                    ...data.files.map((file) => {
+                                        return mv(
+                                            path.join(activePipelines[pipeline.id].transferDirectory, file),
+                                            path.join(activePipelines[pipeline.id].systemDirectory, file)
+                                        );
+                                    }),
+                                    ...data.directories.map((dir) => {
+                                        return mv(
+                                            path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                                            path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                                            { mkdirp: true }
+                                        );
+                                    }),
+                                ]).then(() => data);
+                            })
+                            .then((data) => {
+                                if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
+                                    if (!activePipelines[pipeline.id].registered) {
+                                        activePipelines[pipeline.id].stashedOutput = message;
+                                    } else {
                                         const archive = archiver('tar', {
                                             gzip: true,
                                             gzipOptions: {
                                                 level: 9,
                                             },
                                         });
-                                        const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
+
+                                        const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
                                         const splitProm = splitFilesFromStream(
-                                            archive, // stream
+                                            archive,
                                             path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
                                             22428800 // 20MB chunk size
                                         );
@@ -598,184 +576,70 @@ module.exports = {
                                         });
                                         archive.finalize();
                                         return splitProm.then((files) => {
-                                            if (success) {
-                                                activePipelines[pipeline.id].finalTransferList = new Set();
-                                            }
-                                            clientPublish(
-                                                activePipelines[pipeline.id].clients,
-                                                {
-                                                    runId: pipeline.id,
-                                                    output: message,
-                                                    success,
-                                                    files: [...files],
-                                                    iteration: messageIteration,
-                                                    debug: { sent: Date.now() },
-                                                },
-                                                {
-                                                    success,
-                                                    limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                                                    owner: activePipelines[pipeline.id].owner,
-                                                }
-                                            );
-                                        });
-                                    }
-                                    clientPublish(
-                                        activePipelines[pipeline.id].clients,
-                                        {
-                                            runId: pipeline.id,
-                                            output: message,
-                                            success,
-                                            iteration: messageIteration,
-                                            debug: { sent: Date.now() },
-                                        },
-                                        {
-                                            success,
-                                            limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                                            owner: activePipelines[pipeline.id].owner,
-                                        }
-
-                                    );
-                                }).catch((e) => {
-                                    logger.error(e);
-                                    publishData('run', {
-                                        id: clientId,
-                                        runId: pipeline.id,
-                                        error: `Error from central node ${e}`,
-                                        debug: { sent: Date.now() },
-                                    });
-                                });
-                        }
-                        // local client
-                    } else {
-                        if (message instanceof Error) { // eslint-disable-line no-lonely-if
-                            if (!activePipelines[pipeline.id].registered) {
-                                activePipelines[pipeline.id].stashedOutput = message;
-                            } else {
-                                publishData('run', {
-                                    id: clientId,
-                                    runId: pipeline.id,
-                                    error: message,
-                                    debug: { sent: Date.now() },
-                                });
-                                activePipelines[pipeline.id].stashedOutput = undefined;
-                            }
-                        } else {
-                            await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                                .then((data) => {
-                                    return Promise.all([
-                                        ...data.files.map((file) => {
-                                            return mv(
-                                                path.join(activePipelines[pipeline.id].transferDirectory, file),
-                                                path.join(activePipelines[pipeline.id].systemDirectory, file)
-                                            );
-                                        }),
-                                        ...data.directories.map((dir) => {
-                                            return mv(
-                                                path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                                                path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                                                { mkdirp: true }
-                                            );
-                                        }),
-                                    ]).then(() => data);
-                                })
-                                .then((data) => {
-                                    if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
-                                        if (!activePipelines[pipeline.id].registered) {
-                                            activePipelines[pipeline.id].stashedOutput = message;
-                                        } else {
-                                            const archive = archiver('tar', {
-                                                gzip: true,
-                                                gzipOptions: {
-                                                    level: 9,
-                                                },
-                                            });
-
-                                            const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
-                                            const splitProm = splitFilesFromStream(
-                                                archive,
-                                                path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
-                                                22428800 // 20MB chunk size
-                                            );
-                                            data.files.forEach((file) => {
-                                                archive.append(
-                                                    fs.createReadStream(
-                                                        path.join(activePipelines[pipeline.id].systemDirectory, file)
-                                                    ),
-                                                    { name: file }
-                                                );
-                                            });
-                                            data.directories.forEach((dir) => {
-                                                archive.directory(
-                                                    path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                                                    dir
-                                                );
-                                            });
-                                            archive.finalize();
-                                            return splitProm.then((files) => {
-                                                logger.debug('############# Local client sending out data with files');
-                                                publishData('run', {
-                                                    id: clientId,
-                                                    runId: pipeline.id,
-                                                    output: message,
-                                                    files: [...files],
-                                                    iteration: messageIteration,
-                                                    debug: { sent: Date.now() },
-                                                });
-                                                activePipelines[pipeline.id].stashedOutput = undefined;
-                                                transferFiles(
-                                                    'post',
-                                                    100,
-                                                    [...files],
-                                                    clientId,
-                                                    pipeline.id,
-                                                    activePipelines[pipeline.id].systemDirectory
-                                                ).catch((e) => {
-                                                    // files failed to send, bail
-                                                    logger.error(`Client file send error: ${e}`);
-                                                    publishData('run', {
-                                                        id: clientId,
-                                                        runId: pipeline.id,
-                                                        error: { stack: e.stack, message: e.message },
-                                                        debug: { sent: Date.now() },
-                                                    }, 1);
-                                                });
-                                            }).catch((e) => {
-                                                publishData('run', {
-                                                    id: clientId,
-                                                    runId: pipeline.id,
-                                                    error: e,
-                                                    debug: { sent: Date.now() },
-                                                });
-                                                throw e;
-                                            });
-                                        }
-                                    } else {
-                                        if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
-                                            activePipelines[pipeline.id].stashedOutput = message;
-                                        } else {
-                                            logger.debug('############# Local client sending out data');
+                                            logger.debug('############# Local client sending out data with files');
                                             publishData('run', {
                                                 id: clientId,
                                                 runId: pipeline.id,
                                                 output: message,
+                                                files: [...files],
                                                 iteration: messageIteration,
                                                 debug: { sent: Date.now() },
-                                            }, 1);
+                                            });
                                             activePipelines[pipeline.id].stashedOutput = undefined;
-                                        }
+                                            transferFiles(
+                                                'post',
+                                                100,
+                                                [...files],
+                                                clientId,
+                                                pipeline.id,
+                                                activePipelines[pipeline.id].systemDirectory
+                                            ).catch((e) => {
+                                                // files failed to send, bail
+                                                logger.error(`Client file send error: ${e}`);
+                                                publishData('run', {
+                                                    id: clientId,
+                                                    runId: pipeline.id,
+                                                    error: { stack: e.stack, message: e.message },
+                                                    debug: { sent: Date.now() },
+                                                }, 1);
+                                            });
+                                        }).catch((e) => {
+                                            publishData('run', {
+                                                id: clientId,
+                                                runId: pipeline.id,
+                                                error: e,
+                                                debug: { sent: Date.now() },
+                                            });
+                                            throw e;
+                                        });
                                     }
-                                })
-                                .catch((e) => {
-                                    publishData('run', {
-                                        id: clientId,
-                                        runId: pipeline.id,
-                                        error: e,
-                                        debug: { sent: Date.now() },
-                                    });
-                                    throw e;
+                                } else {
+                                    if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
+                                        activePipelines[pipeline.id].stashedOutput = message;
+                                    } else {
+                                        logger.debug('############# Local client sending out data');
+                                        publishData('run', {
+                                            id: clientId,
+                                            runId: pipeline.id,
+                                            output: message,
+                                            iteration: messageIteration,
+                                            debug: { sent: Date.now() },
+                                        }, 1);
+                                        activePipelines[pipeline.id].stashedOutput = undefined;
+                                    }
+                                }
+                            })
+                            .catch((e) => {
+                                publishData('run', {
+                                    id: clientId,
+                                    runId: pipeline.id,
+                                    error: e,
+                                    debug: { sent: Date.now() },
                                 });
-                        }
+                                throw e;
+                            });
                     }
+
                 };
 
                 /**
@@ -805,7 +669,7 @@ module.exports = {
                             callback();
                         }
 
-                        if (mode === 'remote') activePipelines[runId].state = 'running';
+
                     } else if (activePipelines[runId].state === 'created') {
                         activePipelines[runId].state = 'running';
                         Object.keys(activePipelines[runId].clients).forEach((clientId) => {
@@ -834,45 +698,11 @@ module.exports = {
                                 return res;
                             });
                     }).then((res) => {
-                        if (mode === 'remote') {
-                            debugProfile('**************************** Profiling totals ***************************');
-                            const totalTime = Date.now() - pipelineStartTime;
-                            Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-                                Object.keys(remoteClients[clientId][runId].debug.profiling).forEach((task) => {
-                                    debugProfile(`Total ${task} time for ${clientId} took: ${remoteClients[clientId][runId].debug.profiling[task]}ms`);
-                                });
-                            });
-                            debugProfile(`Total pipeline time: ${totalTime}ms`);
-                        }
-                        if (!activePipelines[runId].finalTransferList
-                            || Object.keys(activePipelines[runId].clients)
-                                .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
-                            || (
-                                activePipelines[runId].limitOutputToOwner
-                                && activePipelines[runId].finalTransferList.has(activePipelines[runId].owner)
-                            )
-                            // allow locals to cleanup in sim
-                            || mode === 'local'
-                        ) {
                             return cleanupPipeline(runId)
                                 .then(() => { return res; });
-                        }
-                        // we have clients waiting on final transfer output, just give results
-                        return res;
                     })
                     .catch((err) => {
-                        if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
-                            if (mode === 'remote') {
-                                clientPublish(
-                                    activePipelines[runId].clients,
-                                    { runId, error: err }
-                                );
-                            }
-                            return cleanupPipeline(runId)
-                                .then(() => {
-                                    throw err;
-                                });
-                        }
+
                         // local pipeline user stop error, or other uncaught error
                         publishData('run', {
                             id: clientId, runId, error: { message: err.message, stack: err.stack },
