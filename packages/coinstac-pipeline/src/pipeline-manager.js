@@ -34,7 +34,6 @@ module.exports = {
   }) {
     
     if (mode === 'remote') {
-      debugger
       return pipelineManagerCentral.create(
         {
           clientId,
@@ -52,7 +51,6 @@ module.exports = {
         }
       )
     } else {
-      debugger
       return pipelineManagerOuter.create({
         clientId,
         imageDirectory,
