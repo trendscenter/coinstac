@@ -77,7 +77,7 @@ module.exports = {
         debugProfileClient.log = l => logger.info(`PROFILING: ${l}`);
         debugProfile.log = l => logger.info(`PROFILING: ${l}`);
 
-
+        
         /**
          * exponential backout for GET
          * consider file batching here if server load is too high
@@ -230,28 +230,6 @@ module.exports = {
                 });
             });
         };
-
-        const waitingOnForRun = (runId) => {
-            const waiters = [];
-            Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-                const clientRun = remoteClients[clientId][runId];
-                if ((clientRun
-                    && !store.has(runId, clientId))
-                    // test if we have all files, if there are any
-                    || (clientRun
-                        && (clientRun.files.expected.length !== 0
-                            && !clientRun.files.expected
-                                .every(e => clientRun.files.received.includes(e))
-                        )
-                    )
-                ) {
-                    waiters.push(clientId);
-                }
-            });
-
-            return waiters;
-        };
-
 
         const publishData = (key, data, qos = 0) => {
             mqttClient.publish(
@@ -754,7 +732,6 @@ module.exports = {
                     return currentStep.stop(type);
                 }
             },
-            waitingOnForRun,
         };
     },
 };
