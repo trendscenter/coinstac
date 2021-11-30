@@ -18,6 +18,7 @@ services:
       - ./mongo_data/:/data/db
     networks:
       - ci_network
+    command: --quiet
   ui:
     depends_on:
       - 'api'

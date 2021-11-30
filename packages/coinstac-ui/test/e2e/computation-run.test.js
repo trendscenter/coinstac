@@ -40,10 +40,10 @@ describe('e2e run computation with 1 member', () => {
   });
 
   after(async () => {
-    if (process.env.CI) {
+    // if (process.env.CI) {
       console.log('/********** Main process logs **********/');
-      console.log(await fs.readFile('coinstac-log.json').toString());
-    }
+      console.log((await fs.readFile('coinstac-log.json')).toString());
+    // }
     return app.close();
   });
 
