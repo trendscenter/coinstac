@@ -26,6 +26,7 @@ let app;
 
 describe('e2e run computation with 1 member', () => {
   before(async () => {
+    await fs.rm('coinstac-log.json');
     app = await electron.launch({
       // path: electron,
       args: ['--enable-logging', appPath],
