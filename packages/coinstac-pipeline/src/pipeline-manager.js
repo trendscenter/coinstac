@@ -1,36 +1,24 @@
 'use strict';
 
 const fs = require('fs');
-const mqtt = require('mqtt');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const http = require('http');
 const https = require('https');
 const FormData = require('form-data');
-const archiver = require('archiver');
 const Emitter = require('events');
 const winston = require('winston');
-// const express = require('express');
-// const multer = require('multer');
-const uuid = require('uuid/v4');
-const tar = require('tar-fs');
-const zlib = require('zlib');
-const merge2 = require('merge2');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
-const mv = pify(require('mv'));
 const Store = require('./io-store');
 const mqttSetupCentral = require('./mqtt-setup-central');
+const mqttSetupOuter = require('./mqtt-setup-outer');
+const { extractTar } = require('./pipeline-manager/helpers');
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
-
-const {
-  readdir,
-  unlink,
-} = fs.promises;
 
 winston.loggers.add('pipeline', {
   level: 'info',
@@ -42,93 +30,8 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
-
-/**
- * Takes an input stream and writes it to disk in
- * chunks specified by the chunk size
- * @param  {Object} stream      stream to split
- * @param  {string} filePath    destination
- * @param  {integer} chunkSize  split size
- * @return {Object}             Promise on output close
- */
-const splitFilesFromStream = (stream, filePath, chunkSize) => {
-  let currentChunk = 0;
-  let currentChunkLen = 0;
-  const asyncStreams = [];
-  const splits = [];
-  const newFileStream = fs.createWriteStream(
-    `${filePath}.${currentChunk}`
-  );
-  splits[currentChunk] = {
-    filePath: `${filePath}.${currentChunk}`,
-    stream: newFileStream,
-  };
-  asyncStreams.push(new Promise((resolve, reject) => {
-    splits[currentChunk].stream.on('close', () => resolve());
-    splits[currentChunk].stream.on('error', e => reject(e));
-  }));
-  stream.on('data', (data) => {
-    if (currentChunkLen >= chunkSize) {
-      splits[currentChunk].stream.end();
-      currentChunk += 1;
-      const newFileStream = fs.createWriteStream(
-        `${filePath}.${currentChunk}`
-      );
-      splits[currentChunk] = {
-        filePath: `${filePath}.${currentChunk}`,
-        stream: newFileStream,
-      };
-      asyncStreams.push(new Promise((resolve, reject) => {
-        splits[currentChunk].stream.on('close', () => resolve());
-        splits[currentChunk].stream.on('error', e => reject(e));
-      }));
-      splits[currentChunk].stream.write(data);
-      currentChunkLen = data.length;
-    } else {
-      splits[currentChunk].stream.write(data);
-      currentChunkLen += data.length;
-    }
-  });
-  asyncStreams.push(new Promise((resolve, reject) => {
-    stream.on('end', () => {
-      splits[currentChunk].stream.end();
-      resolve();
-    });
-    stream.on('error', (e) => {
-      reject(e);
-    });
-  }));
-  return Promise.all(asyncStreams)
-    .then(() => splits.map(split => path.basename(split.filePath)));
-};
-
-const extractTar = (parts, outdir) => {
-  return new Promise((resolve, reject) => {
-    const unpack = merge2(...parts.map(part => fs.createReadStream(part)))
-      .pipe(zlib.createGunzip())
-      .pipe(tar.extract(outdir));
-    unpack.on('finish', () => resolve());
-    unpack.on('error', e => reject(e));
-  });
-};
-
-/**
- * get files in a dir recursively
- * https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
- * @param  {string}  dir dir path
- * @return {Promise}     files
- */
-const getFilesAndDirs = async (dir) => {
-  const dirents = await readdir(dir, { withFileTypes: true });
-  return dirents.reduce((memo, dirent) => {
-    if (dirent.isDirectory()) {
-      memo.directories.push(dirent.name);
-    } else {
-      memo.files.push(dirent.name);
-    }
-    return memo;
-  }, { files: [], directories: [] });
-};
+const communicateCentral = require('./communicate-central');
+const communicateOuter = require('./communicate-outer');
 
 module.exports = {
 
@@ -161,8 +64,6 @@ module.exports = {
   }) {
     const store = Store.init(clientId);
     const activePipelines = {};
-    let io;
-    let socket;
     let mqttClient;
     let mqttServer;
     const remoteClients = {};
@@ -400,7 +301,6 @@ module.exports = {
         clearClientFileList,
         printClientTimeProfiling,
         clientPublish,
-        mqttServer,
         remotePort,
         cleanupPipeline,
         mqttRemoteProtocol,
@@ -410,167 +310,27 @@ module.exports = {
         store,
       });
     } else {
-      /**
-       * Local node code
-       */
-      let clientInit = false;
-      logger.silly('Starting local pipeline manager');
-      const getMqttConn = () => {
-        return new Promise((resolve, reject) => {
-          const client = mqtt.connect(
-            `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
-            {
-              clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
-              reconnectPeriod: 5000,
-              connectTimeout: 15 * 1000,
-            }
-          );
-          client.on('offline', () => {
-            if (!clientInit) {
-              client.end(true, () => {
-                reject(new Error('MQTT_OFFLINE'));
-              });
-            }
-          });
-          client.on('connect', () => {
-            clientInit = true;
-            logger.silly(`mqtt connection up ${clientId}`);
-            client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
-              if (err) logger.error(`Mqtt error: ${err}`);
-            });
-            client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
-              if (err) logger.error(`Mqtt error: ${err}`);
-            });
-            resolve(client);
-          });
-        }).catch((e) => {
-          if (e.message === 'MQTT_OFFLINE') {
-            return new Promise((resolve) => {
-              logger.error('MQTT connection down trying WS/S');
-              const client = mqtt.connect(
-                `${mqttRemoteWSProtocol}//${mqttRemoteURL}:${mqttRemoteWSPort}${mqttRemoteWSPathname}`,
-                {
-                  clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
-                  reconnectPeriod: 5000,
-                }
-              );
-              client.on('connect', () => {
-                clientInit = true;
-                logger.silly(`mqtt connection up ${clientId}`);
-                client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
-                  if (err) logger.error(`Mqtt error: ${err}`);
-                });
-                client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
-                  if (err) logger.error(`Mqtt error: ${err}`);
-                });
-                resolve(client);
-              });
-              resolve(client);
-            });
-          }
-          throw e;
-        });
-      };
-
-      mqttClient = await getMqttConn();
-
-      mqttClient.on('message', async (topic, dataBuffer) => {
-        const received = Date.now();
-        const data = JSON.parse(dataBuffer);
-        // TODO: step check?
-        switch (topic) {
-          case `${clientId}-run`:
-            if (!data.error && activePipelines[data.runId]) {
-              if (activePipelines[data.runId].pipeline.currentState.currentIteration
-                !== data.iteration
-              ) {
-                logger.silly(`Duplicate message client ${data.id}`);
-                return;
-              }
-              activePipelines[data.runId].stateStatus = 'received central node data';
-              logger.silly('received central node data');
-              debugProfileClient(`Transmission to ${clientId} took the remote: ${Date.now() - data.debug.sent}ms`);
-
-              let error;
-              if (data.files) {
-                try {
-                  const workDir = data.success
-                    ? activePipelines[data.runId].outputDirectory
-                    : activePipelines[data.runId].baseDirectory;
-                  const paths = await transferFiles('get', 300, data.files, clientId, data.runId, workDir);
-                  const fullPathFiles = paths
-                    .map(p => path.join(workDir, p));
-                  await extractTar(fullPathFiles, workDir);
-                  await Promise.all(fullPathFiles.map(f => unlink(f)));
-                } catch (e) {
-                  error = e;
-                }
-              }
-              if (data.success && data.files) {
-                // let the remote know we have the files
-                publishData('finished', {
-                  id: clientId,
-                  runId: data.runId,
-                });
-              }
-
-              if (error) {
-                if (data.success) throw error;
-                publishData('run', {
-                  id: clientId,
-                  runId: data.runId,
-                  error: { stack: error.stack, message: error.message },
-                });
-                activePipelines[data.runId].remote.reject(error);
-              } else {
-                store.put(data.runId, clientId, data.output);
-                // why is this resolve in a promise? It's a terrible hack to
-                // keep docker happy mounting the transfer dir. If there are comp
-                // issues writing to it, this is the place to look
-                await rmrf(path.join(activePipelines[data.runId].systemDirectory, '*'))
-                  .then(() => {
-                    activePipelines[data.runId].remote.resolve(
-                      { debug: { received }, success: data.success }
-                    );
-                  });
-              }
-            } else if (data.error && activePipelines[data.runId]) {
-              activePipelines[data.runId].state = 'error';
-              activePipelines[data.runId].stateStatus = 'Received error';
-              activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
-            }
-
-            break;
-          case `${clientId}-register`:
-            if (activePipelines[data.runId]) {
-              if (activePipelines[data.runId].registered) break;
-              activePipelines[data.runId].registered = true;
-              if (activePipelines[data.runId].stashedOutput) {
-                activePipelines[data.runId]
-                  .communicate(
-                    activePipelines[data.runId].pipeline,
-                    activePipelines[data.runId].stashedOutput,
-                    activePipelines[data.runId].pipeline.currentState.currentIteration
-                  );
-              }
-            }
-            break;
-          default:
-        }
+      mqttClient = await mqttSetupOuter({
+        mqttClient,
+        logger,
+        mqttRemoteProtocol,
+        mqttRemoteURL,
+        mqttRemotePort,
+        clientId,
+        mqttRemoteWSProtocol,
+        mqttRemoteWSPort,
+        mqttRemoteWSPathname,
+        activePipelines,
+        debugProfileClient,
+        transferFiles,
+        extractTar,
+        publishData,
+        store,
       });
     }
 
 
     return {
-      activePipelines,
-      clientId,
-      io,
-      mode,
-      operatingDirectory,
-      remoteClients,
-      socket,
-      mqttClient,
-
       /**
        * Starts a pipeline given a pipeline spec, client list and unique ID
        * for that pipeline. The return object is that pipeline and a promise that
@@ -661,250 +421,28 @@ module.exports = {
         activePipelines[runId].communicate = async (pipeline, success, messageIteration) => {
           const message = store.getAndRemove(pipeline.id, clientId);
           if (mode === 'remote') {
-            if (message instanceof Error) {
-              const runError = Object.assign(
-                message,
-                {
-                  error: `Pipeline error from central node\n Error details: ${message.error}`,
-                  message: `Pipeline error from central node\n Error details: ${message.message}`,
-                  stack: message.stack,
-                }
-              );
-              activePipelines[pipeline.id].state = 'error';
-              activePipelines[pipeline.id].stateStatus = 'Central node error';
-              activePipelines[pipeline.id].error = runError;
-              activePipelines[pipeline.id].remote.reject(runError);
-              clientPublish(
-                activePipelines[pipeline.id].clients,
-                { runId: pipeline.id, error: runError }
-              );
-            } else {
-              logger.silly('############ Sending out remote data');
-              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                .then((data) => {
-                  return Promise.all([
-                    ...data.files.map((file) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, file),
-                        path.join(activePipelines[pipeline.id].systemDirectory, file)
-                      );
-                    }),
-                    ...data.directories.map((dir) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        { mkdirp: true }
-                      );
-                    }),
-                  ]).then(() => data);
-                })
-                .then((data) => {
-                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
-                    const archive = archiver('tar', {
-                      gzip: true,
-                      gzipOptions: {
-                        level: 9,
-                      },
-                    });
-                    const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
-                    const splitProm = splitFilesFromStream(
-                      archive, // stream
-                      path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
-                      22428800 // 20MB chunk size
-                    );
-                    data.files.forEach((file) => {
-                      archive.append(
-                        fs.createReadStream(
-                          path.join(activePipelines[pipeline.id].systemDirectory, file)
-                        ),
-                        { name: file }
-                      );
-                    });
-                    data.directories.forEach((dir) => {
-                      archive.directory(
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        dir
-                      );
-                    });
-                    archive.finalize();
-                    return splitProm.then((files) => {
-                      if (success) {
-                        activePipelines[pipeline.id].finalTransferList = new Set();
-                      }
-                      clientPublish(
-                        activePipelines[pipeline.id].clients,
-                        {
-                          runId: pipeline.id,
-                          output: message,
-                          success,
-                          files: [...files],
-                          iteration: messageIteration,
-                          debug: { sent: Date.now() },
-                        },
-                        {
-                          success,
-                          limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                          owner: activePipelines[pipeline.id].owner,
-                        }
-                      );
-                    });
-                  }
-                  clientPublish(
-                    activePipelines[pipeline.id].clients,
-                    {
-                      runId: pipeline.id,
-                      output: message,
-                      success,
-                      iteration: messageIteration,
-                      debug: { sent: Date.now() },
-                    },
-                    {
-                      success,
-                      limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
-                      owner: activePipelines[pipeline.id].owner,
-                    }
-
-                  );
-                }).catch((e) => {
-                  logger.error(e);
-                  publishData('run', {
-                    id: clientId,
-                    runId: pipeline.id,
-                    error: `Error from central node ${e}`,
-                    debug: { sent: Date.now() },
-                  });
-                });
-            }
-            // local client
+            communicateCentral({
+              message,
+              activePipelines,
+              pipeline,
+              clientPublish,
+              logger,
+              clientId,
+              success,
+              messageIteration,
+              publishData,
+            });
           } else {
-            if (message instanceof Error) { // eslint-disable-line no-lonely-if
-              if (!activePipelines[pipeline.id].registered) {
-                activePipelines[pipeline.id].stashedOutput = message;
-              } else {
-                publishData('run', {
-                  id: clientId,
-                  runId: pipeline.id,
-                  error: message,
-                  debug: { sent: Date.now() },
-                });
-                activePipelines[pipeline.id].stashedOutput = undefined;
-              }
-            } else {
-              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
-                .then((data) => {
-                  return Promise.all([
-                    ...data.files.map((file) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, file),
-                        path.join(activePipelines[pipeline.id].systemDirectory, file)
-                      );
-                    }),
-                    ...data.directories.map((dir) => {
-                      return mv(
-                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                        { mkdirp: true }
-                      );
-                    }),
-                  ]).then(() => data);
-                })
-                .then((data) => {
-                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
-                    if (!activePipelines[pipeline.id].registered) {
-                      activePipelines[pipeline.id].stashedOutput = message;
-                    } else {
-                      const archive = archiver('tar', {
-                        gzip: true,
-                        gzipOptions: {
-                          level: 9,
-                        },
-                      });
-
-                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
-                      const splitProm = splitFilesFromStream(
-                        archive,
-                        path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
-                        22428800 // 20MB chunk size
-                      );
-                      data.files.forEach((file) => {
-                        archive.append(
-                          fs.createReadStream(
-                            path.join(activePipelines[pipeline.id].systemDirectory, file)
-                          ),
-                          { name: file }
-                        );
-                      });
-                      data.directories.forEach((dir) => {
-                        archive.directory(
-                          path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                          dir
-                        );
-                      });
-                      archive.finalize();
-                      return splitProm.then((files) => {
-                        logger.debug('############# Local client sending out data with files');
-                        publishData('run', {
-                          id: clientId,
-                          runId: pipeline.id,
-                          output: message,
-                          files: [...files],
-                          iteration: messageIteration,
-                          debug: { sent: Date.now() },
-                        });
-                        activePipelines[pipeline.id].stashedOutput = undefined;
-                        transferFiles(
-                          'post',
-                          100,
-                          [...files],
-                          clientId,
-                          pipeline.id,
-                          activePipelines[pipeline.id].systemDirectory
-                        ).catch((e) => {
-                          // files failed to send, bail
-                          logger.error(`Client file send error: ${e}`);
-                          publishData('run', {
-                            id: clientId,
-                            runId: pipeline.id,
-                            error: { stack: e.stack, message: e.message },
-                            debug: { sent: Date.now() },
-                          }, 1);
-                        });
-                      }).catch((e) => {
-                        publishData('run', {
-                          id: clientId,
-                          runId: pipeline.id,
-                          error: e,
-                          debug: { sent: Date.now() },
-                        });
-                        throw e;
-                      });
-                    }
-                  } else {
-                    if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
-                      activePipelines[pipeline.id].stashedOutput = message;
-                    } else {
-                      logger.debug('############# Local client sending out data');
-                      publishData('run', {
-                        id: clientId,
-                        runId: pipeline.id,
-                        output: message,
-                        iteration: messageIteration,
-                        debug: { sent: Date.now() },
-                      }, 1);
-                      activePipelines[pipeline.id].stashedOutput = undefined;
-                    }
-                  }
-                })
-                .catch((e) => {
-                  publishData('run', {
-                    id: clientId,
-                    runId: pipeline.id,
-                    error: e,
-                    debug: { sent: Date.now() },
-                  });
-                  throw e;
-                });
-            }
+            communicateOuter({
+              message,
+              activePipelines,
+              pipeline,
+              logger,
+              clientId,
+              messageIteration,
+              publishData,
+              transferFiles,
+            });
           }
         };
 
@@ -945,17 +483,17 @@ module.exports = {
         };
 
         const pipelineProm = Promise.all([
-          mkdirp(this.activePipelines[runId].baseDirectory),
-          mkdirp(this.activePipelines[runId].outputDirectory),
-          mkdirp(this.activePipelines[runId].transferDirectory),
-          mkdirp(this.activePipelines[runId].systemDirectory),
+          mkdirp(activePipelines[runId].baseDirectory),
+          mkdirp(activePipelines[runId].outputDirectory),
+          mkdirp(activePipelines[runId].transferDirectory),
+          mkdirp(activePipelines[runId].systemDirectory),
         ])
           .catch((err) => {
             throw new Error(`Unable to create pipeline directories: ${err}`);
           })
           .then(() => {
-            this.activePipelines[runId].pipeline.stateEmitter.on('update',
-              data => this.activePipelines[runId].stateEmitter
+            activePipelines[runId].pipeline.stateEmitter.on('update',
+              data => activePipelines[runId].stateEmitter
                 .emit('update', Object.assign({}, data, activePipelines[runId].currentState)));
 
             return activePipelines[runId].pipeline.run(remoteHandler)
@@ -1020,14 +558,14 @@ module.exports = {
         };
       },
       getPipelineStateListener(runId) {
-        if (!this.activePipelines[runId]) {
+        if (!activePipelines[runId]) {
           throw new Error('invalid pipeline ID');
         }
 
-        return this.activePipelines[runId].stateEmitter;
+        return activePipelines[runId].stateEmitter;
       },
       suspendPipeline(runId) {
-        const run = this.activePipelines[runId];
+        const run = activePipelines[runId];
         const packagedState = {
           activePipelineState: {
             currentState: run.currentState,
@@ -1041,7 +579,7 @@ module.exports = {
           .then(output => Object.assign({ output }, packagedState));
       },
       async stopPipeline(runId, type = 'user') {
-        const run = this.activePipelines[runId];
+        const run = activePipelines[runId];
 
         if (!run) {
           throw new Error('Invalid pipeline ID');

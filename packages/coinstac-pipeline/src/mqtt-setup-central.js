@@ -22,7 +22,6 @@ async function mqqtSetupCentral({
   clearClientFileList,
   printClientTimeProfiling,
   clientPublish,
-  mqttServer,
   remotePort,
   cleanupPipeline,
   mqttRemoteProtocol,
@@ -151,7 +150,7 @@ async function mqqtSetupCentral({
   /**
    * mqtt server-side setup
    */
-  mqttServer = mqtt.connect(
+  const mqttServer = mqtt.connect(
     `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
     {
       clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
