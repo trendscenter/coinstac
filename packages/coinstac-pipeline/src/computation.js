@@ -2,7 +2,8 @@
 
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
-const path = require('path');
+const path = require('path')
+const utils = require('./utils');
 
 /**
  * Generates manager options per computation type
@@ -77,6 +78,7 @@ module.exports = {
     runId,
     spec,
   }) {
+    Manager.setLogger = utils.logger;
     const computation = Object.assign(
       {},
       spec.computation,

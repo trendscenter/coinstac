@@ -21,8 +21,8 @@ winston.loggers.add('docker-manager', {
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
-logger = winston.loggers.get('docker-manager');
-logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+logger = winston.loggers.get('coinstac-main') || winston.loggers.get('docker-manager');
+logger.level = 'silly'; // process.LOGLEVEL ? process.LOGLEVEL : 'info';
 utils.setLogger(logger);
 
 let services = {};
@@ -35,6 +35,7 @@ let portLock = false;
  */
 const setLogger = (loggerInstance) => {
   logger = loggerInstance;
+  utils.setLogger(logger);
   return logger;
 };
 
