@@ -32,6 +32,7 @@ defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 const Pipeline = require('./pipeline');
 const communicateCentral = require('./communicate-central');
 const communicateOuter = require('./communicate-outer');
+const expressFileServerSetup = require('./express-file-server-setup');
 
 module.exports = {
 
@@ -293,6 +294,17 @@ module.exports = {
 
     // TODO: secure socket layer
     if (mode === 'remote') {
+      await expressFileServerSetup({
+        activePipelines,
+        remoteClients,
+        waitingOnForRun,
+        logger,
+        clearClientFileList,
+        printClientTimeProfiling,
+        clientPublish,
+        remotePort,
+      });
+
       mqttServer = await mqttSetupCentral({
         logger,
         activePipelines,
@@ -301,7 +313,6 @@ module.exports = {
         clearClientFileList,
         printClientTimeProfiling,
         clientPublish,
-        remotePort,
         cleanupPipeline,
         mqttRemoteProtocol,
         mqttRemoteURL,
