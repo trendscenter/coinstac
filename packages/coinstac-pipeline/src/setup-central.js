@@ -11,11 +11,10 @@ const { getFilesAndDirs, splitFilesFromStream } = require('./pipeline-manager/he
 const expressFileServerSetup = require('./express-file-server-setup');
 
 async function setupCentral({
+  cleanupPipeline,
   logger,
   activePipelines,
   remoteClients,
-  clientPublish,
-  cleanupPipeline,
   mqttRemoteProtocol,
   mqttRemoteURL,
   mqttRemotePort,
@@ -24,6 +23,22 @@ async function setupCentral({
   remotePort,
   debugProfileClient,
 }) {
+  let mqttServer;
+  const clientPublish = (clients, data, opts) => {
+    Object.keys(clients).forEach((clientId) => {
+      if (opts && opts.success && opts.limitOutputToOwner) {
+        if (clientId === opts.owner) {
+          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+        } else {
+          const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
+          mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+        }
+      } else {
+        mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+      }
+    });
+  };
+
   function waitingOnForRun(runId) {
     const waiters = [];
     Object.keys(activePipelines[runId].clients).forEach((clientId) => {
@@ -343,10 +358,15 @@ async function setupCentral({
     remotePort,
     printClientTimeProfiling,
   });
-  const mqttServer = await mqttSetup();
+  mqttServer = await mqttSetup();
 
 
-  return { mqttServer, communicate , waitingOnForRun};
+  return {
+    mqttServer,
+    communicate,
+    waitingOnForRun,
+    clientPublish,
+  };
 }
 
 module.exports = setupCentral;

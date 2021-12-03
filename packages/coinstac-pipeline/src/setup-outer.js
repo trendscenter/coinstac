@@ -5,6 +5,9 @@ const rmrf = pify(require('rimraf'));
 const fs = require('fs');
 const archiver = require('archiver');
 const mv = pify(require('mv'));
+const http = require('http');
+const https = require('https');
+const FormData = require('form-data');
 const { splitFilesFromStream, extractTar, getFilesAndDirs } = require('./pipeline-manager/helpers');
 
 const {
@@ -22,10 +25,149 @@ async function stupOuter({
   mqttRemoteWSPathname,
   activePipelines,
   debugProfileClient,
-  transferFiles,
   store,
+  remoteProtocol,
+  remoteURL,
+  remotePort,
+  remotePathname,
 }) {
+  const request = remoteProtocol.trim() === 'https:' ? https : http;
   let mqttClient;
+
+  /**
+   * exponential backout for GET
+   * consider file batching here if server load is too high
+   */
+  const exponentialRequest = (
+    method,
+    factor,
+    file,
+    clientId,
+    runId,
+    directory,
+    compressed = false,
+    files = []
+  ) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (method === 'get') {
+          request.get(
+            `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}&files=${encodeURIComponent(JSON.stringify(files))}`,
+            (res) => {
+              if (res.statusCode !== 200) {
+                return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
+              }
+              const wstream = fs.createWriteStream(
+                path.join(directory, file)
+              );
+              res.pipe(wstream);
+              wstream.on('close', () => {
+                resolve(file);
+              });
+              wstream.on('error', (e) => {
+                reject(e);
+              });
+              res.on('error', (e) => {
+                reject(e);
+              });
+            }
+          );
+        } else if (method === 'post') {
+          logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
+          const form = new FormData();
+          form.append('filename', file);
+          form.append('compressed', compressed.toString());
+          form.append('files', JSON.stringify(files));
+          form.append('clientId', clientId);
+          form.append('runId', runId);
+          form.append('file', fs.createReadStream(
+            path.join(directory, file),
+            {
+              headers: { 'transfer-encoding': 'chunked' },
+              knownSize: NaN,
+            }
+          ));
+          form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
+            (err, res) => {
+              if (err) return reject(err);
+              res.resume();
+              res.on('end', () => {
+                if (!res.complete) {
+                  return reject(new Error('File post connection broken'));
+                }
+                if (res.statusCode !== 200) {
+                  return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
+                }
+                resolve();
+              });
+              res.on('error', (e) => {
+                reject(e);
+              });
+            });
+        }
+      }, 5000 * factor);
+    });
+  };
+
+  /**
+   *  transfer a file to or from the remote
+   * @param  {string} method   POST or GET
+   * @param  {integer} limit   retry limit for an unreachable host
+   * @param  {Array} files     files to send or receive
+   * @param  {string} clientId this clients id
+   * @param  {string} runId    the run context for the files
+   * @return {Promise}         Promise when the files are received,
+   *                           the action fails besides ECONNREFUSED,
+   *                           or the limit is reached
+   */
+  const transferFiles = async (method, limit, files, clientId, runId, directory) => {
+    logger.silly(`Sending ${files.length} files`);
+    return Promise.all(files.reduce((memo, file, index) => {
+      memo.push((async () => {
+        let retryLimit = 0;
+        let success = false;
+        let partFile;
+        // retry 1000 times w/ backout
+        while (retryLimit < limit) {
+          try {
+            partFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
+              method,
+              retryLimit,
+              file,
+              clientId,
+              runId,
+              directory,
+              true
+            );
+            success = true;
+            break;
+          } catch (e) {
+            logger.silly(JSON.stringify(e));
+            if ((e.code
+              && (
+                e.code === 'ECONNREFUSED'
+                || e.code === 'EPIPE'
+                || e.code === 'ECONNRESET'
+                || e.code === 'EAGAIN'
+              ))
+              || (e.message && e.message.includes('EPIPE'))
+            ) {
+              retryLimit += 1;
+              logger.silly(`Retrying file request: ${file}`);
+              logger.silly(`File request failed with: ${e.message}`);
+            } else {
+              throw e;
+            }
+          }
+        }
+        if (!success) throw new Error('Service down, file retry limit reached');
+        logger.silly(`Successfully sent file ${index}`);
+        return partFile;
+      })());
+      return memo;
+    }, []));
+  };
+
   const publishData = (key, data, qos = 0) => {
     mqttClient.publish(
       key,
@@ -319,7 +461,11 @@ async function stupOuter({
 
   mqttClient = await mqqttSetup();
 
-  return { mqttClient, communicate, publishData };
+  return {
+    mqttClient,
+    communicate,
+    publishData,
+  };
 }
 
 module.exports = stupOuter;
