@@ -13,9 +13,8 @@ const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const Store = require('./io-store');
-const mqttSetupCentral = require('./mqtt-setup-central');
-const mqttSetupOuter = require('./mqtt-setup-outer');
-const { extractTar } = require('./pipeline-manager/helpers');
+const setupCentral = require('./setup-central');
+const setupOuter = require('./setup-outer');
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
@@ -30,9 +29,6 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
-const communicateCentral = require('./communicate-central');
-const communicateOuter = require('./communicate-outer');
-const expressFileServerSetup = require('./express-file-server-setup');
 
 module.exports = {
 
@@ -65,8 +61,11 @@ module.exports = {
   }) {
     const store = Store.init(clientId);
     const activePipelines = {};
-    let mqttClient;
+    let mqttClient; // eslint-disable-line no-unused-vars
     let mqttServer;
+    let communicate;
+    let publishData;
+    let waitingOnForRun;
     const remoteClients = {};
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
@@ -242,76 +241,13 @@ module.exports = {
       });
     };
 
-    const waitingOnForRun = (runId) => {
-      const waiters = [];
-      Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-        const clientRun = remoteClients[clientId][runId];
-        if ((clientRun
-          && !store.has(runId, clientId))
-          // test if we have all files, if there are any
-          || (clientRun
-            && (clientRun.files.expected.length !== 0
-              && !clientRun.files.expected
-                .every(e => clientRun.files.received.includes(e))
-            )
-          )
-        ) {
-          waiters.push(clientId);
-        }
-      });
-
-      return waiters;
-    };
-
-    const clearClientFileList = (runId) => {
-      Object.keys(remoteClients).forEach((clientId) => {
-        if (remoteClients[clientId][runId]) {
-          remoteClients[clientId][runId].files = { received: [], expected: [] };
-        }
-      });
-    };
-
-    const printClientTimeProfiling = (runId, task) => {
-      Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-        const currentClient = remoteClients[clientId][runId];
-        if (currentClient) {
-          const time = currentClient.debug.received - currentClient.debug.sent;
-          currentClient.debug.profiling[task] = currentClient.debug.profiling[task]
-            ? currentClient.debug.profiling[task] + time : time;
-          debugProfileClient(`${task} took ${clientId}: ${time}ms`);
-        }
-      });
-    };
-
-    const publishData = (key, data, qos = 0) => {
-      mqttClient.publish(
-        key,
-        JSON.stringify(data),
-        { qos },
-        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-      );
-    };
-
     // TODO: secure socket layer
-    if (mode === 'remote') {
-      await expressFileServerSetup({
-        activePipelines,
-        remoteClients,
-        waitingOnForRun,
-        logger,
-        clearClientFileList,
-        printClientTimeProfiling,
-        clientPublish,
-        remotePort,
-      });
 
-      mqttServer = await mqttSetupCentral({
+    if (mode === 'remote') {
+      ({ mqttServer, communicate, waitingOnForRun } = await setupCentral({
         logger,
         activePipelines,
         remoteClients,
-        waitingOnForRun,
-        clearClientFileList,
-        printClientTimeProfiling,
         clientPublish,
         cleanupPipeline,
         mqttRemoteProtocol,
@@ -319,10 +255,11 @@ module.exports = {
         mqttRemotePort,
         clientId,
         store,
-      });
+        remotePort,
+        debugProfileClient,
+      }));
     } else {
-      mqttClient = await mqttSetupOuter({
-        mqttClient,
+      ({ mqttClient, communicate, publishData } = await setupOuter({
         logger,
         mqttRemoteProtocol,
         mqttRemoteURL,
@@ -334,10 +271,8 @@ module.exports = {
         activePipelines,
         debugProfileClient,
         transferFiles,
-        extractTar,
-        publishData,
         store,
-      });
+      }));
     }
 
 
@@ -424,38 +359,7 @@ module.exports = {
           activePipelines[runId].registered = false;
           publishData('register', { id: clientId, runId });
         }
-        /**
-         * Communicate with the with node(s), clients to remote or remote to clients
-         * @param  {Object} pipeline pipeline to preform the messaging on
-         * @param  {Object} message  data to serialize to recipient
-         */
-        activePipelines[runId].communicate = async (pipeline, success, messageIteration) => {
-          const message = store.getAndRemove(pipeline.id, clientId);
-          if (mode === 'remote') {
-            communicateCentral({
-              message,
-              activePipelines,
-              pipeline,
-              clientPublish,
-              logger,
-              clientId,
-              success,
-              messageIteration,
-              publishData,
-            });
-          } else {
-            communicateOuter({
-              message,
-              activePipelines,
-              pipeline,
-              logger,
-              clientId,
-              messageIteration,
-              publishData,
-              transferFiles,
-            });
-          }
-        };
+
 
         /**
          * callback fn passed down to facilitate external communication
@@ -473,7 +377,7 @@ module.exports = {
             reject: callback,
           };
           if (!noop) {
-            await activePipelines[runId].communicate(
+            await communicate(
               activePipelines[runId].pipeline,
               success,
               iteration
