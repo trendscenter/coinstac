@@ -431,6 +431,9 @@ loadConfig()
                   });
               })
               .catch((error) => {
+                logger.verbose('############ Client pipeline error');
+                logger.verbose(error);
+
                 mainWindow.webContents.send('local-run-error', {
                   consName: consortium.name,
                   run: Object.assign(
@@ -480,7 +483,8 @@ loadConfig()
       ipcMain.on('start-pipeline', (event, {
         consortium, dataMappings, pipelineRun, networkVolume,
       }) => {
-        // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
+        // This is a way to avoid multiple instances of COINSTAC
+        // running on the same machine to start
         // the pipeline runs at the same time. We start the pipeline runs with random delays
         // between 0 and 3000ms.
         const delayAmount = Math.floor(Math.random() * 3000);

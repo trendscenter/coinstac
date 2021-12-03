@@ -101,7 +101,7 @@ const startService = ({
     services[serviceId].state = 'starting';
     let depth = 0;
     const tryService = () => {
-      return generateServicePort(serviceId)
+      return generateServicePort(serviceId, process.env.CI_PORT_START || 8101)
         .then((port) => {
           return serviceProviders[serviceType].createService(serviceId, port, opts);
         }).catch((e) => {

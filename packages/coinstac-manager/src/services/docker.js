@@ -21,7 +21,15 @@ module.exports = {
       } else {
         switch (version) {
           case 1:
-            opts.docker.CMD = ['node', '/server/index.js', JSON.stringify({ level: process.LOGLEVEL, server: opts.http ? 'http' : 'ws' })];
+            opts.docker.CMD = [
+              'node',
+              '/server/index.js',
+              JSON.stringify({
+                level: process.LOGLEVEL,
+                server: opts.http ? 'http' : 'ws',
+                port: process.env.CI ? port : 8881,
+              }),
+            ];
             break;
           case 2:
             break;
@@ -36,15 +44,16 @@ module.exports = {
       // for debug mode just grab the last port # to try to not have containers collide
       const portmunge = port.toString().slice(-2);
       if (process.LOGLEVEL === 'debug') utils.logger.debug(`Container debug port at: 44${portmunge}`);
+      const tcpOpt = `${process.env.CI ? port : 8881}/tcp`;
       const defaultOpts = {
       // this port is coupled w/ the internal base server image FYI
         ExposedPorts: {
-          '8881/tcp': {},
+          [tcpOpt]: {},
           ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
         },
         HostConfig: {
           PortBindings: {
-            '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
+            [tcpOpt]: [{ HostPort: `${port}`, HostIp: process.env.CI ? '' : '127.0.0.1' }],
             ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: `44${portmunge}`, HostIp: '127.0.0.1' }] }),
           },
         },
@@ -60,15 +69,17 @@ module.exports = {
       return docker.createContainer(jobOpts)
         .then((container) => {
           utils.logger.silly(`Starting cointainer: ${serviceId}`);
-          return container.start().then(() => container);
+          return container.start()
+            .then(async container => ({ container, inspect: await container.inspect() }));
         })
         // is the container service ready?
-        .then((container) => {
+        .then(({ container, inspect }) => {
+          const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
           utils.logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${host}:${port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -104,10 +115,11 @@ module.exports = {
             return Promise.resolve();
           };
 
-          return checkServicePort().then(() => container);
+          return checkServicePort().then(() => ({ container, inspect }));
         })
-        .then((container) => {
+        .then(({ container, inspect }) => {
           utils.logger.silly(`Returning service access function for ${serviceId}`);
+          const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
           /**
            * Calls the WS server inside the container
            * with data format:
@@ -128,7 +140,7 @@ module.exports = {
                 new Promise((resolve) => {
                   let count = 0;
                   const testConnection = () => {
-                    const ws = new WS(`ws://127.0.0.1:${port}`);
+                    const ws = new WS(`ws://${host}:${port}`);
                     ws.on('open', () => {
                       ws.close(1000, 'Test Connection');
                       resolve();
@@ -149,7 +161,7 @@ module.exports = {
                   };
                   testConnection();
                 }).then(() => {
-                  const ws = new WS(`ws://127.0.0.1:${port}`);
+                  const ws = new WS(`ws://${host}:${port}`);
                   ws.on('open', () => {
                     ws.send(JSON.stringify({
                       command: commandData[0],
@@ -257,7 +269,7 @@ module.exports = {
                 new Promise((resolve) => {
                   let count = 0;
                   const testConnection = () => {
-                    const ws = new WS(`ws://127.0.0.1:${port}`);
+                    const ws = new WS(`ws://${host}:${port}`);
                     ws.on('open', () => {
                       // ws.close(1000, 'Test Connection');
                       resolve();
@@ -278,7 +290,7 @@ module.exports = {
                   };
                   testConnection();
                 }).then(() => {
-                  const ws = new WS(`ws://127.0.0.1:${port}`);
+                  const ws = new WS(`ws://${host}:${port}`);
                   ws.on('open', () => {
                     ws.send(JSON.stringify({
                       mode,
@@ -366,9 +378,7 @@ module.exports = {
             // promise fullfilled by container output
             return prox;
           };
-          // services[serviceId].state = 'running';
-          // fulfill to waiting consumers
-          // proxRes(services[serviceId].service);
+
           return { service: serviceFunction, container };
         });
     };

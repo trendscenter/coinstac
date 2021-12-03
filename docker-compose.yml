@@ -34,6 +34,7 @@ services:
       - CI=true
       - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=coinstac_local-volume
+      - CI_PORT_START=8101
   api:
     depends_on:
       - 'mongo'
@@ -63,6 +64,7 @@ services:
       - CI=true
       - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=coinstac_remote-volume
+      - CI_PORT_START=8501
 networks:
     ci_network:
       name: ci-network

@@ -2,7 +2,7 @@
 
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
-const path = require('path')
+const path = require('path');
 const utils = require('./utils');
 
 /**
