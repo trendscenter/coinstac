@@ -26,9 +26,7 @@ let app;
 
 describe('e2e run computation with 1 member', () => {
   before(async () => {
-    await fs.rm('coinstac-log.json');
     app = await electron.launch({
-      // path: electron,
       args: ['--enable-logging', appPath],
       env: Object.assign({}, process.env, { NODE_ENV: 'test' }),
       logger: {
@@ -41,10 +39,10 @@ describe('e2e run computation with 1 member', () => {
   });
 
   after(async () => {
-    // if (process.env.CI) {
+    if (process.env.CI) {
       console.log('/********** Main process logs **********/');
       console.log((await fs.readFile('coinstac-log.json')).toString());
-    // }
+    }
     return app.close();
   });
 
