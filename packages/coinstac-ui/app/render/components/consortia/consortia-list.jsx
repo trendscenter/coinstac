@@ -120,7 +120,6 @@ class ConsortiaList extends Component {
     this.selectPipeline = this.selectPipeline.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
     this.stopPipeline = this.stopPipeline.bind(this);
-    this.tutorialChange = this.tutorialChange.bind(this);
   }
 
   componentDidMount() {
@@ -534,13 +533,6 @@ class ConsortiaList extends Component {
     this.closeConsortiumPipelinesMenu();
   }
 
-  tutorialChange(tourState) {
-    if (tourState.lifecycle === 'complete' && tourState.step.target === '.start-pipeline') {
-      const { toggleTutorial } = this.props;
-      toggleTutorial();
-    }
-  }
-
   render() {
     const { consortia, classes, auth } = this.props;
     const { search, showModal } = this.state;
@@ -608,7 +600,6 @@ class ConsortiaList extends Component {
           <Joyride
             steps={STEPS.consortiaList}
             disableScrollParentFix
-            callback={this.tutorialChange}
           />
         )}
       </div>
@@ -638,7 +629,6 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  toggleTutorial: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
 };
 

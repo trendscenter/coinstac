@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
@@ -12,6 +14,7 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
+import { toggleTutorial } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -26,6 +29,7 @@ import {
 } from '../../state/graphql/functions';
 import DashboardNav from './dashboard-nav';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
+import DashboardTutorialModal from './dashboard-tutorial';
 import DockerStatus from './docker-status';
 
 import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
@@ -42,8 +46,10 @@ import UserPermissionsListener from './listeners/user-permissions-listener';
 import TreeviewListener from './listeners/treeview-listener';
 
 function Dashboard({
-  auth, children, runs, maps, router, hideTutorial,
+  auth, children, runs, maps, router, hideTutorial, toggleTutorial,
 }) {
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
+
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
   } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
@@ -68,6 +74,12 @@ function Dashboard({
 
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
+
+    if (!hideTutorial) {
+      setTimeout(() => {
+        setShowTutorialModal(true);
+      }, 1000);
+    }
   }, []);
 
   useEffect(() => {
@@ -98,13 +110,21 @@ function Dashboard({
 
   const canShowBackButton = auth.locationStacks.length > 1;
 
-  function goBack() {
+  const handleGoBack = () => {
     if (!canShowBackButton) return;
 
     const { locationStacks } = auth;
 
     router.push(locationStacks[locationStacks.length - 2]);
-  }
+  };
+
+  const handleCloseModal = (neverShow) => {
+    setShowTutorialModal(false);
+
+    if (neverShow) {
+      toggleTutorial();
+    }
+  };
 
   const childrenWithProps = React.cloneElement(children, {
     computations, consortia, pipelines, runs, threads, dockerStatus,
@@ -137,7 +157,7 @@ function Dashboard({
             <button
               type="button"
               className="back-button"
-              onClick={goBack}
+              onClick={handleGoBack}
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
@@ -163,6 +183,7 @@ function Dashboard({
         runs={runs}
         consortia={consortia}
       />
+      <DashboardTutorialModal open={showTutorialModal} onClose={handleCloseModal} />
     </div>
   );
 }
@@ -181,6 +202,7 @@ Dashboard.propTypes = {
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
   hideTutorial: PropTypes.bool.isRequired,
+  toggleTutorial: PropTypes.func.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -218,6 +240,12 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
   hideTutorial: auth.hideTutorial,
 });
 
-const connectedComponent = connect(mapStateToProps)(withRouter(ConnectedDashboard));
+const mapDispatchToProps = {
+  toggleTutorial,
+};
+
+const connectedComponent = connect(
+  mapStateToProps, mapDispatchToProps
+)(withRouter(ConnectedDashboard));
 
 export default connectedComponent;
