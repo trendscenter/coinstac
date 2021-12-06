@@ -8,7 +8,7 @@ const mv = pify(require('mv'));
 const http = require('http');
 const https = require('https');
 const FormData = require('form-data');
-const { splitFilesFromStream, extractTar, getFilesAndDirs } = require('./pipeline-manager/helpers');
+const { splitFilesFromStream, extractTar, getFilesAndDirs } = require('./pipeline-manager-helpers');
 
 const {
   unlink,

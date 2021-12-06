@@ -6,7 +6,7 @@ const mkdirp = promisify(require('mkdirp'));
 const fs = require('fs');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
-const { extractTar } = require('./pipeline-manager/helpers');
+const { extractTar } = require('./pipeline-manager-helpers');
 
 const {
   unlink,

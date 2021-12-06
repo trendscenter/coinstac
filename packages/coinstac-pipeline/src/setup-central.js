@@ -7,7 +7,7 @@ const fs = require('fs');
 const archiver = require('archiver');
 const uuid = require('uuid/v4');
 const mv = pify(require('mv'));
-const { getFilesAndDirs, splitFilesFromStream } = require('./pipeline-manager/helpers');
+const { getFilesAndDirs, splitFilesFromStream } = require('./pipeline-manager-helpers');
 const expressFileServerSetup = require('./express-file-server-setup');
 
 async function setupCentral({
