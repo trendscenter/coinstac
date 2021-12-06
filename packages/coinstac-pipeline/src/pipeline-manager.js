@@ -111,7 +111,6 @@ module.exports = {
       }));
     } else {
       ({
-        mqttClient,
         communicate,
         publishData,
       } = await setupOuter({
