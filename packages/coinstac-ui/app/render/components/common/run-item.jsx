@@ -54,8 +54,8 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
   },
-  runStatePaper: {
-    width: `calc(50% - ${theme.spacing(1)}px)`,
+  runStateInnerContainer: {
+    minHeight: '8em',
   },
   runTitle: {
     textDecoration: 'underline',
@@ -75,74 +75,53 @@ function parseWaiting(runObject, stateKey) {
     .filter(clientId => Boolean(clientId));
 }
 
-function getStateWell(runObject, stateName, stateKey, classes) {
-  const {
-    mode, waitingOn, controllerState, currentIteration, pipelineStep, totalSteps,
-  } = runObject[stateKey];
+function getStateWell(runObject, classes) {
+  const OuterNodeRunObject = runObject.localPipelineState;
+  const CentralNodeRunObject = runObject.remotePipelineState;
+
 
   return (
-    <Paper
-      className={classNames(classes.rootPaper, classes.runStatePaper)}
-    >
-      <Typography variant="h5" className={classes.runTitle}>
-        {`${stateName} Pipeline State:`}
-      </Typography>
+    <div className={classes.runStateInnerContainer}>
+
+      <div>
+        <Typography className={classes.label}>Pipeline Step</Typography>
+        <Typography className={classes.value}>
+          {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
+        </Typography>
+      </div>
+
+      <div>
+        <Typography className={classes.label}>Iteration:</Typography>
+        <Typography className={classes.value}>
+          {OuterNodeRunObject.currentIteration}
+        </Typography>
+      </div>
+
+      <div>
+        <Typography className={classes.label}>Local Node Status:</Typography>
+        <Typography className={classes.value}>
+          {OuterNodeRunObject.controllerState}
+        </Typography>
+      </div>
+
+      <div>
+        <Typography className={classes.label}>Central Node Status:</Typography>
+        <Typography className={classes.value}>
+          {CentralNodeRunObject.controllerState}
+        </Typography>
+      </div>
       {
-        mode
-        && (
-          <div>
-            <Typography className={classes.label}>Mode:</Typography>
-            <Typography className={classes.value}>
-              {mode}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        waitingOn && waitingOn.length > 0
+        CentralNodeRunObject.waitingOn && CentralNodeRunObject.waitingOn.length > 0
         && (
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
+              {CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
             </Typography>
           </div>
         )
       }
-      {
-        controllerState
-        && (
-          <div>
-            <Typography className={classes.label}>Controller State:</Typography>
-            <Typography className={classes.value}>
-              {controllerState}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        currentIteration >= 0
-        && (
-          <div>
-            <Typography className={classes.label}>Current Iteration:</Typography>
-            <Typography className={classes.value}>
-              {currentIteration}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        pipelineStep >= 0
-        && (
-          <div>
-            <Typography className={classes.label}>Step Count:</Typography>
-            <Typography className={classes.value}>
-              {`${pipelineStep + 1} / ${totalSteps}`}
-            </Typography>
-          </div>
-        )
-      }
-    </Paper>
+    </div>
   );
 }
 
@@ -174,10 +153,10 @@ class RunItem extends Component {
       >
         <div className={classes.titleContainer}>
           <Typography variant="h5">
-            { consortiumName }
+            {consortiumName}
             {
               pipelineSnapshot
-              && <span>{ ` || ${pipelineSnapshot.name}`}</span>
+              && <span>{` || ${pipelineSnapshot.name}`}</span>
             }
           </Typography>
           {
@@ -276,11 +255,7 @@ class RunItem extends Component {
           <div className={classes.runStateContainer}>
             {
               localPipelineState && status === 'started'
-              && getStateWell(runObject, 'Local', 'localPipelineState', classes)
-            }
-            {
-              remotePipelineState && status === 'started'
-              && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
+              && getStateWell(runObject, classes)
             }
           </div>
         </div>
@@ -358,7 +333,7 @@ class RunItem extends Component {
 }
 
 RunItem.defaultProps = {
-  stopPipeline: () => {},
+  stopPipeline: () => { },
 };
 
 RunItem.propTypes = {
