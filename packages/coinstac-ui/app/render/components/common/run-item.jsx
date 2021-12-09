@@ -37,6 +37,7 @@ const styles = theme => ({
   },
   value: {
     display: 'inline-block',
+    whiteSpace: 'nowrap',
   },
   contentContainer: {
     marginBottom: theme.spacing(1),
@@ -55,7 +56,10 @@ const styles = theme => ({
     justifyContent: 'space-between',
   },
   runStateInnerContainer: {
-    minHeight: '8em',
+    paddingBottom: '1em',
+  },
+  runStateKeyValueContainer: {
+    whiteSpace: 'nowrap',
   },
   runTitle: {
     textDecoration: 'underline',
@@ -83,44 +87,40 @@ function getStateWell(runObject, classes) {
   return (
     <div className={classes.runStateInnerContainer}>
 
-      <div>
-        <Typography className={classes.label}>Pipeline Step</Typography>
+      <div className={classes.runStateKeyValueContainer}>
+        <Typography className={classes.label}>Pipeline Step:</Typography>
         <Typography className={classes.value}>
           {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
         </Typography>
       </div>
 
-      <div>
+      <div className={classes.runStateKeyValueContainer}>
         <Typography className={classes.label}>Iteration:</Typography>
         <Typography className={classes.value}>
           {OuterNodeRunObject.currentIteration}
         </Typography>
       </div>
 
-      <div>
+      <div className={classes.runStateKeyValueContainer}>
         <Typography className={classes.label}>Local Node Status:</Typography>
         <Typography className={classes.value}>
           {OuterNodeRunObject.controllerState}
         </Typography>
       </div>
 
-      <div>
+      <div className={classes.runStateKeyValueContainer}>
         <Typography className={classes.label}>Central Node Status:</Typography>
         <Typography className={classes.value}>
           {CentralNodeRunObject.controllerState}
         </Typography>
       </div>
-      {
-        CentralNodeRunObject.waitingOn && CentralNodeRunObject.waitingOn.length > 0
-        && (
-          <div>
-            <Typography className={classes.label}>Waiting on Users:</Typography>
-            <Typography className={classes.value}>
-              {CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
-            </Typography>
-          </div>
-        )
-      }
+
+      <div className={classes.runStateKeyValueContainer}>
+        <Typography className={classes.label}>Waiting on Users:</Typography>
+        <Typography className={classes.value}>
+          {CentralNodeRunObject.controllerState && CentralNodeRunObject.waitingOn.length > 0 && CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
+        </Typography>
+      </div>
     </div>
   );
 }
