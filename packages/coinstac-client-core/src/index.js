@@ -11,6 +11,7 @@ const nes = require('nes');
 const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
+const ncp = require('ncp').ncp;
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -271,92 +272,138 @@ class CoinstacClient {
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
+    const copyFolderRecursive = async (source, target) => {
+      const linkPromises = [];
+      // Check if folder needs to be created or integrated
+      const sourceStats = await fs.stat(source);
+      const sourceFiles = await fs.readdir(source);
+
+      // Let's create the directory
+      mkdirp(target).then(() => {
+        // Copy Files and Handle Nested Dirs
+        sourceFiles.forEach( async(file) => {
+          const curSource = path.join(source, file);
+          const curStats = await fs.stat(curSource);
+          const curTarget = path.join(target, file);
+          if (curStats.isDirectory()) {
+            copyFolderRecursive(curSource, curTarget);
+          } else {
+            linkPromises.push(fs.writeFile(curTarget, curSource));
+          }
+        });
+      });
+
+      return Promise.all(linkPromises);
+    }
+
     if (clients) {
       runObj.clients = clients;
     }
 
     if (!this.clientServerURL) {
       const fp = path.join(this.appDirectory, 'input', this.clientId, runId);
-      return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
-        .then(() => {
+      const dataType = clientPipeline.steps[0].inputMap.data.type;
+
+      if (dataType === 'directory') {
+        return mkdirp(fp)
+          .then(() => {
+            return new Promise((resolve) => {
+              ncp(filePaths.baseDirectory, fp, (e) => {
+                if (e) {
+                  throw e;
+                }
+                resolve();
+              });
+            }).then(() => this.pipelineManager.startPipeline(runObj));
+          });
+      }
+
+      if (dataType !== 'directory') {
+        return mkdirp(fp)
+          .then(() => {
           // TODO: validate runPipeline against clientPipeline
-          const linkPromises = [];
+            const linkPromises = [];
 
-          if (filePaths) {
-            let stageFiles = process.env.CI ? fs.copy : fs.link;
-            if (networkVolume) {
-              stageFiles = fs.symlink;
-              runObj.alternateInputDirectory = filePaths.baseDirectory;
+            if (filePaths) {
+              let stageFiles = process.env.CI ? fs.copy : fs.link;
+              if (networkVolume) {
+                stageFiles = fs.symlink;
+                runObj.alternateInputDirectory = filePaths.baseDirectory;
+              }
+
+              for (let i = 0; i < filePaths.files.length; i += 1) {
+                const mkdir = path.normalize(filePaths.files[i])
+                === path.basename(filePaths.files[i])
+                  ? Promise.resolve()
+                  : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+
+                linkPromises.push( // eslint-disable-next-line no-loop-func
+                  mkdir.then(() => stageFiles(
+                    path.resolve(filePaths.baseDirectory, filePaths.files[i]),
+                    path.resolve(fp, path.basename(filePaths.files[i]))
+                  )
+                    .catch((e) => {
+                      // permit dupes
+                      if (e.code && e.code !== 'EEXIST') {
+                        throw e;
+                      }
+                    }))
+                );
+              }
             }
 
-            for (let i = 0; i < filePaths.files.length; i += 1) {
-              const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])
-                ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
-
-              linkPromises.push( // eslint-disable-next-line no-loop-func
-                mkdir.then(() => stageFiles(
-                  path.resolve(filePaths.baseDirectory, filePaths.files[i]),
-                  path.resolve(fp, path.basename(filePaths.files[i]))
-                )
-                  .catch((e) => {
-                  // permit dupes
-                    if (e.code && e.code !== 'EEXIST') {
-                      throw e;
-                    }
-                  }))
-              );
-            }
-          }
-
-          return Promise.all(linkPromises)
-            .then(() => this.pipelineManager.startPipeline(runObj));
-        });
+            return Promise.all(linkPromises)
+              .then(() => this.pipelineManager.startPipeline(runObj));
+          });
+      }
     }
 
-    const run = {
-      ...runObj,
-      consortiumId,
-      pipelineSnapshot: clientPipeline,
-    };
-
-    return axios.post(
-      `${this.clientServerURL}/startPipeline/${this.clientId}`,
-      { run },
-      { headers: { Authorization: `Bearer ${this.token}` } }
-    )
-      .then(({ data }) => {
-        return new Promise((resolve) => {
-          const stateEmitter = new Emitter();
-
-          function getResult(socketClient) {
-            return new Promise((resResolve, resReject) => {
-              socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
-                if (res.event === 'update') {
-                  stateEmitter.emit('update', res.data);
-                }
-
-                if (res.event === 'result') {
-                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
-                  resResolve(res.data);
-                }
-
-                if (res.event === 'error') {
-                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
-                  resReject(res.data);
-                }
-              });
-            });
-          }
-
-          resolve({
-            pipeline: {
-              ...data.pipeline,
-              stateEmitter,
-            },
-            result: getResult(this.socketClient),
-          });
-        });
-      });
+    // const run = {
+    //   ...runObj,
+    //   consortiumId,
+    //   pipelineSnapshot: clientPipeline,
+    // };
+    //
+    // console.log(run);
+    //
+    // return axios.post(
+    //   `${this.clientServerURL}/startPipeline/${this.clientId}`,
+    //   { run },
+    //   { headers: { Authorization: `Bearer ${this.token}` } }
+    // )
+    //   .then(({ data }) => {
+    //     return new Promise((resolve) => {
+    //       const stateEmitter = new Emitter();
+    //
+    //       function getResult(socketClient) {
+    //         return new Promise((resResolve, resReject) => {
+    //           socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
+    //             if (res.event === 'update') {
+    //               stateEmitter.emit('update', res.data);
+    //             }
+    //
+    //             if (res.event === 'result') {
+    //               socketClient.unsubscribe(`/pipelineResult/${runId}`);
+    //               resResolve(res.data);
+    //             }
+    //
+    //             if (res.event === 'error') {
+    //               socketClient.unsubscribe(`/pipelineResult/${runId}`);
+    //               resReject(res.data);
+    //             }
+    //           });
+    //         });
+    //       }
+    //
+    //       resolve({
+    //         pipeline: {
+    //           ...data.pipeline,
+    //           stateEmitter,
+    //         },
+    //         result: getResult(this.socketClient),
+    //       });
+    //     });
+    //   });
   }
 
   /**
@@ -389,11 +436,21 @@ class CoinstacClient {
       })
       .then((filesArray) => {
         const unlinkPromises = [];
-        for (let i = 0; i < filesArray.length; i += 1) {
-          unlinkPromises.push(
-            fs.unlink(path.resolve(fullPath, filesArray[i]))
-          );
-        }
+        filesArray.forEach(async (file) => {
+          file = path.resolve(fullPath, file);
+          fs.stat(file).then(async (fstats) => {
+            const hasFiles = await fs.readdir(file);
+            if (fstats.isDirectory() && hasFiles) {
+              unlinkPromises.push(
+                fs.rmdir(file, { recursive: true })
+              );
+            } else {
+              unlinkPromises.push(
+                fs.unlink(file)
+              );
+            }
+          });
+        });
         return Promise.all(unlinkPromises);
       });
   }

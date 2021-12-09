@@ -3,6 +3,9 @@ import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
 
+const fs = require('fs');
+const path = require('path');
+
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
@@ -31,15 +34,33 @@ const INITIAL_STATE = {
 //   {type: 'boolean', name: 'isControl'},
 //   {type: 'number', name: 'age'}
 // ]
+//
+const getAllFiles = ((dirPath, arrayOfFiles) => {
+  const files = fs.readdirSync(dirPath)
+
+  arrayOfFiles = arrayOfFiles || [];
+
+  files.forEach((file) => {
+    if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
+      arrayOfFiles.push(path.join(__dirname, dirPath, '/', file));
+      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
+    } else if (basename(file) !== '.DS_Store') {
+      arrayOfFiles.push(path.join(__dirname, dirPath, '/', file));
+    }
+  });
+
+  return arrayOfFiles;
+});
 
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
-      const filesArray = [];
+      let filesArray = [];
       const inputMap = {};
       let baseDirectory = null;
+      let dataType = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
         inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
@@ -81,7 +102,21 @@ export const saveDataMapping = applyAsyncLoading(
 
           inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
         } else if (mappedData && mappedData.fieldType === 'directory') {
-          inputMap[inputMapKey].value = mappedData.directory;
+          baseDirectory = mappedData.directory;
+          let files = getAllFiles(mappedData.directory,null);
+          files.unshift(baseDirectory);
+          const newFiles = files.map((file) => {
+            const normPath = baseDirectory.replace(/[\/\\]/g,`\\/`);
+            let newfile = file.replace(new RegExp(`.*${normPath}`), '');
+            return baseDirectory+''+newfile;
+          });
+          filesArray = newFiles;
+          files.shift();
+          inputMap[inputMapKey].value = files.map((file) => {
+            const normPath = baseDirectory.replace(/[\/\\]/g,`\\/`);
+            let newfile = file.replace(new RegExp(`.*${normPath}`), '');
+            return newfile;
+          });
         } else if (mappedData && mappedData.fieldType === 'boolean'
           || mappedData && mappedData.fieldType === 'number'
           || mappedData && mappedData.fieldType === 'object'
@@ -89,12 +124,21 @@ export const saveDataMapping = applyAsyncLoading(
           inputMap[inputMapKey].value = mappedData.value;
         }
         inputMap[inputMapKey].fulfilled = true;
+
+        // carry dataType to the pipeline for processing files
+        if ( mappedData && mappedData.fieldType === 'csv'
+          || mappedData && mappedData.fieldType === 'files'
+          || mappedData && mappedData.fieldType === 'directory'
+        ) {
+          inputMap[inputMapKey].type = mappedData.fieldType;
+        }
       });
 
       mapData.push({
         filesArray,
         baseDirectory,
         inputMap,
+        dataType
       });
     });
 
