@@ -73,11 +73,18 @@
 						"source": "owner"
          }
       },
-      "output":{
-         "message":{
-            "type":"string",
-            "description":"Output message from fMRI preprocessing"
-         }
+      "output": {
+        "covariates": {
+          "type": "array",
+          "items": [
+            "boolean",
+            "number"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "tooltip": "Output message from fMRI step"
+        }
       },
 			"display": {
 	      "type": "string"
