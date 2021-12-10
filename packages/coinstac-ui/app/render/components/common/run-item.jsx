@@ -118,7 +118,7 @@ function getStateWell(runObject, classes) {
       <div className={classes.runStateKeyValueContainer}>
         <Typography className={classes.label}>Waiting on Users:</Typography>
         <Typography className={classes.value}>
-          {CentralNodeRunObject.controllerState && CentralNodeRunObject.waitingOn.length > 0 && CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
+          {CentralNodeRunObject.controllerState && CentralNodeRunObject.waitingOn && CentralNodeRunObject.waitingOn.length > 0 && CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
         </Typography>
       </div>
     </div>
