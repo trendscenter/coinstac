@@ -238,7 +238,6 @@ module.exports = {
                     if (output.code !== 0) {
                       throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
                     }
-                    utils.logger.silly(`Docker stderr: ${output.stderr}`);
                     utils.logger.debug(`Output size: ${output.stdout.length}`);
 
                     let error;
@@ -363,7 +362,6 @@ module.exports = {
                   }).then((output) => {
                     utils.logger.debug('Docker service call finished');
                     if (output.code !== 0) {
-                      utils.logger.silly(`Docker stderr: ${output.stderr}`);
                       throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
                     }
                     proxR(output.stdout);

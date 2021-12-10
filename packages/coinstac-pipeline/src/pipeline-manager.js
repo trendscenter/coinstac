@@ -628,6 +628,7 @@ module.exports = {
             } else {
               mqttServer.publish(`${id}-register`, JSON.stringify({ runId }));
               remoteClients[id].state = 'registered';
+              utils.logger.silly(`MQTT registered: ${id}`);
             }
             break;
           case 'finished':
@@ -666,6 +667,7 @@ module.exports = {
               connectTimeout: 15 * 1000,
             }
           );
+          client.on('error', e => utils.logger.error(`MQTT client error: ${e}`));
           client.on('offline', () => {
             if (!clientInit) {
               client.end(true, () => {

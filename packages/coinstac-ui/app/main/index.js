@@ -11,12 +11,24 @@
 
 Error.stackTraceLimit = 100;
 
+const fs = require('fs');
+
+if (process.env.CI) {
+  // write out DEBUG:mqttjs* logs to file
+  const stdOverride = fs.createWriteStream('./mqtt.log', { flags: 'a' });
+  const write = (...args) => {
+    stdOverride.write(...args);
+  };
+  process.stdout.write = write;
+  process.stderr.write = write;
+}
+
+
 const {
   compact, keys, pick, omit,
 } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
-const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const moment = require('moment');

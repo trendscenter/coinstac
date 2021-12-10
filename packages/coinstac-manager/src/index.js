@@ -6,8 +6,8 @@ const portscanner = require('portscanner');
 const http = require('http');
 const winston = require('winston');
 const utils = require('./utils');
-const dockerService = require('./services/docker.js');
-const singularityService = require('./services/singularity.js');
+const dockerService = require('./services/docker');
+const singularityService = require('./services/singularity');
 
 const serviceProviders = {
   docker: dockerService,

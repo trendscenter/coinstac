@@ -7,12 +7,12 @@ winston.loggers.add('pipeline', {
   ],
 });
 const defaultLogger = winston.loggers.get('pipeline');
-defaultLogger.level = 'silly'; // process.LOGLEVEL ? process.LOGLEVEL : 'info';
-let logger = defaultLogger;
+defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+const logger = defaultLogger;
 
 module.exports = {
   logger,
   init(opts) {
-    logger = opts.logger || defaultLogger;
+    this.logger = opts.logger || defaultLogger;
   },
 };

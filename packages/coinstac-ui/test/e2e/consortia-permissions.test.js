@@ -1,19 +1,19 @@
+/* eslint-disable no-console */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
+const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
-
-const { logFilter } = require('./helper');
 
 const appPath = path.join(__dirname, '../..');
 
-const EXIST_TIMEOUT = 6000;
+const EXIST_TIMEOUT = 10000;
 const LOGIN_TIMEOUT = 30000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test4';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium-permission';
-const CONS_DESC = 'e2e-description-permission';
+const CONS_NAME = 'e2e-consortium-2-member';
+const CONS_DESC = 'e2e-description-2-member';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -22,51 +22,71 @@ let app1;
 let app2;
 let appWindow1;
 let appWindow2;
-
+const _deviceId1 = 'test1';
+const _deviceId2 = 'test4';
 describe('e2e consortia permissions', () => {
   before(async () => {
     app1 = await electron.launch({
-      args: ['--enable-logging', appPath],
-      env: Object.assign({}, process.env, { TEST_INSTANCE: 'test-1', NODE_ENV: 'test' }),
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId1,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-1',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId1}/` } : {}),
+      }),
       logger: {
         isEnabled: () => true,
         log: (name, severity, message) => console.log(`INSTANCE 1 -> ${name}: ${message}`),
       },
     });
     appWindow1 = await app1.firstWindow();
-    appWindow1.on('console', msg => console.log(msg.text()));
+    appWindow1.on('console', msg => console.log(`INSTANCE 1 -> ${msg.text()}`));
 
     app2 = await electron.launch({
-      args: ['--enable-logging', appPath],
-      env: Object.assign({}, process.env, { TEST_INSTANCE: 'test-2', NODE_ENV: 'test' }),
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId2,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-2',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId2}/` } : {}),
+      }),
       logger: {
         isEnabled: () => true,
         log: (name, severity, message) => console.log(`INSTANCE 2 -> ${name}: ${message}`),
       },
     });
     appWindow2 = await app2.firstWindow();
-    appWindow2.on('console', msg => console.log(msg.text()));
+    appWindow2.on('console', msg => console.log(`INSTANCE 2 -> ${msg.text()}`));
   });
 
   after(async () => {
     if (process.env.CI) {
-      await app1.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
-      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
-      await app2.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
+      console.log('/********** Main process logs **********/');
+      console.log((await fs.readFile('coinstac-log.json')).toString());
     }
 
     return Promise.all([
       app1.close(),
       app2.close(),
     ]);
+  });
+
+  it('displays the correct title', async () => {
+    return appWindow1.title().should.eventually.equal('COINSTAC');
   });
 
   it('authenticates demo user on first instance', async () => {

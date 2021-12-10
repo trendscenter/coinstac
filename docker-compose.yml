@@ -31,6 +31,7 @@ services:
     networks:
       - ci_network
     environment:
+      - DEBUG=mqttjs*
       - CI=true
       - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=coinstac_local-volume
