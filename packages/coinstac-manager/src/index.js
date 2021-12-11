@@ -22,7 +22,7 @@ winston.loggers.add('docker-manager', {
   ],
 });
 logger = winston.loggers.get('coinstac-main') || winston.loggers.get('docker-manager');
-logger.level = 'silly'; // process.LOGLEVEL ? process.LOGLEVEL : 'info';
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 utils.setLogger(logger);
 
 let services = {};
