@@ -143,9 +143,9 @@ function runDeleted(run) {
 function runChanged(run) {
   const r = transformToClient(run);
 
-  pubSub.publish('pipelineChanged', {
-    pipelineChanged: r,
-    pipelineId: r.id,
+  pubSub.publish('userRunChanged', {
+    userRunChanged: r,
+    runId: r.id,
   });
 }
 

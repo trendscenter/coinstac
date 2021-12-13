@@ -5,6 +5,11 @@ Below is a list of papers related to COINSTAC.
 
 ## Journal Papers
 
+K. Rootes-Murdy, H. Gazula, E. Verner, et al. Federated Analysis of Neuroimaging Data: A Review of the Field. Neuroinform (2021). https://doi.org/10.1007/s12021-021-09550-7
+
+H. Imtiaz et al., "A Correlated Noise-assisted Decentralized Differentially Private Estimation Protocol, and its application to fMRI Source Separation," in IEEE Transactions on Signal Processing.
+https://doi.org/10.1109/TSP.2021.3126546
+
 S. Basodi, R. Raja, B. Ray, H. Gazula, J. Liu, E. Verner, V. D. Calhoun, Decentralized Brain Age Estimation using MRI Data, bioRxiv 2021.05.10.443469; 
 https://doi.org/10.1101/2021.05.10.443469
 

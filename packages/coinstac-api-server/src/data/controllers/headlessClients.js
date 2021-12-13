@@ -1,5 +1,5 @@
 const { ObjectID } = require('mongodb');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 
 const database = require('../../database');
 const helperFunctions = require('../../auth-helpers');
