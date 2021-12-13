@@ -72,9 +72,10 @@ function getApolloClient({ apiServer, subApiServer }) {
         typePolicies: {
           Query: {
             fields: {
-              searchDatasets: {
-                merge: false, // prefer incoming server data over the data in the cache
-              },
+              // prefer incoming server data over the data in the cache
+              searchDatasets: { merge: false },
+              fetchAllConsortia: { merge: false },
+              fetchAllPipelines: { merge: false },
             },
           },
         },
