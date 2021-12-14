@@ -7,7 +7,7 @@ const { _electron: electron } = require('playwright');
 
 const appPath = path.join(__dirname, '../..');
 
-const EXIST_TIMEOUT = 10000;
+const EXIST_TIMEOUT = 30000;
 const LOGIN_TIMEOUT = 30000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test4';
