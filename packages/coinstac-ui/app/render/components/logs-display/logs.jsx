@@ -10,7 +10,7 @@ const styles = theme => ({
   pageTitle: {
     marginBottom: theme.spacing(2),
   },
-  logsContainer: {
+  logsWrapper: {
     padding: theme.spacing(2),
     overflowY: 'auto',
     height: '100%',
@@ -28,17 +28,17 @@ const styles = theme => ({
 });
 
 class Logs extends Component {
-  getContainer = () => {
-    return document.getElementById('logs-container');
+  getWrapper = () => {
+    return document.getElementById('logs-wrapper');
   }
 
   handleScrollToTop = () => {
-    this.getContainer().scrollTop = 0;
+    this.getWrapper().scrollTop = 0;
   }
 
   handleScrollToBottom = () => {
-    const logsContainer = this.getContainer();
-    logsContainer.scrollTop = logsContainer.scrollHeight;
+    const logsWrapper = this.getWrapper();
+    logsWrapper.scrollTop = logsWrapper.scrollHeight;
   }
 
   render() {
@@ -60,7 +60,7 @@ class Logs extends Component {
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
-            <div id="logs-container" className={classes.logsContainer} onScroll={this.handleScroll}>
+            <div id="logs-wrapper" className={classes.logsWrapper} onScroll={this.handleScroll}>
               {logs.map((message, ind) => (
                 <span
                   className={classes.message}

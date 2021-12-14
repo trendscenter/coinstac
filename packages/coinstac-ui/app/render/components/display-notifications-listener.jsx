@@ -1,31 +1,33 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { withSnackbar } from 'notistack';
+
+import Notification from './notification';
+
 import { dequeueNotification } from '../state/ducks/notifyAndLog';
 
-class DisplayNotificationsListener extends React.Component {
-  componentDidUpdate(prevProps) {
-    const { enqueueSnackbar, dequeueNotification, notifications } = this.props;
+function DisplayNotificationsListener({ notifications, dequeueNotification }) {
+  if (!notifications) return null;
 
-    if (notifications.length > prevProps.notifications.length) {
-      const lastNotification = notifications[notifications.length - 1];
-
-      enqueueSnackbar(lastNotification.message, {
-        variant: lastNotification.severity,
-        anchorOrigin: {
-          vertical: 'bottom',
-          horizontal: 'left',
-        },
-      });
-
-      dequeueNotification();
-    }
+  function onCloseNotification(notificationId) {
+    dequeueNotification(notificationId);
   }
 
-  render() {
-    return null;
-  }
+  return (
+    <React.Fragment>
+      {notifications.map((notification, index) => (
+        <Notification
+          key={notification.id}
+          duration={5000}
+          id={notification.id}
+          message={notification.message}
+          severity={notification.severity}
+          index={index}
+          onClose={onCloseNotification}
+        />
+      ))}
+    </React.Fragment>
+  );
 }
 
 DisplayNotificationsListener.defaultProps = {
@@ -35,16 +37,13 @@ DisplayNotificationsListener.defaultProps = {
 DisplayNotificationsListener.propTypes = {
   notifications: PropTypes.array,
   dequeueNotification: PropTypes.func.isRequired,
-  enqueueSnackbar: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ notifications }) => ({
   notifications: notifications.notifications,
 });
 
-const connectedComponent = connect(mapStateToProps,
+export default connect(mapStateToProps,
   {
     dequeueNotification,
   })(DisplayNotificationsListener);
-
-export default withSnackbar(connectedComponent);

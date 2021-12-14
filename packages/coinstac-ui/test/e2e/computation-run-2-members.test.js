@@ -1,14 +1,14 @@
-const { Application } = require('spectron');
+/* eslint-disable no-console */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
-const electron = require('electron');
-
-const { logFilter } = require('./helper');
+const fs = require('fs').promises;
+const { _electron: electron } = require('playwright');
 
 const appPath = path.join(__dirname, '../..');
 
-const EXIST_TIMEOUT = 6000;
+const EXIST_TIMEOUT = 10000;
+const LOGIN_TIMEOUT = 30000;
 const COMPUTATION_TIMEOUT = 150000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
@@ -23,462 +23,334 @@ const COMPUTATION_NAME = 'Ridge Regression (Singleshot) - FreeSurfer Volumes';
 chai.should();
 chai.use(chaiAsPromised);
 
-// chromedriver opts are for headless usage
-// but dont affect local tests
-const app1 = new Application({
-  path: electron,
-  env: { TEST_INSTANCE: 'test-1', NODE_ENV: 'test' },
-  args: [appPath],
-  chromeDriverArgs: [
-    '--no-sandbox',
-    '--whitelisted-ips=',
-    '--disable-dev-shm-usage',
-  ],
-  port: 9515,
-});
-
-const app2 = new Application({
-  path: electron,
-  env: { TEST_INSTANCE: 'test-2', NODE_ENV: 'test' },
-  args: [appPath],
-  chromeDriverArgs: [
-    '--no-sandbox',
-    '--whitelisted-ips=',
-    '--disable-dev-shm-usage',
-  ],
-  port: 9516,
-});
-
+let app1;
+let app2;
+let appWindow1;
+let appWindow2;
+const _deviceId1 = 'test1';
+const _deviceId2 = 'test2';
 describe('e2e run computation with 2 members', () => {
   before(async () => {
-    await Promise.all([
-      app1.start(),
-      app2.start(),
-    ]);
+    app1 = await electron.launch({
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId1,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-1',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId1}/` } : {}),
+      }),
+      logger: {
+        isEnabled: () => true,
+        log: (name, severity, message) => console.log(`INSTANCE 1 -> ${name}: ${message}`),
+      },
+    });
+    appWindow1 = await app1.firstWindow();
+    appWindow1.on('console', msg => console.log(`INSTANCE 1 -> ${msg.text()}`));
 
-    return Promise.all([
-      app1.client.waitUntilWindowLoaded(10000),
-      app2.client.waitUntilWindowLoaded(10000),
-    ]);
+    app2 = await electron.launch({
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId2,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-2',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId2}/`, CI_PORT_START: '8106' } : {}),
+      }),
+      logger: {
+        isEnabled: () => true,
+        log: (name, severity, message) => console.log(`INSTANCE 2 -> ${name}: ${message}`),
+      },
+    });
+    appWindow2 = await app2.firstWindow();
+    appWindow2.on('console', msg => console.log(`INSTANCE 2 -> ${msg.text()}`));
   });
 
   after(async () => {
     if (process.env.CI) {
-      await app1.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
-      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
-      await app2.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
+      console.log('/********** Main process logs **********/');
+      console.log((await fs.readFile('coinstac-log.json')).toString());
     }
+
     return Promise.all([
-      app1.stop(),
-      app2.stop(),
+      app1.close(),
+      app2.close(),
     ]);
   });
 
   it('displays the correct title', async () => {
-    return app1.client.getTitle().should.eventually.equal('COINSTAC');
+    return appWindow1.title().should.eventually.equal('COINSTAC');
   });
 
   it('authenticates demo user on first instance', async () => {
-    const usernameField = await app1.client.$('#login-username');
-    await usernameField.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await usernameField.setValue(USER_ID_1);
+    await appWindow1.click('#login-username', { timeout: EXIST_TIMEOUT });
+    await appWindow1.fill('#login-username', USER_ID_1);
+    await appWindow1.fill('#login-password', PASS);
 
-    const passwordField = await app1.client.$('#login-password');
-    await passwordField.setValue(PASS);
-
-    const loginButton = await app1.client.$('button=Log In');
-    await loginButton.click();
-
-    const userTitleElement = await app1.client.$('.user-account-name');
-    await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('button:has-text("Log In")');
 
     // Assert
-    return userTitleElement.getText().should.eventually.equal(USER_ID_1);
+    return appWindow1.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_1);
   });
 
   it('authenticates demo user on second instance', async () => {
-    const usernameField = await app2.client.$('#login-username');
-    await usernameField.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await usernameField.setValue(USER_ID_2);
+    await appWindow2.click('#login-username', { timeout: EXIST_TIMEOUT });
+    await appWindow2.fill('#login-username', USER_ID_2);
+    await appWindow2.fill('#login-password', PASS);
 
-    const passwordField = await app2.client.$('#login-password');
-    await passwordField.setValue(PASS);
-
-    const loginButton = await app2.client.$('button=Log In');
-    await loginButton.click();
-
-    const userTitleElement = await app2.client.$('.user-account-name');
-    await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow2.click('button:has-text("Log In")');
 
     // Assert
-    return userTitleElement.getText().should.eventually.equal(USER_ID_2);
+    return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
   });
 
   it('accesses the Add Consortium page', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")');
 
-    const createConsortiumButton = await app1.client.$('a[name="create-consortium-button"]');
-    await createConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await createConsortiumButton.click();
-
-    const createConsortiumTitle = await app1.client.$('h4=Consortium Creation');
+    await appWindow1.click('a[name="create-consortium-button"]', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return createConsortiumTitle.waitForDisplayed({
+    return appWindow1.waitForSelector('h4:has-text("Consortium Creation")', {
+      state: 'visible',
       timeout: EXIST_TIMEOUT,
-    }).should.eventually.equal(true);
+    }).should.eventually.not.equal(null);
   });
 
   it('creates a consortium', async () => {
-    const nameField = await app1.client.$('#name');
-    await nameField.setValue(CONS_NAME);
+    await appWindow1.fill('#name', CONS_NAME);
+    await appWindow1.fill('#description', CONS_DESC);
 
-    const descriptionField = await app1.client.$('#description');
-    await descriptionField.setValue(CONS_DESC);
-
-    const saveButton = await app1.client.$('button=Save');
-    await saveButton.click();
-
-    const saveNotification = await app1.client.$('span=Consortium Saved');
-    const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
-      timeout: EXIST_TIMEOUT,
-    });
-
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
-
-    const consortiumItemListTitle = await app1.client.$(`h5=${CONS_NAME}`);
-    const isItemListDisplayed = await consortiumItemListTitle.waitForDisplayed({
-      timeout: EXIST_TIMEOUT,
-    });
+    await appWindow1.click('button:has-text("Save")');
 
     // Assert
-    isSaveNotificationDisplayed.should.equal(true);
-    isItemListDisplayed.should.equal(true);
+    await appWindow1.waitForSelector('div:has-text("Consortium Saved")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
+
+    await appWindow1.click('a:has-text("Consortia")');
+
+    await appWindow1.waitForSelector(`h5:has-text("${CONS_NAME}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('accesses the Add Pipeline page', async () => {
-    const pipelinesMenuButton = await app1.client.$('a=Pipelines');
-    await pipelinesMenuButton.click();
+    await appWindow1.click('a:has-text("Pipelines")');
 
-    const createPipelineButton = await app1.client.$('a[name="create-pipeline-button"]');
-    await createPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await createPipelineButton.click();
-
-    const createPipelineTitle = await app1.client.$('h4=Pipeline Creation');
+    await appWindow1.click('a[name="create-pipeline-button"]', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return createPipelineTitle.waitForDisplayed({
+    return appWindow1.waitForSelector('h4:has-text("Pipeline Creation")', {
+      state: 'visible',
       timeout: EXIST_TIMEOUT,
-    }).should.eventually.equal(true);
+    }).should.eventually.not.equal(null);
   });
 
   it('creates a pipeline', async () => {
-    const nameField = await app1.client.$('#name');
-    await nameField.setValue(PIPE_NAME);
+    await appWindow1.fill('#name', PIPE_NAME);
+    await appWindow1.fill('#description', PIPE_DESC);
 
-    const descriptionField = await app1.client.$('#description');
-    await descriptionField.setValue(PIPE_DESC);
+    await appWindow1.click('#pipelineconsortia', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click(`#consortium-menu li:has-text("${CONS_NAME}")`, { timeout: EXIST_TIMEOUT });
 
-    const consortiumDropdown = await app1.client.$('#pipelineconsortia');
-    await consortiumDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await consortiumDropdown.click();
-    const consortiumMenu = await app1.client.$('#consortium-menu');
-    await consortiumMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    const consortiumItem = await consortiumMenu.$(`li=${CONS_NAME}`);
-    await consortiumItem.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await consortiumItem.click();
-    await consortiumDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#computation-dropdown', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click(`#computation-menu li:has-text("${COMPUTATION_NAME}")`, { timeout: EXIST_TIMEOUT });
 
-    const computationDropdown = await app1.client.$('#computation-dropdown');
-    await computationDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await computationDropdown.click();
-    const computationMenu = await app1.client.$('#computation-menu');
-    await computationMenu.waitForExist({ timeout: EXIST_TIMEOUT });
-    const computationItem = await computationMenu.$(`li=${COMPUTATION_NAME}`);
-    await computationItem.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await computationItem.click({ x: 10, y: 10 });
-    await computationDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-
-    const pipelineStepElement = await app1.client.$('.pipeline-step');
-    await pipelineStepElement.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await pipelineStepElement.click();
+    await appWindow1.click('.pipeline-step', { timeout: EXIST_TIMEOUT });
 
     const addCovariate = async (name, type, index) => {
-      const addCovariatesButton = await app1.client.$('button=Add Covariates');
-      await addCovariatesButton.click();
+      await appWindow1.click('button:has-text("Add Covariates")', { timeout: EXIST_TIMEOUT });
 
-      const dataDropdown = await app1.client.$(`#covariates-${index}-data-dropdown`);
-      await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-      await dataDropdown.click();
-      const dataDropdownMenu = await app1.client.$(`#covariates-${index}-data-dropdown-menu`);
-      await dataDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      const dataTypeOption = await dataDropdownMenu.$(`li=${type}`);
-      await dataTypeOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-      await dataTypeOption.click();
-      await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+      await appWindow1.click(`#covariates-${index}-data-dropdown`, { timeout: EXIST_TIMEOUT });
+      await appWindow1.click(`#covariates-${index}-data-dropdown-menu li:has-text("${type}")`, { timeout: EXIST_TIMEOUT });
 
-      const sourceDropdown = await app1.client.$(`#input-source-${index}-dropdown`);
-      await sourceDropdown.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      await sourceDropdown.click();
-      const sourceDropdownMenu = await app1.client.$(`#input-source-${index}-dropdown-menu`);
-      await sourceDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      const sourceFileOption = await sourceDropdownMenu.$('li=File');
-      await sourceFileOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-      await sourceFileOption.click();
-      await sourceDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-
-      const nameInput = await app1.client.$(`#covariates-${index}-input-name`);
-      await nameInput.setValue(name);
+      await appWindow1.fill(`#covariates-${index}-input-name`, name);
     };
 
     await addCovariate('isControl', 'boolean', 0);
     await addCovariate('age', 'number', 1);
 
-    const addDataButton = await app1.client.$('button=Add Data');
-    await addDataButton.click();
+    await appWindow1.click('button:has-text("Add Data")', { timeout: EXIST_TIMEOUT });
 
-    const dataDropdown = await app1.client.$('#data-0-data-dropdown');
-    await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await dataDropdown.click();
-    const dataDropdownMenu = await app1.client.$('#data-0-data-dropdown-menu');
-    await dataDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    const freesurferOption = await dataDropdownMenu.$('li=FreeSurfer');
-    await freesurferOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await freesurferOption.click();
-    await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-data-dropdown', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-data-dropdown-menu li:has-text("FreeSurfer")', { timeout: EXIST_TIMEOUT });
 
-    const dataInterest = await app1.client.$('#data-0-area');
-    await dataInterest.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await dataInterest.click();
-    const dataInterestDropdownMenu = await dataInterest.$('.react-select-dropdown-menu');
-    await dataInterestDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    const fifthVentricleOption = await dataInterestDropdownMenu.$('div=5th-Ventricle');
-    await fifthVentricleOption.waitForClickable();
-    await fifthVentricleOption.click();
+    await appWindow1.click('#data-0-area', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-area .react-select-dropdown-menu div:has-text("5th-Ventricle")', { timeout: EXIST_TIMEOUT });
 
-    const lambdaField = await app1.client.$('[name="step-lambda"]');
-    await lambdaField.setValue('0');
+    await appWindow1.fill('[name="step-lambda"]', '0');
 
-    const saveButton = await app1.client.$('button=Save Pipeline');
-    await saveButton.click();
-
-    const saveNotification = await app1.client.$('span=Pipeline Saved');
-    const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
-      timeout: EXIST_TIMEOUT,
-    });
+    await appWindow1.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return isSaveNotificationDisplayed.should.equal(true);
+    await appWindow1.waitForSelector('div:has-text("Pipeline Saved")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('sets the created pipeline to the consortium', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")');
 
-    const viewDetailsButton = await app1.client.$(`a[name="${CONS_NAME}"]`);
-    await viewDetailsButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await viewDetailsButton.click();
+    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    const consortiumEditTabs = await app1.client.$('#consortium-tabs');
-    const pipelinesTabMenu = await consortiumEditTabs.$('span=Pipelines');
-    await pipelinesTabMenu.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await pipelinesTabMenu.click();
+    await appWindow1.click('#consortium-tabs span:has-text("Pipelines")', { timeout: EXIST_TIMEOUT });
 
-    const pipelineSelectDropdown = await app1.client.$('#owned-pipelines-dropdown');
-    await pipelineSelectDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await pipelineSelectDropdown.click();
-    const pipelineDropdownMenu = await app1.client.$('#owned-pipelines-dropdown-menu');
-    await pipelineDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    const pipelineOption = await pipelineDropdownMenu.$(`li=${PIPE_NAME}`);
-    await pipelineOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await pipelineOption.click();
-    await pipelineSelectDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#owned-pipelines-dropdown', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click(`#owned-pipelines-dropdown-menu li:has-text("${PIPE_NAME}")`, { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const pipelineLink = await app1.client.$(`a=${PIPE_NAME}`);
-    const pipelineDownloadCompleteNotification = await app1.client.$(`span=${COMPUTATION_NAME} Download Complete`);
-
     return Promise.all([
-      pipelineLink
-        .waitForDisplayed({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
-      pipelineDownloadCompleteNotification
-        .waitForDisplayed({ timeout: COMPUTATION_DOWNLOAD_TIMEOUT }).should.eventually.equal(true),
+      appWindow1.waitForSelector(`a:has-text("${PIPE_NAME}")`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow1.waitForSelector(`div:has-text("${COMPUTATION_NAME} Download Complete")`, {
+        state: 'visible',
+        timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
+      }).should.eventually.not.equal(null),
     ]);
   });
 
   it('joins a consortium', async () => {
-    const consortiaMenuButton = await app2.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow2.click('a:has-text("Consortia")');
 
-    const joinConsortiumButton = await app2.client.$(`button[name="${CONS_NAME}-join-cons-button"]`);
-    await joinConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await joinConsortiumButton.click();
+    await appWindow2.click(`button[name="${CONS_NAME}-join-cons-button"]`, { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const leaveConsortiumButton = await app2.client.$(`button[name="${CONS_NAME}-leave-cons-button"]`);
-    const pipelineDownloadCompleteNotification = await app2.client.$(`span=${COMPUTATION_NAME} Download Complete`);
-
     return Promise.all([
-      leaveConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT })
-        .should.eventually.equal(true),
-      pipelineDownloadCompleteNotification
-        .waitForDisplayed({ timeout: COMPUTATION_DOWNLOAD_TIMEOUT }).should.eventually.equal(true),
+      appWindow2.waitForSelector(`button[name="${CONS_NAME}-leave-cons-button"]`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector(`div:has-text("${COMPUTATION_NAME} Download Complete")`, {
+        state: 'visible',
+        timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
+      }).should.eventually.not.equal(null),
     ]);
   });
 
   it('map data to consortium on site 1', async () => {
-    const mapsMenuButton = await app1.client.$('a=Maps');
-    await mapsMenuButton.click();
+    await appWindow1.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
 
-    const consortiumMapItemButton = await app1.client.$(`a[name="${CONS_NAME}"]`);
-    await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await consortiumMapItemButton.click();
+    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    const addFilesGroupButton = await app1.client.$('button=Add Files Group');
-    await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await addFilesGroupButton.click();
+    await appWindow1.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
 
-    const autoMapButton = await app1.client.$('button=Auto Map');
-    await autoMapButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await autoMapButton.click();
+    await appWindow1.click('button:has-text("Auto Map")', { timeout: EXIST_TIMEOUT });
 
-    const saveButton = await app1.client.$('button=Save');
-    await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await saveButton.click();
+    await appWindow1.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
 
-    const backToConsortiaLink = await app1.client.$('a=Back to Consortia');
-    await backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await backToConsortiaLink.click();
+    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const startPipelineButton = await app1.client.$('button=Start Pipeline');
-
-    return startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector('button:has-text("Start Pipeline")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('map data to consortium on site 2', async () => {
-    const mapsMenuButton = await app2.client.$('a=Maps');
-    await mapsMenuButton.click();
+    await appWindow2.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
 
-    const consortiumMapItemButton = await app2.client.$(`a[name="${CONS_NAME}"]`);
-    await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await consortiumMapItemButton.click();
+    await appWindow2.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    const addFilesGroupButton = await app2.client.$('button=Add Files Group');
-    await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await addFilesGroupButton.click();
+    await appWindow2.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
 
-    const autoMapButton = await app2.client.$('button=Auto Map');
-    await autoMapButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await autoMapButton.click();
+    await appWindow2.click('button:has-text("Auto Map")', { timeout: EXIST_TIMEOUT });
 
-    const saveButton = await app2.client.$('button=Save');
-    await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await saveButton.click();
+    await appWindow2.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow2.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const backToConsortiaLink = await app2.client.$('a=Back to Consortia');
-
-    return backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return appWindow2.waitForSelector('button:has-text("Map Local Data")', {
+      state: 'hidden',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(null);
   });
 
   it('runs a computation', async () => {
-    const startPipelineButton = await app1.client.$('button=Start Pipeline');
-    await startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await startPipelineButton.click();
+    await appWindow1.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const pipelineStartNotification = await app1.client.$(`span=Pipeline Starting for ${CONS_NAME}.`);
-
-    return pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('displays computation progress', async () => {
-    const homeMenuButton = await app1.client.$('a=Home');
-    await homeMenuButton.click();
-
-    const runItem = await app1.client.$('div.run-item-paper:first-child');
-    await runItem.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('a:has-text("Home")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const inProgressText = await runItem.$('span=In Progress');
-
-    return inProgressText.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector('div.run-item-paper:first-child span:has-text("In Progress")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('displays results', async () => {
-    const runItem = await app1.client.$('div.run-item-paper:first-child');
-    const viewResultsButton = await runItem.$('a=View Results');
-
     // Wait for computation to complete (results button only shows up at the end of the run)
-    await viewResultsButton.waitForClickable({ timeout: COMPUTATION_TIMEOUT });
-
-    await viewResultsButton.click();
+    await appWindow1.click('div.run-item-paper:first-child a:has-text("View Results")', { timeout: COMPUTATION_TIMEOUT });
 
     // Assert
-    const resultsPageTitle = await app1.client.$('h3=Regressions');
-    const resultDescription = await app1.client.$(`h6=Results: ${CONS_NAME} || ${PIPE_NAME}`);
-
     return Promise.all([
-      resultsPageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-        .should.eventually.equal(true),
-      resultDescription.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-        .should.eventually.equal(true),
+      appWindow1.waitForSelector('h3:has-text("Regressions")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow1.waitForSelector(`h6:has-text("Results: ${CONS_NAME} || ${PIPE_NAME}")`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
     ]);
   });
 
   it('deletes consortium', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
-    const deleteConsortiumButton = await app1.client.$(`button[name="${CONS_NAME}-delete"]`);
-    await deleteConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await deleteConsortiumButton.click();
+    await appWindow1.click(`button[name="${CONS_NAME}-delete"]`, { timeout: EXIST_TIMEOUT });
 
-    const deleteModal = await app1.client.$('#list-delete-modal');
-    const confirmButton = await deleteModal.$('button=Delete');
-    await confirmButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-
-    await confirmButton.click();
+    await appWindow1.click('#list-delete-modal button:has-text("Delete")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const consortiumListItemTitle = await app1.client.$(`h1=${CONS_NAME}`);
 
     // Wait for consortium item to be deleted from consortium list
-    return consortiumListItemTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector(`h1:has-text("${CONS_NAME}")`, {
+      state: 'hidden',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(null);
   });
 
   it('logs out', async () => {
-    const logoutButtonSite1 = await app1.client.$('a=Log Out');
-    await logoutButtonSite1.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await logoutButtonSite1.click();
-
-    const logoutButtonSite2 = await app2.client.$('a=Log Out');
-    await logoutButtonSite2.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await logoutButtonSite2.click();
+    await appWindow1.click('a:has-text("Log Out")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('a:has-text("Log Out")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const loginButtonSite1 = await app1.client.$('button=Log In');
-    const loginButtonSite2 = await app2.client.$('button=Log In');
-
     return Promise.all([
-      loginButtonSite1.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
-      loginButtonSite2.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
+      appWindow1.waitForSelector('button:has-text("Log In")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector('button:has-text("Log In")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
     ]);
   });
 });

@@ -196,7 +196,7 @@ const queries = {
   `,
   searchDatasets: `
     {
-      searchDatasets(searchString: $searchString, tags: $tags) {
+      searchDatasets(searchString: $searchString, subjectGroups: $subjectGroups, modality: $modality) {
         ${sharedFields.datasetFields}
       }
     }
@@ -208,9 +208,9 @@ const queries = {
       }
     }
   `,
-  fetchAllDatasetsTags: `
+  fetchAllDatasetsSubjectGroups: `
     {
-      fetchAllDatasetsTags
+      fetchAllDatasetsSubjectGroups
     }
   `,
 };

@@ -44,10 +44,7 @@ function getErrorLogger(logName, className) {
 
 loadConfig()
   .then((config) => {
-    const base = path.join(
-      process.env.HOME || process.env.TEMP,
-      config.get('logLocations')[os.platform()]
-    );
+    const base = config.get('logLocations')[os.platform()];
     const targets = [{
       className: 'standard-log',
       filename: path.join(base, config.get('logFile')),

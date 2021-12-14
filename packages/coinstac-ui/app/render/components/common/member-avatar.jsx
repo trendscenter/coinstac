@@ -13,7 +13,7 @@ import {
 } from '../../state/graphql/functions';
 
 const styles = theme => ({
-  containerStyles: {
+  avatarWrapper: {
     display: 'inline-block',
     margin: theme.spacing(1),
     marginLeft: 0,
@@ -21,11 +21,11 @@ const styles = theme => ({
     textAlign: 'center',
     position: 'relative',
   },
-  textStyles: {
+  text: {
     fontSize: 12,
     display: 'block',
   },
-  markStyles: {
+  mark: {
     fontSize: 14,
     color: 'white',
     backgroundColor: '#5cb85c',
@@ -53,21 +53,21 @@ function MemberAvatar({
   const user = get(data, 'fetchUser');
 
   return (
-    <div key={`${name}-avatar`} className={cx(classes.containerStyles, className)}>
+    <div key={`${name}-avatar`} className={cx(classes.avatarWrapper, className)}>
       {user && user.photo
         ? <Avatar name={name} size={width} src={user.photo} round />
         : <Avatar name={name} size={width} round />}
       {
         consRole && showDetails
-        && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
+        && <Typography variant="subtitle2" className={classes.text}>{consRole}</Typography>
       }
       {
         showDetails
-        && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
+        && <Typography variant="caption" className={classes.text}>{name}</Typography>
       }
       {
         ready
-        && <DoneIcon className={classes.markStyles} />
+        && <DoneIcon className={classes.mark} />
       }
     </div>
   );

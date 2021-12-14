@@ -22,6 +22,7 @@ let mainWindow = null;
  */
 function createWindow() {
   const renderIndexPath = require.resolve('app/render/index.html');
+  const preloadPath = require.resolve('app/render/preload.js');
   const menu = electronDefaultMenu(electron.app, electron.shell);
   const size = electron.screen.getPrimaryDisplay().workAreaSize;
 
@@ -36,6 +37,7 @@ function createWindow() {
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      preload: preloadPath,
     },
   });
 
@@ -86,12 +88,8 @@ function createWindow() {
       },
     });
   electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menu));
+  return mainWindow;
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-electronApp.whenReady().then(createWindow);
 
 // Quit when all windows are closed.
 electronApp.on('window-all-closed', () => {
@@ -106,8 +104,16 @@ electronApp.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow();
+    // createWindow();
   }
 });
 
-module.exports = function getWindow() { return mainWindow; };
+module.exports = {
+  getWindow() { return mainWindow; },
+  createWindow() {
+    // This method will be called when Electron has finished
+    // initialization and is ready to create browser windows.
+    // Some APIs can only be used after this event occurs.
+    return electronApp.whenReady().then(createWindow);
+  },
+};
