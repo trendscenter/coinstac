@@ -34,6 +34,7 @@
         "covariates": {
           "label": "Covariates",
           "type": "csv",
+          "extensions": ["csv", "txt"],
           "items": ["boolean", "number"],
           "source": "member"
         },
@@ -41,7 +42,6 @@
           "label": "Data",
           "type": "freesurfer",
           "items": ["FreeSurfer"],
-          "extensions": ["csv", "txt"],
           "source": "owner"
         }
       },

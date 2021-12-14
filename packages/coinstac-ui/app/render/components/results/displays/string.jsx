@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
-import { remote } from 'electron';
 
 // Get Base App Dir
-const dir = remote.getGlobal('config').get('coinstacHome');
+const dir = window.config.coinstacHome;
 
 class String extends Component {
   /**

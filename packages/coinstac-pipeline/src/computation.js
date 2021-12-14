@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
 const path = require('path');
+const utils = require('./utils');
 
 /**
  * Generates manager options per computation type
@@ -77,15 +78,21 @@ module.exports = {
     runId,
     spec,
   }) {
+    Manager.setLogger = utils.logger;
     const computation = Object.assign(
       {},
       spec.computation,
       mode === 'remote' ? spec.computation.remote : {}
     );
     const { meta } = spec;
-    const containerOptions = mode === 'remote'
-      ? (spec.computation.remote.containerOptions || {})
-      : (spec.computation.containerOptions || {});
+    let containerOptions = {};
+    if (mode === 'remote') {
+      if (spec.computation.remote) {
+        containerOptions = spec.computation.remote.containerOptions || {};
+      }
+    } else {
+      containerOptions = spec.computation.containerOptions || {};
+    }
     return {
       computation,
       meta,

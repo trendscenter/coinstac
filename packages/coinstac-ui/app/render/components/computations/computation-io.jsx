@@ -12,17 +12,23 @@ const styles = theme => ({
   },
 });
 
-const ComputationIO = ({ compIO, classes }) => (
-  <div className={classes.wrapper}>
-    <ReactJson
-      src={compIO}
-      theme="monokai"
-      displayDataTypes={false}
-      displayObjectSize={false}
-      enableClipboard={false}
-    />
-  </div>
-);
+const ComputationIO = ({ compIO, classes }) => {
+  if (!compIO) {
+    return null;
+  }
+
+  return (
+    <div className={classes.wrapper}>
+      <ReactJson
+        src={compIO}
+        theme="monokai"
+        displayDataTypes={false}
+        displayObjectSize={false}
+        enableClipboard={false}
+      />
+    </div>
+  );
+};
 
 ComputationIO.defaultProps = {
   compIO: null,

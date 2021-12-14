@@ -1,291 +1,234 @@
-const { Application } = require('spectron');
+/* eslint-disable no-console */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
-const electron = require('electron');
-
-const { logFilter } = require('./helper');
+const fs = require('fs').promises;
+const { _electron: electron } = require('playwright');
 
 const appPath = path.join(__dirname, '../..');
 
-const EXIST_TIMEOUT = 6000;
+const EXIST_TIMEOUT = 10000;
+const LOGIN_TIMEOUT = 30000;
 const USER_ID_1 = 'test1';
-const USER_ID_2 = 'test2';
+const USER_ID_2 = 'test4';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium-permission';
-const CONS_DESC = 'e2e-description-permission';
+const CONS_NAME = 'e2e-consortium-2-member';
+const CONS_DESC = 'e2e-description-2-member';
 
 chai.should();
 chai.use(chaiAsPromised);
 
-const app1 = new Application({
-  path: electron,
-  env: { TEST_INSTANCE: 'test-1', NODE_ENV: 'test' },
-  args: [appPath],
-  chromeDriverArgs: [
-    '--no-sandbox',
-    '--whitelisted-ips=',
-    '--disable-dev-shm-usage',
-  ],
-  port: 9515,
-});
-
-const app2 = new Application({
-  path: electron,
-  env: { TEST_INSTANCE: 'test-2', NODE_ENV: 'test' },
-  args: [appPath],
-  chromeDriverArgs: [
-    '--no-sandbox',
-    '--whitelisted-ips=',
-    '--disable-dev-shm-usage',
-  ],
-  port: 9516,
-});
-
+let app1;
+let app2;
+let appWindow1;
+let appWindow2;
+const _deviceId1 = 'test1';
+const _deviceId2 = 'test4';
 describe('e2e consortia permissions', () => {
   before(async () => {
-    await Promise.all([
-      app1.start(),
-      app2.start(),
-    ]);
+    app1 = await electron.launch({
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId1,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-1',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId1}/` } : {}),
+      }),
+      logger: {
+        isEnabled: () => true,
+        log: (name, severity, message) => console.log(`INSTANCE 1 -> ${name}: ${message}`),
+      },
+    });
+    appWindow1 = await app1.firstWindow();
+    appWindow1.on('console', msg => console.log(`INSTANCE 1 -> ${msg.text()}`));
 
-    return Promise.all([
-      app1.client.waitUntilWindowLoaded(10000),
-      app2.client.waitUntilWindowLoaded(10000),
-    ]);
+    app2 = await electron.launch({
+      args: [
+        '--enable-logging',
+        appPath,
+        ...(process.env.CI ? [
+          '--disable-dev-shm-usage',
+          '--mockDeviceId',
+          _deviceId2,
+        ] : []),
+      ],
+      env: Object.assign({}, process.env, {
+        TEST_INSTANCE: 'test-2',
+        NODE_ENV: 'test',
+        ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${_deviceId2}/` } : {}),
+      }),
+      logger: {
+        isEnabled: () => true,
+        log: (name, severity, message) => console.log(`INSTANCE 2 -> ${name}: ${message}`),
+      },
+    });
+    appWindow2 = await app2.firstWindow();
+    appWindow2.on('console', msg => console.log(`INSTANCE 2 -> ${msg.text()}`));
   });
 
   after(async () => {
     if (process.env.CI) {
-      await app1.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
-      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
-      await app2.client.getMainProcessLogs().then((logs) => {
-        logs.filter(logFilter).forEach((log) => {
-          console.log(log); // eslint-disable-line no-console
-        });
-      });
+      console.log('/********** Main process logs **********/');
+      console.log((await fs.readFile('coinstac-log.json')).toString());
     }
-    Promise.all([
-      app1.stop(),
-      app2.stop(),
+
+    return Promise.all([
+      app1.close(),
+      app2.close(),
     ]);
   });
 
+  it('displays the correct title', async () => {
+    return appWindow1.title().should.eventually.equal('COINSTAC');
+  });
+
   it('authenticates demo user on first instance', async () => {
-    const usernameField = await app1.client.$('#login-username');
-    await usernameField.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await usernameField.setValue(USER_ID_1);
+    await appWindow1.click('#login-username', { timeout: EXIST_TIMEOUT });
+    await appWindow1.fill('#login-username', USER_ID_1);
+    await appWindow1.fill('#login-password', PASS);
 
-    const passwordField = await app1.client.$('#login-password');
-    await passwordField.setValue(PASS);
-
-    const loginButton = await app1.client.$('button=Log In');
-    await loginButton.click();
-
-    const userTitleElement = await app1.client.$('.user-account-name');
-    await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('button:has-text("Log In")');
 
     // Assert
-    return userTitleElement.getText().should.eventually.equal(USER_ID_1);
+    return appWindow1.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_1);
   });
 
   it('authenticates demo user on second instance', async () => {
-    const usernameField = await app2.client.$('#login-username');
-    await usernameField.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await usernameField.setValue(USER_ID_2);
+    await appWindow2.click('#login-username', { timeout: EXIST_TIMEOUT });
+    await appWindow2.fill('#login-username', USER_ID_2);
+    await appWindow2.fill('#login-password', PASS);
 
-    const passwordField = await app2.client.$('#login-password');
-    await passwordField.setValue(PASS);
-
-    const loginButton = await app2.client.$('button=Log In');
-    await loginButton.click();
-
-    const userTitleElement = await app2.client.$('.user-account-name');
-    await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow2.click('button:has-text("Log In")');
 
     // Assert
-    return userTitleElement.getText().should.eventually.equal(USER_ID_2);
+    return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
   });
 
   it('accesses the Add Consortium page', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")');
 
-    const createConsortiumButton = await app1.client.$('a[name="create-consortium-button"]');
-    await createConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await createConsortiumButton.click();
-
-    const createConsortiumTitle = await app1.client.$('h4=Consortium Creation');
+    await appWindow1.click('a[name="create-consortium-button"]', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return createConsortiumTitle.waitForDisplayed({
+    return appWindow1.waitForSelector('h4:has-text("Consortium Creation")', {
+      state: 'visible',
       timeout: EXIST_TIMEOUT,
-    }).should.eventually.equal(true);
+    }).should.eventually.not.equal(null);
   });
 
   it('creates a consortium', async () => {
-    const nameField = await app1.client.$('#name');
-    await nameField.setValue(CONS_NAME);
+    await appWindow1.fill('#name', CONS_NAME);
+    await appWindow1.fill('#description', CONS_DESC);
 
-    const descriptionField = await app1.client.$('#description');
-    await descriptionField.setValue(CONS_DESC);
-
-    const saveButton = await app1.client.$('button=Save');
-    await saveButton.click();
-
-    const saveNotification = await app1.client.$('span=Consortium Saved');
-    const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
-      timeout: EXIST_TIMEOUT,
-    });
-
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
-
-    const consortiumItemListTitle = await app1.client.$(`h5=${CONS_NAME}`);
-    const isItemListDisplayed = await consortiumItemListTitle.waitForDisplayed({
-      timeout: EXIST_TIMEOUT,
-    });
+    await appWindow1.click('button:has-text("Save")');
 
     // Assert
-    isSaveNotificationDisplayed.should.equal(true);
-    isItemListDisplayed.should.equal(true);
+    await appWindow1.waitForSelector('div:has-text("Consortium Saved")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
+
+    await appWindow1.click('a:has-text("Consortia")');
+
+    await appWindow1.waitForSelector(`h5:has-text("${CONS_NAME}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
   });
 
   it('add another user as member', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")');
 
-    const viewDetailsButton = await app1.client.$(`a[name="${CONS_NAME}"]`);
-    await viewDetailsButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await viewDetailsButton.click();
+    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    const pageTitle = await app1.client.$('h4=Consortium Edit');
-    await pageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow1.click('.consortium-add-user', { timeout: EXIST_TIMEOUT });
 
-    const addUserButton = await app1.client.$('.consortium-add-user');
-    await addUserButton.click();
+    await appWindow1.click(`.react-select-dropdown-menu div:has-text("${USER_ID_2}")`, { timeout: EXIST_TIMEOUT });
 
-    const userDropdownMenu = await app1.client.$('.react-select-dropdown-menu');
-    await userDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    const userOption = await userDropdownMenu.$(`div=${USER_ID_2}`);
-    await userOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await userOption.click();
-
-    const addMemberButton = await app1.client.$('button=Add Member');
-    await addMemberButton.click();
+    await appWindow1.click('button:has-text("Add Member")');
 
     // Assert
-    const userListItem = await app1.client.$(`div=${USER_ID_2}`);
-
-    return userListItem.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector(`span:has-text("${USER_ID_2}")`, {
+      state: 'visible',
+      timeout: 30000,
+    }).should.eventually.not.equal(null);
   });
 
   it('access consortium as member', async () => {
-    const consortiaMenuButton = await app2.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow2.click('a:has-text("Consortia")');
 
-    const viewDetailsButton = await app2.client.$(`a[name="${CONS_NAME}"]`);
-    await viewDetailsButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await viewDetailsButton.click();
-
-    const pageTitle = await app2.client.$('h4=Consortium Edit');
-    await pageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-
-    const userListItem = await app2.client.$(`div=${USER_ID_2}`);
-    await userListItem.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    await appWindow2.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const userTableRow = await app2.client.$('#consortium-member-table tbody tr:last-child');
-
-    const isOwnerCheckbox = await userTableRow.$('input[name="isOwner"]');
-
-    return isOwnerCheckbox.isSelected().should.eventually.equal(false);
+    return Promise.all([
+      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
+        state: 'hidden',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.equal(null),
+    ]);
   });
 
   it('grant ownership to a member', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")');
 
-    const viewDetailsButton = await app1.client.$(`a[name="${CONS_NAME}"]`);
-    await viewDetailsButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await viewDetailsButton.click();
+    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    const pageTitle = await app1.client.$('h4=Consortium Edit');
-    await pageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-
-    const userListItem = await app1.client.$(`span=${USER_ID_2}`);
-    await userListItem.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-
-    const userTableRow = await app1.client.$('#consortium-member-table tbody tr:last-child');
-
-    const isOwnerCheckbox = await userTableRow.$('input[name="isOwner"]');
-
-    await isOwnerCheckbox.click();
+    await appWindow1.click('#consortium-member-table tbody tr:last-child input[name="isOwner"]', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const consortiaMenuButtonSite2 = await app2.client.$('a=Consortia');
-    await consortiaMenuButtonSite2.click();
-
-    const viewDetailsButtonSite2 = await app2.client.$(`a[name="${CONS_NAME}"]`);
-    await viewDetailsButtonSite2.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await viewDetailsButtonSite2.click();
-
-    const pageTitleSite2 = await app2.client.$('h4=Consortium Edit');
-    await pageTitleSite2.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-
-    const userListItemSite2 = await app2.client.$(`span=${USER_ID_2}`);
-    await userListItemSite2.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-
-    const userTableRowSite2 = await app2.client.$('#consortium-member-table tbody tr:last-child');
-
-    const isOwnerCheckboxSite2 = await userTableRowSite2.$('input[name="isOwner"]');
-
-    return isOwnerCheckboxSite2.isSelected().should.eventually.equal(true);
+    return Promise.all([
+      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+    ]);
   });
 
   it('deletes consortium', async () => {
-    const consortiaMenuButton = await app1.client.$('a=Consortia');
-    await consortiaMenuButton.click();
+    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
-    const deleteConsortiumButton = await app1.client.$(`button[name="${CONS_NAME}-delete"]`);
-    await deleteConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await deleteConsortiumButton.click();
+    await appWindow1.click(`button[name="${CONS_NAME}-delete"]`, { timeout: EXIST_TIMEOUT });
 
-    const deleteModal = await app1.client.$('#list-delete-modal');
-    const confirmButton = await deleteModal.$('button=Delete');
-    await confirmButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-
-    await confirmButton.click();
+    await appWindow1.click('#list-delete-modal button:has-text("Delete")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const consortiumListItemTitle = await app1.client.$(`h1=${CONS_NAME}`);
 
     // Wait for consortium item to be deleted from consortium list
-    return consortiumListItemTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
-      .should.eventually.equal(true);
+    return appWindow1.waitForSelector(`h1:has-text("${CONS_NAME}")`, {
+      state: 'hidden',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(null);
   });
 
   it('logs out', async () => {
-    const logoutButtonSite1 = await app1.client.$('a=Log Out');
-    await logoutButtonSite1.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await logoutButtonSite1.click();
-
-    const logoutButtonSite2 = await app2.client.$('a=Log Out');
-    await logoutButtonSite2.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await logoutButtonSite2.click();
+    await appWindow1.click('a:has-text("Log Out")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('a:has-text("Log Out")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    const loginButtonSite1 = await app1.client.$('button=Log In');
-    const loginButtonSite2 = await app2.client.$('button=Log In');
-
     return Promise.all([
-      loginButtonSite1.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
-      loginButtonSite2.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
+      appWindow1.waitForSelector('button:has-text("Log In")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector('button:has-text("Log In")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
     ]);
   });
 });

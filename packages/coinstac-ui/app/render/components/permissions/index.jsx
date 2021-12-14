@@ -128,6 +128,7 @@ class Permission extends Component {
                     <TableCell>
                       <div className={classes.avatarWrapper}>
                         <MemberAvatar
+                          id={user.id}
                           name={user.username}
                           width={30}
                         />

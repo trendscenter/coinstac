@@ -3,7 +3,6 @@ import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
-import { SnackbarProvider } from 'notistack';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider } from '@material-ui/core/styles';
 import ActivityIndicator from './activity-indicator/activity-indicator';
@@ -27,7 +26,6 @@ class App extends Component {
       autoLogin,
       setError,
       logout,
-      router,
       notifyWarning,
     } = this.props;
 
@@ -42,7 +40,6 @@ class App extends Component {
     ipcRenderer.on(EXPIRED_TOKEN, () => {
       setError(EXPIRED_TOKEN);
       logout();
-      router.push('/login');
     });
 
     ipcRenderer.on(BAD_TOKEN, () => {
@@ -76,19 +73,9 @@ class App extends Component {
           <CssBaseline />
           <ActivityIndicator visible={isLoading} />
 
-          <SnackbarProvider
-            maxSnack={3}
-            classes={{
-              variantSuccess: 'notistack-notification notistack-notification-success',
-              variantError: 'notistack-notification notistack-notification-error',
-              variantWarning: 'notistack-notification notistack-notification-warning',
-              variantInfo: 'notistack-notification notistack-notification-info',
-            }}
-          >
-            { checkJWT && children }
+          { checkJWT && children }
 
-            <DisplayNotificationsListener />
-          </SnackbarProvider>
+          <DisplayNotificationsListener />
         </MuiThemeProvider>
       </div>
     );
@@ -100,7 +87,6 @@ App.displayName = 'App';
 App.propTypes = {
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
-  router: PropTypes.object.isRequired,
   autoLogin: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,

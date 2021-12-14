@@ -1,15 +1,17 @@
 import axios from 'axios';
+import crypto from 'crypto';
 import ipcPromise from 'ipc-promise';
-import { remote, ipcRenderer } from 'electron';
+import { app } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
 import { notifySuccess, notifyError } from './notifyAndLog';
+import { clearUserState, loadUserState } from './statePersist';
 
-const apiServer = remote.getGlobal('config').get('apiServer');
+const { apiServer } = window.config;
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
-export const API_TOKEN_KEY = `id_token_${remote.getCurrentWindow().id}`;
+export const API_TOKEN_KEY = `id_token_${crypto.randomBytes(16).toString('base64')}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -25,7 +27,7 @@ const INITIAL_STATE = {
     institution: '',
     photo: '',
   },
-  appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
+  appDirectory: localStorage.getItem('appDirectory') || window.config.coinstacHome,
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
   isApiVersionCompatible: true,
@@ -79,26 +81,13 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
   await ipcPromise.send('login-init', {
     userId: data.user.id, appDirectory, clientServerURL, token: data.id_token,
   });
-
   const user = { ...data.user, label: reqUser.username };
+  const tokenData = {
+    token: data.id_token,
+    userId: user.id,
+  };
 
-  remote.getCurrentWindow().webContents.send('login-success', data.user.id);
-
-  return new Promise((resolve) => {
-    ipcRenderer.on('app-init-finished', () => {
-      const tokenData = {
-        token: data.id_token,
-        userId: user.id,
-      };
-
-      (reqUser.saveLogin ? localStorage : sessionStorage)
-        .setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
-
-      dispatch(setUser(user));
-
-      resolve();
-    });
-  });
+  dispatch(loadUserState(user, tokenData));
 };
 
 export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
@@ -109,8 +98,7 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 
   await axios.post(`${API_URL}/logout`, { username: user.username });
 
-  await ipcPromise.send('logout');
-
+  dispatch(clearUserState());
   dispatch(clearUser());
 });
 
@@ -171,7 +159,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
 
 export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
   .then(({ data }) => {
-    const versionsMatch = remote.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === remote.app.getVersion().slice(0, 3);
+    const versionsMatch = window.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === app.getVersion().slice(0, 3);
     dispatch(setApiVersionCheck(versionsMatch));
   })
   .catch(() => {
@@ -180,11 +168,6 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const tokenData = {
-      token: data.id_token,
-      userId: data.user.id,
-    };
-    sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
     const { auth: { appDirectory, clientServerURL } } = getState();
     return initCoreAndSetToken(
       { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch

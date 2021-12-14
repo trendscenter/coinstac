@@ -91,7 +91,13 @@ class FormLogin extends Component {
     const { auth, classes } = this.props;
 
     const errorMessage = auth.error === EXPIRED_TOKEN
-      ? 'Your login session has expired,<br/>please re-login'
+      ? (
+        <React.Fragment>
+          Your login session has expired,
+          <br />
+          please re-login
+        </React.Fragment>
+      )
       : auth.error;
 
     return (

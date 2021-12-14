@@ -5,9 +5,10 @@ import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { get } from 'lodash';
 import PropTypes from 'prop-types';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
@@ -68,6 +69,14 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
   }, []);
+
+  useEffect(() => {
+    const email = get(auth, 'user.email');
+
+    if (!email) {
+      router.push('/login');
+    }
+  }, [auth]);
 
   const consortia = get(consortiaData, 'fetchAllConsortia');
   const computations = get(computationData, 'fetchAllComputations');
@@ -173,7 +182,7 @@ Dashboard.propTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const clientConfig = remote.getGlobal('config');
+const { apiServer, subApiServer } = window.config;
 
 function ConnectedDashboard(props) {
   const apolloClient = useRef(null);
@@ -184,11 +193,12 @@ function ConnectedDashboard(props) {
 
       apolloClient.current.client.stop();
       apolloClient.current.wsLink.subscriptionClient.close();
+      apolloClient.current = null;
     };
   }, []);
 
   if (!apolloClient.current) {
-    apolloClient.current = getApolloClient(clientConfig);
+    apolloClient.current = getApolloClient({ apiServer, subApiServer });
   }
 
   return (

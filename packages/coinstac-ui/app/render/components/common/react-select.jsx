@@ -113,7 +113,7 @@ function Option(props) {
 
   return (
     <MenuItem
-      buttonRef={innerRef}
+      ref={innerRef}
       selected={isFocused}
       component="div"
       style={{

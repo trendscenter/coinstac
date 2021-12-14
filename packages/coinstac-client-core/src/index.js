@@ -283,7 +283,7 @@ class CoinstacClient {
           const linkPromises = [];
 
           if (filePaths) {
-            let stageFiles = process.env.CI ? fs.copy : fs.link;
+            let stageFiles = process.env.CI ? fs.copyFile : fs.link;
             if (networkVolume) {
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {
