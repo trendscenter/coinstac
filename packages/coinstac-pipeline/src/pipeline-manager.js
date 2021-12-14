@@ -208,7 +208,6 @@ module.exports = {
           publishData('register', { id: clientId, runId });
         }
 
-
         /**
          * callback fn passed down to facilitate external communication
          * @param  {[type]} success      informs transmission of completion

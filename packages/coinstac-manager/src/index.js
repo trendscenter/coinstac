@@ -6,8 +6,8 @@ const portscanner = require('portscanner');
 const http = require('http');
 const winston = require('winston');
 const utils = require('./utils');
-const dockerService = require('./services/docker.js');
-const singularityService = require('./services/singularity.js');
+const dockerService = require('./services/docker');
+const singularityService = require('./services/singularity');
 
 const serviceProviders = {
   docker: dockerService,
@@ -21,7 +21,7 @@ winston.loggers.add('docker-manager', {
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
-logger = winston.loggers.get('docker-manager');
+logger = winston.loggers.get('coinstac-main') || winston.loggers.get('docker-manager');
 logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 utils.setLogger(logger);
 
@@ -35,6 +35,7 @@ let portLock = false;
  */
 const setLogger = (loggerInstance) => {
   logger = loggerInstance;
+  utils.setLogger(logger);
   return logger;
 };
 
@@ -100,7 +101,7 @@ const startService = ({
     services[serviceId].state = 'starting';
     let depth = 0;
     const tryService = () => {
-      return generateServicePort(serviceId)
+      return generateServicePort(serviceId, process.env.CI_PORT_START || 8101)
         .then((port) => {
           return serviceProviders[serviceType].createService(serviceId, port, opts);
         }).catch((e) => {

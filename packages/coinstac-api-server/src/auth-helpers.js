@@ -2,7 +2,6 @@ const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
-const Promise = require('bluebird');
 const { ObjectID } = require('mongodb');
 const database = require('./database');
 const { transformToClient } = require('./utils');

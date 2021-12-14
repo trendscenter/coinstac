@@ -696,30 +696,36 @@ const resolvers = {
         owningConsortium: ObjectID(args.consortiumId)
       }).toArray();
 
-      await db.collection('pipelines').deleteMany({
-        owningConsortium: ObjectID(args.consortiumId)
-      });
+      if (pipelines.length) {
+        await db.collection('pipelines').deleteMany({
+          owningConsortium: ObjectID(args.consortiumId)
+        });
 
-      eventEmitter.emit(PIPELINE_DELETED, pipelines);
+        eventEmitter.emit(PIPELINE_DELETED, pipelines.map((pipe) => ({
+          id: pipe._id
+        })));
+      }
 
       const runs = await db.collection('runs').find({
         consortiumId: args.consortiumId,
         endDate: null,
       }).toArray();
 
-      const n = await db.collection('runs').deleteMany({
-        consortiumId: args.consortiumId,
-        endDate: null,
-      });
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          consortiumId: args.consortiumId,
+          endDate: null,
+        });
 
-      eventEmitter.emit(RUN_DELETED, runs);
-      runs.forEach(async (run) => {
-        try {
-          await axios.post(
-            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
-          );
-        } catch (e) {}
-      });
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) {}
+        });
+      }
 
       return transformToClient(deletedConsortiumResult.value);
     },
@@ -752,7 +758,9 @@ const resolvers = {
       }
 
       const deletePipelineResult = await db.collection('pipelines').findOneAndDelete({ _id: pipelineId });
-      eventEmitter.emit(PIPELINE_DELETED, deletePipelineResult.value);
+      eventEmitter.emit(PIPELINE_DELETED, {
+        id: deletePipelineResult.value._id
+      });
 
       const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate({
         activePipelineId: args.pipelineId

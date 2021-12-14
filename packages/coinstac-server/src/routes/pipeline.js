@@ -98,8 +98,8 @@ module.exports = manager.then((remotePipelineManager) => {
       path: '/startPipeline',
       config: {
         // auth: 'jwt',
-        handler: (req, res) => {
-          authenticateServer()
+        handler: (req, h) => {
+          return authenticateServer()
             .then(() => {
               const { payload: { run } } = req;
 
@@ -108,7 +108,7 @@ module.exports = manager.then((remotePipelineManager) => {
                   .map(comp => comp.computation.dockerImage))
                 .reduce((acc, val) => acc.concat(val), []);
 
-              pullImagesFromList(computationImageList)
+              return pullImagesFromList(computationImageList)
                 .then(() => pruneImages())
                 .then(() => {
                   const { result, stateEmitter } = remotePipelineManager.startPipeline({
@@ -117,7 +117,6 @@ module.exports = manager.then((remotePipelineManager) => {
                     runId: run.id,
                     timeout: run.pipelineSnapshot.timeout,
                   });
-                  res({}).code(201);
 
                   stateEmitter.on('update', (data) => {
                     // TODO:  console most likely should be removed post proto development
@@ -126,7 +125,7 @@ module.exports = manager.then((remotePipelineManager) => {
                     updateRunState();
                   });
 
-                  return result
+                  result
                     .then((result) => {
                       saveResults(run.id, result);
                     })
@@ -134,6 +133,7 @@ module.exports = manager.then((remotePipelineManager) => {
                       console.log(error); // eslint-disable-line no-console
                       saveError(run.id, error);
                     });
+                  return h.response({}).code(201);
                 });
             });
         },
@@ -144,16 +144,16 @@ module.exports = manager.then((remotePipelineManager) => {
       path: '/stopPipeline',
       config: {
         // auth: 'jwt',
-        handler: (req, res) => {
-          authenticateServer()
+        handler: (req, h) => {
+          return authenticateServer()
             .then(() => {
               const { payload: { runId } } = req;
-              remotePipelineManager.stopPipeline(runId, 'user')
+              return remotePipelineManager.stopPipeline(runId, 'user')
                 .then(() => {
-                  res({}).code(200);
+                  return h.response({}).code(200);
                 }).catch((e) => {
                   console.error(e); // eslint-disable-line no-console
-                  res({}).code(500);
+                  return h.response({}).code(500);
                 });
             });
         },
