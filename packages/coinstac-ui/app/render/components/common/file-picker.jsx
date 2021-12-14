@@ -135,13 +135,14 @@ FilePicker.defaultProps = {
   multiple: false,
   directory: false,
   tooltip: null,
+  extensions: [],
   selected: [],
 };
 
 FilePicker.propTypes = {
   multiple: PropTypes.bool,
   directory: PropTypes.bool,
-  extensions: PropTypes.array.isRequired,
+  extensions: PropTypes.array,
   filterName: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   tooltip: PropTypes.string,

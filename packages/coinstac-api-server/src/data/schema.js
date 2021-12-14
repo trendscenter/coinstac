@@ -166,6 +166,7 @@ const typeDefs = `
     id: ID
     datasetDescription: JSON
     participantsDescription: JSON
+    otherInfo: JSON
     owner: JSON
   }
 
@@ -178,6 +179,7 @@ const typeDefs = `
     id: ID
     datasetDescription: JSON
     participantsDescription: JSON
+    otherInfo: JSON
   }
 
   # This is the general mutation description
@@ -234,8 +236,8 @@ const typeDefs = `
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
     fetchAvailableHeadlessClients: [HeadlessClient]
-    fetchAllDatasetsTags: [String]
-    searchDatasets(searchString: String, tags: [String]): [Dataset]
+    fetchAllDatasetsSubjectGroups: [String]
+    searchDatasets(searchString: String, subjectGroups: [String], modality: String): [Dataset]
     fetchDataset(id: ID!): Dataset
   }
 

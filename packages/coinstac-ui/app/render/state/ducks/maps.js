@@ -71,58 +71,59 @@ export const saveDataMapping = applyAsyncLoading(
 
         const mappedData = map[inputMapKey];
 
-        // has csv column mapping
-        if (mappedData && mappedData.fieldType === 'csv') {
-          const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
+        if (mappedData) {
+          // has csv column mapping
+          if (mappedData.fieldType === 'csv') {
+            const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
 
-          const value = { ...mappedData.fileData[0].data };
+            const value = { ...mappedData.fileData[0].data };
 
-          baseDirectory = dirname(mappedData.files[0]);
+            baseDirectory = dirname(mappedData.files[0]);
 
-          Object.keys(value).forEach((valueKey) => {
-            filesArray.push(valueKey);
+            Object.keys(value).forEach((valueKey) => {
+              filesArray.push(valueKey);
 
-            inputMapVariables.forEach((variable) => {
-              const columnName = mappedData.maps[variable];
+              inputMapVariables.forEach((variable) => {
+                const columnName = mappedData.maps[variable];
 
-              if (columnName) {
-                value[valueKey][variable] = value[valueKey][columnName];
+                if (columnName) {
+                  value[valueKey][variable] = value[valueKey][columnName];
 
-                if (columnName !== variable) {
-                  delete value[valueKey][columnName];
+                  if (columnName !== variable) {
+                    delete value[valueKey][columnName];
+                  }
                 }
-              }
+              });
             });
-          });
 
-          inputMap[inputMapKey].value = value;
-        } else if (mappedData && mappedData.fieldType === 'files') {
-          baseDirectory = dirname(mappedData.files[0]);
-          filesArray.push(...mappedData.files);
+            inputMap[inputMapKey].value = value;
+          } else if (mappedData.fieldType === 'files') {
+            baseDirectory = dirname(mappedData.files[0]);
+            filesArray.push(...mappedData.files);
 
-          inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
-        } else if (mappedData && mappedData.fieldType === 'directory') {
-          baseDirectory = mappedData.directory;
-          let files = getAllFiles(mappedData.directory,null);
-          files.unshift(baseDirectory);
-          const newFiles = files.map((file) => {
-            const normPath = baseDirectory.replace(/[\/\\]/g,`\\/`);
-            let newfile = file.replace(new RegExp(`.*${normPath}`), '');
-            return baseDirectory+''+newfile;
-          });
-          filesArray = newFiles;
-          files.shift();
-          inputMap[inputMapKey].value = files.map((file) => {
-            const normPath = baseDirectory.replace(/[\/\\]/g,`\\/`);
-            let newfile = file.replace(new RegExp(`.*${normPath}`), '');
-            return newfile;
-          });
-        } else if (mappedData && mappedData.fieldType === 'boolean'
-          || mappedData && mappedData.fieldType === 'number'
-          || mappedData && mappedData.fieldType === 'object'
-          || mappedData && mappedData.fieldType === 'text') {
-          inputMap[inputMapKey].value = mappedData.value;
+            inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+          } else if (mappedData.fieldType === 'directory') {
+            baseDirectory = mappedData.directory;
+            const files = getAllFiles(mappedData.directory, null);
+            files.unshift(baseDirectory);
+            const newFiles = files.map((file) => {
+              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
+              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
+              return `${baseDirectory}${newfile}`;
+            });
+            filesArray = newFiles;
+            files.shift();
+            inputMap[inputMapKey].value = files.map((file) => {
+              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
+              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
+              return newfile;
+            });
+          } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
+            || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
+            inputMap[inputMapKey].value = mappedData.value;
+          }
         }
+
         inputMap[inputMapKey].fulfilled = true;
 
         // carry dataType to the pipeline for processing files

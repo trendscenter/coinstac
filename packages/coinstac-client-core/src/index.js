@@ -358,6 +358,8 @@ class CoinstacClient {
       }
     }
 
+    // The code below doesn't seem to do anything?
+    //
     // const run = {
     //   ...runObj,
     //   consortiumId,

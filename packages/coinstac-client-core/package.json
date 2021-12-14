@@ -32,7 +32,6 @@
     "axios": "^0.21.1",
     "coinstac-manager": "^5.4.0",
     "coinstac-pipeline": "^5.4.0",
-    "convict": "^4.3.2",
     "csv-parse": "^4.4.3",
     "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",

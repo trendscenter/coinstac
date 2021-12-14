@@ -2,13 +2,16 @@ const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
-const Promise = require('bluebird');
 const { ObjectID } = require('mongodb');
 const database = require('./database');
 const { transformToClient } = require('./utils');
 const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const audience = 'coinstac';
+const issuer = 'coinstac';
+const subject = 'coinstac';
 
 const helperFunctions = {
   /**
@@ -17,7 +20,13 @@ const helperFunctions = {
    * @return {string} A JWT for the requested user
    */
   createToken(id) {
-    return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+    return jwt.sign({ id }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+      expiresIn: '12h',
+    });
   },
   /**
    * Decode and verify validity of token
@@ -33,7 +42,13 @@ const helperFunctions = {
    * @return {string} A JWT for the requested email
    */
   createPasswordResetToken(email) {
-    return jwt.sign({ email }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+    return jwt.sign({ email }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+      expiresIn: '24h',
+    });
   },
   /**
    * Create new user account
@@ -176,8 +191,8 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  async validateToken(decoded) {
-    const user = await helperFunctions.getUserDetailsByID(decoded.id);
+  async validateToken(data) {
+    const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
     return {
       isValid: user && user.id,
@@ -375,6 +390,9 @@ const helperFunctions = {
       });
     });
   },
+  audience,
+  issuer,
+  subject,
 };
 
 module.exports = helperFunctions;

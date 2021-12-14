@@ -157,6 +157,7 @@ const sharedFields = {
     id
     datasetDescription
     participantsDescription
+    otherInfo
     owner
   `,
 };
