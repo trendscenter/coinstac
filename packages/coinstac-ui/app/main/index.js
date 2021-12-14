@@ -11,12 +11,24 @@
 
 Error.stackTraceLimit = 100;
 
+const fs = require('fs');
+
+if (process.env.CI) {
+  // write out DEBUG:mqttjs* logs to file
+  const stdOverride = fs.createWriteStream('./mqtt.log', { flags: 'a' });
+  const write = (...args) => {
+    stdOverride.write(...args);
+  };
+  process.stdout.write = write;
+  process.stderr.write = write;
+}
+
+
 const {
   compact, keys, pick, omit,
 } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
-const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const moment = require('moment');
@@ -43,7 +55,7 @@ parseCLIInput();
 require('./utils/boot/configure-dev-services.js');
 
 // Load the UI
-const { getWindow, createWindow } = require('./utils/boot/configure-browser-window.js');
+const { createWindow } = require('./utils/boot/configure-browser-window.js');
 
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
@@ -431,6 +443,9 @@ loadConfig()
                   });
               })
               .catch((error) => {
+                logger.verbose('############ Client pipeline error');
+                logger.verbose(error);
+
                 mainWindow.webContents.send('local-run-error', {
                   consName: consortium.name,
                   run: Object.assign(
@@ -480,7 +495,8 @@ loadConfig()
       ipcMain.on('start-pipeline', (event, {
         consortium, dataMappings, pipelineRun, networkVolume,
       }) => {
-        // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
+        // This is a way to avoid multiple instances of COINSTAC
+        // running on the same machine to start
         // the pipeline runs at the same time. We start the pipeline runs with random delays
         // between 0 and 3000ms.
         const delayAmount = Math.floor(Math.random() * 3000);

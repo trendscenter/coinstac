@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const hapi = require('hapi');
+const hapi = require('@hapi/hapi');
 const axios = require('axios');
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -16,11 +16,11 @@ program.parse(process.argv);
 
 let idToken = '';
 
-const server = new hapi.Server();
-server.connection({
+const server = new hapi.Server({
   host: process.env.PIPELINE_SERVER_HOSTNAME,
   port: process.env.PIPELINE_SERVER_PORT,
 });
+
 const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 /**
  * On server start, pull in comps from DB whitelist and download via docker
