@@ -252,7 +252,7 @@ async function populatePipelines() {
 async function populateRuns() {
   const db = database.getDbInstance();
 
-  db.collection('runs').insertMany([
+  return db.collection('runs').insertMany([
     {
       _id: RUN_IDS[0],
       clients: {
