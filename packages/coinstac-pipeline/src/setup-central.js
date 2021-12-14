@@ -5,7 +5,7 @@ const rmrf = pify(require('rimraf'));
 const mqtt = require('mqtt');
 const fs = require('fs');
 const archiver = require('archiver');
-const uuid = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const mv = pify(require('mv'));
 const { getFilesAndDirs, splitFilesFromStream } = require('./pipeline-manager-helpers');
 const expressFileServerSetup = require('./express-file-server-setup');
@@ -323,6 +323,7 @@ async function setupCentral({
           } else {
             mqttServer.publish(`${id}-register`, JSON.stringify({ runId }));
             remoteClients[id].state = 'registered';
+            logger.silly(`MQTT registered: ${id}`);
           }
           break;
         case 'finished':

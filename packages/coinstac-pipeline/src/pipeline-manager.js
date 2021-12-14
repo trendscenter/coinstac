@@ -4,25 +4,16 @@ const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const Emitter = require('events');
-const winston = require('winston');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
+const utils = require('./utils');
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
-
-winston.loggers.add('pipeline', {
-  level: 'info',
-  transports: [
-    new winston.transports.Console({ format: winston.format.cli() }),
-  ],
-});
-const defaultLogger = winston.loggers.get('pipeline');
-defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
 
@@ -40,7 +31,7 @@ module.exports = {
   async create({
     clientId,
     imageDirectory = './',
-    logger,
+    logger = utils.logger,
     operatingDirectory = './',
     mode,
     remotePathname = '/transfer',
@@ -65,9 +56,9 @@ module.exports = {
     let waitingOnForRun;
     const remoteClients = {};
 
-    logger = logger || defaultLogger;
-    debugProfileClient.log = l => logger.info(`PROFILING: ${l}`);
-    debugProfile.log = l => logger.info(`PROFILING: ${l}`);
+    utils.init({ logger });
+    debugProfileClient.log = l => utils.logger.info(`PROFILING: ${l}`);
+    debugProfile.log = l => utils.logger.info(`PROFILING: ${l}`);
 
     /**
      * Perform final cleanup on a specified pipeline
@@ -98,7 +89,7 @@ module.exports = {
         clientPublish,
       } = await setupCentral({
         cleanupPipeline,
-        logger,
+        logger: utils.logger,
         activePipelines,
         remoteClients,
         mqttRemoteProtocol,
@@ -114,7 +105,7 @@ module.exports = {
         communicate,
         publishData,
       } = await setupOuter({
-        logger,
+        logger: utils.logger,
         mqttRemoteProtocol,
         mqttRemoteURL,
         mqttRemotePort,
@@ -175,7 +166,7 @@ module.exports = {
               clientId,
               userDirectories,
               owner: spec.owner,
-              logger,
+              logger: utils.logger,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             outputDirectory: userDirectories.outputDirectory,
