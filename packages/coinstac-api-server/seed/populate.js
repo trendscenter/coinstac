@@ -1216,8 +1216,9 @@ async function populateDatasets() {
 async function populate(closeConnection = true) {
   await database.connect();
 
-  database.dropDbInstance();
-
+  await database.dropDbInstance();
+  database.getDbInstance();
+  await database.createDbIndexes();
   await populateComputations();
   await populateConsortia();
   await populatePipelines();
