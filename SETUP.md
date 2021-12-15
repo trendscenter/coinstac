@@ -11,11 +11,17 @@ You’ll need some software installed:
   * Linux: `apt-get install build-essential` for Ubuntu-flavored versions. Check your distro for details.
   * Windows: requires npm to be installed first (go to step 3) `npm install --global windows-build-tools`
 2. **Install git.** See https://git-scm.com/download. You may also try [GitHub’s desktop client](https://desktop.github.com/): see [their post for CLI instructions](https://github.com/blog/1510-installing-git-from-github-for-mac).
-3. **Install Node.js**, Coinstac aims to use node LTS but usually the last few versions are fine. You can enter `node -v` to find out which version you have.
+3. **Install Node.js**. Coinstac only supports the latest LTS version of Nodejs. You can enter `node -v` to find out which version you have.
+   * Consider using a Node.js version manager if you already have a version of Node.js installed.
+     * Mac/Linux: [n](https://www.npmjs.com/package/n)
+     * Windows: [nvm-windows](https://github.com/coreybutler/nvm-windows)
    * Download the latest LTS build from [nodejs.org](https://nodejs.org/)
-   * Consider [using n](https://www.npmjs.com/package/n) for easy Node.js version management if you already have a version of Node.js installed.
+   * Windows: configure npm to use Git Bash for executing scripts 
+     * `npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"`
+
 4. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
 5. To run computations and have the UI not complain, you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
+
 
 
 ## Downloading Source Code
@@ -52,9 +58,10 @@ Any time you pull in new code, you'll need to rebuild the application.
 
 The user interface is an [Electron application](http://electron.atom.io/). To run it:
 
-1. In the top level `coinstac` directory run `npm run devdata` to start and prime the database
-2. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
-3. Export the example config from the top level `./.env-example.sh` or otherwise put it in your env
+1. use `config/.env-example.sh` to set the environment variables.
+   *  Windows Git Bash: copy the contents of `config/.env-example.sh` into your `.bashrc` file an relaunch your terminal/shell. The location of `.bashrc` can be found using `echo ~` in your bash terminal. If there is no `.bashrc` file there, create one.  
+2. In the top level `coinstac` directory run `npm run devdata` to start and prime the database
+3. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
 4. Still in the top level directory run `npm run start` to run webpack, and the api services
 5. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-ui/_ directory.
 6. Run `npm start` to start the UI
@@ -73,6 +80,10 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
 * If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run build` to re-link them.
 * If you're trying to test simulator code, the mqtt service must be shut down, as simulator packages its own.
 
+## Configuration
+
+* Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-ui/config/local-example.json`
+* Create a new file at `/coinstac-server/config/local.json` and copy into it the contents of `/coinstac-server/config/default.json`
 
 ## Additional Suggested Software
 
@@ -109,52 +120,6 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
               "sourceMaps": false
           }
       ]
-   }
-   ```
-
-## Configuration
-
-Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following, conversely there is a `local-example.json` that cointains the local defualts that work for local development work. Just copy that file to `local.json` in the `config` directory.
-
-   ```json
-   {
-     "apiServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3100",
-       "protocol": "http:"
-     },
-     "subApiServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3100",
-       "protocol": "ws:"
-     },
-     "pipelineWSServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3300",
-       "protocol": "http:"
-     },
-     "mqttServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "1883",
-       "protocol": "mqtt:"
-     }
-   }
-   ```
-
-As well as the above config, the `coinstac-server` needs to be pointed to your local mosquitto instance.
-Place the following in `/coinstac-server/config/local.json`
-   ```json
-   {
-     "mqttServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "1883",
-       "protocol": "mqtt:"
-     }
    }
    ```
 

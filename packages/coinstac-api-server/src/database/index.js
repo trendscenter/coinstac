@@ -14,21 +14,21 @@ async function connect() {
 
 function createDbInstance() {
   db = client.db(process.env.DATABASE_NAME);
-
-  db.collection('users').createIndex({ username: 1 }, { unique: true });
-  db.collection('users').createIndex({ email: 1 }, { unique: true });
-
-  db.collection('headlessClients').createIndex({ name: 1 }, { unique: true });
-
-  db.collection('datasets').createIndex({ '$**': 'text' });
 }
 
-function dropDbInstance() {
+async function createDbIndexes() {
+  await db.collection('users').createIndex({ username: 1 }, { unique: true });
+  await db.collection('users').createIndex({ email: 1 }, { unique: true });
+  await db.collection('headlessClients').createIndex({ name: 1 }, { unique: true });
+  await db.collection('datasets').createIndex({ '$**': 'text' });
+}
+
+async function dropDbInstance() {
   if (!db) {
     createDbInstance();
   }
 
-  db.dropDatabase();
+  await db.dropDatabase();
   db = null;
 }
 
@@ -54,4 +54,5 @@ module.exports = {
   dropDbInstance,
   getDbInstance,
   createUniqueId,
+  createDbIndexes,
 };
