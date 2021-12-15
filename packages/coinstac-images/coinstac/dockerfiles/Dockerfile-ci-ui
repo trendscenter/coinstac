@@ -1,6 +1,8 @@
 FROM coinstacteam/coinstac:ci
 RUN apt-get update && \
     apt-get install -y xvfb \
+    x11-apps \
+    imagemagick \
     libgbm1 \
     libxss1 \
     libnss3 \

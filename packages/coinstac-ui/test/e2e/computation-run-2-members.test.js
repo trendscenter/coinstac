@@ -4,10 +4,11 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
+const { execSync } = require('child_process');
 
 const appPath = path.join(__dirname, '../..');
 
-const EXIST_TIMEOUT = 10000;
+const EXIST_TIMEOUT = 30000;
 const LOGIN_TIMEOUT = 30000;
 const COMPUTATION_TIMEOUT = 150000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
@@ -30,6 +31,13 @@ let appWindow2;
 const _deviceId1 = 'test1';
 const _deviceId2 = 'test2';
 describe('e2e run computation with 2 members', () => {
+  afterEach(async function screenshot() {
+    if (process.env.CI && this.currentTest.state === 'failed') {
+      console.log(this.currentTest);
+      await fs.mkdir('/tmp/screenshots', { recursive: true });
+      execSync('xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-$(date +%s).png');
+    }
+  });
   before(async () => {
     app1 = await electron.launch({
       args: [
