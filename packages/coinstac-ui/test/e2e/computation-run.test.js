@@ -4,6 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
+const { execSync } = require('child_process');
 
 const appPath = path.join(__dirname, '../..');
 
@@ -25,6 +26,13 @@ let appWindow;
 let app;
 
 describe('e2e run computation with 1 member', () => {
+  afterEach(async function screenshot() {
+    if (process.env.CI && this.currentTest.state === 'failed') {
+      console.log(this.currentTest);
+      await fs.mkdir('/tmp/screenshots', { recursive: true });
+      execSync('xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-$(date +%s).png');
+    }
+  });
   before(async () => {
     app = await electron.launch({
       args: ['--enable-logging', appPath],
