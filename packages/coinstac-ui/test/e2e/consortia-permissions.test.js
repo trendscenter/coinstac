@@ -29,7 +29,7 @@ describe('e2e consortia permissions', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
       await fs.mkdir('/tmp/screenshots', { recursive: true });
-      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replace(' ', '-')}$(date +%s).png`);
+      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
     }
   });
   before(async () => {
