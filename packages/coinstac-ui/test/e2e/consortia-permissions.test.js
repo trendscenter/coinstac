@@ -172,19 +172,17 @@ describe('e2e consortia permissions', () => {
   it('access consortium as member', async () => {
     await appWindow2.click('a:has-text("Consortia")');
 
-    await appWindow2.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
+    const t1 = await appWindow2.waitForSelector('h6:has-text("Member")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    });
+    const t2 = await appWindow2.waitForSelector(`span:has-text("${USER_ID_2}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    });
 
     // Assert
-    return Promise.all([
-      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
-        state: 'visible',
-        timeout: EXIST_TIMEOUT,
-      }).should.eventually.not.equal(null),
-      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
-        state: 'hidden',
-        timeout: EXIST_TIMEOUT,
-      }).should.eventually.equal(null),
-    ]);
+    return !!t1 && !!t2;
   });
 
   it('grant ownership to a member', async () => {
@@ -196,11 +194,11 @@ describe('e2e consortia permissions', () => {
 
     // Assert
     return Promise.all([
-      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
+      appWindow1.waitForSelector(`div:has-text("${USER_ID_2}")`, {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
-      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
+      appWindow1.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
