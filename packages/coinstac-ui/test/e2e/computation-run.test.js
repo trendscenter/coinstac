@@ -28,9 +28,8 @@ let app;
 describe('e2e run computation with 1 member', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
-      console.log(this.currentTest);
       await fs.mkdir('/tmp/screenshots', { recursive: true });
-      execSync('xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-$(date +%s).png');
+      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replace(' ', '-')}$(date +%s).png`);
     }
   });
   before(async () => {
@@ -44,6 +43,9 @@ describe('e2e run computation with 1 member', () => {
     });
     appWindow = await app.firstWindow();
     appWindow.on('console', msg => console.log(msg.text()));
+    appWindow.on('pageerror', (err) => {
+      console.log(`******** Window Error: ${err.message}`);
+    });
   });
 
   after(async () => {
