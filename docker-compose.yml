@@ -28,6 +28,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - local-volume:/root/.coinstac
+      - /home/circleci/screenshots:/tmp/screenshots
     networks:
       - ci_network
     environment:
