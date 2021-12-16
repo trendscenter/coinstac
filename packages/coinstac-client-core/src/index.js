@@ -358,54 +358,52 @@ class CoinstacClient {
       }
     }
 
-    // The code below doesn't seem to do anything?
-    //
-    // const run = {
-    //   ...runObj,
-    //   consortiumId,
-    //   pipelineSnapshot: clientPipeline,
-    // };
-    //
-    // console.log(run);
-    //
-    // return axios.post(
-    //   `${this.clientServerURL}/startPipeline/${this.clientId}`,
-    //   { run },
-    //   { headers: { Authorization: `Bearer ${this.token}` } }
-    // )
-    //   .then(({ data }) => {
-    //     return new Promise((resolve) => {
-    //       const stateEmitter = new Emitter();
-    //
-    //       function getResult(socketClient) {
-    //         return new Promise((resResolve, resReject) => {
-    //           socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
-    //             if (res.event === 'update') {
-    //               stateEmitter.emit('update', res.data);
-    //             }
-    //
-    //             if (res.event === 'result') {
-    //               socketClient.unsubscribe(`/pipelineResult/${runId}`);
-    //               resResolve(res.data);
-    //             }
-    //
-    //             if (res.event === 'error') {
-    //               socketClient.unsubscribe(`/pipelineResult/${runId}`);
-    //               resReject(res.data);
-    //             }
-    //           });
-    //         });
-    //       }
-    //
-    //       resolve({
-    //         pipeline: {
-    //           ...data.pipeline,
-    //           stateEmitter,
-    //         },
-    //         result: getResult(this.socketClient),
-    //       });
-    //     });
-    //   });
+    const run = {
+      ...runObj,
+      consortiumId,
+      pipelineSnapshot: clientPipeline,
+    };
+
+    console.log(run);
+
+    return axios.post(
+      `${this.clientServerURL}/startPipeline/${this.clientId}`,
+      { run },
+      { headers: { Authorization: `Bearer ${this.token}` } }
+    )
+      .then(({ data }) => {
+        return new Promise((resolve) => {
+          const stateEmitter = new Emitter();
+
+          function getResult(socketClient) {
+            return new Promise((resResolve, resReject) => {
+              socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
+                if (res.event === 'update') {
+                  stateEmitter.emit('update', res.data);
+                }
+
+                if (res.event === 'result') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resResolve(res.data);
+                }
+
+                if (res.event === 'error') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resReject(res.data);
+                }
+              });
+            });
+          }
+
+          resolve({
+            pipeline: {
+              ...data.pipeline,
+              stateEmitter,
+            },
+            result: getResult(this.socketClient),
+          });
+        });
+      });
   }
 
   /**
