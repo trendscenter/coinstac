@@ -272,30 +272,6 @@ class CoinstacClient {
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
-    const copyFolderRecursive = async (source, target) => {
-      const linkPromises = [];
-      // Check if folder needs to be created or integrated
-      const sourceStats = await fs.stat(source);
-      const sourceFiles = await fs.readdir(source);
-
-      // Let's create the directory
-      mkdirp(target).then(() => {
-        // Copy Files and Handle Nested Dirs
-        sourceFiles.forEach( async(file) => {
-          const curSource = path.join(source, file);
-          const curStats = await fs.stat(curSource);
-          const curTarget = path.join(target, file);
-          if (curStats.isDirectory()) {
-            copyFolderRecursive(curSource, curTarget);
-          } else {
-            linkPromises.push(fs.writeFile(curTarget, curSource));
-          }
-        });
-      });
-
-      return Promise.all(linkPromises);
-    }
-
     if (clients) {
       runObj.clients = clients;
     }
@@ -363,8 +339,6 @@ class CoinstacClient {
       consortiumId,
       pipelineSnapshot: clientPipeline,
     };
-
-    console.log(run);
 
     return axios.post(
       `${this.clientServerURL}/startPipeline/${this.clientId}`,
