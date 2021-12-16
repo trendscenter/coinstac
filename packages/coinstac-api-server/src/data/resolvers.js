@@ -247,7 +247,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { [`members.${credentials.id}`]: { $exists: true } },
+          { members: {[credentials.id]:credentials.username} }
         ]
       }).toArray();
 
@@ -454,20 +454,20 @@ const resolvers = {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
     },
-    fetchAllDatasetsTags: async () => {
+    fetchAllDatasetsSubjectGroups: async () => {
       const db = database.getDbInstance();
 
       const result = await db.collection('datasets').aggregate([
-        { $unwind: '$tags' },
-        { $group: { _id: null, tags: { $addToSet: '$tags' } } },
-        { $unwind: '$tags' },
-        { $sort: { tags: 1 } },
-        { $group: { _id: null, tags: { $push: '$tags' } } },
+        { $unwind: '$otherInfo.subjectGroups' },
+        { $group: { _id: null, subjectGroups: { $addToSet: '$otherInfo.subjectGroups' } } },
+        { $unwind: '$subjectGroups' },
+        { $sort: { subjectGroups: 1 } },
+        { $group: { _id: null, subjectGroups: { $push: '$subjectGroups' } } },
       ]).toArray();
 
-      return result.length ? result[0].tags : [];
+      return result.length ? result[0].subjectGroups : [];
     },
-    searchDatasets: async (parent, { searchString = '', tags = [] }) => {
+    searchDatasets: async (parent, { searchString = '', subjectGroups = [], modality = '' }) => {
       const db = database.getDbInstance();
 
       const searchObj = {};
@@ -478,8 +478,12 @@ const resolvers = {
         };
       }
 
-      if (tags && tags.length) {
-        searchObj.tags = { $all: tags };
+      if (subjectGroups && subjectGroups.length) {
+        searchObj['otherInfo.subjectGroups'] = { $all: subjectGroups };
+      }
+
+      if (modality) {
+        searchObj['otherInfo.modality'] = modality;
       }
 
       const datasets = await db.collection('datasets').find(searchObj).toArray();
@@ -697,30 +701,36 @@ const resolvers = {
         owningConsortium: ObjectID(args.consortiumId)
       }).toArray();
 
-      await db.collection('pipelines').deleteMany({
-        owningConsortium: ObjectID(args.consortiumId)
-      });
+      if (pipelines.length) {
+        await db.collection('pipelines').deleteMany({
+          owningConsortium: ObjectID(args.consortiumId)
+        });
 
-      eventEmitter.emit(PIPELINE_DELETED, pipelines);
+        eventEmitter.emit(PIPELINE_DELETED, pipelines.map((pipe) => ({
+          id: pipe._id
+        })));
+      }
 
       const runs = await db.collection('runs').find({
         consortiumId: args.consortiumId,
         endDate: null,
       }).toArray();
 
-      const n = await db.collection('runs').deleteMany({
-        consortiumId: args.consortiumId,
-        endDate: null,
-      });
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          consortiumId: args.consortiumId,
+          endDate: null,
+        });
 
-      eventEmitter.emit(RUN_DELETED, runs);
-      runs.forEach(async (run) => {
-        try {
-          await axios.post(
-            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
-          );
-        } catch (e) {}
-      });
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) {}
+        });
+      }
 
       return transformToClient(deletedConsortiumResult.value);
     },
@@ -753,7 +763,9 @@ const resolvers = {
       }
 
       const deletePipelineResult = await db.collection('pipelines').findOneAndDelete({ _id: pipelineId });
-      eventEmitter.emit(PIPELINE_DELETED, deletePipelineResult.value);
+      eventEmitter.emit(PIPELINE_DELETED, {
+        id: deletePipelineResult.value._id
+      });
 
       const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate({
         activePipelineId: args.pipelineId
@@ -1454,7 +1466,7 @@ const resolvers = {
       }
     },
     saveDataset: async (parent, args, { credentials }) => {
-      const { id, datasetDescription, participantsDescription } = args.input;
+      const { id, datasetDescription, participantsDescription, otherInfo } = args.input;
 
       const db = database.getDbInstance();
 
@@ -1476,6 +1488,7 @@ const resolvers = {
             $set: {
               datasetDescription,
               participantsDescription,
+              otherInfo,
             }
           },
           { returnDocument: 'after' },
@@ -1486,6 +1499,7 @@ const resolvers = {
         const insertResult = await db.collection('datasets').insertOne({
           datasetDescription,
           participantsDescription,
+          otherInfo,
           owner: {
             id: credentials._id,
             username: credentials.username,

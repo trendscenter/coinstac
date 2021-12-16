@@ -23,6 +23,8 @@ function EditDataset({ params, auth }) {
 
   const [datasetDescription, setDatasetDescription] = useState({});
   const [participantsDescription, setParticipantsDescription] = useState({});
+  const [otherInfo, setOtherInfo] = useState({});
+
   const [submitCompleted, setSubmitCompleted] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [viewOnly, setViewOnly] = useState(true);
@@ -42,7 +44,12 @@ function EditDataset({ params, auth }) {
       return;
     }
 
-    const { datasetDescription, participantsDescription, owner } = remoteDatasetData;
+    const {
+      datasetDescription,
+      participantsDescription,
+      otherInfo,
+      owner,
+    } = remoteDatasetData;
 
     if (datasetDescription) {
       setDatasetDescription(datasetDescription);
@@ -50,6 +57,10 @@ function EditDataset({ params, auth }) {
 
     if (participantsDescription) {
       setParticipantsDescription(participantsDescription);
+    }
+
+    if (otherInfo) {
+      setOtherInfo(otherInfo);
     }
 
     if (auth.user.id === owner.id) {
@@ -94,6 +105,7 @@ function EditDataset({ params, auth }) {
     const submitData = {
       datasetDescription,
       participantsDescription,
+      otherInfo,
     };
 
     if (datasetId) {
@@ -111,6 +123,10 @@ function EditDataset({ params, auth }) {
 
   function handleParticipantsDescriptionChange(value) {
     setParticipantsDescription(value.jsObject);
+  }
+
+  function handleOtherInfoChange(value) {
+    setOtherInfo(value.jsObject);
   }
 
   return (
@@ -150,6 +166,15 @@ function EditDataset({ params, auth }) {
             name="Participants Description"
             initialValue={participantsDescription}
             onChange={handleParticipantsDescriptionChange}
+            disabled={submitting || viewOnly}
+          />
+        </Box>
+        <Box marginBottom={2}>
+          <JsonField
+            id="other-info"
+            name="Other Info"
+            initialValue={otherInfo}
+            onChange={handleOtherInfoChange}
             disabled={submitting || viewOnly}
           />
         </Box>

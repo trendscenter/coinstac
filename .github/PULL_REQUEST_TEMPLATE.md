@@ -6,7 +6,7 @@
 - [] Tests for the changes have been added (for bug fixes / features)
 - [] Passes e2e testing
 - [] Passes lint
-- [] Docs have been added / updated if neccessary (for bug fixes / features)
+- [] Docs have been added / updated if necessary (for bug fixes / features)
 
 
 * **What kind of change does this PR introduce?** (Bug fix, feature, docs update, ...)
@@ -14,7 +14,7 @@
 
 
 * **What is the current behavior?** (You can also link to an open issue here)
-referenced issue(s):
+closes _issue #_
 
 
 

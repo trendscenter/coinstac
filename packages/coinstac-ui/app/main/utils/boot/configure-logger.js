@@ -12,12 +12,7 @@ const close = pify(require('fs').close);
 const cliOpts = require('./parse-cli-input.js').get();
 
 function buildLogFilePath(config) {
-  const logLocation = path.join(
-    process.env.HOME || process.env.TEMP,
-    config.get('logLocations')[process.platform]
-  );
-
-  return path.join(logLocation, config.get('logFile'));
+  return path.join(config.get('logLocations')[process.platform], config.get('logFile'));
 }
 
 async function configureLogger(config) {

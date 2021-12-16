@@ -2,9 +2,11 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import { Provider as ReduxProvider } from 'react-redux';
 import { syncHistoryWithStore } from 'react-router-redux';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
 
@@ -20,7 +22,6 @@ startErrorHandling();
 require('./styles/app.scss');
 
 const rootEl = document.getElementById('app');
-global.config = remote.getGlobal('config');
 
 if (process.env.CI) {
   global.console.warn = () => {};

@@ -9,12 +9,13 @@ const port = 3000;
 const config = {
   bail: true,
   devServer: {
+    host: 'localhost',
     historyApiFallback: true,
     hot: true,
     port,
   },
   entry: {
-    app: ['babel-polyfill', path.join(__dirname, 'app', 'render', 'index.js')],
+    app: [path.join(__dirname, 'app', 'render', 'index.js')],
   },
 
   /**

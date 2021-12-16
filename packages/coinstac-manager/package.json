@@ -9,16 +9,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ava": "^3.8.1",
-    "debug": "^4.2.0",
+    "debug": "^4.3.2",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
-    "socket.io": "^2.1.1",
-    "socket.io-client": "^2.1.1",
-    "socket.io-stream": "^0.9.1",
-    "unzipper": "^0.10.3",
     "util": "^0.10.4",
     "winston": "^3.2.1",
     "ws": "^7.2.3"

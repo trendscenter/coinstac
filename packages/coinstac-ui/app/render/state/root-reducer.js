@@ -8,12 +8,7 @@ import localRunResults from './ducks/localRunResults';
 import maps from './ducks/maps';
 import runs from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
-
-const CLEAR_STATE = 'CLEAR_STATE';
-const REHYDRATE = 'REHYDRATE';
-
-export const clearState = state => ({ type: CLEAR_STATE, payload: state });
-export const rehydrate = state => ({ type: REHYDRATE, payload: state });
+import { CLEAR_STATE, REHYDRATE } from './ducks/statePersist';
 
 function rootReducer() {
   const appReducer = combineReducers({
