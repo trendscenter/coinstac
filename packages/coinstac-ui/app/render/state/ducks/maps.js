@@ -15,26 +15,6 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
-// map
-// {
-//   covariates: {
-//     fileData: [{
-//       data: {
-//         subject0_aseg_stats.txt: {isControl: 'False', age: 22}
-//         subject1_aseg_stats.txt: {isControl: 'True', age: 47}
-//       }
-//     }],
-//     files: [],
-//     maps: {isControl: 'isControl', age: 'age'}
-//   }
-// }
-
-// inputMap covariates value
-// [
-//   {type: 'boolean', name: 'isControl'},
-//   {type: 'number', name: 'age'}
-// ]
-//
 const getAllFiles = ((dirPath, arrayOfFiles) => {
   const files = fs.readdirSync(dirPath)
 
@@ -42,10 +22,10 @@ const getAllFiles = ((dirPath, arrayOfFiles) => {
 
   files.forEach((file) => {
     if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
-      arrayOfFiles.push(path.join(__dirname, dirPath, '/', file));
+      arrayOfFiles.push(path.join(__dirname, dirPath, file));
       arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
-    } else if (basename(file) !== '.DS_Store') {
-      arrayOfFiles.push(path.join(__dirname, dirPath, '/', file));
+    } else {
+      arrayOfFiles.push(path.join(__dirname, dirPath, file));
     }
   });
 
