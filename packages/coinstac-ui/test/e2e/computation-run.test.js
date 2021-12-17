@@ -44,7 +44,10 @@ describe('e2e run computation with 1 member', () => {
     appWindow = await app.firstWindow();
     appWindow.on('console', msg => console.log(msg.text()));
     appWindow.on('pageerror', (err) => {
-      console.log(`******** Window Error: ${err.message}`);
+      console.log(`**************** Window Error: ${err.message}`);
+    });
+    appWindow.on('crash', (err) => {
+      console.log(`**************** Window crash: ${err.message}`);
     });
   });
 
