@@ -40,5 +40,8 @@
     "coinstac-manager": "^5.4.0",
     "coinstac-pipeline": "^5.4.0",
     "commander": "^6.1.0"
+  },
+  "devDependencies": {
+    "ava": "^3.15.0"
   }
 }

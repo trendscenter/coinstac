@@ -67,3 +67,5 @@ packages/coinstac-ui/coinstac-mas*
 
 packages/coinstac-ui/config/local-build-copy.json
 build/
+
+.vscode

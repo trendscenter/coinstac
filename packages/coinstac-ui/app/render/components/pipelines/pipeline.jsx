@@ -45,6 +45,7 @@ import {
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
   FETCH_ALL_HEADLESS_CLIENTS,
+  FETCH_ALL_PIPELINES_QUERY,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -403,7 +404,8 @@ class Pipeline extends Component {
     const { client } = this.props;
     const { pipeline } = this.state;
 
-    const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const pipelinesData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+    const data = pipelinesData.fetchAllPipelines.find(p => p.id === pipeline) || {};
     data.fetchPipeline = { ...pipeline, __typename: 'Pipeline' };
 
     client.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
