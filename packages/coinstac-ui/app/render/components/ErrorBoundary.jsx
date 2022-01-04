@@ -2,12 +2,10 @@ import {
   Box, Button, Paper, TextField,
 } from '@material-ui/core';
 import axios from 'axios';
-import { remote } from 'electron';
 import React, { useState } from 'react';
+import { ipcRenderer, clipboard } from 'electron';
 import { API_TOKEN_KEY } from '../state/ducks/auth';
 
-const { app } = window.require('electron').remote;
-const { clipboard } = window.require('electron');
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -22,12 +20,12 @@ class ErrorBoundary extends React.Component {
   };
 
   closeApplication = () => {
-    app.quit();
+    ipcRenderer.invoke('quit');
   };
 
   relaunchApplication = () => {
-    app.relaunch();
-    app.quit();
+    ipcRenderer.invoke('relaunch');
+    ipcRenderer.invoke('quit');
   };
 
   openBugReportGithub = () => {
@@ -126,7 +124,7 @@ function BugReport(props) {
   };
 
   const handleSubmit = () => {
-    const apiServer = remote.getGlobal('config').get('apiServer');
+    const { apiServer } = window.config;
     const API_URL = `${apiServer.protocol}//${apiServer.hostname}${
       apiServer.port ? `:${apiServer.port}` : ''
     }${apiServer.pathname ? `${apiServer.pathname}` : '/graphql'}`;
