@@ -3,7 +3,6 @@ import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
-import { SnackbarProvider } from 'notistack';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider } from '@material-ui/core/styles';
 import ActivityIndicator from './activity-indicator/activity-indicator';
@@ -75,20 +74,10 @@ class App extends Component {
           <MuiThemeProvider theme={theme}>
             <CssBaseline />
             <ActivityIndicator visible={isLoading} />
-
-            <SnackbarProvider
-              maxSnack={3}
-              classes={{
-                variantSuccess: 'notistack-notification notistack-notification-success',
-                variantError: 'notistack-notification notistack-notification-error',
-                variantWarning: 'notistack-notification notistack-notification-warning',
-                variantInfo: 'notistack-notification notistack-notification-info',
-              }}
-            >
+              
               {checkJWT && children}
 
               <DisplayNotificationsListener />
-            </SnackbarProvider>
           </MuiThemeProvider>
         </div>
       </ErrorBoundary>

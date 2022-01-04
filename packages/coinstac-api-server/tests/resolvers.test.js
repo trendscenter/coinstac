@@ -885,6 +885,6 @@ test('createIssue', async (t) => {
 });
 
 test.after.always('cleanup', async () => {
-  database.dropDbInstance();
+  await database.dropDbInstance();
   await database.close();
 });

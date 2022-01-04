@@ -4,6 +4,7 @@ const debug = require('debug');
 const Emitter = require('events');
 const Computation = require('./computation');
 const Store = require('./io-store');
+const utils = require('./utils');
 
 const debugProfilePipeline = debug('pipeline:profile-pipeline');
 
@@ -30,7 +31,6 @@ module.exports = {
   {
     clientId,
     imageDirectory,
-    logger,
     alternateInputDirectory,
     operatingDirectory,
     owner,
@@ -94,7 +94,7 @@ module.exports = {
     };
     let totalCompTime = 0;
     let totalCodeTime = 0;
-    debugProfilePipeline.log = l => logger.info(`PROFILING: ${l}`);
+    debugProfilePipeline.log = l => utils.logger.info(`PROFILING: ${l}`);
 
     return {
       activeControlBox,
@@ -211,7 +211,7 @@ module.exports = {
                       stack,
                     }
                   );
-                  logger.error(`Pipeline Error: ${iterationError}`);
+                  utils.logger.error(`Pipeline Error: ${iterationError}`);
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {

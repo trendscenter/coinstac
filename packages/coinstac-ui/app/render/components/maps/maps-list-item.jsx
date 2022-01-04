@@ -12,14 +12,16 @@ import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
   rootPaper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
+    padding: theme.spacing(2),
     marginTop: theme.spacing(2),
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   title: {
     marginBottom: theme.spacing(1),

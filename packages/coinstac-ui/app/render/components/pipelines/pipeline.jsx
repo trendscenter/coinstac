@@ -81,12 +81,14 @@ const styles = theme => ({
     marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
+    padding: theme.spacing(2),
     marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   tooltip: {
     color: '#ab8e6b',

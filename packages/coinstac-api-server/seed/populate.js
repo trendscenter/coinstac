@@ -252,7 +252,7 @@ async function populatePipelines() {
 async function populateRuns() {
   const db = database.getDbInstance();
 
-  db.collection('runs').insertMany([
+  return db.collection('runs').insertMany([
     {
       _id: RUN_IDS[0],
       clients: {
@@ -1096,6 +1096,13 @@ async function populateDatasets() {
           },
         },
       },
+      otherInfo: {
+        modality: 'sMRI',
+        numberOfSubjects: 20,
+        numberOfSessions: 20,
+        subjectGroups: ['schizophrenia', 'controls'],
+        description: '10 subjects diagnosed with schizophrenia and 10 controls, scanned with 3T Siemens scanner, preprocessed with VBM',
+      },
     },
     {
       owner: {
@@ -1138,6 +1145,13 @@ async function populateDatasets() {
             F: 'female',
           },
         },
+      },
+      otherInfo: {
+        modality: 'fMRI',
+        numberOfSubjects: 10,
+        numberOfSessions: 10,
+        subjectGroups: ['alcoholism'],
+        description: '10 subjects with alcoholism',
       },
     },
     {
@@ -1188,6 +1202,13 @@ async function populateDatasets() {
           },
         },
       },
+      otherInfo: {
+        modality: 'dMRI',
+        numberOfSubjects: 20,
+        numberOfSessions: 20,
+        subjectGroups: ['schizophrenia', 'controls'],
+        description: '10 subjects diagnosed with schizophrenia and 10 controls, scanned with 3T Siemens scanner, preprocessed with VBM',
+      },
     },
   ]);
 }
@@ -1195,8 +1216,9 @@ async function populateDatasets() {
 async function populate(closeConnection = true) {
   await database.connect();
 
-  database.dropDbInstance();
-
+  await database.dropDbInstance();
+  database.getDbInstance();
+  await database.createDbIndexes();
   await populateComputations();
   await populateConsortia();
   await populatePipelines();
