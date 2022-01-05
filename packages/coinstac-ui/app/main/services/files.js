@@ -35,18 +35,17 @@ module.exports = {
    * path.
    */
   showDialog: (mainWindow, filters, properties) => {
-    // if (process.env.NODE_ENV === 'test') {
-    //   return mockFileDialog();
-    // }
+    if (process.env.NODE_ENV === 'test') {
+      return mockFileDialog();
+    }
 
-    // return dialog.showOpenDialog(
-    //   mainWindow,
-    //   {
-    //     filters,
-    //     properties,
-    //   }
-    // );
-    return mockFileDialog();
+    return dialog.showOpenDialog(
+      mainWindow,
+      {
+        filters,
+        properties,
+      }
+    );
   },
 
   /**
