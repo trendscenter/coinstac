@@ -9,7 +9,7 @@ const readFile = pify(require('fs').readFile);
 const writeFile = pify(require('fs').writeFile);
 const open = pify(require('fs').open);
 const close = pify(require('fs').close);
-const cliOpts = require('./parse-cli-input.js').get();
+const cliOpts = require('./parse-cli-input').get();
 
 function buildLogFilePath(config) {
   return path.join(config.get('logLocations')[process.platform], config.get('logFile'));
