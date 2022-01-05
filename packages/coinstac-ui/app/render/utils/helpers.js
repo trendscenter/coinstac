@@ -86,23 +86,44 @@ export const isUserInGroup = (userId, groupArr) => {
  * @param {Csv files} files
  */
 export function readCsvFreesurferFiles(files) {
+  console.log({ message: 'in helpers.js in readCsvFreesurferFiles', files });
   const readPromises = files.map(file => new Promise((resolve, reject) => {
+    window.myStreams = [];
     try {
+      console.log({ message: 'in helpers.js in readCsvFreesurferFiles in the try block', file });
       const inputStream = fs.createReadStream(file, 'utf8');
+      window.myStreams.push(inputStream);
 
       const data = {};
       let header = [];
 
       inputStream
-        .pipe(new CsvReadableStream({
-          parseNumbers: true, parseBooleans: true, trim: true, skipHeader: true,
-        }))
-        .on('header', (headerRow) => {
-          header = headerRow;
+        .on('open', (msg) => {
+          console.log({ message: 'inputStream is open', msg });
         })
-        .on('data', (row) => {
-          const rowData = {};
+        .on('ready', (msg) => {
+          console.log({ message: 'inputStream is ready', msg });
+        })
+        .on('close', (msg) => {
+          console.log({ message: 'inputStream is close', msg });
+        })
+        .on('data', (msg) => {
+          console.log({ message: 'inputStream is data', msg });
+        })
+        .on('error', (msg) => {
+          console.log({ message: 'inputStream is error', msg });
+        });
 
+      const myCsvReadableStream = new CsvReadableStream({
+        parseNumbers: true, parseBooleans: true, trim: true, skipHeader: true,
+      });
+
+      inputStream.pipe(myCsvReadableStream);
+
+      myCsvReadableStream
+        .on('data', (row) => {
+          console.log({ message: 'stream2 on data' });
+          const rowData = {};
           row.forEach((cell, i) => {
             if (i === 0) {
               return;
@@ -114,19 +135,64 @@ export function readCsvFreesurferFiles(files) {
           // First column of each row serves as the row id
           data[row[0]] = rowData;
         })
+        .on('header', (headerRow) => {
+          console.log({ message: 'stream2 on header' });
+          header = headerRow;
+        })
+
         .on('end', () => {
+          console.log({ message: 'stream2 on end' });
           // Remove the first column from the header as it's just an id and does not need to
           // be shown to the user
           header = header.filter((col, i) => i !== 0);
-
           resolve({ header, data });
+        })
+
+        .on('close', () => {
+          console.log({ message: 'stream2 on close' });
+          header = header.filter((col, i) => i !== 0);
+          resolve({ header, data });
+        })
+
+        .on('finish', () => {
+          console.log({ message: 'stream2 on finish' });
+          header = header.filter((col, i) => i !== 0);
+          resolve({ header, data });
+        })
+
+        .on('error', (e) => {
+          console.log({ message: 'stream2 on error' });
+          reject(e);
+        })
+
+        .on('drain', (e) => {
+          console.log({ message: 'stream2 on drain' });
+          reject(e);
+        })
+
+        .on('pipe', (e) => {
+          console.log({ message: 'stream2 on pipe' });
+          reject(e);
+        })
+
+        .on('readable', () => {
+          console.log({ message: 'stream2 on readable' });
+        })
+
+        .on('pause', () => {
+          console.log({ message: 'stream2 on pause' });
         });
+
+
+      console.log({ message: 'after inputStream initialized', inputStream });
     } catch (error) {
+      console.log({ error });
       reject(error);
     }
   }));
 
   return Promise.all(readPromises);
+  // return [{ header: ['header1', 'header2'], data: ['data1', 'data2'] }];
 }
 
 export const buildTree = (nodes) => {
