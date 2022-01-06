@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import ipcPromise from 'ipc-promise';
 import { withStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -19,6 +18,7 @@ import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import InfoIcon from '@material-ui/icons/Info';
+import { ipcRenderer } from 'electron';
 
 const styles = theme => ({
   selectFileButton: {
@@ -48,7 +48,7 @@ function openFileDialog(multiple, directory, extensions, filterName) {
     properties.push('multiSelections');
   }
 
-  return ipcPromise.send('open-dialog', { filters, properties });
+  return ipcRenderer.invoke('open-dialog', { filters, properties });
 }
 
 function FilePicker({
@@ -72,13 +72,13 @@ function FilePicker({
             }
           }}
         >
-          { directory ? 'Select Directory(s)' : 'Select File(s)' }
+          {directory ? 'Select Directory(s)' : 'Select File(s)'}
         </Button>
         {
           tooltip && (
             <Tooltip
               title={
-                <Typography variant="body1">{ tooltip }</Typography>
+                <Typography variant="body1">{tooltip}</Typography>
               }
             >
               <InfoIcon />
@@ -95,7 +95,7 @@ function FilePicker({
                   <FileCopyIcon />
                 </ListItemIcon>
                 <ListItemText primary="Click to see selected files" />
-                { expandList ? <ExpandLessIcon /> : <ExpandMoreIcon /> }
+                {expandList ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </ListItem>
             </List>
             <Collapse in={expandList} timeout="auto">
@@ -109,7 +109,7 @@ function FilePicker({
                           variant="body2"
                           color="textPrimary"
                         >
-                          { file }
+                          {file}
                         </Typography>
                       </ListItemText>
                       <ListItemSecondaryAction>
