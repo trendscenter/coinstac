@@ -261,6 +261,14 @@ class ConsortiaList extends Component {
             onClick={this.stopPipeline(consortium.activePipelineId)}
           >
             Stop Pipeline
+          </Button>,
+          <Button
+            key={`${consortium.id}-suspend-pipeline-button`}
+            variant="contained"
+            className={classes.button}
+            onClick={this.suspendPipeline(consortium.id)}
+          >
+            Suspend Pipeline
           </Button>
         );
       }
@@ -430,6 +438,20 @@ class ConsortiaList extends Component {
       memberConsortia: orderBy(memberConsortia, ['createDate'], ['desc']),
       otherConsortia: orderBy(otherConsortia, ['createDate'], ['desc']),
     };
+  }
+
+  suspendPipeline = consortiumId => () => {
+    const { runs } = this.props;
+
+    const presentRun = runs
+      .filter(run => run.consortiumId === consortiumId)
+      .reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
+      });
+
+    if (presentRun) {
+      ipcRenderer.send('suspend-pipeline', presentRun.id);
+    }
   }
 
   startPipeline(consortiumId) {

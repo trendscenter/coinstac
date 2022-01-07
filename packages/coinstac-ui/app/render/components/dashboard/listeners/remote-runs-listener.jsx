@@ -38,7 +38,7 @@ function RemoteRunsListener({
 
       if (remoteRun.results) {
         runData.status = 'complete';
-      } else if (remoteRunsFirstFetch.error) {
+      } else if (remoteRun.error) {
         runData.status = 'error';
       }
 
@@ -69,7 +69,7 @@ function RemoteRunsListener({
       if (!localRun.results) {
         notifySuccess(`${consortium.name} Pipeline Complete.`);
       }
-    } else if (localRun.error) {
+    } else if (remoteRunChanged.error) {
       runData.status = 'error';
 
       if (!localRun.error) {

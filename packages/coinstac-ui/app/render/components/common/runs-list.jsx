@@ -16,6 +16,8 @@ const RunsList = ({
   hoursSinceActive,
   runs,
   stopPipeline,
+  suspendPipeline,
+  resumePipeline,
 }) => {
   let runNoResultsCount = 0;
 
@@ -43,6 +45,8 @@ const RunsList = ({
                 consortium && consortium.name ? consortium.name : ''
               }
               stopPipeline={stopPipeline(run.id)}
+              suspendPipeline={suspendPipeline(run.id)}
+              resumePipeline={resumePipeline(run)}
             />
           );
         }
@@ -84,6 +88,8 @@ const RunsList = ({
 
 RunsList.defaultProps = {
   stopPipeline: () => {},
+  suspendPipeline: () => {},
+  resumePipeline: () => {},
 };
 
 RunsList.propTypes = {
@@ -93,6 +99,8 @@ RunsList.propTypes = {
   limitToComplete: PropTypes.bool.isRequired,
   runs: PropTypes.array.isRequired,
   stopPipeline: PropTypes.func,
+  suspendPipeline: PropTypes.func,
+  resumePipeline: PropTypes.func,
 };
 
 const mapStateToProps = ({ auth }) => ({

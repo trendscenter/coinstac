@@ -259,6 +259,8 @@ class CoinstacClient {
    *                        for this pipeline
    * @param {*} runId The id if this particular pipeline run
    * @param {*} runPipeline The run's copy of the current pipeline
+   * @param {*} runSaveState This object represents the state where the run was last
+   *                          suspended (optional)
    */
   startPipeline(
     clients,
@@ -267,9 +269,15 @@ class CoinstacClient {
     filePaths,
     runId,
     runPipeline,
-    networkVolume = false
+    networkVolume = false,
+    runSaveState
   ) {
-    const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
+    const runObj = {
+      spec: clientPipeline,
+      runId,
+      timeout: clientPipeline.timeout,
+      saveState: runSaveState,
+    };
 
     if (clients) {
       runObj.clients = clients;
@@ -368,6 +376,14 @@ class CoinstacClient {
    */
   requestPipelineStop(runId) {
     this.pipelineManager.stopPipeline(runId);
+  }
+
+  /**
+   * Suspends a pipeline and returns its current state, so it can be resumed later
+   * @param {string} runId id of the pipeline run
+   */
+  suspendPipeline(runId) {
+    return this.pipelineManager.suspendPipeline(runId);
   }
 
   unlinkFiles(runId) {

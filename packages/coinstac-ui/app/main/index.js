@@ -65,6 +65,7 @@ const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js'
 const loadConfig = require('../config.js');
 const fileFunctions = require('./services/files.js');
 
+const runsStates = {};
 
 const getAllFilesInDirectory = (directory) => {
   const dirents = fs.readdirSync(directory, { withFileTypes: true });
@@ -299,6 +300,12 @@ loadConfig()
 
       function startPipelineRun(run, filesArray, consortium, networkVolume) {
         const pipeline = run.pipelineSnapshot;
+        const runSaveState = runsStates[run.id];
+
+        if (runSaveState) {
+          // delete saved state
+          runsStates[run.id] = undefined;
+        }
 
         const computationImageList = pipeline.steps
           .map(step => step.computations
@@ -382,7 +389,8 @@ loadConfig()
               filesArray,
               run.id,
               run.pipelineSteps,
-              networkVolume
+              networkVolume,
+              runSaveState
             )
               .then(({ pipeline, result }) => {
                 // Listen for local pipeline state updates
@@ -515,6 +523,22 @@ loadConfig()
       ipcMain.on('stop-pipeline', (event, { pipelineId, runId }) => {
         try {
           return initializedCore.requestPipelineStop(pipelineId, runId);
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      ipcPromise.on('suspend-pipeline', async ({ runId }) => {
+        try {
+          const saveState = await initializedCore.suspendPipeline(runId);
+          runsStates[runId] = saveState;
+          return true;
         } catch (err) {
           logger.error(err);
           mainWindow.webContents.send('docker-error', {
