@@ -1,14 +1,13 @@
 const {
   ipcMain,
   Notification,
-  quit,
-  relaunch,
+  app,
 } = require('electron');
 
-ipcMain.handle('quit', () => quit());
+ipcMain.handle('quit', () => app.quit());
 ipcMain.handle('relaunch', () => {
-  relaunch();
-  quit();
+  app.relaunch();
+  app.quit();
 });
 
 

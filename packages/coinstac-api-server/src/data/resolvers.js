@@ -302,7 +302,7 @@ const resolvers = {
      * Returns all pipelines.
      * @return {array} List of all pipelines
      */
-    fetchAllPipelines: async () => {
+    fetchAllPipelines: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const pipelineSteps = await db.collection('pipelines').aggregate([
@@ -339,7 +339,17 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      return transformToClient(Object.values(pipelines));
+      const owningConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = owningConsortia.map(consortium => String(consortium._id));
+      let res = Object.values(pipelines);
+      if (!isAdmin(credentials.permissions)) {
+        res = res.filter(pipeline => {
+          return consortiaIds.includes(String(pipeline.owningConsortium))
+          || pipeline.shared;
+        });
+      }
+
+      return transformToClient(res);
     },
     /**
      * Returns single pipeline
