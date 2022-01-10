@@ -4,7 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
 
 const appPath = path.join(__dirname, '../..');
 
@@ -34,7 +34,7 @@ describe('e2e run computation with 2 members', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
       await fs.mkdir('/tmp/screenshots', { recursive: true });
-      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
+      exec(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
     }
   });
   before(async () => {
