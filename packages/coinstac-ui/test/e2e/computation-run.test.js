@@ -25,7 +25,6 @@ chai.use(chaiAsPromised);
 let appWindow;
 let app;
 let interval;
-let zero = 0;
 describe('e2e run computation with 1 member', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {

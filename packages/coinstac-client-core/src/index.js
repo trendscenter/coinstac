@@ -11,7 +11,7 @@ const nes = require('nes');
 const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
-const ncp = require('ncp').ncp;
+const { ncp } = require('ncp');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -301,7 +301,8 @@ class CoinstacClient {
             const linkPromises = [];
 
             if (filePaths) {
-              let stageFiles = process.env.CI ? fs.copy : fs.link;
+              debugger
+              let stageFiles = process.env.CI ? fs.copyFile : fs.link;
               if (networkVolume) {
                 stageFiles = fs.symlink;
                 runObj.alternateInputDirectory = filePaths.baseDirectory;
