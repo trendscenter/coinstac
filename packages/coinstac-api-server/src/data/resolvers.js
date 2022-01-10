@@ -247,7 +247,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { members: {[credentials.id]:credentials.username} }
+          { members: { [credentials.id]: credentials.username } }
         ]
       }).toArray();
 
@@ -273,10 +273,16 @@ const resolvers = {
      * Returns all computations.
      * @return {array} All computations
      */
-    fetchAllComputations: async () => {
+    fetchAllComputations: async (_, { preprocess }) => {
       const db = database.getDbInstance();
 
-      const computations = await db.collection('computations').find().toArray();
+      let computations;
+      if (preprocess != null) {
+        computations = await db.collection('computations').find({ "meta.preprocess": preprocess }).toArray();
+      }
+      else {
+        computations = await db.collection('computations').find().toArray();
+      }
       return transformToClient(computations);
     },
     /**
@@ -723,7 +729,7 @@ const resolvers = {
             await axios.post(
               `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
             );
-          } catch (e) {}
+          } catch (e) { }
         });
       }
 
@@ -744,7 +750,7 @@ const resolvers = {
       const pipeline = await db.collection('pipelines').findOne({ _id: pipelineId });
 
       if (!permissions.consortia[pipeline.owningConsortium] ||
-          !permissions.consortia[pipeline.owningConsortium].includes('owner')
+        !permissions.consortia[pipeline.owningConsortium].includes('owner')
       ) {
         return Boom.forbidden('Action not permitted')
       }
@@ -1146,7 +1152,7 @@ const resolvers = {
     updateConsortiumMappedUsers: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
-      const updateObj =  {};
+      const updateObj = {};
 
       if (args.isMapped) {
         updateObj.$addToSet = {
