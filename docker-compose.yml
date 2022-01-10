@@ -37,6 +37,7 @@ services:
       - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=coinstac_local-volume
       - CI_PORT_START=8101
+      - ELECTRON_ENABLE_LOGGING=true
   api:
     depends_on:
       - 'mongo'

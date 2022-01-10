@@ -4,7 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
 
 const appPath = path.join(__dirname, '../..');
 
@@ -24,17 +24,18 @@ chai.use(chaiAsPromised);
 
 let appWindow;
 let app;
-
+let interval;
+let zero = 0;
 describe('e2e run computation with 1 member', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
       await fs.mkdir('/tmp/screenshots', { recursive: true });
-      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
+      exec(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
     }
   });
   before(async () => {
     app = await electron.launch({
-      args: ['--enable-logging', appPath],
+      args: ['--no-gpu', '--enable-logging', appPath],
       env: Object.assign({}, process.env, { NODE_ENV: 'test' }),
       logger: {
         isEnabled: () => true,
@@ -44,15 +45,16 @@ describe('e2e run computation with 1 member', () => {
     appWindow = await app.firstWindow();
     appWindow.on('console', msg => console.log(msg.text()));
     appWindow.on('pageerror', (err) => {
-      console.log(`**************** Window Error: ${err.message}`);
+      console.log(`**************** Window Error: ${JSON.stringify(err, null, 2)}`);
     });
     appWindow.on('crash', (err) => {
-      console.log(`**************** Window crash: ${err.message}`);
+      console.log(`**************** Window crash: ${JSON.stringify(err, null, 2)}`);
     });
   });
 
   after(async () => {
     if (process.env.CI) {
+      clearInterval(interval);
       console.log('/********** Main process logs **********/');
       console.log((await fs.readFile('coinstac-log.json')).toString());
     }
@@ -150,7 +152,7 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.click('#data-0-area', { timeout: EXIST_TIMEOUT });
     await appWindow.click('#data-0-area .react-select-dropdown-menu div:has-text("5th-Ventricle")', { timeout: EXIST_TIMEOUT });
 
-    await appWindow.fill('[name="step-lambda"]', '0');
+    await appWindow.fill('[name="step-lambda"]', '1');
 
     await appWindow.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
 
@@ -205,6 +207,11 @@ describe('e2e run computation with 1 member', () => {
   });
 
   it('runs a computation', async () => {
+    try {
+
+
+
+
     await appWindow.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
     // Assert
@@ -212,6 +219,9 @@ describe('e2e run computation with 1 member', () => {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
+    } catch (e) {
+      console.log(`-----------------------------------------${e}`);
+    }
   });
 
   it('displays computation progress', async () => {
