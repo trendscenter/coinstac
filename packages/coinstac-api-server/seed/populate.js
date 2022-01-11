@@ -3,6 +3,8 @@ const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
+const nn = require('./data/coinstac-dinunet');
+const nnGPU = require('./data/coinstac-dinunet-gpu');
 const dsneMS = require('./data/coinstac-dsne-ms');
 const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
@@ -41,6 +43,8 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -96,6 +100,8 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
+    { ...nn, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
+    { ...nnGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
