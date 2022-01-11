@@ -1,10 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import FilePicker from '../common/file-picker';
+import FilePicker from '../../common/file-picker';
 
 const styles = theme => ({
   rootPaper: {
@@ -35,7 +34,7 @@ function MapsFilesField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
   function setSelectedFiles(selectedFiles) {
-    onChange(fieldName, { files: selectedFiles });
+    onChange(fieldName, { fieldType: fieldDescription.type, files: selectedFiles });
   }
 
   function appendSelectedFiles(selectedFiles) {
@@ -63,7 +62,7 @@ function MapsFilesField({
   }
 
   return (
-    <Paper className={classes.rootPaper} elevation={2}>
+    <div>
       <Typography variant="h4" className={classes.header}>
         {fieldName}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -76,7 +75,7 @@ function MapsFilesField({
         selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
         deleteFile={fileIndex => deleteFile(fileIndex)}
       />
-    </Paper>
+    </div>
   );
 }
 

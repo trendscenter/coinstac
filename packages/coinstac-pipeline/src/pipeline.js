@@ -139,7 +139,10 @@ module.exports = {
                       })
                   );
                 });
-              } else if (cache[step].variables[key].type === 'files' || cache[step].variables[key].type === 'file') {
+              } else if (
+                cache[step].variables[key].type === 'files'
+                || cache[step].variables[key].type === 'file'
+                || cache[step].variables[key].type === 'directory') {
                 cache[step].variables[key].value = output[key];
                 const fileArray = Array.isArray(output[key]) ? output[key] : [output[key]];
                 fileArray.forEach((file) => {

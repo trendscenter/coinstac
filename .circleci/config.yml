@@ -4,9 +4,12 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     steps:
+      - run: mkdir screenshots/
       - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
       - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
       - run: cd coinstac && docker-compose up --exit-code-from ui
+      - store_artifacts:
+          path: /home/circleci/screenshots
 workflows:
   build-and-test:
     jobs:
