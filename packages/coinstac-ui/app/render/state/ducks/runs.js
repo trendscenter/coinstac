@@ -1,16 +1,55 @@
 import { uniqBy } from 'lodash';
+import { ipcRenderer } from 'electron';
+
 import { saveLocalRunResult } from './localRunResults';
+import { notifyInfo, notifyError } from './notifyAndLog';
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
 const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
 const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
+const SAVE_RUN_AWAITING_MAP = 'SAVE_RUN_AWAITING_MAP';
+const REMOVE_RUN_AWAITING_MAP = 'REMOVE_RUN_AWAITING_MAP';
 
 // Action Creators
 export const clearRuns = () => ({
   type: CLEAR_RUNS,
   payload: null,
 });
+
+export const startRun = (run, consortium) => (dispatch, getState) => {
+  const { maps, auth } = getState();
+
+  if (!consortium) {
+    dispatch(notifyError('Consortium no longer exists for pipeline run.'));
+    return;
+  }
+
+  const dataMap = maps.consortiumDataMappings.find(m => m.consortiumId === consortium.id
+    && m.pipelineId === consortium.activePipelineId);
+
+  if (!dataMap) {
+    dispatch(notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`));
+    dispatch({
+      type: SAVE_RUN_AWAITING_MAP,
+      payload: run,
+    });
+    return;
+  }
+
+  dispatch(notifyInfo(`Pipeline Starting for ${consortium.name}.`));
+  dispatch({
+    type: REMOVE_RUN_AWAITING_MAP,
+    payload: run.id,
+  });
+
+  ipcRenderer.send('start-pipeline', {
+    consortium,
+    dataMappings: dataMap,
+    pipelineRun: run,
+    networkVolume: auth.networkVolume,
+  });
+};
 
 export const saveLocalRun = run => (dispatch, getState) => {
   if (run.type === 'local') {
@@ -45,6 +84,7 @@ const INITIAL_STATE = {
   localRuns: [],
   remoteRuns: [],
   runs: [],
+  runsAwaitingDataMap: [],
 };
 
 function runSort(a, b) {
@@ -73,6 +113,18 @@ export default function reducer(state = INITIAL_STATE, action) {
       localRuns[index] = { ...localRuns[index], ...action.payload.object };
 
       return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
+    }
+    case SAVE_RUN_AWAITING_MAP: {
+      return {
+        ...state,
+        runsAwaitingDataMap: [...state.runsAwaitingDataMap, action.payload],
+      };
+    }
+    case REMOVE_RUN_AWAITING_MAP: {
+      return {
+        ...state,
+        runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id === action.payload),
+      };
     }
     default:
       return state;
