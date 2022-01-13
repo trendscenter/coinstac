@@ -48,7 +48,6 @@
       },
       "data": {
         "label": "Data",
-<<<<<<< HEAD
         "type": "files",
         "items": [
           "Files"
@@ -59,33 +58,16 @@
           "h5"
         ],
         "source": "member",
-=======
-        "type": "freesurfer",
-        "items": [
-          "FreeSurfer"
-        ],
-        "extensions": [
-          "csv",
-          "txt"
-        ],
-        "source": "owner",
->>>>>>> master
         "order": 2
       },
       "task_id": {
         "default": "FS-Classification",
         "values": [
           "FS-Classification",
-<<<<<<< HEAD
           "VBM-Classification",
           "ICA-Classification"
         ],
         "label": "Pick a NN task:",
-=======
-          "VBM-Classification"
-        ],
-        "label": "Which task to run?",
->>>>>>> master
         "type": "select",
         "source": "owner",
         "group": "NN Params",
@@ -97,11 +79,7 @@
           "train",
           "test"
         ],
-<<<<<<< HEAD
         "label": "NN Mode:",
-=======
-        "label": "NN Mode",
->>>>>>> master
         "type": "select",
         "source": "owner",
         "group": "NN Params",
@@ -113,11 +91,7 @@
           "dSGD",
           "rankDAD"
         ],
-<<<<<<< HEAD
         "label": "Pick aggregation engine:",
-=======
-        "label": "Aggregation engine to use",
->>>>>>> master
         "type": "select",
         "source": "owner",
         "conditional": {
@@ -129,11 +103,7 @@
       },
       "num_reducers": {
         "default": 2,
-<<<<<<< HEAD
         "label": "Number of reducers in the aggregator(Default is good):",
-=======
-        "label": "Number of reducers in the aggregator(Depends on number of sites)",
->>>>>>> master
         "type": "number",
         "source": "owner",
         "group": "NN Params",
@@ -141,43 +111,23 @@
       },
       "batch_size": {
         "default": 16,
-<<<<<<< HEAD
         "label": "Batch size:",
         "type": "number",
         "source": "owner",
-=======
-        "label": "Batch size",
-        "type": "number",
-        "source": "member",
->>>>>>> master
         "group": "NN Params",
         "order": 7
       },
       "local_iterations": {
         "default": 1,
-<<<<<<< HEAD
         "label": "Local gradient accumulation iterations(effective batch size = batch size * gradient accumulation iterations)",
         "type": "number",
         "source": "owner",
-=======
-        "label": "Number of gradient accumulate iterations(Effective batch size = batch_size * grad_accumulation_iters)",
-        "type": "number",
-        "source": "member",
-        "conditional": {
-          "variable": "mode",
-          "value": "train"
-        },
->>>>>>> master
         "group": "NN Params",
         "order": 8
       },
       "learning_rate": {
         "default": 0.001,
-<<<<<<< HEAD
         "label": "Learning rate:",
-=======
-        "label": "Learning rate",
->>>>>>> master
         "type": "number",
         "source": "owner",
         "conditional": {
@@ -189,11 +139,7 @@
       },
       "epochs": {
         "default": 101,
-<<<<<<< HEAD
         "label": "Epochs:",
-=======
-        "label": "Epochs",
->>>>>>> master
         "type": "number",
         "source": "owner",
         "conditional": {
@@ -203,7 +149,6 @@
         "group": "NN Params",
         "order": 10
       },
-<<<<<<< HEAD
       "pretrain": {
         "default": false,
         "label": "Use the site with maximum data to pre-train locally as starting point:",
@@ -239,11 +184,6 @@
       "validation_epochs": {
         "default": 1,
         "label": "Run validation after every epochs:",
-=======
-      "validation_epochs": {
-        "default": 1,
-        "label": "Number of epochs for validation step",
->>>>>>> master
         "type": "number",
         "source": "owner",
         "conditional": {
@@ -251,7 +191,6 @@
           "value": "train"
         },
         "group": "NN Params",
-<<<<<<< HEAD
         "order": 13
       },
       "precision_bits": {
@@ -269,15 +208,11 @@
         },
         "group": "NN Params",
         "order": 14
-=======
-        "order": 11
->>>>>>> master
       },
       "gpus": {
         "default": [
           0
         ],
-<<<<<<< HEAD
         "label": "GPU IDs to use Eg. [0], [0, 1]:",
         "type": "object",
         "source": "member",
@@ -303,33 +238,6 @@
       "patience": {
         "default": 35,
         "label": "Early stopping patience epochs:",
-=======
-        "label": "GPU IDs to use. Eg. [0], [0, 1]",
-        "type": "object",
-        "source": "member",
-        "group": "NN Params",
-        "order": 12
-      },
-      "pin_memory": {
-        "default": false,
-        "label": "Pin Memory",
-        "type": "boolean",
-        "source": "member",
-        "group": "NN Params",
-        "order": 13
-      },
-      "num_workers": {
-        "default": 0,
-        "label": "Number of workers",
-        "type": "number",
-        "source": "member",
-        "group": "NN Params",
-        "order": 14
-      },
-      "patience": {
-        "default": 101,
-        "label": "Early stop patience epochs",
->>>>>>> master
         "type": "number",
         "source": "owner",
         "conditional": {
@@ -337,90 +245,14 @@
           "value": "train"
         },
         "group": "NN Params",
-<<<<<<< HEAD
         "order": 18
       },
-=======
-        "order": 15
-      },
-      "load_lim": {
-        "default": null,
-        "label": "Limit the data to be loaded (Useful for debugging the pipeline with few data)",
-        "type": "number",
-        "source": "owner",
-        "group": "NN Params",
-        "order": 16
-      },
-      "load_sparse": {
-        "default": false,
-        "label": "Load each data item in single dataloader(Useful when working with patches of images like in semantic segmentation.)",
-        "type": "boolean",
-        "source": "owner",
-        "conditional": {
-          "variable": "task_id",
-          "value": "N/A"
-        },
-        "group": "NN Params",
-        "order": 17
-      },
-      "pretrain": {
-        "default": false,
-        "label": "Use the site with MAX amount of data to pre-train locally and begin distributed training from there.",
-        "type": "boolean",
-        "source": "owner",
-        "group": "NN Params",
-        "order": 18
-      },
-      "pretrain_args": {
-        "default": {
-          "epochs": 0,
-          "learning_rate": 0.001,
-          "batch_size": 16,
-          "gpus": [
-            0
-          ],
-          "local_iterations": 1,
-          "validation_epochs": 1,
-          "pin_memory": false,
-          "num_workers": 0,
-          "patience": 51
-        },
-        "label": "Pretrain arguments (Will override the main arguments above)",
-        "type": "object",
-        "source": "member",
-        "conditional": {
-          "variable": "pretrain",
-          "value": true
-        },
-        "group": "NN Params",
-        "order": 19
-      },
-      "dataloader_args": {
-        "default": {
-          "train": {
-            "drop_last": true
-          },
-          "validation": {
-            "drop_last": false
-          },
-          "test": {
-            "drop_last": false
-          }
-        },
-        "label": "Dataloader arguments (Will override the main arguments above)",
-        "type": "object",
-        "source": "member",
-        "group": "NN Params",
-        "order": 20
-      },
->>>>>>> master
       "split_ratio": {
         "default": [
           0.8,
           0.1,
           0.1
         ],
-<<<<<<< HEAD
         "label": "Data split ratio for train, validation, test in the same order:",
         "type": "object",
         "source": "owner",
@@ -470,92 +302,10 @@
           "split_files": []
         },
         "label": "VBM classification parameters.",
-=======
-        "label": "Data split ratio for train, validation, and/or test. Eg. [0.6, 0.2, 0.2], [0.8, 0.2], or [1](Default keys- train, validation, and test will be used from left to right)",
-        "type": "object",
-        "source": "owner",
-        "group": "Pick one",
-        "order": 21
-      },
-      "num_folds": {
-        "default": null,
-        "label": "K-Fold Cross Validation, K? (Mutually exclusive with data split ratio)",
-        "type": "number",
-        "source": "owner",
-        "group": "Pick one",
-        "order": 22
-      },
-      "monitor_metric": {
-        "default": "f1",
-        "label": "Metric to monitor for model selection.",
-        "type": "select",
-        "values": [
-          "f1",
-          "accuracy",
-          "precision",
-          "recall",
-          "overlap",
-          "average",
-          "time"
-        ],
-        "source": "owner",
-        "conditional": {
-          "variable": "mode",
-          "value": "train"
-        },
-        "group": "NN Params",
-        "order": 23
-      },
-      "metric_direction": {
-        "default": "maximize",
-        "label": "Metric direction of improvement.",
-        "type": "select",
-        "values": [
-          "maximize",
-          "minimize"
-        ],
-        "source": "owner",
-        "conditional": {
-          "variable": "mode",
-          "value": "train"
-        },
-        "group": "NN Params",
-        "order": 24
-      },
-      "log_header": {
-        "default": "Loss|F1",
-        "label": "Plots to be generated. Separate plot will be created for items separated by pipe (|).",
-        "type": "string",
-        "source": "owner",
-        "group": "NN Params",
-        "order": 25
-      },
-      "model_scale": {
-        "default": 1,
-        "label": "Scale factor for NN model.",
-        "type": "number",
-        "source": "owner",
-        "conditional": {
-          "variable": "task_id",
-          "value": "VBM-Classification"
-        },
-        "group": "Computation params",
-        "order": 26
-      },
-      "hidden_sizes": {
-        "default": [
-          256,
-          128,
-          64,
-          32
-        ],
-        "label": "Size of each inner NN layers (except input and the last layer)",
->>>>>>> master
         "type": "object",
         "source": "owner",
         "conditional": {
           "variable": "task_id",
-<<<<<<< HEAD
           "value": "VBM-Classification"
         },
         "group": "Computation",
@@ -591,52 +341,6 @@
         },
         "group": "Computation",
         "order": 26
-=======
-          "value": "FS-Classification"
-        },
-        "group": "Computation params",
-        "order": 27
-      },
-       "input_size": {
-        "default": 66,
-        "label": "Num of dependent variables",
-        "type": "number",
-        "source": "owner",
-        "conditional": {
-          "variable": "task_id",
-          "value": "FS-Classification"
-        },
-        "group": "Computation params",
-        "order": 28
-      },
-      "num_class": {
-        "default": 2,
-        "label": "Number of classes",
-        "type": "number",
-        "source": "owner",
-        "group": "Computation params",
-        "order": 29
-      },
-      "input_channel": {
-        "default": 1,
-        "label": "Number of input channels",
-        "type": "number",
-        "source": "owner",
-        "conditional": {
-          "variable": "task_id",
-          "value": "VBM-Classification"
-        },
-        "group": "Computation params",
-        "order": 30
-      },
-      "labels_column": {
-        "default": "isControl",
-        "label": "Column name to be used as label",
-        "type": "string",
-        "source": "member",
-        "group": "Computation params",
-        "order": 31
->>>>>>> master
       }
     },
     "output": {
