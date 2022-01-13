@@ -14,7 +14,7 @@ const {
   unlink,
 } = fs.promises;
 
-async function stupOuter({
+async function setupOuter({
   logger,
   mqttRemoteProtocol,
   mqttRemoteURL,
@@ -468,4 +468,4 @@ async function stupOuter({
   };
 }
 
-module.exports = stupOuter;
+module.exports = setupOuter;
