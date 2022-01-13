@@ -20,6 +20,7 @@ const sharedFields = {
       version
       id
       compspecVersion
+      preprocess
     }
     delete
     submittedBy
