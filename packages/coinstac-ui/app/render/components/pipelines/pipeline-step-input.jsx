@@ -20,6 +20,7 @@ import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-us
 import PipelineStepInputCsv from './pipeline-step-input/pipeline-step-input-csv';
 import PipelineStepInputFreesurfer from './pipeline-step-input/pipeline-step-input-freesurfer';
 import PipelineStepInputFiles from './pipeline-step-input/pipeline-step-input-files';
+import PipelineStepInputDirectory from './pipeline-step-input/pipeline-step-input-directory';
 import PipelineStepInputObject from './pipeline-step-input/pipeline-step-input-object';
 
 const styles = theme => ({
@@ -306,6 +307,9 @@ class PipelineStepInput extends Component {
                 />
               )
             }
+            {objParams.type === 'directory' && (
+              <PipelineStepInputDirectory />
+            )}
             {
               objParams.type === 'string' && (
                 <PipelineStepInputTextField
