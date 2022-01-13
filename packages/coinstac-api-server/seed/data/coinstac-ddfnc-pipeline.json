@@ -28,7 +28,7 @@
               "items": ["NIfTI"],
               "extensions": [["nii"]],
               "order": 0,
-              "source": "member",
+              "source": "member"
             },
             "mask": {
                 "label": "Mask",
