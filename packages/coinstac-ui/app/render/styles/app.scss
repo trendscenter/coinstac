@@ -51,32 +51,21 @@ html {
  * Logo
  */
 .logo {
-  margin: 0 0 0 4rem;
+  margin: 3rem 0;
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 1rem 0;
+}
 
-  abbr[title] {
-    border: none;
-    text-decoration: none;
-  }
-
-  abbr {
-    position: relative;
-
-    &::before {
-      background: url(../../../img/icons/png/256x256.png) no-repeat;
-      background-size: contain;
-      content: "";
-      height: 4rem;
-      width: 4rem;
-      vertical-align: top;
-      position: absolute;
-      left: -4.75rem;
-      top: -0.5rem;
-    }
-  }
+.logo::before {
+  background: url(../../../img/icons/coinstac-logo.png) no-repeat;
+  background-size: contain;
+  content: "";
+  height: 10rem;
+  width: 20rem;
+  vertical-align: top;
+  position: absolute;
 }
 
 .mainnav svg {
@@ -123,6 +112,17 @@ html {
       left: initial;
       height: auto;
     }
+
+    .logo {
+      margin: 3rem 0;
+      padding: 2.5rem 0 0;
+    }
+
+    .logo::before {
+      height: 8rem;
+      width: 18rem;
+    }
+
   }
 
   &-content {
