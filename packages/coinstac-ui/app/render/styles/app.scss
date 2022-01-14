@@ -204,7 +204,7 @@ html {
 
 .settings {
   .logs-wrapper {
-    height: calc(100% - 70px);
+    height: calc(100vh - 105px);
     background-color: whitesmoke;
     position: relative;
   }
@@ -235,11 +235,11 @@ html {
   }
 
   .scroll-to-bottom {
-    top: 15px;
+    bottom: 15px;
   }
 
   .scroll-to-top {
-    bottom: 15px;
+    top: 15px;
   }
 }
 

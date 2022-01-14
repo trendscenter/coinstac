@@ -55,8 +55,8 @@ class Logs extends Component {
           <div className="logs-wrapper">
             <button
               type="button"
-              className="scroll-to-bottom"
-              onClick={this.handleScrollToBottom}
+              className="scroll-to-top"
+              onClick={this.handleScrollToTop}
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
@@ -72,8 +72,8 @@ class Logs extends Component {
             </div>
             <button
               type="button"
-              className="scroll-to-top"
-              onClick={this.handleScrollToTop}
+              className="scroll-to-bottom"
+              onClick={this.handleScrollToBottom}
             >
               <ArrowDownwardIcon className="arrow-icon" />
             </button>
