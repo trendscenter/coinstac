@@ -19,7 +19,7 @@
                 "COINS_ENV": "development",
                 "NODE_ENV": "development"
             },
-           "runtimeArgs": [] 
+            "runtimeArgs": []
         },
         {
             "name": "Attach",
@@ -27,6 +27,20 @@
             "address": "localhost",
             "port": 5858,
             "sourceMaps": false
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "With TTY",
+            "program": "${workspaceRoot}/packages/coinstac-simulator/bin/coinstac-simulator",
+            "args": [
+                "--preprocess",
+                "--username",
+                "test1",
+                "--password",
+                "password"
+            ],
+            "console": "integratedTerminal"
         }
     ]
- }
+}

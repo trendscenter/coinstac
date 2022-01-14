@@ -4,7 +4,7 @@ const config = require('./config');
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
 
-const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, meta {  id,name,preprocess }}}';
+const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {dockerImage}, meta {  id,name,preprocess }}}';
 
 async function getIdToken(username, password) {
   const { data } = await axios.post('/authenticate', { username, password });
@@ -24,13 +24,15 @@ async function fetchComputations(id_token) {
       preprocess: true,
     },
   };
-  return axios.post('/graphql', payload, { headers });
+  const response = await axios.post('/graphql', payload, { headers });
+  return response.data.data.fetchAllComputations;
 }
 
 async function fetchPreprocessComputations(username, password) {
   const id_token = await getIdToken(username, password);
-  const { data } = await fetchComputations(id_token);
-  return data;
+  const computations = await fetchComputations(id_token);
+  return computations;
 }
 
-module.exports = fetchPreprocessComputations;
+
+module.exports = { fetchPreprocessComputations };

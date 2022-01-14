@@ -41,7 +41,7 @@ program
   .option('--username [username]', ' username for uploads')
   .option('--password [password]', ' password for uploads')
   .option('--loglevel [level]', ' enter info, debug, and silly log levels')
-  .option('--preprocess', '');
+  .option('--preprocess', 'preprocess');
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -76,27 +76,52 @@ if (program.loglevel) {
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { option } = require('commander');
-const fetchPreprocessComputations = require('../src/fetchPreprocessComputations');
+const { fetchPreprocessComputations } = require('../src/preprocess');
+const { pullImages } = require('../../coinstac-pipeline/node_modules/coinstac-manager/src');
 
 if (program.preprocess) {
   logger.info('preprocess option selected');
-  //authenticate
-  // fetch preprocessing computations
+
   (async () => {
-    try {
-      const result = await fetchPreprocessComputations(program.username, program.password);
-      console.log({ result });
-    }
-    catch (error) {
-      console.log(error);
-    }
-    process.exit(0);
+    // authenticate and fetch computations
+    const computations = await fetchPreprocessComputations(program.username, program.password);
+
+    // list options of computations
+    await inquirer.prompt([{
+      type: 'number',
+      name: 'select preprocess',
+      message: `Select preprocess computation:${computations.map((computation, index) => {
+        return `\n${index} ${computation.meta.name}`;
+      })}`,
+    }]).then(async (answers) => {
+      const answer = answers['select preprocess'];
+      if (!Object.keys(computations).includes(answer)) {
+        console.log('The asnwer provided is not a valid choice.');
+      } else {
+        // download the selected computation
+        const selectedComputation = computations[answer];
+
+        const pullStreams = await pullImages([{
+          img: selectedComputation.computation.dockerImage,
+          compId: selectedComputation.id,
+          compName: selectedComputation.meta.name,
+        }]);
+
+        console.log('Updating docker images');
+        await pullStreams.forEach((obj) => {
+          if (typeof obj.stream.pipe === 'function') {
+            obj.stream.pipe(process.stdout);
+          } else {
+            process.stdout.write('.');
+          }
+        });
+      }
+    });
+
+    // process.exit(0);
   }
   )();
-  // list preprocessing computations
-  
-  // prompt user to select
-  // download selected computation
+
 } else {
   console.log('not preprocess');
   if (program.upload) {
