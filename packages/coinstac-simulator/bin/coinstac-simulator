@@ -108,20 +108,28 @@ if (program.preprocess) {
         }]);
 
         console.log('Updating docker images');
-        await pullStreams.forEach((obj) => {
-          if (typeof obj.stream.pipe === 'function') {
-            obj.stream.pipe(process.stdout);
-          } else {
-            process.stdout.write('.');
-          }
-        });
+        await Promise.all(
+          pullStreams.map((obj) => {
+            return new Promise((resolve, reject) => {
+              if (typeof obj.stream.pipe === 'function') {
+                obj.stream.pipe(process.stdout);
+                obj.stream
+                  .on('end', () => { resolve(); })
+                  .on('error', (error) => { reject(error); });
+              } else {
+                resolve();
+                process.stdout.write('.');
+              }
+            });
+          })
+        );
+        //do something with the docker images
       }
     });
 
-    // process.exit(0);
+    process.exit(0);
   }
   )();
-
 } else {
   console.log('not preprocess');
   if (program.upload) {
