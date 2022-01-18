@@ -142,9 +142,9 @@ loadConfig()
 
     logger.verbose('main process booted');
     createWindow().then((mainWindow) => {
-      mainWindow.webContents.on('new-window', (e, url) => {
-        e.preventDefault();
+      mainWindow.webContents.setWindowOpenHandler((url) => {
         electron.shell.openExternal(url);
+        return { action: 'deny' };
       });
 
       logger.on('log-message', (arg) => {
