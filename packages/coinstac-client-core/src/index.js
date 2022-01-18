@@ -309,7 +309,6 @@ class CoinstacClient {
             const linkPromises = [];
 
             if (filePaths) {
-              debugger
               let stageFiles = process.env.CI ? fs.copyFile : fs.link;
               if (networkVolume) {
                 stageFiles = fs.symlink;
