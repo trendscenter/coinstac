@@ -12,6 +12,8 @@ const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
 const winston = require('winston');
+const fs = require('fs');
+const { parse } = require('csv-parse/sync');
 const pkg = require('../package.json');
 
 const logger = winston.createLogger({
@@ -96,7 +98,7 @@ if (program.preprocess) {
     }]).then(async (answers) => {
       const answer = answers['select preprocess'];
       if (!Object.keys(computations).includes(answer)) {
-        console.log('The asnwer provided is not a valid choice.');
+        console.log('The answer provided is not a valid choice.');
       } else {
         // download the selected computation
         const selectedComputation = computations[answer];
@@ -124,6 +126,54 @@ if (program.preprocess) {
           })
         );
         //do something with the docker images
+
+        //get a list of files in this directory
+        const files = await new Promise((resolve, reject) => {
+          fs.readdir('./', (err, data) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(data);
+          });
+        });
+
+        //find the .csv file
+        const csvs = files.filter((file) => {
+          if (file.includes('csv')) {
+            return file;
+          }
+        });
+        if (csvs.length < 1) {
+          console.log('no .csv files found');
+          process.exit(0);
+        }
+        await inquirer.prompt([{
+          type: 'number',
+          name: 'select covariates file',
+          message: `Select Covariates File:${csvs.map((csv, index) => {
+            return `\n${index} ${csv}`;
+          })}`,
+        }]).then(async (answers) => {
+          const answer = answers['select covariates file'];
+          if (!Object.keys(csvs).includes(answer)) {
+            console.log('The answer provided is not a valid choice.');
+          } else {
+            //parse the csv, and turn it into an inputspec object (partial at this point, dont worry too much about that) with the subject data and save that to the same dir
+            const inputSpec = { covariates: {} };
+            const records = parse(fs.readFileSync(csvs[answer]));
+            const headers = records[0];
+            for (let i = 1; i < records.length; i++) {
+              const record = records[i];
+              const covariate = {}
+              for (let j = 1; j < headers.length; j++) {
+                covariate[headers[j]] = record[j];
+              }
+              inputSpec.covariates[records[i][0]] = covariate;
+            }
+            console.log(inputSpec);
+            fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
+          }
+        });
       }
     });
 
