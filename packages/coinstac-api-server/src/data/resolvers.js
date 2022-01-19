@@ -247,7 +247,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { members: credentials.username }
+          { members: {[credentials.id]:credentials.username} }
         ]
       }).toArray();
 
