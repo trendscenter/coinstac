@@ -1,15 +1,17 @@
 import { useRef, useEffect } from 'react';
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { get } from 'lodash';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { FETCH_ALL_USER_RUNS_QUERY, FETCH_ALL_CONSORTIA_QUERY } from '../../../state/graphql/functions';
 import { startRun } from '../../../state/ducks/runs';
+import { selectSuspendedRunsStates } from '../../../state/ducks/suspendedRuns';
 
 /*
  * This effect checks if there are runs that must be started locally when the app first starts.
  */
 function useStartInitialRuns() {
+  const suspendedRunsStates = useSelector(selectSuspendedRunsStates);
   const dispatch = useDispatch();
 
   const ranFirstTime = useRef(false);
@@ -35,7 +37,7 @@ function useStartInitialRuns() {
     if (!runs) return;
 
     runs.forEach((run) => {
-      if (run.status !== 'started') return;
+      if (run.status !== 'started' || run.id in suspendedRunsStates) return;
 
       const consortium = consortia.find(c => c.id === run.consortiumId);
 

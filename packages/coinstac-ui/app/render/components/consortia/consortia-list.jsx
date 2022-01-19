@@ -261,14 +261,6 @@ class ConsortiaList extends Component {
             onClick={this.stopPipeline(consortium.activePipelineId)}
           >
             Stop Pipeline
-          </Button>,
-          <Button
-            key={`${consortium.id}-suspend-pipeline-button`}
-            variant="contained"
-            className={classes.button}
-            onClick={this.suspendPipeline(consortium.id)}
-          >
-            Suspend Pipeline
           </Button>
         );
       }

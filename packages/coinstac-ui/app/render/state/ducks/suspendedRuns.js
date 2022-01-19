@@ -3,10 +3,13 @@ const DELETE_SUSPENDED_RUN = 'DELETE_SUSPENDED_RUN';
 
 const INITIAL_STATE = {};
 
-export const saveSuspendedRun = runId => ({
+export const selectSuspendedRunsStates = state => state.suspendedRuns;
+
+export const saveSuspendedRun = (runId, runState) => ({
   type: SAVE_SUSPENDED_RUN,
   payload: {
     runId,
+    runState,
   },
 });
 
@@ -22,21 +25,15 @@ export default function reducer(state = INITIAL_STATE, action) {
     case SAVE_SUSPENDED_RUN:
       return {
         ...state,
-        runsState: {
-          ...state.runState,
-          [action.payload.runId]: true,
-        },
+        [action.payload.runId]: action.payload.runState,
       };
     case DELETE_SUSPENDED_RUN:
-      return {
-        ...state,
-        runsState: Object.keys(state.runsState)
-          .filter(runId => runId !== action.payload.runId)
-          .reduce((aggregate, runId) => {
-            aggregate[runId] = state.runsState[runId];
-            return aggregate;
-          }, {}),
-      };
+      return Object.keys(state)
+        .filter(runId => runId !== action.payload.runId)
+        .reduce((aggregate, runId) => {
+          aggregate[runId] = state[runId];
+          return aggregate;
+        }, {});
     default:
       return state;
   }

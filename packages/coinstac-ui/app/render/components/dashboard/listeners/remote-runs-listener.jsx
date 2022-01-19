@@ -13,7 +13,7 @@ function runIsFinished(run) {
 }
 
 function RemoteRunsListener({
-  userId, localRuns, consortia, saveLocalRun, updateLocalRun, notifyError, notifySuccess,
+  userId, localRuns, consortia, saveLocalRun, updateLocalRun, suspendedRuns, notifyError, notifySuccess,
 }) {
   const ranFirstQuery = useRef(false);
 
@@ -40,6 +40,8 @@ function RemoteRunsListener({
         runData.status = 'complete';
       } else if (remoteRun.error) {
         runData.status = 'error';
+      } else if (remoteRun.id in suspendedRuns) {
+        runData.status = 'suspended';
       }
 
       saveLocalRun(runData);
@@ -84,8 +86,9 @@ function RemoteRunsListener({
   return null;
 }
 
-const mapStateToProps = ({ runs }) => ({
+const mapStateToProps = ({ runs, suspendedRuns }) => ({
   localRuns: runs.runs,
+  suspendedRuns,
 });
 
 export default connect(mapStateToProps,

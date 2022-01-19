@@ -30,12 +30,12 @@ const stopPipeline = (pipelineId, runId) => () => {
 };
 
 function DashboardHome({
-  consortia, runs, maps, user, saveSuspendedRun, deleteSuspendedRun,
+  consortia, runs, maps, user, suspendedRuns, saveSuspendedRun, deleteSuspendedRun,
   networkVolume, classes, notifyError, notifyInfo,
 }) {
   const suspendPipeline = runId => async () => {
-    await ipcPromise.send('suspend-pipeline', { runId });
-    saveSuspendedRun(runId);
+    const runSaveState = await ipcPromise.send('suspend-pipeline', { runId });
+    saveSuspendedRun(runId, runSaveState);
   };
 
   const resumePipeline = run => () => {
@@ -52,12 +52,14 @@ function DashboardHome({
       return;
     }
 
+    const runState = suspendedRuns[run.id];
+
     deleteSuspendedRun(run.id);
 
     notifyInfo(`Pipeline Starting for ${consortium.name}.`);
 
     ipcRenderer.send('start-pipeline', {
-      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume,
+      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume, runState,
     });
   };
 
@@ -95,6 +97,7 @@ DashboardHome.propTypes = {
   maps: PropTypes.array.isRequired,
   user: PropTypes.object.isRequired,
   networkVolume: PropTypes.bool.isRequired,
+  suspendedRuns: PropTypes.object.isRequired,
   saveSuspendedRun: PropTypes.func.isRequired,
   deleteSuspendedRun: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
@@ -105,12 +108,14 @@ function mapStateToProps({
   auth: { user, networkVolume },
   runs: { runs },
   maps: { consortiumDataMappings },
+  suspendedRuns,
 }) {
   return {
     runs,
     user,
     maps: consortiumDataMappings,
     networkVolume,
+    suspendedRuns,
   };
 }
 
