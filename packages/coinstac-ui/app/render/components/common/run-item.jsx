@@ -118,7 +118,11 @@ function getStateWell(runObject, classes) {
       <div className={classes.runStateKeyValueContainer}>
         <Typography className={classes.label}>Waiting on Users:</Typography>
         <Typography className={classes.value}>
-          {CentralNodeRunObject.controllerState && CentralNodeRunObject.waitingOn && CentralNodeRunObject.waitingOn.length > 0 && CentralNodeRunObject.controllerState.includes('waiting on') ? parseWaiting(runObject, 'remotePipelineState') : ''}
+          {CentralNodeRunObject.controllerState
+            && CentralNodeRunObject.waitingOn
+            && CentralNodeRunObject.waitingOn.length > 0
+            && CentralNodeRunObject.controllerState.includes('waiting on')
+            ? parseWaiting(runObject, 'remotePipelineState') : 'none'}
         </Typography>
       </div>
     </div>
@@ -183,6 +187,7 @@ class RunItem extends Component {
             status === 'started' && (localPipelineState || remotePipelineState)
             && (
               <LinearProgress
+                style={{ paddingBottom: '30px' }}
                 variant="indeterminate"
                 value={remotePipelineState
                   ? ((remotePipelineState.pipelineStep + 1) / remotePipelineState.totalSteps) * 100
