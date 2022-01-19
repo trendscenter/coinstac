@@ -108,23 +108,30 @@ function getStateWell(runObject, classes) {
         </Typography>
       </div>
 
-      <div className={classes.runStateKeyValueContainer}>
-        <Typography className={classes.label}>Central Node Status:</Typography>
-        <Typography className={classes.value}>
-          {CentralNodeRunObject.controllerState}
-        </Typography>
-      </div>
-
-      <div className={classes.runStateKeyValueContainer}>
-        <Typography className={classes.label}>Waiting on Users:</Typography>
-        <Typography className={classes.value}>
-          {CentralNodeRunObject.controllerState
-            && CentralNodeRunObject.waitingOn
-            && CentralNodeRunObject.waitingOn.length > 0
-            && CentralNodeRunObject.controllerState.includes('waiting on')
-            ? parseWaiting(runObject, 'remotePipelineState') : 'none'}
-        </Typography>
-      </div>
+      {CentralNodeRunObject
+        && (
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Central Node Status:</Typography>
+            <Typography className={classes.value}>
+              {CentralNodeRunObject.controllerState}
+            </Typography>
+          </div>
+        )
+      }
+      {
+        CentralNodeRunObject
+        && CentralNodeRunObject.controllerState
+        && CentralNodeRunObject.waitingOn
+        && CentralNodeRunObject.waitingOn.length > 0
+        && CentralNodeRunObject.controllerState.includes('waiting on')
+        && (
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Waiting on Users:</Typography>
+            <Typography className={classes.value}>
+              {parseWaiting(runObject, 'remotePipelineState')}
+            </Typography>
+          </div>)
+      }
     </div>
   );
 }
@@ -187,7 +194,6 @@ class RunItem extends Component {
             status === 'started' && (localPipelineState || remotePipelineState)
             && (
               <LinearProgress
-                style={{ paddingBottom: '30px' }}
                 variant="indeterminate"
                 value={remotePipelineState
                   ? ((remotePipelineState.pipelineStep + 1) / remotePipelineState.totalSteps) * 100
@@ -197,7 +203,10 @@ class RunItem extends Component {
             )
           }
           <div>
-            <Typography className={classes.label}>
+            <Typography
+              className={classes.label}
+              style={{ paddingTop: '30px' }}
+            >
               Status:
             </Typography>
             <Typography className={classes.value}>
