@@ -94,7 +94,7 @@ if (program.preprocess) {
       type: 'number',
       name: 'select preprocess',
       message: `Select preprocess computation:${computations.map((computation, index) => {
-        return `\n${index} ${computation.meta.name}`;
+        return `\n${index} ${computation.meta.name}\n`;
       })}`,
     }]).then(async (answers) => {
       const answer = answers['select preprocess'];
@@ -149,21 +149,10 @@ if (program.preprocess) {
           process.exit(0);
         }
 
-        // const inputspecfiles = files.filter((file) => {
-        //   if (file.includes('inputspec.json')) {
-        //     return true;
-        //   }
-        //   return false;
-        // });
-
-        // if (inputspecfiles.length > 0) {
-
-        // }
-
         await inquirer.prompt([{
           type: 'number',
           name: 'existing inputspec or generate',
-          message: 'Wich inputspec will be used?\n0 use an existing inputspec \n1 generate a new inputspec',
+          message: 'Wich inputspec will be used?\n0 Use an existing inputspec \n1 Generate a new inputspec\n',
         }])
           .then(async (answers) => {
             const answer = answers['existing inputspec or generate'];
@@ -172,8 +161,7 @@ if (program.preprocess) {
               process.exit();
             } else if (answer === '0') {
               // show exsiting compspec
-
-              console.log('not done yet');
+              console.log('continue');
             } else if (answer === '1') {
               // generate a default compspec
               await inquirer.prompt([{
@@ -181,7 +169,7 @@ if (program.preprocess) {
                 name: 'select covariates file',
                 message: `Select Covariates File:${csvs.map((csv, index) => {
                   return `\n${index} ${csv}`;
-                })}`,
+                })}\n`,
               }]).then(async (answers) => {
                 const answer = answers['select covariates file'];
                 if (!Object.keys(csvs).includes(answer)) {
@@ -201,18 +189,44 @@ if (program.preprocess) {
                     }
                     inputSpec.covariates[records[i][0]] = covariate;
                   }
-                  console.log(inputSpec);
-                  // take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
 
+                  // take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
                   fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
+
+                  await inquirer.prompt([{
+                    type: 'number',
+                    name: 'exit',
+                    message: `inputspec.json created. Press any key to exit.`,
+                  }]).then(() => {
+                    process.exit();
+                  })
                 }
               });
             }
           });
-
-
-        // if they didnt want to use an existing inputspec
       }
+      //check to see if inputspec.json exists
+      const files = await new Promise((resolve, reject) => {
+        fs.readdir('./', (err, data) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(data);
+        });
+      });
+
+      const inputspecfiles = files.filter((file) => {
+        if (file.includes('inputspec.json')) {
+          return true;
+        }
+        return false;
+      });
+
+      if (!(inputspecfiles.length > 0)) {
+        console.log('No inputspec.json detected. Exiting');
+      }
+
+      
     });
 
     process.exit(0);
