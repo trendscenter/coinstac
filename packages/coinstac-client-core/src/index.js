@@ -320,7 +320,7 @@ class CoinstacClient {
                   mkdir.then(async () => {
                     await stageFiles(
                       (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
-                        : path.resolve(runObj.baseDirectory, filePaths.files[i])
+                        : path.resolve(filePaths.baseDirectory, filePaths.files[i])
                       ),
                       path.resolve(fp, path.basename(filePaths.files[i]))
                     );
