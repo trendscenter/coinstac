@@ -103,7 +103,7 @@ if (program.preprocess) {
       } else {
         // download the selected computation
         const selectedComputation = computations[answer];
-        
+
 
         const pullStreams = await pullImages([{
           img: selectedComputation.computation.dockerImage,
@@ -127,8 +127,8 @@ if (program.preprocess) {
             });
           })
         );
-        //do something with the docker images
-        //get a list of files in this directory
+        // do something with the docker images
+        // get a list of files in this directory
         const files = await new Promise((resolve, reject) => {
           fs.readdir('./', (err, data) => {
             if (err) {
@@ -138,9 +138,9 @@ if (program.preprocess) {
           });
         });
 
-        //find the .csv file
+        // find the .csv file
         const csvs = files.filter((file) => {
-          if (file.includes('csv')) {
+          if (file.includes('.csv')) {
             return file;
           }
         });
@@ -148,36 +148,70 @@ if (program.preprocess) {
           console.log('no .csv files found');
           process.exit(0);
         }
+
+        // const inputspecfiles = files.filter((file) => {
+        //   if (file.includes('inputspec.json')) {
+        //     return true;
+        //   }
+        //   return false;
+        // });
+
+        // if (inputspecfiles.length > 0) {
+
+        // }
+
         await inquirer.prompt([{
           type: 'number',
-          name: 'select covariates file',
-          message: `Select Covariates File:${csvs.map((csv, index) => {
-            return `\n${index} ${csv}`;
-          })}`,
-        }]).then(async (answers) => {
-          const answer = answers['select covariates file'];
-          if (!Object.keys(csvs).includes(answer)) {
-            console.log('The answer provided is not a valid choice.');
-          } else {
-            //parse the csv, and turn it into an inputspec object (partial at this point, dont worry too much about that) with the subject data and save that to the same dir
-            const inputSpec = selectedComputation.computation.input;
-            inputSpec.covariates = {}
-            const records = parse(fs.readFileSync(csvs[answer]));
-            const headers = records[0];
-            for (let i = 1; i < records.length; i++) {
-              const record = records[i];
-              const covariate = {}
-              for (let j = 1; j < headers.length; j++) {
-                covariate[headers[j]] = record[j];
-              }
-              inputSpec.covariates[records[i][0]] = covariate;
-            }
-            console.log(inputSpec);
-            //take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
+          name: 'existing inputspec or generate',
+          message: 'Wich inputspec will be used?\n0 use an existing inputspec \n1 generate a new inputspec',
+        }])
+          .then(async (answers) => {
+            const answer = answers['existing inputspec or generate'];
+            if (!['0', '1'].includes(answer)) {
+              console.log('The answer provided is not a valid choice.');
+              process.exit();
+            } else if (answer === '0') {
+              // show exsiting compspec
 
-            fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
-          }
-        });
+              console.log('not done yet');
+            } else if (answer === '1') {
+              // generate a default compspec
+              await inquirer.prompt([{
+                type: 'number',
+                name: 'select covariates file',
+                message: `Select Covariates File:${csvs.map((csv, index) => {
+                  return `\n${index} ${csv}`;
+                })}`,
+              }]).then(async (answers) => {
+                const answer = answers['select covariates file'];
+                if (!Object.keys(csvs).includes(answer)) {
+                  console.log('The answer provided is not a valid choice.');
+                  process.exit();
+                } else {
+                  // parse the csv, and turn it into an inputspec object (partial at this point, dont worry too much about that) with the subject data and save that to the same dir
+                  const inputSpec = selectedComputation.computation.input;
+                  inputSpec.covariates = {};
+                  const records = parse(fs.readFileSync(csvs[answer]));
+                  const headers = records[0];
+                  for (let i = 1; i < records.length; i++) {
+                    const record = records[i];
+                    const covariate = {};
+                    for (let j = 1; j < headers.length; j++) {
+                      covariate[headers[j]] = record[j];
+                    }
+                    inputSpec.covariates[records[i][0]] = covariate;
+                  }
+                  console.log(inputSpec);
+                  // take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
+
+                  fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
+                }
+              });
+            }
+          });
+
+
+        // if they didnt want to use an existing inputspec
       }
     });
 
