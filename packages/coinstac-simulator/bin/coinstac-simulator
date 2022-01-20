@@ -87,6 +87,7 @@ if (program.preprocess) {
   (async () => {
     // authenticate and fetch computations
     const computations = await fetchPreprocessComputations(program.username, program.password);
+    console.log(computations);
 
     // list options of computations
     await inquirer.prompt([{
@@ -102,6 +103,7 @@ if (program.preprocess) {
       } else {
         // download the selected computation
         const selectedComputation = computations[answer];
+        
 
         const pullStreams = await pullImages([{
           img: selectedComputation.computation.dockerImage,
@@ -126,7 +128,6 @@ if (program.preprocess) {
           })
         );
         //do something with the docker images
-
         //get a list of files in this directory
         const files = await new Promise((resolve, reject) => {
           fs.readdir('./', (err, data) => {
@@ -159,7 +160,8 @@ if (program.preprocess) {
             console.log('The answer provided is not a valid choice.');
           } else {
             //parse the csv, and turn it into an inputspec object (partial at this point, dont worry too much about that) with the subject data and save that to the same dir
-            const inputSpec = { covariates: {} };
+            const inputSpec = selectedComputation.computation.input;
+            inputSpec.covariates = {}
             const records = parse(fs.readFileSync(csvs[answer]));
             const headers = records[0];
             for (let i = 1; i < records.length; i++) {
@@ -171,6 +173,8 @@ if (program.preprocess) {
               inputSpec.covariates[records[i][0]] = covariate;
             }
             console.log(inputSpec);
+            //take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
+
             fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
           }
         });
