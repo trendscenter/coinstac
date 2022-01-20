@@ -196,7 +196,7 @@ if (program.preprocess) {
                   await inquirer.prompt([{
                     type: 'number',
                     name: 'exit',
-                    message: `inputspec.json created. Press any key to exit.`,
+                    message: 'inputspec.json created. Press any key to exit.',
                   }]).then(() => {
                     process.exit();
                   })
@@ -226,7 +226,7 @@ if (program.preprocess) {
         console.log('No inputspec.json detected. Exiting');
       }
 
-      
+
     });
 
     process.exit(0);
