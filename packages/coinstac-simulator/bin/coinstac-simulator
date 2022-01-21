@@ -81,6 +81,56 @@ const { option } = require('commander');
 const { fetchPreprocessComputations } = require('../src/preprocess');
 const { pullImages } = require('../../coinstac-pipeline/node_modules/coinstac-manager/src');
 
+
+async function runPipeline(pipelineSpec) {
+  /* eslint-disable no-console */
+  const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
+    : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
+  logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
+
+  const started = sim.startRun({
+    spec: pipelineSpec,
+    runMode: globalMode,
+    clientCount: count,
+    operatingDirectory: program.directory,
+  });
+
+
+  try {
+    const simRun = await started;
+    const { results } = simRun;
+    logger.info('Simulator run finished');
+    if (globalMode === 'decentralized') {
+      logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
+    } else {
+      logger.info('Local run(s) finished');
+      results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+    }
+    // TODO: should not be necessary, something is holding the loop up
+    process.exit();
+  } catch (err) {
+    logger.error('Simulator run failed!');
+    logger.error('Fun error details:\n');
+    logger.error(err.message);
+    logger.error(err.stack || '');
+    process.exit(0);
+  }
+}
+
+function pipelineSpecFactory(inputSpec, mode, comp) {
+  let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
+  const comps = Array.isArray(comp) ? comp : [comp];
+  specMap = specMap.map((spec, index) => ({
+    controller: { type: mode[index] },
+    computations: [comps[index]],
+    inputMap: spec,
+  }));
+  return {
+    steps: specMap,
+  };
+}
+
+
 if (program.preprocess) {
   logger.info('preprocess option selected');
 
@@ -143,6 +193,7 @@ if (program.preprocess) {
           if (file.includes('.csv')) {
             return file;
           }
+          return false;
         });
         if (csvs.length < 1) {
           console.log('no .csv files found');
@@ -151,17 +202,18 @@ if (program.preprocess) {
 
         await inquirer.prompt([{
           type: 'number',
-          name: 'existing inputspec or generate',
-          message: 'Wich inputspec will be used?\n0 Use an existing inputspec \n1 Generate a new inputspec\n',
+          name: 'existing pipelineSpec or generate',
+          message: 'Wich pipelineSpec will be used?\n0 Use an existing pipelineSpec \n1 Generate a new pipelineSpec\n',
         }])
           .then(async (answers) => {
-            const answer = answers['existing inputspec or generate'];
+            const answer = answers['existing pipelineSpec or generate'];
             if (!['0', '1'].includes(answer)) {
               console.log('The answer provided is not a valid choice.');
               process.exit();
             } else if (answer === '0') {
               // show exsiting compspec
-              console.log('continue');
+              const pipelineSpec = fs.readFileSync('./pipelinespec.json');
+              return runPipeline(pipelineSpec);
             } else if (answer === '1') {
               // generate a default compspec
               await inquirer.prompt([{
@@ -176,8 +228,9 @@ if (program.preprocess) {
                   console.log('The answer provided is not a valid choice.');
                   process.exit();
                 } else {
-                  // parse the csv, and turn it into an inputspec object (partial at this point, dont worry too much about that) with the subject data and save that to the same dir
-                  const inputSpec = selectedComputation.computation.input;
+                  //create an inputspec from the csv and the api results\
+                  debugger
+                  const inputSpec = JSON.parse(JSON.stringify(selectedComputation.computation.input));
                   inputSpec.covariates = {};
                   const records = parse(fs.readFileSync(csvs[answer]));
                   const headers = records[0];
@@ -189,17 +242,19 @@ if (program.preprocess) {
                     }
                     inputSpec.covariates[records[i][0]] = covariate;
                   }
-
-                  // take the compspec you’ve grabbed from the api, and fill in those other values, dont worry if there are some different or missing vs that input spec, as they’ve changed
-                  fs.writeFileSync('inputspec.json', JSON.stringify(inputSpec));
+                  // console.log(selectedComputation);
+                  // console.log(selectedComputation.computation.input.covariates)
+                  debugger
+                  const generatedPipeSpec = pipelineSpecFactory(inputSpec, 'local', selectedComputation);
+                  fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec));
 
                   await inquirer.prompt([{
                     type: 'number',
                     name: 'exit',
-                    message: 'inputspec.json created. Press any key to exit.',
+                    message: 'pipelineSpec.json created. Press any key to exit.',
                   }]).then(() => {
                     process.exit();
-                  })
+                  });
                 }
               });
             }
@@ -225,8 +280,6 @@ if (program.preprocess) {
       if (!(inputspecfiles.length > 0)) {
         console.log('No inputspec.json detected. Exiting');
       }
-
-
     });
 
     process.exit(0);
@@ -275,19 +328,6 @@ if (program.preprocess) {
         columnWidth: [12, 12, 30, 6],
       });
     }
-
-    const pipelineSpecFactory = (inputSpec, mode, comp) => {
-      let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
-      const comps = Array.isArray(comp) ? comp : [comp];
-      specMap = specMap.map((spec, index) => ({
-        controller: { type: mode[index] },
-        computations: [comps[index]],
-        inputMap: spec,
-      }));
-      return {
-        steps: specMap,
-      };
-    };
 
     let fulfilledPipelineSpec;
 
@@ -426,100 +466,7 @@ if (program.preprocess) {
 
     fulfilledPipelineSpec
       .then((pipelineSpec) => {
-        /* eslint-disable no-console */
-        const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
-          : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-        logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
-        const started = sim.startRun({
-          spec: pipelineSpec,
-          runMode: globalMode,
-          clientCount: count,
-          operatingDirectory: program.directory,
-        });
-
-        return started.then((simRun) => {
-          const updateTable = (node, data) => {
-            let foundNode = false;
-            let state = data.controllerState ? data.controllerState : 'initializing';
-            state = state === 'stopped' ? 'shutting down docker...' : state;
-
-            if (!DEBUG_MODE) {
-              tableData.forEach((row, index) => {
-                if (row[0] === node) {
-                  tableData[index] = [
-                    node,
-                    data.currentIteration ? data.currentIteration : 'initializing',
-                    state,
-                    data.mode,
-                  ];
-                  foundNode = true;
-                }
-              });
-              if (!foundNode) {
-                tableData.push([
-                  node,
-                  data.currentIteration ? data.currentIteration : 'initializing',
-                  state,
-                  data.mode,
-                ]);
-              }
-
-              table.setData({
-                headers: ['node', 'iteration', 'state', 'mode'],
-                data: tableData,
-              });
-              screen.render();
-            } else {
-              logger.debug(`${node} ---- ${JSON.stringify(data)}`);
-            }
-          };
-
-          if (simRun.pipelines.remote) {
-            simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
-              .on('update', (data) => {
-                updateTable('remote', data);
-              });
-          }
-          simRun.pipelines.locals.forEach((local, index) => {
-            local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
-              updateTable(`local-${index}`, data);
-            });
-          });
-
-          if (!DEBUG_MODE) {
-            screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-            table.focus();
-
-            screen.append(table);
-            screen.render();
-          }
-
-          return simRun.allResults;
-        });
-      })
-      .then((results) => {
-        if (!DEBUG_MODE) {
-          screen.destroy();
-        }
-        logger.info('Simulator run finished');
-        if (globalMode === 'decentralized') {
-          logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
-        } else {
-          logger.info('Local run(s) finished');
-          results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
-        }
-        // TODO: should not be necessary, something is holding the loop up
-        process.exit();
-      })
-      .catch((err) => {
-        if (!DEBUG_MODE) {
-          screen.destroy();
-        }
-        logger.error('Simulator run failed!');
-        logger.error('Fun error details:\n');
-        logger.error(err.message);
-        logger.error(err.stack || '');
-        process.exit(0);
+        runPipeline(pipelineSpec);
       });
   }
 }

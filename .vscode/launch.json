@@ -33,6 +33,7 @@
             "request": "launch",
             "name": "With TTY",
             "program": "${workspaceRoot}/packages/coinstac-simulator/bin/coinstac-simulator",
+            "cwd": "${workspaceRoot}/algorithm-development/test-data/freesurfer-test-data/site1",
             "args": [
                 "--preprocess",
                 "--username",
