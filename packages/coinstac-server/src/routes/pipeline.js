@@ -118,14 +118,14 @@ module.exports = manager.then((remotePipelineManager) => {
                       runId: run.id,
                       timeout: run.pipelineSnapshot.timeout,
                     });
-                    
+
                     stateEmitter.on('update', (data) => {
                       // TODO:  console most likely should be removed post proto development
                       // or made less noisy
                       updateRunMessageQueue.push({ runId: run.id, data });
                       updateRunState();
                     });
-                    
+
                     result
                       .then((result) => {
                         saveResults(run.id, result);

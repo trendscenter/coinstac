@@ -190,6 +190,15 @@ class Pipeline extends Component {
     };
   }
 
+  componentDidMount() {
+    const { consortium } = this.state;
+    const { params, consortia } = this.props;
+
+    if (isEmpty(consortium) && consortia.length > 0 && params.pipelineId) {
+      this.setConsortiumWithActivePipeline();
+    }
+  }
+
   // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { consortium, pipeline, selectedId } = this.state;
@@ -254,6 +263,39 @@ class Pipeline extends Component {
     this.setState(prevState => ({
       owner,
       consortium,
+      pipeline: { ...prevState.pipeline, owningConsortium },
+      startingPipeline: { ...prevState.pipeline, owningConsortium },
+    }));
+  }
+
+  setConsortiumWithActivePipeline = () => {
+    const {
+      auth: { user },
+      params,
+      pipelines,
+      consortia,
+    } = this.props;
+
+
+    const pipeline = pipelines.find(p => p.id === params.pipelineId);
+
+    if (!pipeline || !pipeline.owningConsortium) {
+      return;
+    }
+
+    const { owningConsortium } = pipeline;
+
+    const consortium = consortia.find(con => con.id === owningConsortium);
+
+    if (!consortium) {
+      return;
+    }
+
+    const owner = isPipelineOwner(user.permissions, owningConsortium);
+
+    this.setState(prevState => ({
+      owner,
+      consortium: omit(consortium, ['__typename']),
       pipeline: { ...prevState.pipeline, owningConsortium },
       startingPipeline: { ...prevState.pipeline, owningConsortium },
     }));
@@ -963,6 +1005,7 @@ Pipeline.propTypes = {
   client: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   users: PropTypes.array,
