@@ -186,7 +186,7 @@ async function setupOuter({
         publishData('run', {
           id: clientId,
           runId: pipeline.id,
-          error: message,
+          error: { message: message.message, error: message.error, stack: message.stack },
           debug: { sent: Date.now() },
         });
         activePipelines[pipeline.id].stashedOutput = undefined;
@@ -267,7 +267,7 @@ async function setupOuter({
                   publishData('run', {
                     id: clientId,
                     runId: pipeline.id,
-                    error: { stack: e.stack, message: e.message },
+                    error: { message: message.message, error: message.error, stack: message.stack },
                     debug: { sent: Date.now() },
                   }, 1);
                 });
@@ -275,7 +275,7 @@ async function setupOuter({
                 publishData('run', {
                   id: clientId,
                   runId: pipeline.id,
-                  error: e,
+                  error: { message: e.message, error: e.error, stack: e.stack },
                   debug: { sent: Date.now() },
                 });
                 throw e;
