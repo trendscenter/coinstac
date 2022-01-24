@@ -11,6 +11,7 @@ import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
 import DisplayNotificationsListener from './display-notifications-listener';
+import ErrorBoundary from './ErrorBoundary';
 
 class App extends Component {
   constructor(props) {
@@ -68,16 +69,18 @@ class App extends Component {
     const { checkJWT } = this.state;
 
     return (
-      <div className="app">
-        <MuiThemeProvider theme={theme}>
-          <CssBaseline />
-          <ActivityIndicator visible={isLoading} />
+      <ErrorBoundary>
+        <div className="app">
+          <MuiThemeProvider theme={theme}>
+            <CssBaseline />
+            <ActivityIndicator visible={isLoading} />
+              
+              {checkJWT && children}
 
-          { checkJWT && children }
-
-          <DisplayNotificationsListener />
-        </MuiThemeProvider>
-      </div>
+              <DisplayNotificationsListener />
+          </MuiThemeProvider>
+        </div>
+      </ErrorBoundary>
     );
   }
 }

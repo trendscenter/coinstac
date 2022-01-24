@@ -32,5 +32,5 @@ nsis:
 linux:
   target: AppImage
   category: Science
-  executableName: COINSTAC
+  artifactName: COINSTAC-${version}-linux.zip
   icon: img/icons/coinstac.png
