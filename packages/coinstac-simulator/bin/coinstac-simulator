@@ -129,13 +129,9 @@ function pipelineSpecFactory(inputSpec, mode, comp) {
 }
 
 if (program.preprocess) {
-  logger.info('preprocess option selected');
-
   (async () => {
     // authenticate and fetch computations
     const computations = await fetchPreprocessComputations(program.username, program.password);
-    console.log(computations);
-
     // list options of computations
     await inquirer.prompt([{
       type: 'number',
@@ -146,7 +142,7 @@ if (program.preprocess) {
     }]).then(async (answers) => {
       const answer = answers['select preprocess'];
       if (!Object.keys(computations).includes(answer)) {
-        console.log('The answer provided is not a valid choice.');
+        logger.info('The answer provided is not a valid choice.');
       } else {
         // download the selected computation
         const selectedComputation = computations[answer];
@@ -156,7 +152,7 @@ if (program.preprocess) {
           compName: selectedComputation.meta.name,
         }]);
 
-        console.log('Updating docker images');
+        logger.info('Updating docker images');
         await Promise.all(
           pullStreams.map((obj) => {
             return new Promise((resolve, reject) => {
@@ -180,7 +176,7 @@ if (program.preprocess) {
           .then(async (answers) => {
             const answer = answers['existing pipelineSpec or generate'];
             if (!['0', '1'].includes(answer)) {
-              console.log('The answer provided is not a valid choice.');
+              logger.info('The answer provided is not a valid choice.');
               process.exit();
             } else if (answer === '0') {
               const rawData = fs.readFileSync('./pipelinespec.json');
@@ -204,7 +200,7 @@ if (program.preprocess) {
                 return false;
               });
               if (csvs.length < 1) {
-                console.log('no .csv files found');
+                logger.info('no .csv files found');
                 process.exit(0);
               }
               await inquirer.prompt([{
@@ -217,7 +213,7 @@ if (program.preprocess) {
                 const answer = answers['select covariates file'];
 
                 if (!Object.keys(csvs).includes(answer)) {
-                  console.log('The answer provided is not a valid choice.');
+                  logger.info('The answer provided is not a valid choice.');
                   process.exit();
                 } else {
                   //  create an inputspec from the csv and the api results
@@ -241,13 +237,10 @@ if (program.preprocess) {
           });
       }
     });
-
     process.exit(0);
   }
   )();
 } else if (program.upload) {
-  console.log('not preprocess');
-
   if (!program.username && !program.password) {
     logger.error('Username and password required for compspec upload');
     process.exit(1);
