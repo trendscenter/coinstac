@@ -37,6 +37,7 @@ function createWindow() {
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      contextIsolation: false,
       preload: preloadPath,
     },
   });
@@ -68,6 +69,7 @@ function createWindow() {
           width: 800,
           webPreferences: {
             nodeIntegration: true,
+            contextIsolation: false,
           },
         });
 

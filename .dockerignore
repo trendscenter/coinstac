@@ -1,5 +1,4 @@
 .git
-packages/coinstac-images
 **/mongo_data
 
 # Logs
