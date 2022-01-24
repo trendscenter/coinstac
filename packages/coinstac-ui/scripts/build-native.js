@@ -1,3 +1,3 @@
-const buildNative = require('./utils/build-native.js');
+const buildNative = require('./utils/build-native');
 
 buildNative();
