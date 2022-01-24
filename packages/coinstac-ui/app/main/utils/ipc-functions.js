@@ -1,4 +1,15 @@
-const electron = require('electron');
+const {
+  ipcMain,
+  Notification,
+  app,
+} = require('electron');
+
+ipcMain.handle('quit', () => app.quit());
+ipcMain.handle('relaunch', () => {
+  app.relaunch();
+  app.quit();
+});
+
 
 module.exports = {
   manualDirectorySelection(path) {
@@ -8,7 +19,7 @@ module.exports = {
     return core.constructor.getJSONSchema(filePath[0]);
   },
   sendNotification(title, body) {
-    const notification = new electron.Notification({ title, body });
+    const notification = new Notification({ title, body });
     notification.show();
   },
 };
