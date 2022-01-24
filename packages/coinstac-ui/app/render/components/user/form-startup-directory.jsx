@@ -8,7 +8,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import { withStyles } from '@material-ui/core/styles';
-import ipcPromise from 'ipc-promise';
+import { ipcRenderer } from 'electron';
 
 const styles = theme => ({
   description: {
@@ -38,7 +38,7 @@ class FormStartupDirectory extends React.Component {
   }
 
   handleSelectDirectoryClick = () => {
-    ipcPromise.send('open-dialog', { org: 'directory' })
+    ipcRenderer.invoke('open-dialog', { org: 'directory' })
       .then((selectedDirectory) => {
         if (!selectedDirectory) return;
 
