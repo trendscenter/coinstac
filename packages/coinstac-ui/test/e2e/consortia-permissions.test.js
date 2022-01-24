@@ -28,9 +28,8 @@ const _deviceId2 = 'test4';
 describe('e2e consortia permissions', () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
-      console.log(this.currentTest);
       await fs.mkdir('/tmp/screenshots', { recursive: true });
-      execSync('xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-$(date +%s).png');
+      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
     }
   });
   before(async () => {
@@ -56,6 +55,9 @@ describe('e2e consortia permissions', () => {
     });
     appWindow1 = await app1.firstWindow();
     appWindow1.on('console', msg => console.log(`INSTANCE 1 -> ${msg.text()}`));
+    appWindow1.on('pageerror', (err) => {
+      console.log(`******** Window Error Instance 1: ${err.message}`);
+    });
 
     app2 = await electron.launch({
       args: [
@@ -79,6 +81,9 @@ describe('e2e consortia permissions', () => {
     });
     appWindow2 = await app2.firstWindow();
     appWindow2.on('console', msg => console.log(`INSTANCE 2 -> ${msg.text()}`));
+    appWindow2.on('pageerror', (err) => {
+      console.log(`******** Window Error Instance 2: ${err.message}`);
+    });
   });
 
   after(async () => {
@@ -172,19 +177,17 @@ describe('e2e consortia permissions', () => {
   it('access consortium as member', async () => {
     await appWindow2.click('a:has-text("Consortia")');
 
-    await appWindow2.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
+    const t1 = await appWindow2.waitForSelector('h6:has-text("Member")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    });
+    const t2 = await appWindow2.waitForSelector(`span:has-text("${USER_ID_2}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    });
 
     // Assert
-    return Promise.all([
-      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
-        state: 'visible',
-        timeout: EXIST_TIMEOUT,
-      }).should.eventually.not.equal(null),
-      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
-        state: 'hidden',
-        timeout: EXIST_TIMEOUT,
-      }).should.eventually.equal(null),
-    ]);
+    return !!t1 && !!t2;
   });
 
   it('grant ownership to a member', async () => {
@@ -196,11 +199,11 @@ describe('e2e consortia permissions', () => {
 
     // Assert
     return Promise.all([
-      appWindow2.waitForSelector(`div:has-text("${USER_ID_2}")`, {
+      appWindow1.waitForSelector(`div:has-text("${USER_ID_2}")`, {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
-      appWindow2.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
+      appWindow1.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),

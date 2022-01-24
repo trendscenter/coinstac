@@ -105,6 +105,7 @@ const typeDefs = `
     remotePipelineState: JSON
     type: String
     sharedUsers: [ID]
+    status: String!
   }
 
   type User {
@@ -223,6 +224,7 @@ const typeDefs = `
     fetchAllResults: [Result]
     fetchAllUsers: [User]
     fetchAllUserRuns: [Run]
+    fetchRun(runId: ID!): Run
     fetchAllHeadlessClients: [HeadlessClient]
     fetchAccessibleHeadlessClients: [HeadlessClient]
     fetchComputation(computationIds: [ID]): [Computation]
@@ -246,6 +248,7 @@ const typeDefs = `
     pipelineChanged(pipelineId: ID): Pipeline
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
+    runStarted(userId: ID): Run
     userChanged(userId: ID): User
     usersOnlineStatusChanged: JSON
     headlessClientChanged: HeadlessClient

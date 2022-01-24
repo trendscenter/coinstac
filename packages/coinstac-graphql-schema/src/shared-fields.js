@@ -96,6 +96,7 @@ const sharedFields = {
     results
     type
     sharedUsers
+    status
   `,
   userMetadata: `
     id

@@ -9,6 +9,7 @@ const {
   PIPELINE_DELETED,
   RUN_CHANGED,
   RUN_DELETED,
+  RUN_STARTED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -149,6 +150,15 @@ function runChanged(run) {
   });
 }
 
+function runStarted(run) {
+  const r = transformToClient(run);
+
+  pubSub.publish('runStarted', {
+    runStarted: r,
+    runId: r.id,
+  });
+}
+
 function runWithHeadlessClientStarted(run) {
   const r = transformToClient(run);
 
@@ -208,6 +218,7 @@ function initSubscriptions(ps) {
 
   eventEmitter.on(RUN_CHANGED, runChanged);
   eventEmitter.on(RUN_DELETED, runDeleted);
+  eventEmitter.on(RUN_STARTED, runStarted);
 
   eventEmitter.on(RUN_WITH_HEADLESS_CLIENT_STARTED, runWithHeadlessClientStarted);
 

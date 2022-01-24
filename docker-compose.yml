@@ -28,6 +28,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - local-volume:/root/.coinstac
+      - ${CIRCLE_WORKING_DIRECTORY}/screenshots:/tmp/screenshots
     networks:
       - ci_network
     environment:
@@ -36,6 +37,7 @@ services:
       - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=coinstac_local-volume
       - CI_PORT_START=8101
+      - ELECTRON_ENABLE_LOGGING=true
   api:
     depends_on:
       - 'mongo'

@@ -213,6 +213,36 @@ const queries = {
       fetchAllDatasetsSubjectGroups
     }
   `,
+  fetchRunStatus: `
+    {
+      fetchRun(runId: $runId) {
+        id
+        status
+      }
+    }
+  `,
+  runStarted: `
+    {
+      runStarted(userId: $userId) {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
+  fetchRunStatus: `
+    {
+      fetchRun(runId: $runId) {
+        id
+        status
+      }
+    }
+  `,
+  runStarted: `
+    {
+      runStarted(userId: $userId) {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
 };
 
 module.exports = queries;
