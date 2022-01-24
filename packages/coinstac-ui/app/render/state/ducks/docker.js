@@ -1,6 +1,6 @@
 'use strict';
 
-import ipcPromise from 'ipc-promise';
+import { ipcRenderer } from 'electron';
 import { applyAsyncLoading } from './loading';
 import { notifyError, notifySuccess } from './notifyAndLog';
 
@@ -13,10 +13,10 @@ export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 
 // Action Creators
-export const getDockerImages = applyAsyncLoading(() => dispatch => ipcPromise.send('get-all-images')
+export const getDockerImages = applyAsyncLoading(() => dispatch => ipcRenderer.invoke('get-all-images')
   .then(res => dispatch({ payload: res, type: GET_LOCAL_IMAGES })));
 
-export const pullComputations = applyAsyncLoading(compsAndConsortiumId => dispatch => ipcPromise.send('download-comps', compsAndConsortiumId)
+export const pullComputations = applyAsyncLoading(compsAndConsortiumId => dispatch => ipcRenderer.invoke('download-comps', compsAndConsortiumId)
   .then((res) => {
     dispatch({ payload: true, type: PULL_COMPUTATIONS });
     return res;
@@ -26,7 +26,7 @@ export const pullComputations = applyAsyncLoading(compsAndConsortiumId => dispat
     return err;
   }));
 
-export const removeImage = applyAsyncLoading((compId, imgName, imgId) => dispatch => ipcPromise.send('remove-image', { compId, imgId, imgName })
+export const removeImage = applyAsyncLoading((compId, imgName, imgId) => dispatch => ipcRenderer.invoke('remove-image', { compId, imgId, imgName })
   .then(() => {
     dispatch({ payload: imgName, type: REMOVE_IMAGE });
   }));
