@@ -1,17 +1,15 @@
-
 const fs = require('fs');
 const CsvReadableStream = require('csv-reader');
 const {
   ipcMain,
   Notification,
-  quit,
-  relaunch,
+  app,
 } = require('electron');
 
-ipcMain.handle('quit', () => quit());
+ipcMain.handle('quit', () => app.quit());
 ipcMain.handle('relaunch', () => {
-  relaunch();
-  quit();
+  app.relaunch();
+  app.quit();
 });
 ipcMain.handle('parseCsv', (event, files) => {
   const readPromises = files.map(file => new Promise((resolve, reject) => {

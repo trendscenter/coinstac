@@ -89,7 +89,7 @@ const MapsListItem = ({
         )
       }
       {
-        dataMapIsComplete
+        (!needsDataMapping || dataMapIsComplete)
           ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
           : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
       }

@@ -22,6 +22,7 @@ const {
   PIPELINE_DELETED,
   RUN_CHANGED,
   RUN_DELETED,
+  RUN_STARTED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -302,7 +303,7 @@ const resolvers = {
      * Returns all pipelines.
      * @return {array} List of all pipelines
      */
-    fetchAllPipelines: async () => {
+    fetchAllPipelines: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const pipelineSteps = await db.collection('pipelines').aggregate([
@@ -339,7 +340,17 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      return transformToClient(Object.values(pipelines));
+      const owningConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = owningConsortia.map(consortium => String(consortium._id));
+      let res = Object.values(pipelines);
+      if (!isAdmin(credentials.permissions)) {
+        res = res.filter(pipeline => {
+          return consortiaIds.includes(String(pipeline.owningConsortium))
+          || pipeline.shared;
+        });
+      }
+
+      return transformToClient(res);
     },
     /**
      * Returns single pipeline
@@ -492,6 +503,29 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    fetchRun: async (parent, { runId }, { credentials }) => {
+      const db = database.getDbInstance();
+
+      let run;
+
+      if (isAdmin(credentials.permissions)) {
+        run = await db.collection('runs').findOne({ _id: ObjectID(runId) });
+      } else {
+        run = await db.collection('runs').findOne({
+          _id: ObjectID(runId),
+          $or: [
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ]
+        });
+      }
+
+      if (!run) {
+        return Boom.notFound('Run not found');
+      }
+
+      return transformToClient(run);
+    },
   },
   Mutation: {
     /**
@@ -632,6 +666,7 @@ const resolvers = {
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
           type: isPipelineDecentralized ? 'decentralized' : 'local',
+          status: 'started'
         });
 
         const run = transformToClient(result.ops[0]);
@@ -641,6 +676,7 @@ const resolvers = {
         );
 
         eventEmitter.emit(RUN_CHANGED, run);
+        eventEmitter.emit(RUN_STARTED, run);
 
         if (pipeline.headlessMembers) {
           eventEmitter.emit(RUN_WITH_HEADLESS_CLIENT_STARTED, run);
@@ -985,7 +1021,8 @@ const resolvers = {
       }
 
       const updateObj = {
-        endDate: Date.now()
+        endDate: Date.now(),
+        status: 'error'
       };
 
       if (run.type !== 'local') {
@@ -1067,7 +1104,8 @@ const resolvers = {
       }
 
       const updateObj = {
-        endDate: Date.now()
+        endDate: Date.now(),
+        status: 'complete'
       };
 
       if (run.type !== 'local') {
@@ -1607,6 +1645,12 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
         (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
+      )
+    },
+    runStarted: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('runStarted'),
+        (payload, variables) => (variables.userId && keys(payload.runStarted.clients).indexOf(variables.userId) > -1)
       )
     },
     headlessClientChanged: {
