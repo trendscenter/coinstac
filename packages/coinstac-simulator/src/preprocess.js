@@ -3,6 +3,7 @@ const axios = require('axios');
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const config = require('./config');
+const path = require('path');
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
 
@@ -132,5 +133,12 @@ function createInputSpec(baseInputSpec, csvPath) {
   return inputSpec;
 }
 
-module.exports = { fetchPreprocessComputations, createInputSpec };
+async function prepareDirectory(pipelineSpec) {
+  await fs.promises.mkdir(path.resolve('input/local0/preprocessingRun'), { recursive: true });
+  Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value).map((filename) => {
+    return fs.promises.link(filename, `input/local0/preprocessingRun/${filename}`);
+  }));
+}
+
+module.exports = { fetchPreprocessComputations, createInputSpec, prepareDirectory };
 

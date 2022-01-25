@@ -78,10 +78,10 @@ if (program.loglevel) {
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { option } = require('commander');
-const { fetchPreprocessComputations, createInputSpec } = require('../src/preprocess');
+const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
 const { pullImages } = require('../../coinstac-pipeline/node_modules/coinstac-manager/src');
 
-async function runPipeline(pipelineSpec) {
+async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
   const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
     : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
@@ -91,7 +91,8 @@ async function runPipeline(pipelineSpec) {
     spec: pipelineSpec,
     runMode: globalMode,
     clientCount: count,
-    operatingDirectory: program.directory,
+    operatingDirectory: operatingDirectory || program.directory,
+
   });
   try {
     const simRun = await started;
@@ -105,14 +106,15 @@ async function runPipeline(pipelineSpec) {
       results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
     }
     // TODO: should not be necessary, something is holding the loop up
-    process.exit();
+    // process.exit();
   } catch (err) {
     logger.error('Simulator run failed!');
     logger.error('Fun error details:\n');
     logger.error(err.message);
     logger.error(err.stack || '');
-    process.exit(0);
+    // process.exit(0);
   }
+  return started;
 }
 
 function pipelineSpecFactory(inputSpec, mode, comp) {
@@ -181,7 +183,10 @@ if (program.preprocess) {
             } else if (answer === '0') {
               const rawData = fs.readFileSync('./pipelinespec.json');
               const pipelineSpec = JSON.parse(rawData);
-              return runPipeline(pipelineSpec);
+              // link before this
+              await prepareDirectory(pipelineSpec);
+              const run = await runPipeline(pipelineSpec, './');
+              return run;
             } else if (answer === '1') {
               // generate a default compspec
               // find the .csv file
@@ -221,7 +226,7 @@ if (program.preprocess) {
                     JSON.stringify(selectedComputation.computation.input)
                   );
                   const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
-                  const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, 'local', selectedComputation);
+                  const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
                   fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec));
 
                   await inquirer.prompt([{

@@ -31,7 +31,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "With TTY",
+            "name": "preprocess from test",
             "program": "${workspaceRoot}/packages/coinstac-simulator/bin/coinstac-simulator",
             "cwd": "${workspaceRoot}/algorithm-development/test-data/freesurfer-test-data/site1",
             "args": [
