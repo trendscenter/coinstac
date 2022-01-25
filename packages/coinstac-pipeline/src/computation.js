@@ -34,7 +34,7 @@ const managerOptions = ({
           },
         }, containerOptions),
       };
-      if (alternateInputDirectory) opts.docker.HostConfig.Binds.push(`${alternateInputDirectory}:${alternateInputDirectory}:ro`);
+      if (alternateInputDirectory) opts.docker.HostConfig.Binds.push(`${alternateInputDirectory.in}:${alternateInputDirectory.out}:ro`);
       if (process.env.CI) {
         opts.docker.HostConfig = {
           Binds: [

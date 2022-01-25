@@ -13,7 +13,7 @@ import { start as startErrorHandling } from './utils/boot/configure-error-handli
 import Root from './containers/root';
 
 // Set up root paths
-require('../common/utils/add-root-require-path.js');
+require('../common/utils/add-root-require-path');
 
 // Boot up the render process
 startErrorHandling();

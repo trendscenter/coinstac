@@ -28,7 +28,6 @@ const {
   compact, keys, pick, omit,
 } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
-const ipcPromise = require('ipc-promise');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const moment = require('moment');
@@ -44,26 +43,26 @@ const { EXPIRED_TOKEN, BAD_TOKEN } = require('../render/utils/error-codes');
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 // Set up root paths
-require('../common/utils/add-root-require-path.js');
+require('../common/utils/add-root-require-path');
 
 // Parse and handle CLI flags
-const parseCLIInput = require('./utils/boot/parse-cli-input.js');
+const parseCLIInput = require('./utils/boot/parse-cli-input');
 
 parseCLIInput();
 
 // Add dev mode specific services
-require('./utils/boot/configure-dev-services.js');
+require('./utils/boot/configure-dev-services');
 
 // Load the UI
-const { createWindow } = require('./utils/boot/configure-browser-window.js');
+const { createWindow } = require('./utils/boot/configure-browser-window');
 
 // Set up error handling
-const logUnhandledError = require('../common/utils/log-unhandled-error.js');
-const configureCore = require('./utils/boot/configure-core.js');
-const { configureLogger, readInitialLogContents } = require('./utils/boot/configure-logger.js');
-const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
-const loadConfig = require('../config.js');
-const fileFunctions = require('./services/files.js');
+const logUnhandledError = require('../common/utils/log-unhandled-error');
+const configureCore = require('./utils/boot/configure-core');
+const { configureLogger, readInitialLogContents } = require('./utils/boot/configure-logger');
+const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir');
+const loadConfig = require('../config');
+const fileFunctions = require('./services/files');
 
 
 const getAllFilesInDirectory = (directory) => {
@@ -253,7 +252,8 @@ loadConfig()
         mainWindow.webContents.send('prepare-consortia-files', res);
       });
 
-      ipcPromise.on('login-init', ({
+
+      ipcMain.handle('login-init', (event, {
         userId, appDirectory, clientServerURL, token,
       }) => {
         return initializedCore
@@ -276,7 +276,7 @@ loadConfig()
        * [initializedCore description]
        * @type {[type]}
        */
-      ipcPromise.on('logout', () => {
+      ipcMain.handle('logout', () => {
         // TODO: hacky way to not get a mqtt reconnn loop
         // a better way would be to make an actual shutdown fn for pipeline
         return new Promise((resolve) => {
@@ -292,7 +292,7 @@ loadConfig()
         });
       });
 
-      ipcPromise.on('set-client-server-url', url => new Promise((resolve) => {
+      ipcMain.handle('set-client-server-url', (event, url) => new Promise((resolve) => {
         initializedCore.setClientServerURL(url);
         resolve();
       }));
@@ -530,7 +530,7 @@ loadConfig()
     * IPC listener to return a list of all local Docker images
     * @return {Promise<String[]>} An array of all local Docker image names
     */
-      ipcPromise.on('get-all-images', () => {
+      ipcMain.handle('get-all-images', () => {
         return initializedCore.Manager.getImages()
           .then((data) => {
             return data;
@@ -551,7 +551,7 @@ loadConfig()
     * IPC listener to return status of Docker
     * @return {Promise<boolean[]>} Docker running?
     */
-      ipcPromise.on('get-status', () => {
+      ipcMain.handle('get-status', () => {
         return initializedCore.Manager.getStatus()
           .then((result) => {
             return result;
@@ -575,7 +575,7 @@ loadConfig()
     *  associated with the computations being retrieved
     * @return {Promise}
     */
-      ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
+      ipcMain.handle('download-comps', (event, params) => { // eslint-disable-line no-unused-vars
         return initializedCore.Manager
           .pullImages(params.computations)
           .then((compStreams) => {
@@ -633,7 +633,7 @@ loadConfig()
      * @param {String} org How the files being retrieved are organized
      * @return {String[]} List of file paths being retrieved
     */
-      ipcPromise.on('open-dialog', ({ org, filters, properties }) => {
+      ipcMain.handle('open-dialog', (event, { org, filters, properties }) => {
         let dialogFilters;
         let dialogProperties;
         let postDialogFunc;
@@ -665,7 +665,7 @@ loadConfig()
      * IPC Listener to remove a Docker image
      * @param {String} imgId ID of the image to remove
      */
-      ipcPromise.on('remove-image', ({ compId, imgId, imgName }) => {
+      ipcMain.handle('remove-image', (event, { compId, imgId, imgName }) => {
         return initializedCore.Manager.removeImage(imgId)
           .catch((err) => {
             const output = [{
