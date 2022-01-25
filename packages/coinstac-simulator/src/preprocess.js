@@ -7,7 +7,7 @@ const path = require('path');
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
 
-const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {dockerImage, input}, meta {  id,name,preprocess }}}';
+const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess }}}';
 
 async function getIdToken(username, password) {
   const { data } = await axios.post('/authenticate', { username, password });
