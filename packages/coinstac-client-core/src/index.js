@@ -420,8 +420,7 @@ class CoinstacClient {
         filesArray.forEach(async (file) => {
           file = path.resolve(fullPath, file);
           fs.stat(file).then(async (fstats) => {
-            const hasFiles = await fs.readdir(file);
-            if (fstats.isDirectory() && hasFiles) {
+            if (fstats.isDirectory()) {
               unlinkPromises.push(
                 fs.rmdir(file, { recursive: true })
               );
@@ -430,6 +429,8 @@ class CoinstacClient {
                 fs.unlink(file)
               );
             }
+          }).catch((e) => {
+            this.logger.error(`Failed fs call unlinking files: ${e}`);
           });
         });
         return Promise.all(unlinkPromises);
