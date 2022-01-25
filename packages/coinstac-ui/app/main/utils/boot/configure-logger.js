@@ -35,7 +35,7 @@ async function configureLogger(config) {
       await writeFile(logFilePath, Buffer.from(trimmed));
     }
 
-    const logger = winston.loggers.add('coinstac-main', {
+    const logger = winston.createLogger({
       level: 'silly',
       format: winston.format.combine(
         winston.format.timestamp(),
@@ -58,6 +58,7 @@ async function configureLogger(config) {
         }),
       ],
     });
+    winston.loggers.add('coinstac-main', logger);
 
     return logger;
   } catch (err) {
