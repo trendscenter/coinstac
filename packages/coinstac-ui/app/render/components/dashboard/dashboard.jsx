@@ -28,13 +28,11 @@ import {
   THREAD_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import DashboardNav from './dashboard-nav';
-import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 import DashboardTutorialModal from './dashboard-tutorial';
 import DockerStatus from './docker-status';
 
 import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
 import useDockerStatus from './effects/useDockerStatus';
-import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
 import DockerEventsListeners from './listeners/docker-events-listeners';
 import LocalRunStatusListeners from './listeners/local-run-status-listeners';
@@ -44,6 +42,9 @@ import PullComputationsListener from './listeners/pull-computations-listener';
 import RemoteRunsListener from './listeners/remote-runs-listener';
 import UserPermissionsListener from './listeners/user-permissions-listener';
 import TreeviewListener from './listeners/treeview-listener';
+import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
+import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
+import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
 
 function Dashboard({
   auth, children, runs, maps, router, hideTutorial, toggleTutorial,
@@ -62,9 +63,7 @@ function Dashboard({
   const {
     data: threadsData, subscribeToMore: subscribeToThreads,
   } = useQuery(FETCH_ALL_THREADS_QUERY);
-  const {
-    data: userRunsData, subscribeToMore: subscribeToUserRuns,
-  } = useQuery(FETCH_ALL_USER_RUNS_QUERY);
+  const { subscribeToMore: subscribeToUserRuns } = useQuery(FETCH_ALL_USER_RUNS_QUERY);
 
   useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
   useEntityListSubscription(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
@@ -94,9 +93,11 @@ function Dashboard({
   const computations = get(computationData, 'fetchAllComputations');
   const pipelines = get(pipelinesData, 'fetchAllPipelines');
   const threads = get(threadsData, 'fetchAllThreads');
-  const remoteRuns = get(userRunsData, 'fetchAllUserRuns');
 
   const dockerStatus = useDockerStatus();
+
+  useStartInitialRuns(); // starts pipelines on app startup
+  useStartDecentralizedRun(); // starts decentralized runs when the api server sends a subscription
 
   const unreadThreadsCount = useMemo(
     () => {
@@ -151,7 +152,7 @@ function Dashboard({
         </List>
       </div>
       <div className="dashboard-content">
-        <DashboardPipelineNavBar consortia={consortia} localRuns={runs} />
+        <TopNotificationProgressBar consortia={consortia} runs={runs} />
         <main className="content-pane">
           {canShowBackButton && (
             <button
@@ -165,10 +166,6 @@ function Dashboard({
           {childrenWithProps}
         </main>
       </div>
-      <StartPipelineListener
-        consortia={consortia}
-        remoteRuns={remoteRuns}
-      />
       <NotificationsListener />
       <LocalRunStatusListeners />
       <DockerEventsListeners />

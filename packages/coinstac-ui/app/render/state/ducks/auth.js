@@ -1,7 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import ipcPromise from 'ipc-promise';
-import { app } from 'electron';
+import { app, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
@@ -82,8 +81,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
   if (clientServerURL) {
     localStorage.setItem('clientServerURL', clientServerURL);
   }
-
-  await ipcPromise.send('login-init', {
+  await ipcRenderer.invoke('login-init', {
     userId: data.user.id, appDirectory, clientServerURL, token: data.id_token,
   });
   const user = { ...data.user, label: reqUser.username };
@@ -109,7 +107,7 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 
 export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
   localStorage.setItem('clientServerURL', url);
-  return ipcPromise.send('set-client-server-url', url)
+  return ipcRenderer.invoke('set-client-server-url', url)
     .then(() => {
       dispatch(setClientServerURL(url));
     });

@@ -4,18 +4,19 @@ import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
 import ReactJson from 'react-json-view';
-import ipcPromise from 'ipc-promise';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { services } from 'coinstac-common';
+import { ipcRenderer } from 'electron';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
 import { saveDocumentProp } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
+
 
 const styles = theme => ({
   topMargin: {
@@ -40,7 +41,7 @@ class ComputationSubmission extends Component {
   }
 
   getComputationSchema = () => {
-    ipcPromise.send('open-dialog', { org: 'jsonschema' })
+    ipcRenderer.invoke('open-dialog', { org: 'jsonschema' })
       .then((res) => {
         let error = null;
         const validationReults = services.validator.validate(res, 'computation');

@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
@@ -10,11 +9,11 @@ import InfoIcon from '@material-ui/icons/Info';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import red from '@material-ui/core/colors/red';
 import dragula from 'react-dragula';
-import FilePicker from '../common/file-picker';
+import FilePicker from '../../common/file-picker';
 import MapsCsvFieldCsvHeader from './maps-csv-field-csv-header';
 import MapsCsvFieldPipelineVariable from './maps-csv-field-pipeline-variable';
-import { readCsvFreesurferFiles } from '../../utils/helpers';
-import mapVariablesToColumns from '../../utils/csv-column-auto-map';
+import { readCsvFreesurferFiles } from '../../../utils/helpers';
+import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
 
 const styles = theme => ({
   rootPaper: {
@@ -106,7 +105,9 @@ class MapsCsvField extends React.Component {
       return;
     }
 
-    const { fieldName, onChange, fieldDataMap } = this.props;
+    const {
+      fieldName, onChange, fieldDataMap, fieldDescription,
+    } = this.props;
 
     this.setState(prevState => ({
       remainingHeader: prevState.remainingHeader.filter(column => column !== columnName),
@@ -118,13 +119,16 @@ class MapsCsvField extends React.Component {
         ...fieldDataMap.maps,
         [pipelineVariableName]: columnName,
       },
+      fieldType: fieldDescription.type,
     });
 
     fileDataMappingElement.remove();
   }
 
   setSelectedFiles(selectedFiles) {
-    const { onChange, fieldName, fieldDataMap } = this.props;
+    const {
+      onChange, fieldName, fieldDataMap, fieldDescription,
+    } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);
@@ -148,6 +152,7 @@ class MapsCsvField extends React.Component {
         fileData: parsedFiles,
         files: selectedFiles,
         maps: fieldDataMap && fieldDataMap.maps ? fieldDataMap.maps : {},
+        fieldType: fieldDescription.type,
       });
     };
 
@@ -248,7 +253,7 @@ class MapsCsvField extends React.Component {
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
 
     return (
-      <Paper className={classes.rootPaper} elevation={2}>
+      <div>
         <Typography variant="h4" className={classes.header}>
           {fieldName}
           {this.isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -329,7 +334,7 @@ class MapsCsvField extends React.Component {
             </React.Fragment>
           )
         }
-      </Paper>
+      </div>
     );
   }
 }

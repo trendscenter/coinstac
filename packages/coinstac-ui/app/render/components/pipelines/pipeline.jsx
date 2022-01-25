@@ -46,6 +46,7 @@ import {
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
   FETCH_ALL_HEADLESS_CLIENTS,
+  FETCH_ALL_PIPELINES_QUERY,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -192,6 +193,15 @@ class Pipeline extends Component {
     };
   }
 
+  componentDidMount() {
+    const { consortium } = this.state;
+    const { params, consortia } = this.props;
+
+    if (isEmpty(consortium) && consortia.length > 0 && params.pipelineId) {
+      this.setConsortiumWithActivePipeline();
+    }
+  }
+
   // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { consortium, pipeline, selectedId } = this.state;
@@ -213,7 +223,7 @@ class Pipeline extends Component {
       this.setState(
         { pipeline: { ...other }, selectedId: newSelectedId, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length && pipeline.owningConsortium) {
+          if (nextProps.consortia.length && other.owningConsortium) {
             this.setConsortium();
           }
         }
@@ -256,6 +266,39 @@ class Pipeline extends Component {
     this.setState(prevState => ({
       owner,
       consortium,
+      pipeline: { ...prevState.pipeline, owningConsortium },
+      startingPipeline: { ...prevState.pipeline, owningConsortium },
+    }));
+  }
+
+  setConsortiumWithActivePipeline = () => {
+    const {
+      auth: { user },
+      params,
+      pipelines,
+      consortia,
+    } = this.props;
+
+
+    const pipeline = pipelines.find(p => p.id === params.pipelineId);
+
+    if (!pipeline || !pipeline.owningConsortium) {
+      return;
+    }
+
+    const { owningConsortium } = pipeline;
+
+    const consortium = consortia.find(con => con.id === owningConsortium);
+
+    if (!consortium) {
+      return;
+    }
+
+    const owner = isPipelineOwner(user.permissions, owningConsortium);
+
+    this.setState(prevState => ({
+      owner,
+      consortium: omit(consortium, ['__typename']),
       pipeline: { ...prevState.pipeline, owningConsortium },
       startingPipeline: { ...prevState.pipeline, owningConsortium },
     }));
@@ -405,7 +448,8 @@ class Pipeline extends Component {
     const { client } = this.props;
     const { pipeline } = this.state;
 
-    const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const pipelinesData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+    const data = pipelinesData.fetchAllPipelines.find(p => p.id === pipeline) || {};
     data.fetchPipeline = { ...pipeline, __typename: 'Pipeline' };
 
     client.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
@@ -970,6 +1014,7 @@ Pipeline.propTypes = {
   client: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   users: PropTypes.array,

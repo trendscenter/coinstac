@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import ipcPromise from 'ipc-promise';
 import { withStyles } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -19,6 +18,7 @@ import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import InfoIcon from '@material-ui/icons/Info';
+import { ipcRenderer } from 'electron';
 
 const styles = theme => ({
   selectFileButton: {
@@ -32,28 +32,26 @@ const styles = theme => ({
 });
 
 function openFileDialog(multiple, directory, extensions, filterName) {
-  const filters = [
-    { name: filterName, extensions },
-  ];
-
+  const filters = [];
   const properties = [];
 
   if (directory) {
     properties.push('openDirectory');
   } else {
     properties.push('openFile');
+    filters.push({ name: filterName, extensions });
   }
 
   if (multiple) {
     properties.push('multiSelections');
   }
 
-  return ipcPromise.send('open-dialog', { filters, properties });
+  return ipcRenderer.invoke('open-dialog', { filters, properties });
 }
 
 function FilePicker({
-  multiple, directory, extensions, filterName, selectedFiles, onChange,
-  deleteFile, tooltip, classes,
+  multiple, directory, extensions, filterName, selected, onChange,
+  deleteItem, tooltip, classes,
 }) {
   const [expandList, setExpandList] = useState(false);
 
@@ -65,20 +63,20 @@ function FilePicker({
           color="secondary"
           className={classes.selectFileButton}
           onClick={async () => {
-            const selectedFiles = await openFileDialog(multiple, directory, extensions, filterName);
+            const selected = await openFileDialog(multiple, directory, extensions, filterName);
 
-            if (selectedFiles) {
-              onChange(selectedFiles);
+            if (selected) {
+              onChange(selected);
             }
           }}
         >
-          { directory ? 'Select Directory(s)' : 'Select File(s)' }
+          {directory ? 'Select Directory(s)' : 'Select File(s)'}
         </Button>
         {
           tooltip && (
             <Tooltip
               title={
-                <Typography variant="body1">{ tooltip }</Typography>
+                <Typography variant="body1">{tooltip}</Typography>
               }
             >
               <InfoIcon />
@@ -87,21 +85,21 @@ function FilePicker({
         }
       </Box>
       {
-        selectedFiles && selectedFiles.length > 0 && (
+        selected && selected.length > 0 && (
           <Paper variant="outlined" className={classes.fileListContainer}>
             <List disablePadding>
               <ListItem button onClick={() => setExpandList(!expandList)}>
                 <ListItemIcon>
                   <FileCopyIcon />
                 </ListItemIcon>
-                <ListItemText primary="Click to see selected files" />
+                <ListItemText primary={`Click to see selected ${directory ? 'directories' : 'files'}`} />
                 { expandList ? <ExpandLessIcon /> : <ExpandMoreIcon /> }
               </ListItem>
             </List>
             <Collapse in={expandList} timeout="auto">
               <List disablePadding>
                 {
-                  selectedFiles.map((file, index) => (
+                  selected.map((file, index) => (
                     <ListItem key={file} button>
                       <ListItemText>
                         <Typography
@@ -109,14 +107,14 @@ function FilePicker({
                           variant="body2"
                           color="textPrimary"
                         >
-                          { file }
+                          {file}
                         </Typography>
                       </ListItemText>
                       <ListItemSecondaryAction>
                         <IconButton
                           edge="end"
                           aria-label="delete"
-                          onClick={() => deleteFile(index)}
+                          onClick={() => deleteItem(index)}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -137,8 +135,8 @@ FilePicker.defaultProps = {
   multiple: false,
   directory: false,
   tooltip: null,
-  selectedFiles: [],
   extensions: [],
+  selected: [],
 };
 
 FilePicker.propTypes = {
@@ -148,9 +146,9 @@ FilePicker.propTypes = {
   filterName: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
-  selectedFiles: PropTypes.array,
+  selected: PropTypes.array,
   classes: PropTypes.object.isRequired,
-  deleteFile: PropTypes.func.isRequired,
+  deleteItem: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(FilePicker);

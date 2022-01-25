@@ -1,6 +1,10 @@
 /* eslint-disable no-case-declarations */
 import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
+import { startRun } from './runs';
+
+const fs = require('fs');
+const path = require('path');
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
@@ -11,34 +15,32 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
-// map
-// {
-//   covariates: {
-//     fileData: [{
-//       data: {
-//         subject0_aseg_stats.txt: {isControl: 'False', age: 22}
-//         subject1_aseg_stats.txt: {isControl: 'True', age: 47}
-//       }
-//     }],
-//     files: [],
-//     maps: {isControl: 'isControl', age: 'age'}
-//   }
-// }
+const getAllFiles = ((dirPath, arrayOfFiles) => {
+  const files = fs.readdirSync(dirPath);
 
-// inputMap covariates value
-// [
-//   {type: 'boolean', name: 'isControl'},
-//   {type: 'number', name: 'age'}
-// ]
+  arrayOfFiles = arrayOfFiles || [];
+
+  files.forEach((file) => {
+    if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
+      arrayOfFiles.push(path.join(__dirname, dirPath, file));
+      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
+    } else {
+      arrayOfFiles.push(path.join(__dirname, dirPath, file));
+    }
+  });
+
+  return arrayOfFiles;
+});
 
 export const saveDataMapping = applyAsyncLoading(
-  (consortiumId, pipeline, map) => async (dispatch) => {
+  (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
-      const filesArray = [];
+      let filesArray = [];
       const inputMap = {};
       let baseDirectory = null;
+      const dataType = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
         inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
@@ -47,37 +49,66 @@ export const saveDataMapping = applyAsyncLoading(
           return;
         }
 
-        const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
         const mappedData = map[inputMapKey];
 
-        // has csv column mapping
-        if (mappedData.maps) {
-          const value = { ...mappedData.fileData[0].data };
+        if (mappedData) {
+          // has csv column mapping
+          if (mappedData.fieldType === 'csv') {
+            const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
 
-          baseDirectory = dirname(mappedData.files[0]);
+            const value = { ...mappedData.fileData[0].data };
 
-          Object.keys(value).forEach((valueKey) => {
-            filesArray.push(valueKey);
+            baseDirectory = dirname(mappedData.files[0]);
 
-            inputMapVariables.forEach((variable) => {
-              const columnName = mappedData.maps[variable];
+            Object.keys(value).forEach((valueKey) => {
+              filesArray.push(valueKey);
 
-              if (columnName) {
-                value[valueKey][variable] = value[valueKey][columnName];
+              inputMapVariables.forEach((variable) => {
+                const columnName = mappedData.maps[variable];
 
-                if (columnName !== variable) {
-                  delete value[valueKey][columnName];
+                if (columnName) {
+                  value[valueKey][variable] = value[valueKey][columnName];
+
+                  if (columnName !== variable) {
+                    delete value[valueKey][columnName];
+                  }
                 }
-              }
+              });
             });
-          });
 
-          inputMap[inputMapKey].value = value;
-        } else {
-          baseDirectory = dirname(mappedData.files[0]);
-          filesArray.push(...mappedData.files);
+            inputMap[inputMapKey].value = value;
+          } else if (mappedData.fieldType === 'files') {
+            baseDirectory = dirname(mappedData.files[0]);
+            filesArray.push(...mappedData.files);
 
-          inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+            inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+          } else if (mappedData.fieldType === 'directory') {
+            baseDirectory = mappedData.directory;
+            const files = getAllFiles(mappedData.directory, null);
+            files.unshift(baseDirectory);
+            const newFiles = files.map((file) => {
+              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
+              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
+              return `${baseDirectory}${newfile}`;
+            });
+            filesArray = newFiles;
+            files.shift();
+            inputMap[inputMapKey].value = files.map((file) => {
+              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
+              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
+              return newfile;
+            });
+          } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
+            || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
+            inputMap[inputMapKey].value = mappedData.value;
+          }
+        }
+
+        inputMap[inputMapKey].fulfilled = true;
+
+        // carry dataType to the pipeline for processing files
+        if (mappedData && ['csv', 'files', 'directory'].includes(mappedData.fieldType)) {
+          inputMap[inputMapKey].type = mappedData.fieldType;
         }
       });
 
@@ -85,21 +116,32 @@ export const saveDataMapping = applyAsyncLoading(
         filesArray,
         baseDirectory,
         inputMap,
+        dataType,
       });
     });
 
     const mapping = {
-      consortiumId,
+      consortiumId: consortium.id,
       pipelineId: pipeline.id,
       map: mapData,
       dataMap: map,
       isComplete: true,
     };
 
-    dispatch(({
+    dispatch({
       type: SAVE_DATA_MAPPING,
       payload: mapping,
-    }));
+    });
+
+    const { runs } = getState();
+
+    const runAwaitingDataMap = runs.runsAwaitingDataMap.find(
+      run => run.consortiumId === consortium.id && run.pipelineSnapshot.id === pipeline.id
+    );
+
+    if (runAwaitingDataMap) {
+      dispatch(startRun(runAwaitingDataMap, consortium));
+    }
   }
 );
 

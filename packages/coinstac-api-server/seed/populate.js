@@ -3,30 +3,33 @@ const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
-const dsneMS = require('./data/coinstac-dsne-ms');
-const drneVbm = require('./data/coinstac-schema-regression-vbm');
+const brainageFNC = require('./data/coinstac-brainage-fnc.json');
+const dsneMS = require('./data/coinstac-dsne-ms.json');
+const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
-const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
-const dmancova = require('./data/coinstac-dmancova');
+const msrVbm = require('./data/coinstac-schema-regression-ms-vbm.json');
+const dmancova = require('./data/coinstac-dmancova.json');
 
-const drneFsl = require('./data/coinstac-schema-regression-fsl');
-const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
-const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
+const drneFsl = require('./data/coinstac-schema-regression-fsl.json');
+const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl.json');
+const msrFsl = require('./data/coinstac-schema-regression-ms-fsl.json');
 
-const gica = require('./data/coinstac-gica-pipeline');
-const ddfnc = require('./data/coinstac-ddfnc-pipeline');
-const dpsvm = require('./data/coinstac-dpsvm');
-const vbm = require('./data/coinstac-vbm-pre');
+const gica = require('./data/coinstac-gica-pipeline.json');
+const ddfnc = require('./data/coinstac-ddfnc-pipeline.json');
+const dpsvm = require('./data/coinstac-dpsvm.json');
+const dinunet = require('./data/coinstac-dinunet.json');
+const dinunetGPU = require('./data/coinstac-dinunet-gpu.json');
+const vbm = require('./data/coinstac-vbm-pre.json');
 
-const fmri = require('./data/coinstac-fmri');
+const fmri = require('./data/coinstac-fmri.json');
 
-const decentralized = require('./data/coinstac-decentralized-test');
+const decentralized = require('./data/coinstac-decentralized-test.json');
 // const transfer = require('./data/coinstac-file-transfer-test');
 // const stress = require('./data/coinstac-file-stress-test');
-const decentralizedError = require('./data/coinstac-decentralized-error');
-const enigmaSans = require('./data/coinstac-enigma-sans');
-const local = require('./data/coinstac-local-test');
-const localError = require('./data/coinstac-local-error');
+const decentralizedError = require('./data/coinstac-decentralized-error.json');
+const enigmaSans = require('./data/coinstac-enigma-sans.json');
+const local = require('./data/coinstac-local-test.json');
+const localError = require('./data/coinstac-local-error.json');
 
 const CONSORTIA_IDS = [
   database.createUniqueId(),
@@ -41,6 +44,10 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -96,6 +103,9 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
+    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
+    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
+    { ...brainageFNC, submittedBy: 'author', _id: COMPUTATION_IDS[19] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
@@ -252,7 +262,7 @@ async function populatePipelines() {
 async function populateRuns() {
   const db = database.getDbInstance();
 
-  db.collection('runs').insertMany([
+  return db.collection('runs').insertMany([
     {
       _id: RUN_IDS[0],
       clients: {
@@ -1216,8 +1226,9 @@ async function populateDatasets() {
 async function populate(closeConnection = true) {
   await database.connect();
 
-  database.dropDbInstance();
-
+  await database.dropDbInstance();
+  database.getDbInstance();
+  await database.createDbIndexes();
   await populateComputations();
   await populateConsortia();
   await populatePipelines();

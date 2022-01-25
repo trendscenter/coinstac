@@ -111,29 +111,33 @@ module.exports = manager.then((remotePipelineManager) => {
               return pullImagesFromList(computationImageList)
                 .then(() => pruneImages())
                 .then(() => {
-                  const { result, stateEmitter } = remotePipelineManager.startPipeline({
-                    clients: run.clients,
-                    spec: run.pipelineSnapshot,
-                    runId: run.id,
-                    timeout: run.pipelineSnapshot.timeout,
-                  });
-
-                  stateEmitter.on('update', (data) => {
-                    // TODO:  console most likely should be removed post proto development
-                    // or made less noisy
-                    updateRunMessageQueue.push({ runId: run.id, data });
-                    updateRunState();
-                  });
-
-                  result
-                    .then((result) => {
-                      saveResults(run.id, result);
-                    })
-                    .catch((error) => {
-                      console.log(error); // eslint-disable-line no-console
-                      saveError(run.id, error);
+                  try {
+                    const { result, stateEmitter } = remotePipelineManager.startPipeline({
+                      clients: run.clients,
+                      spec: run.pipelineSnapshot,
+                      runId: run.id,
+                      timeout: run.pipelineSnapshot.timeout,
                     });
-                  return h.response({}).code(201);
+
+                    stateEmitter.on('update', (data) => {
+                      // TODO:  console most likely should be removed post proto development
+                      // or made less noisy
+                      updateRunMessageQueue.push({ runId: run.id, data });
+                      updateRunState();
+                    });
+
+                    result
+                      .then((result) => {
+                        saveResults(run.id, result);
+                      })
+                      .catch((error) => {
+                        console.log(error); // eslint-disable-line no-console
+                        saveError(run.id, error);
+                      });
+                    return h.response({}).code(201);
+                  } catch (error) {
+                    return h.response({ error }).code(500);
+                  }
                 });
             });
         },
