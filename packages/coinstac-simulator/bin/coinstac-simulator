@@ -118,9 +118,9 @@ function pipelineSpecFactory(inputSpec, mode, comp) {
   let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
   const comps = Array.isArray(comp) ? comp : [comp];
   specMap = specMap.map((spec, index) => ({
+    inputMap: spec,
     controller: { type: mode[index] },
     computations: [comps[index]],
-    inputMap: spec,
   }));
   return {
     steps: specMap,
@@ -178,11 +178,14 @@ if (program.preprocess) {
               logger.info('The answer provided is not a valid choice.');
               process.exit();
             } else if (answer === '0') {
+              const baseDir = 'coinstac/';
               const rawData = fs.readFileSync('./pipelinespec.json');
               const pipelineSpec = JSON.parse(rawData);
               // link before this
-              await prepareDirectory(pipelineSpec);
-              const run = await runPipeline(pipelineSpec, './');
+              await prepareDirectory(pipelineSpec, baseDir);
+              const run = await runPipeline(pipelineSpec, baseDir);
+              // cleanup input dir
+              await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
               return run;
             } else if (answer === '1') {
               // generate a default compspec
@@ -224,7 +227,7 @@ if (program.preprocess) {
                   );
                   const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
                   const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
-                  fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec));
+                  fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
                   await inquirer.prompt([{
                     type: 'number',
