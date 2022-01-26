@@ -105,14 +105,11 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       logger.info('Local run(s) finished');
       results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
     }
-    // TODO: should not be necessary, something is holding the loop up
-    // process.exit();
   } catch (err) {
     logger.error('Simulator run failed!');
     logger.error('Fun error details:\n');
     logger.error(err.message);
     logger.error(err.stack || '');
-    // process.exit(0);
   }
   return started;
 }
