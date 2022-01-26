@@ -3,15 +3,28 @@ const axios = require('axios');
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const path = require('path');
+const winston = require('winston');
 const config = require('./config');
+
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
 
 const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess }}}';
 
 async function getIdToken(username, password) {
-  const { data } = await axios.post('/authenticate', { username, password });
-  return data.id_token;
+  try {
+    const { data } = await axios.post('/authenticate', { username, password });
+    return data.id_token;
+  } catch (error) {
+    logger.error('Error connecting to API');
+    throw error;
+  }
 }
 
 async function fetchComputations(id_token) {
@@ -27,8 +40,13 @@ async function fetchComputations(id_token) {
       preprocess: true,
     },
   };
-  const response = await axios.post('/graphql', payload, { headers });
-  return response.data.data.fetchAllComputations;
+  try {
+    const response = await axios.post('/graphql', payload, { headers });
+    return response.data.data.fetchAllComputations;
+  } catch (error) {
+    logger.error('Error connecting to API');
+    throw error;
+  }
 }
 
 async function fetchPreprocessComputations(username, password) {
