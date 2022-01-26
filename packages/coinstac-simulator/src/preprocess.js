@@ -2,8 +2,8 @@
 const axios = require('axios');
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
-const config = require('./config');
 const path = require('path');
+const config = require('./config');
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
 
@@ -122,10 +122,10 @@ function createInputSpec(baseInputSpec, csvPath) {
   inputSpec.covariates = { value: {} };
   const records = parse(fs.readFileSync(csvPath));
   const headers = records[0];
-  for (let i = 1; i < records.length; i++) {
+  for (let i = 1; i < records.length; i += 1) {
     const record = records[i];
     const covariate = {};
-    for (let j = 1; j < headers.length; j++) {
+    for (let j = 1; j < headers.length; j += 1) {
       covariate[headers[j]] = record[j];
     }
     inputSpec.covariates.value[records[i][0]] = covariate;
@@ -141,4 +141,3 @@ async function prepareDirectory(pipelineSpec) {
 }
 
 module.exports = { fetchPreprocessComputations, createInputSpec, prepareDirectory };
-

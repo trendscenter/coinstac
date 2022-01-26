@@ -139,7 +139,7 @@ if (program.preprocess) {
       type: 'number',
       name: 'select preprocess',
       message: `Select preprocess computation:${computations.map((computation, index) => {
-        return `\n${index} ${computation.meta.name}\n`;
+        return `\n${index} ) ${computation.meta.name}\n`;
       })}`,
     }]).then(async (answers) => {
       const answer = answers['select preprocess'];
@@ -173,7 +173,7 @@ if (program.preprocess) {
         await inquirer.prompt([{
           type: 'number',
           name: 'existing pipelineSpec or generate',
-          message: 'Wich pipelineSpec will be used?\n0 Use an existing pipelineSpec \n1 Generate a new pipelineSpec\n',
+          message: 'Which pipelineSpec will be used?\n0 ) Use an existing pipelineSpec \n1 ) Generate a new pipelineSpec\n',
         }])
           .then(async (answers) => {
             const answer = answers['existing pipelineSpec or generate'];
@@ -212,7 +212,7 @@ if (program.preprocess) {
                 type: 'number',
                 name: 'select covariates file',
                 message: `Select Covariates File:${csvs.map((csv, index) => {
-                  return `\n${index} ${csv}`;
+                  return `\n${index} ) ${csv}`;
                 })}\n`,
               }]).then(async (answers) => {
                 const answer = answers['select covariates file'];
@@ -232,7 +232,7 @@ if (program.preprocess) {
                   await inquirer.prompt([{
                     type: 'number',
                     name: 'exit',
-                    message: 'pipelineSpec.json created. Press any key to exit.',
+                    message: 'pipelineSpec.json created, please edit pipeline options manually. Press any key to exit.',
                   }]).then(() => {
                     process.exit();
                   });
