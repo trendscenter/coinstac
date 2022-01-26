@@ -58,7 +58,7 @@ export const FETCH_ALL_PIPELINES_QUERY = gql`
 `;
 
 export const FETCH_ALL_COMPUTATIONS_QUERY = gql`
-  query fetchAllComputations
+  query fetchAllComputations($preprocess: Boolean)
     ${queries.fetchAllComputations}
 `;
 
