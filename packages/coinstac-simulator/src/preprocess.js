@@ -134,9 +134,9 @@ function createInputSpec(baseInputSpec, csvPath) {
 }
 
 async function prepareDirectory(pipelineSpec) {
-  await fs.promises.mkdir(path.resolve('input/local0/preprocessingRun'), { recursive: true });
+  await fs.promises.mkdir(path.resolve('input/local0/simulatorRun'), { recursive: true });
   Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value).map((filename) => {
-    return fs.promises.link(filename, `input/local0/preprocessingRun/${filename}`);
+    return fs.promises.link(filename, `input/local0/simulatorRun/${filename}`);
   }));
 }
 
