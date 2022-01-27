@@ -54,6 +54,7 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
+import { tutorialChange } from '../../state/ducks/auth';
 import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import {
@@ -688,7 +689,13 @@ class Pipeline extends Component {
 
   render() {
     const {
-      connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
+      connectDropTarget,
+      consortia,
+      users,
+      classes,
+      auth,
+      availableHeadlessClients,
+      tutorialChange,
     } = this.props;
     const {
       consortium,
@@ -987,7 +994,12 @@ class Pipeline extends Component {
           )}
         </ValidatorForm>
         {!auth.hideTutorial && (
-          <Joyride steps={STEPS.pipeline} continuous disableScrollParentFix />
+          <Joyride
+            steps={STEPS.pipeline}
+            continuous
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
         )}
       </div>
     );
@@ -1018,12 +1030,13 @@ Pipeline.propTypes = {
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   users: PropTypes.array,
+  availableHeadlessClients: PropTypes.array,
   connectDropTarget: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
-  availableHeadlessClients: PropTypes.array,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -1063,6 +1076,7 @@ const connectedComponent = connect(mapStateToProps, {
   notifySuccess,
   notifyError,
   updateMapStatus,
+  tutorialChange,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

@@ -121,6 +121,7 @@ class ConsortiumPipeline extends Component {
       classes,
       pipelines,
       hideTutorial,
+      tutorialChange,
     } = this.props;
 
     const {
@@ -238,7 +239,11 @@ class ConsortiumPipeline extends Component {
           )
         }
         {!hideTutorial && (
-          <Joyride steps={STEPS.consortiumPipeline} disableScrollParentFix />
+          <Joyride
+            steps={STEPS.consortiumPipeline}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
         )}
       </div>
     );
@@ -252,6 +257,7 @@ ConsortiumPipeline.propTypes = {
   pipelines: PropTypes.array.isRequired,
   hideTutorial: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 // TODO: Move this to shared props?

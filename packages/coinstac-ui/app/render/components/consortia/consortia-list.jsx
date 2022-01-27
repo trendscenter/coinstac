@@ -21,7 +21,7 @@ import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import { toggleTutorial } from '../../state/ducks/auth';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -535,7 +535,12 @@ class ConsortiaList extends Component {
   }
 
   render() {
-    const { consortia, classes, auth } = this.props;
+    const {
+      consortia,
+      classes,
+      auth,
+      tutorialChange,
+    } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
@@ -601,6 +606,7 @@ class ConsortiaList extends Component {
           <Joyride
             steps={STEPS.consortiaList}
             disableScrollParentFix
+            callback={tutorialChange}
           />
         )}
       </div>
@@ -619,6 +625,7 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
+  usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -630,7 +637,7 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  usersOnlineStatus: PropTypes.object,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -679,6 +686,7 @@ export default withStyles(styles)(
       pullComputations,
       deleteAllDataMappingsFromConsortium,
       toggleTutorial,
+      tutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)

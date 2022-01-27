@@ -11,7 +11,7 @@ import { flowRight as compose } from 'lodash';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumRuns from './consortium-runs';
-import { updateUserPerms } from '../../state/ducks/auth';
+import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
 import {
   getAllAndSubProp,
   saveDocumentProp,
@@ -211,6 +211,7 @@ class ConsortiumTabs extends Component {
       pipelines,
       consortia,
       classes,
+      tutorialChange,
     } = this.props;
 
     const { user, hideTutorial } = auth;
@@ -237,7 +238,7 @@ class ConsortiumTabs extends Component {
           </Typography>
         </div>
         {!hideTutorial && isEditingConsortium && (
-          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix />
+          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
         )}
         <Tabs
           value={this.getTabIndex()}
@@ -263,6 +264,7 @@ class ConsortiumTabs extends Component {
               users={users}
               savingStatus={savingStatus}
               hideTutorial={hideTutorial || isEditingConsortium}
+              tutorialChange={tutorialChange}
             />
           )
         }
@@ -274,6 +276,7 @@ class ConsortiumTabs extends Component {
               owner={isOwner}
               pipelines={pipelines}
               hideTutorial={hideTutorial}
+              tutorialChange={tutorialChange}
             />
           )
         }
@@ -313,6 +316,7 @@ ConsortiumTabs.propTypes = {
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -338,6 +342,7 @@ const connectedComponent = connect(
     notifySuccess,
     notifyError,
     updateUserPerms,
+    tutorialChange,
   }
 )(ConsortiumTabsWithData);
 

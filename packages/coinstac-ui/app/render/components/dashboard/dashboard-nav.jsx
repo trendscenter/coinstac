@@ -19,7 +19,7 @@ import LanguageIcon from '@material-ui/icons/Language';
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
-const DashboardNav = ({ user, hideTutorial }, { router }) => (
+const DashboardNav = ({ user, hideTutorial, tutorialChange }, { router }) => (
   <Fragment>
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
@@ -74,7 +74,11 @@ const DashboardNav = ({ user, hideTutorial }, { router }) => (
       )}
     </List>
     {!hideTutorial && router.location.pathname === '/dashboard' && (
-      <Joyride steps={STEPS.dashboardNav} disableScrollParentFix />
+      <Joyride
+        steps={STEPS.dashboardNav}
+        disableScrollParentFix
+        callback={tutorialChange}
+      />
     )}
   </Fragment>
 );
@@ -82,6 +86,7 @@ const DashboardNav = ({ user, hideTutorial }, { router }) => (
 DashboardNav.propTypes = {
   user: PropTypes.object.isRequired,
   hideTutorial: PropTypes.bool.isRequired,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 DashboardNav.contextTypes = {

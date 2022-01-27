@@ -139,6 +139,7 @@ class ConsortiumAbout extends Component {
       hideTutorial,
       saveConsortium,
       consortiumUsers,
+      tutorialChange,
     } = this.props;
 
     const { newMember, isAddingMember } = this.state;
@@ -284,7 +285,12 @@ class ConsortiumAbout extends Component {
           )
         }
         {!hideTutorial && (
-          <Joyride steps={STEPS.consortiumAbout} continuous disableScrollParentFix />
+          <Joyride
+            steps={STEPS.consortiumAbout}
+            continuous
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
         )}
       </ValidatorForm>
     );
@@ -298,12 +304,13 @@ ConsortiumAbout.propTypes = {
   savingStatus: PropTypes.string,
   user: PropTypes.object.isRequired,
   users: PropTypes.array,
+  consortiumUsers: PropTypes.array,
   hideTutorial: PropTypes.bool.isRequired,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
-  consortiumUsers: PropTypes.array,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiumAbout.defaultProps = {

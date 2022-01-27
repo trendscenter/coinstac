@@ -14,7 +14,7 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
-import { toggleTutorial } from '../../state/ducks/auth';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -47,7 +47,7 @@ import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
 
 function Dashboard({
-  auth, children, runs, maps, router, hideTutorial, toggleTutorial,
+  auth, children, runs, maps, router, hideTutorial, toggleTutorial, tutorialChange,
 }) {
   const [showTutorialModal, setShowTutorialModal] = useState(false);
 
@@ -139,7 +139,11 @@ function Dashboard({
     <div className="dashboard">
       <div className="dashboard-nav">
         <CoinstacAbbr />
-        <DashboardNav user={auth.user} hideTutorial={hideTutorial} />
+        <DashboardNav
+          user={auth.user}
+          hideTutorial={hideTutorial}
+          tutorialChange={tutorialChange}
+        />
         <List>
           <ListItem>
             <UserAccountController
@@ -200,6 +204,7 @@ Dashboard.propTypes = {
   router: PropTypes.object.isRequired,
   hideTutorial: PropTypes.bool.isRequired,
   toggleTutorial: PropTypes.func.isRequired,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -239,6 +244,7 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
 
 const mapDispatchToProps = {
   toggleTutorial,
+  tutorialChange,
 };
 
 const connectedComponent = connect(

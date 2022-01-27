@@ -30,6 +30,7 @@ const INITIAL_STATE = {
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
   hideTutorial: localStorage.getItem('hideTutorial') === 'true',
+  tutorialSteps: [],
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -48,6 +49,7 @@ const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
 const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
+const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -70,6 +72,9 @@ export const setNetworkVolume = networkVolume => ({
 });
 export const toggleTutorial = () => ({
   type: TOGGLE_TUTORIAL,
+});
+export const tutorialChange = payload => ({
+  type: TUTORIAL_CHANGE, payload,
 });
 
 // Helpers
@@ -241,7 +246,7 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
-  const { locationStacks, hideTutorial } = state;
+  const { locationStacks, hideTutorial, tutorialSteps } = state;
   const { pathname } = payload || {};
 
   switch (type) {
@@ -292,6 +297,25 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         ...state,
         locationStacks: [...locationStacks, pathname],
       };
+    case TUTORIAL_CHANGE: {
+      if ((payload.action !== 'close' && payload.action !== 'next')
+        || payload.lifecycle !== 'complete') {
+        return state;
+      }
+
+      const newTutorialSteps = tutorialSteps.includes(payload.step.id)
+        ? tutorialSteps : [...tutorialSteps, payload.step.id];
+
+      if (newTutorialSteps.length >= 15) {
+        localStorage.setItem('hideTutorial', true);
+      }
+
+      return {
+        ...state,
+        tutorialSteps: newTutorialSteps,
+        hideTutorial: newTutorialSteps.length > 15,
+      };
+    }
     default:
       return state;
   }
