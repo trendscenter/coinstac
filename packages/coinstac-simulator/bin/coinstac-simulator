@@ -181,16 +181,18 @@ if (program.preprocess) {
               const baseDir = 'coinstac/';
               const rawData = fs.readFileSync('./pipelinespec.json');
               const pipelineSpec = JSON.parse(rawData);
-              // link before this
+              // link before running
               await prepareDirectory(pipelineSpec, baseDir);
               const run = await runPipeline(pipelineSpec, baseDir);
               // cleanup input dir
               await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
-              // TODO: fix dir moving to better store results
-              // await fs.promises.rename(
-              //   path.join(baseDir, 'output', 'local0', 'simulatorRun'),
-              //   path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,]/ig, '-')}`)
-              // );
+              //  move dir to better store results
+              const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
+              const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
+              await fs.promises.rename(
+                originalDir,
+                destinationDir
+              );
               return run;
             } else if (answer === '1') {
               // generate a default compspec
