@@ -186,6 +186,11 @@ if (program.preprocess) {
               const run = await runPipeline(pipelineSpec, baseDir);
               // cleanup input dir
               await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+              // TODO: fix dir moving to better store results
+              // await fs.promises.rename(
+              //   path.join(baseDir, 'output', 'local0', 'simulatorRun'),
+              //   path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,]/ig, '-')}`)
+              // );
               return run;
             } else if (answer === '1') {
               // generate a default compspec
