@@ -12,6 +12,8 @@ const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
 const winston = require('winston');
+const fs = require('fs');
+
 const pkg = require('../package.json');
 
 const logger = winston.createLogger({
@@ -40,7 +42,8 @@ program
   .option('-u, --upload', ' upload computation spec')
   .option('--username [username]', ' username for uploads')
   .option('--password [password]', ' password for uploads')
-  .option('--loglevel [level]', ' enter info, debug, and silly log levels');
+  .option('--loglevel [level]', ' enter info, debug, and silly log levels')
+  .option('--preprocess', 'preprocess');
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -74,8 +77,180 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
+const { option } = require('commander');
+const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
+const { pullImages } = require('../../coinstac-pipeline/node_modules/coinstac-manager/src');
 
-if (program.upload) {
+async function runPipeline(pipelineSpec, operatingDirectory) {
+  /* eslint-disable no-console */
+  const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
+    : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
+  logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
+
+  const started = sim.startRun({
+    spec: pipelineSpec,
+    runMode: globalMode,
+    clientCount: count,
+    operatingDirectory: operatingDirectory || program.directory,
+
+  });
+  try {
+    const simRun = await started;
+    const results = await simRun.allResults;
+
+    logger.info('Simulator run finished');
+    if (globalMode === 'decentralized') {
+      logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
+    } else {
+      logger.info('Local run(s) finished');
+      results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+    }
+  } catch (err) {
+    logger.error('Simulator run failed!');
+    logger.error('Fun error details:\n');
+    logger.error(err.message);
+    logger.error(err.stack || '');
+  }
+  return started;
+}
+
+function pipelineSpecFactory(inputSpec, mode, comp) {
+  let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
+  const comps = Array.isArray(comp) ? comp : [comp];
+  specMap = specMap.map((spec, index) => ({
+    inputMap: spec,
+    controller: { type: mode[index] },
+    computations: [comps[index]],
+  }));
+  return {
+    steps: specMap,
+  };
+}
+
+if (program.preprocess) {
+  (async () => {
+    // authenticate and fetch computations
+    const computations = await fetchPreprocessComputations(program.username, program.password);
+    // list options of computations
+    await inquirer.prompt([{
+      type: 'number',
+      name: 'select preprocess',
+      message: `Select preprocess computation:${computations.map((computation, index) => {
+        return `\n${index} ) ${computation.meta.name}\n`;
+      })}`,
+    }]).then(async (answers) => {
+      const answer = answers['select preprocess'];
+      if (!Object.keys(computations).includes(answer)) {
+        logger.info('The answer provided is not a valid choice.');
+      } else {
+        // download the selected computation
+        const selectedComputation = computations[answer];
+        const pullStreams = await pullImages([{
+          img: selectedComputation.computation.dockerImage,
+          compId: selectedComputation.id,
+          compName: selectedComputation.meta.name,
+        }]);
+
+        logger.info('Updating docker images');
+        await Promise.all(
+          pullStreams.map((obj) => {
+            return new Promise((resolve, reject) => {
+              if (typeof obj.stream.pipe === 'function') {
+                obj.stream.pipe(process.stdout);
+                obj.stream
+                  .on('end', () => { resolve(); })
+                  .on('error', (error) => { reject(error); });
+              } else {
+                resolve();
+                process.stdout.write('.');
+              }
+            });
+          })
+        );
+        await inquirer.prompt([{
+          type: 'number',
+          name: 'existing pipelineSpec or generate',
+          message: 'Which pipelineSpec will be used?\n0 ) Use an existing pipelineSpec \n1 ) Generate a new pipelineSpec\n',
+        }])
+          .then(async (answers) => {
+            const answer = answers['existing pipelineSpec or generate'];
+            if (!['0', '1'].includes(answer)) {
+              logger.info('The answer provided is not a valid choice.');
+              process.exit();
+            } else if (answer === '0') {
+              const baseDir = 'coinstac/';
+              const rawData = fs.readFileSync('./pipelinespec.json');
+              const pipelineSpec = JSON.parse(rawData);
+              // link before this
+              await prepareDirectory(pipelineSpec, baseDir);
+              const run = await runPipeline(pipelineSpec, baseDir);
+              // cleanup input dir
+              await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+              // TODO: fix dir moving to better store results
+              // await fs.promises.rename(
+              //   path.join(baseDir, 'output', 'local0', 'simulatorRun'),
+              //   path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,]/ig, '-')}`)
+              // );
+              return run;
+            } else if (answer === '1') {
+              // generate a default compspec
+              // find the .csv file
+              const files = await new Promise((resolve, reject) => {
+                fs.readdir('./', (err, data) => {
+                  if (err) {
+                    reject(err);
+                  }
+                  resolve(data);
+                });
+              });
+              const csvs = files.filter((file) => {
+                if (file.includes('.csv')) {
+                  return file;
+                }
+                return false;
+              });
+              if (csvs.length < 1) {
+                logger.info('no .csv files found');
+                process.exit(0);
+              }
+              await inquirer.prompt([{
+                type: 'number',
+                name: 'select covariates file',
+                message: `Select Covariates File:${csvs.map((csv, index) => {
+                  return `\n${index} ) ${csv}`;
+                })}\n`,
+              }]).then(async (answers) => {
+                const answer = answers['select covariates file'];
+
+                if (!Object.keys(csvs).includes(answer)) {
+                  logger.info('The answer provided is not a valid choice.');
+                  process.exit();
+                } else {
+                  //  create an inputspec from the csv and the api results
+                  const baseInputSpec = JSON.parse(
+                    JSON.stringify(selectedComputation.computation.input)
+                  );
+                  const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
+                  const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
+                  fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
+
+                  await inquirer.prompt([{
+                    type: 'number',
+                    name: 'exit',
+                    message: 'pipelineSpec.json created, please edit pipeline options manually. Press any key to exit.',
+                  }]).then(() => {
+                    process.exit();
+                  });
+                }
+              });
+            }
+          });
+      }
+    });
+    process.exit(0);
+  }
+  )();
+} else if (program.upload) {
   if (!program.username && !program.password) {
     logger.error('Username and password required for compspec upload');
     process.exit(1);
@@ -116,19 +291,6 @@ if (program.upload) {
       columnWidth: [12, 12, 30, 6],
     });
   }
-
-  const pipelineSpecFactory = (inputSpec, mode, comp) => {
-    let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
-    const comps = Array.isArray(comp) ? comp : [comp];
-    specMap = specMap.map((spec, index) => ({
-      controller: { type: mode[index] },
-      computations: [comps[index]],
-      inputMap: spec,
-    }));
-    return {
-      steps: specMap,
-    };
-  };
 
   let fulfilledPipelineSpec;
 
@@ -267,99 +429,6 @@ if (program.upload) {
 
   fulfilledPipelineSpec
     .then((pipelineSpec) => {
-    /* eslint-disable no-console */
-      const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
-        : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-      logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
-      const started = sim.startRun({
-        spec: pipelineSpec,
-        runMode: globalMode,
-        clientCount: count,
-        operatingDirectory: program.directory,
-      });
-
-      return started.then((simRun) => {
-        const updateTable = (node, data) => {
-          let foundNode = false;
-          let state = data.controllerState ? data.controllerState : 'initializing';
-          state = state === 'stopped' ? 'shutting down docker...' : state;
-
-          if (!DEBUG_MODE) {
-            tableData.forEach((row, index) => {
-              if (row[0] === node) {
-                tableData[index] = [
-                  node,
-                  data.currentIteration ? data.currentIteration : 'initializing',
-                  state,
-                  data.mode,
-                ];
-                foundNode = true;
-              }
-            });
-            if (!foundNode) {
-              tableData.push([
-                node,
-                data.currentIteration ? data.currentIteration : 'initializing',
-                state,
-                data.mode,
-              ]);
-            }
-
-            table.setData({
-              headers: ['node', 'iteration', 'state', 'mode'],
-              data: tableData,
-            });
-            screen.render();
-          } else {
-            logger.debug(`${node} ---- ${JSON.stringify(data)}`);
-          }
-        };
-
-        if (simRun.pipelines.remote) {
-          simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
-            .on('update', (data) => {
-              updateTable('remote', data);
-            });
-        }
-        simRun.pipelines.locals.forEach((local, index) => {
-          local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
-            updateTable(`local-${index}`, data);
-          });
-        });
-
-        if (!DEBUG_MODE) {
-          screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-          table.focus();
-
-          screen.append(table);
-          screen.render();
-        }
-
-        return simRun.allResults;
-      });
-    })
-    .then((results) => {
-      if (!DEBUG_MODE) {
-        screen.destroy();
-      }
-      logger.info('Simulator run finished');
-      if (globalMode === 'decentralized') {
-        logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
-      } else {
-        logger.info('Local run(s) finished');
-        results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
-      }
-      // TODO: should not be necessary, something is holding the loop up
-      process.exit();
-    })
-    .catch((err) => {
-      if (!DEBUG_MODE) {
-        screen.destroy();
-      }
-      logger.error('Simulator run failed!');
-      logger.error('Fun error details:\n');
-      logger.error(err.message);
-      logger.error(err.stack || '');
-      process.exit(0);
+      runPipeline(pipelineSpec);
     });
 }

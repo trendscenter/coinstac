@@ -58,7 +58,7 @@ const queries = {
   `,
   fetchAllComputations: `
     {
-      fetchAllComputations {
+      fetchAllComputations(preprocess: $preprocess) {
         ${sharedFields.computationMetadata}
       }
     }
