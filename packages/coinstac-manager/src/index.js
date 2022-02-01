@@ -4,7 +4,6 @@ const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const portscanner = require('portscanner');
 const http = require('http');
-const winston = require('winston');
 const utils = require('./utils');
 const dockerService = require('./services/docker');
 const singularityService = require('./services/singularity');
@@ -14,16 +13,8 @@ const serviceProviders = {
   singularity: singularityService,
 };
 
-let logger;
-winston.loggers.add('docker-manager', {
-  level: 'info',
-  transports: [
-    new winston.transports.Console({ format: winston.format.cli() }),
-  ],
-});
-logger = winston.loggers.get('coinstac-main') || winston.loggers.get('docker-manager');
-logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
-utils.setLogger(logger);
+const { logger } = utils;
+
 
 let services = {};
 const portBlackList = new Set();
@@ -34,9 +25,8 @@ let portLock = false;
  * @param {Object} loggerInstance Winston logger
  */
 const setLogger = (loggerInstance) => {
-  logger = loggerInstance;
-  utils.setLogger(logger);
-  return logger;
+  utils.setLogger(loggerInstance);
+  return loggerInstance;
 };
 
 /**
@@ -304,8 +294,8 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
           portBlackList.delete(service[serviceId].port);
           delete services[serviceId];
         }).catch((err) => {
-        // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
-        // figure out a way to cleanup
+          // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
+          // figure out a way to cleanup
           service.state = 'zombie';
           service.error = err;
         });

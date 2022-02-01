@@ -58,7 +58,6 @@ async function configureLogger(config) {
         }),
       ],
     });
-    winston.loggers.add('coinstac-main', logger);
 
     return logger;
   } catch (err) {
@@ -67,7 +66,7 @@ async function configureLogger(config) {
     console.log(`Error: ${err}`);
     /* eslint-enable no-console */
 
-    const logger = winston.loggers.add('coinstac-main', {
+    const logger = winston.createLogger({
       level: 'silly',
       transports: [
         new winston.transports.Console({ format: winston.format.cli() }),
