@@ -41,6 +41,7 @@
     "chalk": "^1.1.3",
     "clarify": "^2.1.0",
     "coinstac-common": "^6.1.0",
+    "coinstac-manager": "^6.1.0",
     "coinstac-pipeline": "^6.1.0",
     "commander": "^2.15.1",
     "convict": "^4.3.2",

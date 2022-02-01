@@ -78,8 +78,8 @@ if (program.loglevel) {
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { option } = require('commander');
+const { pullImages } = require('coinstac-manager');
 const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
-const { pullImages } = require('../../coinstac-pipeline/node_modules/coinstac-manager/src');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
