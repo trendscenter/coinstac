@@ -64,6 +64,7 @@ const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir');
 const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
 
+const { checkForUpdates } = require('./utils/auto-update');
 
 const getAllFilesInDirectory = (directory) => {
   const dirents = fs.readdirSync(directory, { withFileTypes: true });
@@ -144,6 +145,9 @@ loadConfig()
         electron.shell.openExternal(url);
         return { action: 'deny' };
       });
+
+
+      checkForUpdates(mainWindow);
 
       logger.on('log-message', (arg) => {
         mainWindow.webContents.send('log-message', arg);
