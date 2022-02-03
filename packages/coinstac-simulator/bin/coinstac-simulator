@@ -214,6 +214,7 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
         }
         await inquirer.prompt([{
           type: 'number',
+<<<<<<< HEAD
           name: 'select covariates file',
           message: `Select Covariates File to use for pipeline:\n${csvs.map((csv, index) => {
             return `${index} ) ${csv}`;
@@ -241,6 +242,53 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
             }]).then((resp) => {
               if (resp.noexit) {
                 return startPreprocessRun(generatedPipeSpec, baseDir);
+=======
+          name: 'existing pipelineSpec or generate',
+          message: 'Which pipelineSpec will be used?\n0 ) Use an existing pipelineSpec \n1 ) Generate a new pipelineSpec\n',
+        }])
+          .then(async (answers) => {
+            const answer = answers['existing pipelineSpec or generate'];
+            if (!['0', '1'].includes(answer)) {
+              logger.info('The answer provided is not a valid choice.');
+              process.exit();
+            } else if (answer === '0') {
+              const baseDir = 'coinstac/';
+              const rawData = fs.readFileSync('./pipelinespec.json');
+              const pipelineSpec = JSON.parse(rawData);
+              // link before running
+              await prepareDirectory(pipelineSpec, baseDir);
+              const run = await runPipeline(pipelineSpec, baseDir);
+              // cleanup input dir
+              await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+              //  move dir to better store results
+              const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
+              const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
+              await fs.promises.rename(
+                originalDir,
+                destinationDir
+              );
+              return run;
+            } else if (answer === '1') {
+              // generate a default compspec
+              // find the .csv file
+              const files = await new Promise((resolve, reject) => {
+                fs.readdir('./', (err, data) => {
+                  if (err) {
+                    reject(err);
+                  }
+                  resolve(data);
+                });
+              });
+              const csvs = files.filter((file) => {
+                if (file.includes('.csv')) {
+                  return file;
+                }
+                return false;
+              });
+              if (csvs.length < 1) {
+                logger.info('no .csv files found');
+                process.exit(0);
+>>>>>>> master
               }
               process.exit();
             });

@@ -19,6 +19,7 @@ if (process.env.API_SERVER_HOSTNAME) {
       protocol: 'http',
       apiServer: process.env.API_SERVER_HOSTNAME,
       port: process.env.API_SERVER_PORT,
+      path: '',
     });
 } else {
   config = Object.assign(config,
@@ -26,6 +27,7 @@ if (process.env.API_SERVER_HOSTNAME) {
       protocol: 'https',
       apiServer: 'coinstac.rs.gsu.edu',
       port: '443',
+      path: '/api',
     });
 }
 module.exports = config;
