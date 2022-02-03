@@ -1,4 +1,4 @@
-# dpICA coinstac_simulator
+# dpICA coinstac simulator
 Coinstac Code for Simulator
 
 Tools: Python 3.7, coinstac-simulator 4.2.0
