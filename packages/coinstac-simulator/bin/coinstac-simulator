@@ -9,8 +9,6 @@ const program = require('commander');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
 const path = require('path');
-const blessed = require('blessed');
-const bc = require('blessed-contrib');
 const winston = require('winston');
 const fs = require('fs');
 
@@ -77,8 +75,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { option } = require('commander');
-const { pullImages } = require('coinstac-manager');
+const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -127,17 +124,46 @@ function pipelineSpecFactory(inputSpec, mode, comp) {
   };
 }
 
-if (program.preprocess) {
-  (async () => {
-    // authenticate and fetch computations
+const startPreprocessRun = async (pipelineSpec, baseDir) => {
+  await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+  await prepareDirectory(pipelineSpec, baseDir);
+  const run = await runPipeline(pipelineSpec, baseDir);
+  // cleanup input dir
+  await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+  //  move dir to better store results
+  const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
+  const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
+  await fs.promises.rename(
+    originalDir,
+    destinationDir
+  );
+  return run;
+};
+
+const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
+  let rawSpec;
+  try {
+    rawSpec = fs.readFileSync(pipelineSpecPath);
+  } catch (e) {
+    logger.info('Pipeline spec not found, proceeding to generate one...');
+    logger.info('If this is in error, make sure your spec is named \'pipelineSpec.json\'');
+    rawSpec = null;
+  }
+
+  let pipelineSpec;
+  if (rawSpec) {
+    pipelineSpec = JSON.parse(rawSpec);
+  }
+  // authenticate and fetch computations
+  const genSpecAndProcess = async (pipelineSpec, baseDir) => {
     const computations = await fetchPreprocessComputations(program.username, program.password);
     // list options of computations
     await inquirer.prompt([{
       type: 'number',
       name: 'select preprocess',
-      message: `Select preprocess computation:${computations.map((computation, index) => {
-        return `\n${index} ) ${computation.meta.name}\n`;
-      })}`,
+      message: `Select a preprocessing computation:\n${computations.map((computation, index) => {
+        return `${index} ) ${computation.meta.name}`;
+      }).join('\n\n')}${pipelineSpec ? '\n\n*** Note: this will rename your current pipelineSpec and create a new one ***' : ''}`,
     }]).then(async (answers) => {
       const answer = answers['select preprocess'];
       if (!Object.keys(computations).includes(answer)) {
@@ -151,7 +177,7 @@ if (program.preprocess) {
           compName: selectedComputation.meta.name,
         }]);
 
-        logger.info('Updating docker images');
+        logger.info('Downloading docker image...');
         await Promise.all(
           pullStreams.map((obj) => {
             return new Promise((resolve, reject) => {
@@ -167,92 +193,87 @@ if (program.preprocess) {
             });
           })
         );
+        // find the .csv file
+        const files = await new Promise((resolve, reject) => {
+          fs.readdir('./', (err, data) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(data);
+          });
+        });
+        const csvs = files.filter((file) => {
+          if (file.includes('.csv')) {
+            return file;
+          }
+          return false;
+        });
+        if (csvs.length < 1) {
+          logger.info('no .csv files found');
+          process.exit(0);
+        }
         await inquirer.prompt([{
           type: 'number',
-          name: 'existing pipelineSpec or generate',
-          message: 'Which pipelineSpec will be used?\n0 ) Use an existing pipelineSpec \n1 ) Generate a new pipelineSpec\n',
-        }])
-          .then(async (answers) => {
-            const answer = answers['existing pipelineSpec or generate'];
-            if (!['0', '1'].includes(answer)) {
-              logger.info('The answer provided is not a valid choice.');
-              process.exit();
-            } else if (answer === '0') {
-              const baseDir = 'coinstac/';
-              const rawData = fs.readFileSync('./pipelinespec.json');
-              const pipelineSpec = JSON.parse(rawData);
-              // link before running
-              await prepareDirectory(pipelineSpec, baseDir);
-              const run = await runPipeline(pipelineSpec, baseDir);
-              // cleanup input dir
-              await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
-              //  move dir to better store results
-              const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
-              const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
-              await fs.promises.rename(
-                originalDir,
-                destinationDir
-              );
-              return run;
-            } else if (answer === '1') {
-              // generate a default compspec
-              // find the .csv file
-              const files = await new Promise((resolve, reject) => {
-                fs.readdir('./', (err, data) => {
-                  if (err) {
-                    reject(err);
-                  }
-                  resolve(data);
-                });
-              });
-              const csvs = files.filter((file) => {
-                if (file.includes('.csv')) {
-                  return file;
-                }
-                return false;
-              });
-              if (csvs.length < 1) {
-                logger.info('no .csv files found');
-                process.exit(0);
+          name: 'select covariates file',
+          message: `Select Covariates File to use for pipeline:\n${csvs.map((csv, index) => {
+            return `${index} ) ${csv}`;
+          }).join('\n\n')}\n`,
+        }]).then(async (answers) => {
+          const answer = answers['select covariates file'];
+
+          if (!Object.keys(csvs).includes(answer)) {
+            logger.info('The answer provided is not a valid choice.');
+            process.exit();
+          } else {
+            //  create an inputspec from the csv and the api results
+            const baseInputSpec = JSON.parse(
+              JSON.stringify(selectedComputation.computation.input)
+            );
+            const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
+            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
+            if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
+            fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
+
+            await inquirer.prompt([{
+              type: 'confirm',
+              name: 'noexit',
+              message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
+            }]).then((resp) => {
+              if (resp.noexit) {
+                return startPreprocessRun(generatedPipeSpec, baseDir);
               }
-              await inquirer.prompt([{
-                type: 'number',
-                name: 'select covariates file',
-                message: `Select Covariates File:${csvs.map((csv, index) => {
-                  return `\n${index} ) ${csv}`;
-                })}\n`,
-              }]).then(async (answers) => {
-                const answer = answers['select covariates file'];
-
-                if (!Object.keys(csvs).includes(answer)) {
-                  logger.info('The answer provided is not a valid choice.');
-                  process.exit();
-                } else {
-                  //  create an inputspec from the csv and the api results
-                  const baseInputSpec = JSON.parse(
-                    JSON.stringify(selectedComputation.computation.input)
-                  );
-                  const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
-                  const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
-                  fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
-
-                  await inquirer.prompt([{
-                    type: 'number',
-                    name: 'exit',
-                    message: 'pipelineSpec.json created, please edit pipeline options manually. Press any key to exit.',
-                  }]).then(() => {
-                    process.exit();
-                  });
-                }
-              });
-            }
-          });
+              process.exit();
+            });
+          }
+        });
       }
     });
-    process.exit(0);
+  };
+
+  if (!pipelineSpec) {
+    await genSpecAndProcess(pipelineSpec, baseDir);
+  } else {
+    await inquirer.prompt([{
+      type: 'confirm',
+      name: 'run',
+      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
+    }]).then(async (resp) => {
+      if (resp.run) {
+        return startPreprocessRun(pipelineSpec, baseDir);
+      }
+      // make new spec, ask to rename old
+      await genSpecAndProcess(pipelineSpec, baseDir);
+    });
   }
-  )();
-} else if (program.upload) {
+};
+
+
+if (program.preprocess) {
+  return promptGenerateAndPreprocess('./pipelineSpec.json', 'coinstac/')
+    .then(() => process.exit(0));
+}
+
+if (program.upload) {
   if (!program.username && !program.password) {
     logger.error('Username and password required for compspec upload');
     process.exit(1);
@@ -268,32 +289,6 @@ if (program.preprocess) {
       process.exit(1);
     });
 } else {
-  let table;
-  let screen;
-  let tableData;
-
-  if (!DEBUG_MODE) {
-    screen = blessed.screen({
-      smartCSR: true,
-    });
-
-    tableData = [];
-
-    table = bc.table({
-      keys: true,
-      fg: 'white',
-      selectedFg: 'white',
-      selectedBg: 'blue',
-      interactive: true,
-      label: 'Active Run',
-      width: '100%',
-      height: '100%',
-      border: { type: 'line', fg: 'cyan' },
-      columnSpacing: 5,
-      columnWidth: [12, 12, 30, 6],
-    });
-  }
-
   let fulfilledPipelineSpec;
 
   if (program.pipeline) {
