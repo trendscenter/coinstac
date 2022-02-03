@@ -1,0 +1,24 @@
+[
+  {
+    "subjects_path": {
+      "value": "fmri_gene_full"
+    },
+    "lambda": {
+      "value": 1
+    },
+    "mask_file": {
+      "value": "mask_fmri_pica_v4.nii.gz"
+    }
+  },
+  {
+    "subjects_path": {
+      "value": "fmri_gene_full"
+    },
+    "lambda": {
+      "value": 1
+    },
+    "mask_file": {
+      "value": "mask_fmri_pica_v4.nii.gz"
+    }
+  }
+]

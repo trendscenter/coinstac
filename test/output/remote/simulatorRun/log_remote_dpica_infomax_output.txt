@@ -1,0 +1,787 @@
+==Global logging==
+Global PCA starting...
+Remote_Utils starting...
+state[baseDirectory]= /input/remote/simulatorRun
+sep = /
+
+base_directory = /input/remote/simulatorRun/
+
+Calling dpica.dpica_global_methods 
+dpica_global_methods starting
+==============Global Parameters==============
+SITE_NUM = 2
+NUM_SUBJECT = 63
+MASK_PATH_FILE_NAME =  /input/remote/simulatorRun/mask/mask_fmri_pica_v4.nii.gz
+MASK_PATH_X =  /input/remote/simulatorRun/mask/
+DATA_PATH_X =  /input/remote/simulatorRun/fmri_gene_full/
+DATA_PATH_Y =  /input/remote/simulatorRun/fmri_gene_full/
+DATA_PATH_FROM_FILE =  /input/remote/simulatorRun
+DATA_PATH_OUTPUT =  /output/remote/simulatorRun/F_Nowhite_ConCon0.17_ConCom1_RUN2_I_E0.001_25_15_5_3_False/
+DATA_SITES_X =  /input/remote/simulatorRun/Clean_data/
+MAX_WEIGHT =  100000000.0
+DEFAULT_STOP =  1e-06
+DEFAULT_ANNEALDEG =  60
+DEFAULT_ANNEALSTEP =  0.9
+DEFAULT_EXTANNEAL =  0.98
+DEFAULT_MAXSTEPS =  1000
+DEFAULT_MOMENTUM =  0.0
+DEFAULT_BLOWUP =  1000000000.0
+DEFAULT_BLOWUP_FAC =  0.8
+DEFAULT_RESTART_FAC =  0.9
+MIN_LRATE =  1e-06
+MAX_LRATE =  0.1
+DEFAULT_EXTENDED =  0
+DEFAULT_EXTBLOCKS =  1
+DEFAULT_NSUB =  1
+DEFAULT_EXTMOMENTUM =  0.5
+SIGNCOUNT_THRESHOLD =  25
+DEFAULT_SPHEREFLAG =  on
+DATA_SDEFAULT_PCAFLAGITES =  off
+DEFAULT_POSACTFLAG =  on
+DEFAULT_VERBOSE =  1
+DEFAULT_BIASFLAG =  1
+CONSTRAINED_COMPONENTS =  1
+CONSTRAINED_CONNECTION =  0.17
+CONSTRAINED_CONNECTION_AUTO =  False
+DATA_ENDURANCESITES =  -0.001
+NCOM_X =  25
+NCOM_Y =  15
+NCOM_X1 =  25
+NCOM_Y1 =  15
+NCOM_X2 =  25
+NCOM_Y2 =  15
+NCOM_X3 =  25
+NCOM_Y3 =  15
+Global_NCOM_X =  5
+Global_NCOM_Y =  3
+Global_NCOM_X1 =  5
+Global_NCOM_Y1 =  3
+Global_NCOM_X2 =  5
+Global_NCOM_Y2 =  3
+Global_NCOM_X3 =  5
+Global_NCOM_Y3 =  3
+signsbias =  0.02
+ANNEAL =  0.9
+MAX_STEP =  1000
+DATA_SITES =  siteAll63.txt
+ICA_RUN_NUMBER =  2
+ICA_RUN_AVERAGE =  False
+ICA_RUN_ICASSO =  True
+ENDURANCE =  -0.001
+CRATE_X =  1
+CRATE_Y =  1
+CRATE_PERCENT =  0.9
+CRATE_OUTBOUND_PERCENT =  0.9
+B_DATASET_FIT =  
+B_DATASET_ABCD =  
+B_DATASET_777 =  
+B_DATASET_XY_SWITCH =  
+
+[LOG][def_setUp]+++++Set up start+++++
+
+[LOG][Flow_3_Global_U, White, and deWhite]=====Start=====
+Modality_X === Global_U_X.shape (sr x d) (50, 57705)
+Modality_Y === Global_U_Y.shape (sr x d) (30, 367)
+Modality_X === Con_White_X.shape (r x sN) (25, 63)
+Modality_Y === Con_White_Y.shape (r x sN) (15, 63)
+Modality_X === Con_deWhite_X.shape (sN x r) (63, 25)
+Modality_Y === Con_deWhite_Y.shape (sN x r) (63, 15)
+NSUB_All_X =[31. 32.]
+NSUB_All_Y =[31. 32.]
+NCOM_All_X =[25. 25.]
+NCOM_All_Y =[15. 15.]
+NVOX_All_X =[57705. 57705.]
+NVOX_All_Y =[367. 367.]
+[LOG][Flow_3_Global_U]Loading Global - Loaded time is 0:00:05.693985
+[LOG][Flow_3_Global_U, White, and deWhite]=====Stop=====
+
+[LOG][Flow_4_Global_PCA]=====Start=====
+[LOG][Flow_4_Global_PCA]=====Global PCA of Modality_X and Modality_Y=====
+
+Modality_X === GlobalPCA_U_X.shape (r_X x d_X)(5, 57705)GlobalPCA_White_X (r_X x sr_X) = (5, 50)GlobalPCA_dewhite_X (sr_X x r_X ) = (50, 5)
+Modality_Y === GlobalPCA_U_Y.shape (r_Y x d_Y)(3, 367)GlobalPCA_White_Y (r_Y x sr_Y) = (3, 30)GlobalPCA_dewhite_Y (sr_Y x r_Y ) = (30, 3)
+[LOG][Flow_4_Global_PCA]=====End=====
+
+Completed dpica.dpica_global_methods.
+Calling dpICA_infomax.
+[LOG][Flow_5_Global_ICA]]=====Start=====
+[LOG][Flow_5_Global_ICA]]ICA_RUN_NUMBER = 2
+[LOG][Flow_5_Global_ICA]]ICA_RUN_AVERAGE = False
+[LOG][Flow_5_Global_ICA]]ICA_RUN_ICASSO = True
+
+
+
+[LOG]=====INFOMAX=====
+[LOG]Number of subject =  63.0
+[LOG]Global_NCOM_X =  5
+[LOG]Global_NCOM_Y =  3
+[LOG]CONSTRAINED_CONNECTION = 0.17
+[LOG]CONSTRAINED_CONNECTION_PROABILITY =  0.05
+ Input data X size [5,57705] = 5 channels, 57705 frames.
+ Input data Y size [3,367] = 3 channels, 367 frames.
+ Finding 
+ 5 ICA components using logistic ICA.
+Initial X learning rate will be 0.00932002, block size 138.
+Initial Y learning rate will be 0.0136536, block size 11.
+Learning rate will be multiplied by 0.9 whenever angledelta >= 60 deg.
+Training will end when wchange < 1e-06 or after 1000 steps.
+Online bias adjustment will be used.
+Not removing mean of each channel!!!
+Final training data1 range: -4.7914 to 7.72641
+Final training data1 range: -4.44384 to 3.42886
+Computing the sphering matrix...
+ Starting weights are the identity matrix ...
+ Sphering the data ...
+Beginning ICA training ...
+
+[LOG]=====INFOMAX=====maxsteps=1000
+
+Lowering learning rate to 0.00838802 and starting again.
+Dataset Y step 1 - lrate 0.013654, wchange 0.220690
+Dataset X step 1 - lrate 0.008388, wchange 11.528734
+Dataset Y step 2 - lrate 0.013654, wchange 0.096429
+Dataset X step 2 - lrate 0.008388, wchange 10.588949
+Dataset Y step 3 - lrate 0.012288, wchange 0.055913, angledelta 125.1 deg, Crate_Y 1.000000, eX -2.182955, eY -2.089091, maxC 0.000000, mc_test 0.000000
+Dataset X step 3 - lrate 0.007549, wchange 7.264615, angledelta 118.2 deg, Crate_X 1.000000, eX -2.269349, eY -2.089091, maxC 0.000000, mc_test 0.000000
+Dataset Y step 4 - lrate 0.011059, wchange 0.055551, angledelta 125.6 deg, Crate_Y 1.000000, eX -2.269349, eY -2.201842, maxC 0.000000, mc_test 0.000000
+Dataset X step 4 - lrate 0.006794, wchange 8.307622, angledelta 126.0 deg, Crate_X 1.000000, eX -2.658562, eY -2.201842, maxC 0.135320, mc_test 0.000000
+Dataset Y step 5 - lrate 0.009953, wchange 0.029140, angledelta 115.5 deg, Crate_Y 1.000000, eX -2.658562, eY -2.240235, maxC 0.135320, mc_test 0.000000
+Dataset X step 5 - lrate 0.006794, wchange 10.501797, angledelta 77.6 deg, Crate_X 1.000000, eX -2.150488, eY -2.240235, maxC 0.191041, mc_test 0.202550
+Dataset Y step 6 - lrate 0.009953, wchange 0.044408, angledelta 59.2 deg, Crate_Y 0.900000, eX -2.150488, eY -2.189245, maxC 0.191041, mc_test 0.202550
+Dataset X step 6 - lrate 0.006115, wchange 5.192014, angledelta 106.7 deg, Crate_X 1.000000, eX -2.355290, eY -2.189245, maxC 0.138795, mc_test 0.202550
+Dataset Y step 7 - lrate 0.009953, wchange 0.091981, angledelta 98.5 deg, Crate_Y 0.810000, eX -2.355290, eY -2.130028, maxC 0.138795, mc_test 0.202550
+Dataset X step 7 - lrate 0.006115, wchange 5.037847, angledelta 93.3 deg, Crate_X 1.000000, eX -2.227075, eY -2.130028, maxC 0.173337, mc_test 0.204525
+Dataset Y step 8 - lrate 0.008958, wchange 0.062722, angledelta 155.6 deg, Crate_Y 0.810000, eX -2.227075, eY -2.296726, maxC 0.173337, mc_test 0.204525
+Dataset X step 8 - lrate 0.005503, wchange 0.409300, angledelta 91.7 deg, Crate_X 1.000000, eX -2.369781, eY -2.296726, maxC 0.168566, mc_test 0.204525
+Dataset Y step 9 - lrate 0.008958, wchange 0.012278, angledelta 96.8 deg, Crate_Y 0.810000, eX -2.369781, eY -2.124101, maxC 0.168566, mc_test 0.204525
+Dataset X step 9 - lrate 0.005503, wchange 0.542584, angledelta 107.1 deg, Crate_X 1.000000, eX -2.117653, eY -2.124101, maxC 0.173788, mc_test 0.186200
+Dataset Y step 10 - lrate 0.008062, wchange 0.017590, angledelta 122.5 deg, Crate_Y 0.729000, eX -2.117653, eY -2.184650, maxC 0.173788, mc_test 0.186200
+Dataset X step 10 - lrate 0.004953, wchange 0.422682, angledelta 131.3 deg, Crate_X 0.900000, eX -2.313077, eY -2.184650, maxC 0.182707, mc_test 0.195714
+Dataset Y step 11 - lrate 0.007256, wchange 0.028614, angledelta 88.6 deg, Crate_Y 0.729000, eX -2.313077, eY -2.251025, maxC 0.182707, mc_test 0.195714
+Dataset X step 11 - lrate 0.004953, wchange 0.337438, angledelta 70.2 deg, Crate_X 0.900000, eX -2.247807, eY -2.251025, maxC 0.177839, mc_test 0.189692
+Dataset Y step 12 - lrate 0.007256, wchange 0.012380, angledelta 126.5 deg, Crate_Y 0.729000, eX -2.247807, eY -2.146713, maxC 0.177839, mc_test 0.189692
+Dataset X step 12 - lrate 0.004953, wchange 0.325170, angledelta 86.9 deg, Crate_X 0.810000, eX -2.075634, eY -2.146713, maxC 0.187829, mc_test 0.196643
+Dataset Y step 13 - lrate 0.007256, wchange 0.049787, angledelta 74.7 deg, Crate_Y 0.729000, eX -2.075634, eY -2.103197, maxC 0.187829, mc_test 0.196643
+Dataset X step 13 - lrate 0.004458, wchange 0.346253, angledelta 108.8 deg, Crate_X 0.810000, eX -2.283167, eY -2.103197, maxC 0.176989, mc_test 0.190500
+Dataset Y step 14 - lrate 0.006530, wchange 0.017985, angledelta 86.9 deg, Crate_Y 0.729000, eX -2.283167, eY -2.235233, maxC 0.176989, mc_test 0.190500
+Dataset X step 14 - lrate 0.004458, wchange 0.255516, angledelta 84.2 deg, Crate_X 0.729000, eX -2.155792, eY -2.235233, maxC 0.173852, mc_test 0.186491
+Dataset Y step 15 - lrate 0.006530, wchange 0.017203, angledelta 70.9 deg, Crate_Y 0.729000, eX -2.155792, eY -2.084810, maxC 0.173852, mc_test 0.186491
+Dataset X step 15 - lrate 0.004012, wchange 0.268781, angledelta 125.6 deg, Crate_X 0.729000, eX -2.323005, eY -2.084810, maxC 0.169426, mc_test 0.186491
+Dataset Y step 16 - lrate 0.006530, wchange 0.023796, angledelta 118.1 deg, Crate_Y 0.729000, eX -2.323005, eY -2.048412, maxC 0.169426, mc_test 0.186491
+Dataset X step 16 - lrate 0.004012, wchange 0.288591, angledelta 62.1 deg, Crate_X 0.729000, eX -2.041098, eY -2.048412, maxC 0.178493, mc_test 0.191139
+Dataset Y step 17 - lrate 0.005877, wchange 0.056954, angledelta 128.5 deg, Crate_Y 0.656100, eX -2.041098, eY -2.174498, maxC 0.178493, mc_test 0.191139
+Dataset X step 17 - lrate 0.003611, wchange 0.267588, angledelta 128.9 deg, Crate_X 0.656100, eX -2.170492, eY -2.174498, maxC 0.182708, mc_test 0.193511
+Dataset Y step 18 - lrate 0.005290, wchange 0.012387, angledelta 114.3 deg, Crate_Y 0.590490, eX -2.170492, eY -2.254875, maxC 0.182708, mc_test 0.193511
+Dataset X step 18 - lrate 0.003250, wchange 0.165266, angledelta 113.6 deg, Crate_X 0.590490, eX -2.261233, eY -2.254875, maxC 0.181000, mc_test 0.189822
+Dataset Y step 19 - lrate 0.004761, wchange 0.011103, angledelta 133.8 deg, Crate_Y 0.531441, eX -2.261233, eY -2.281388, maxC 0.181000, mc_test 0.189822
+Dataset X step 19 - lrate 0.002925, wchange 0.115502, angledelta 121.8 deg, Crate_X 0.531441, eX -2.259771, eY -2.281388, maxC 0.182797, mc_test 0.190266
+Dataset Y step 20 - lrate 0.004761, wchange 0.016790, angledelta 140.9 deg, Crate_Y 0.531441, eX -2.259771, eY -2.182002, maxC 0.182797, mc_test 0.190266
+Dataset X step 20 - lrate 0.002632, wchange 0.090786, angledelta 98.0 deg, Crate_X 0.478297, eX -2.285725, eY -2.182002, maxC 0.176732, mc_test 0.185596
+Dataset Y step 21 - lrate 0.004761, wchange 0.002253, angledelta 46.5 deg, Crate_Y 0.531441, eX -2.285725, eY -2.153449, maxC 0.176732, mc_test 0.185596
+Dataset X step 21 - lrate 0.002632, wchange 0.115837, angledelta 92.3 deg, Crate_X 0.478297, eX -2.270824, eY -2.153449, maxC 0.179789, mc_test 0.187470
+Dataset Y step 22 - lrate 0.004285, wchange 0.015095, angledelta 124.9 deg, Crate_Y 0.531441, eX -2.270824, eY -2.255530, maxC 0.179789, mc_test 0.187470
+Dataset X step 22 - lrate 0.002632, wchange 0.113842, angledelta 78.1 deg, Crate_X 0.478297, eX -2.218691, eY -2.255530, maxC 0.179171, mc_test 0.197819
+Dataset Y step 23 - lrate 0.004285, wchange 0.003610, angledelta 82.4 deg, Crate_Y 0.531441, eX -2.218691, eY -2.138577, maxC 0.179171, mc_test 0.197819
+Dataset X step 23 - lrate 0.002632, wchange 0.103395, angledelta 89.9 deg, Crate_X 0.430467, eX -2.208047, eY -2.138577, maxC 0.176852, mc_test 0.184906
+Dataset Y step 24 - lrate 0.004285, wchange 0.006678, angledelta 83.3 deg, Crate_Y 0.531441, eX -2.208047, eY -2.096620, maxC 0.176852, mc_test 0.184906
+Dataset X step 24 - lrate 0.002369, wchange 0.092993, angledelta 119.9 deg, Crate_X 0.430467, eX -2.335026, eY -2.096620, maxC 0.175998, mc_test 0.184194
+Dataset Y step 25 - lrate 0.003856, wchange 0.008209, angledelta 90.7 deg, Crate_Y 0.531441, eX -2.335026, eY -2.140353, maxC 0.175998, mc_test 0.184194
+Dataset X step 25 - lrate 0.002369, wchange 0.087724, angledelta 69.7 deg, Crate_X 0.387420, eX -2.175065, eY -2.140353, maxC 0.181452, mc_test 0.188126
+Dataset Y step 26 - lrate 0.003856, wchange 0.009418, angledelta 84.9 deg, Crate_Y 0.531441, eX -2.175065, eY -2.094655, maxC 0.181452, mc_test 0.188126
+Dataset X step 26 - lrate 0.002132, wchange 0.040530, angledelta 124.2 deg, Crate_X 0.348678, eX -2.310821, eY -2.094655, maxC 0.178203, mc_test 0.186001
+Dataset Y step 27 - lrate 0.003471, wchange 0.005077, angledelta 91.3 deg, Crate_Y 0.478297, eX -2.310821, eY -2.127928, maxC 0.178203, mc_test 0.186001
+Dataset X step 27 - lrate 0.002132, wchange 0.060236, angledelta 101.7 deg, Crate_X 0.348678, eX -2.237201, eY -2.127928, maxC 0.185756, mc_test 0.191031
+Dataset Y step 28 - lrate 0.003124, wchange 0.005160, angledelta 126.3 deg, Crate_Y 0.430467, eX -2.237201, eY -2.194520, maxC 0.185756, mc_test 0.191031
+Dataset X step 28 - lrate 0.002132, wchange 0.069613, angledelta 76.6 deg, Crate_X 0.348678, eX -2.176943, eY -2.194520, maxC 0.184768, mc_test 0.190113
+Dataset Y step 29 - lrate 0.003124, wchange 0.002226, angledelta 61.9 deg, Crate_Y 0.387420, eX -2.176943, eY -2.112284, maxC 0.184768, mc_test 0.190113
+Dataset X step 29 - lrate 0.001919, wchange 0.088579, angledelta 137.5 deg, Crate_X 0.348678, eX -2.205603, eY -2.112284, maxC 0.184086, mc_test 0.188867
+Dataset Y step 30 - lrate 0.002811, wchange 0.005803, angledelta 53.8 deg, Crate_Y 0.348678, eX -2.205603, eY -2.157325, maxC 0.184086, mc_test 0.188867
+Dataset X step 30 - lrate 0.001727, wchange 0.063286, angledelta 120.1 deg, Crate_X 0.313811, eX -2.212239, eY -2.157325, maxC 0.181136, mc_test 0.186322
+Dataset Y step 31 - lrate 0.002530, wchange 0.002041, angledelta 81.4 deg, Crate_Y 0.348678, eX -2.212239, eY -2.205815, maxC 0.181136, mc_test 0.186322
+Dataset X step 31 - lrate 0.001554, wchange 0.031353, angledelta 109.3 deg, Crate_X 0.282430, eX -2.280749, eY -2.205815, maxC 0.182511, mc_test 0.187328
+Dataset Y step 32 - lrate 0.002530, wchange 0.000878, angledelta 90.0 deg, Crate_Y 0.313811, eX -2.280749, eY -2.124987, maxC 0.182511, mc_test 0.187328
+Dataset X step 32 - lrate 0.001554, wchange 0.042447, angledelta 86.3 deg, Crate_X 0.254187, eX -2.262571, eY -2.124987, maxC 0.183352, mc_test 0.187312
+Dataset Y step 33 - lrate 0.002277, wchange 0.001397, angledelta 82.3 deg, Crate_Y 0.313811, eX -2.262571, eY -2.145237, maxC 0.183352, mc_test 0.187312
+Dataset X step 33 - lrate 0.001399, wchange 0.040811, angledelta 120.3 deg, Crate_X 0.228768, eX -2.301865, eY -2.145237, maxC 0.184164, mc_test 0.187931
+Dataset Y step 34 - lrate 0.002277, wchange 0.001367, angledelta 68.8 deg, Crate_Y 0.313811, eX -2.301865, eY -2.122028, maxC 0.184164, mc_test 0.187931
+Dataset X step 34 - lrate 0.001399, wchange 0.024120, angledelta 62.8 deg, Crate_X 0.228768, eX -2.258517, eY -2.122028, maxC 0.178581, mc_test 0.182862
+Dataset Y step 35 - lrate 0.002049, wchange 0.001529, angledelta 60.0 deg, Crate_Y 0.282430, eX -2.258517, eY -2.127042, maxC 0.178581, mc_test 0.182862
+Dataset X step 35 - lrate 0.001399, wchange 0.039280, angledelta 120.2 deg, Crate_X 0.228768, eX -2.235923, eY -2.127042, maxC 0.181105, mc_test 0.184866
+Dataset Y step 36 - lrate 0.001844, wchange 0.000646, angledelta 104.2 deg, Crate_Y 0.254187, eX -2.235923, eY -2.168191, maxC 0.181105, mc_test 0.184866
+Dataset X step 36 - lrate 0.001259, wchange 0.031057, angledelta 122.5 deg, Crate_X 0.228768, eX -2.257559, eY -2.168191, maxC 0.183844, mc_test 0.186809
+Dataset Y step 37 - lrate 0.001844, wchange 0.000597, angledelta 79.9 deg, Crate_Y 0.228768, eX -2.257559, eY -2.145531, maxC 0.183844, mc_test 0.186809
+Dataset X step 37 - lrate 0.001133, wchange 0.020649, angledelta 114.7 deg, Crate_X 0.205891, eX -2.277960, eY -2.145531, maxC 0.182926, mc_test 0.186282
+Dataset Y step 38 - lrate 0.001660, wchange 0.000821, angledelta 37.9 deg, Crate_Y 0.205891, eX -2.277960, eY -2.160246, maxC 0.182926, mc_test 0.186282
+Dataset X step 38 - lrate 0.001020, wchange 0.028586, angledelta 123.5 deg, Crate_X 0.185302, eX -2.281014, eY -2.160246, maxC 0.184553, mc_test 0.187349
+Dataset Y step 39 - lrate 0.001494, wchange 0.000475, angledelta 84.8 deg, Crate_Y 0.205891, eX -2.281014, eY -2.187056, maxC 0.184553, mc_test 0.187349
+Dataset X step 39 - lrate 0.000918, wchange 0.040773, angledelta 112.6 deg, Crate_X 0.166772, eX -2.303256, eY -2.187056, maxC 0.179291, mc_test 0.182302
+Dataset Y step 40 - lrate 0.001494, wchange 0.001034, angledelta 63.2 deg, Crate_Y 0.205891, eX -2.303256, eY -2.144271, maxC 0.179291, mc_test 0.182302
+Dataset X step 40 - lrate 0.000918, wchange 0.017601, angledelta 108.2 deg, Crate_X 0.166772, eX -2.251134, eY -2.144271, maxC 0.181680, mc_test 0.184328
+Dataset Y step 41 - lrate 0.001494, wchange 0.000350, angledelta 68.4 deg, Crate_Y 0.205891, eX -2.251134, eY -2.119897, maxC 0.181680, mc_test 0.184328
+Dataset X step 41 - lrate 0.000918, wchange 0.014013, angledelta 68.4 deg, Crate_X 0.166772, eX -2.236897, eY -2.119897, maxC 0.186619, mc_test 0.188838
+Dataset Y step 42 - lrate 0.001345, wchange 0.001160, angledelta 78.8 deg, Crate_Y 0.205891, eX -2.236897, eY -2.132486, maxC 0.186619, mc_test 0.188838
+Dataset X step 42 - lrate 0.000826, wchange 0.019589, angledelta 93.2 deg, Crate_X 0.166772, eX -2.250995, eY -2.132486, maxC 0.185708, mc_test 0.188026
+Dataset Y step 43 - lrate 0.001210, wchange 0.000403, angledelta 85.0 deg, Crate_Y 0.185302, eX -2.250995, eY -2.159663, maxC 0.185708, mc_test 0.188026
+Dataset X step 43 - lrate 0.000743, wchange 0.015953, angledelta 121.5 deg, Crate_X 0.150095, eX -2.252156, eY -2.159663, maxC 0.182693, mc_test 0.185038
+Dataset Y step 44 - lrate 0.001210, wchange 0.000179, angledelta 90.0 deg, Crate_Y 0.166772, eX -2.252156, eY -2.141032, maxC 0.182693, mc_test 0.185038
+Dataset X step 44 - lrate 0.000669, wchange 0.006364, angledelta 110.4 deg, Crate_X 0.135085, eX -2.299977, eY -2.141032, maxC 0.183375, mc_test 0.185440
+Dataset Y step 45 - lrate 0.001210, wchange 0.000250, angledelta 48.9 deg, Crate_Y 0.166772, eX -2.299977, eY -2.130951, maxC 0.183375, mc_test 0.185440
+Dataset X step 45 - lrate 0.000669, wchange 0.009981, angledelta 77.9 deg, Crate_X 0.121577, eX -2.290463, eY -2.130951, maxC 0.182514, mc_test 0.184536
+Dataset Y step 46 - lrate 0.001210, wchange 0.000473, angledelta 46.3 deg, Crate_Y 0.166772, eX -2.290463, eY -2.132519, maxC 0.182514, mc_test 0.184536
+Dataset X step 46 - lrate 0.000669, wchange 0.010966, angledelta 107.7 deg, Crate_X 0.121577, eX -2.268679, eY -2.132519, maxC 0.184658, mc_test 0.186487
+Dataset Y step 47 - lrate 0.001089, wchange 0.000467, angledelta 76.5 deg, Crate_Y 0.166772, eX -2.268679, eY -2.141305, maxC 0.184658, mc_test 0.186487
+Dataset X step 47 - lrate 0.000669, wchange 0.011943, angledelta 94.8 deg, Crate_X 0.121577, eX -2.260657, eY -2.141305, maxC 0.183429, mc_test 0.185325
+Dataset Y step 48 - lrate 0.001089, wchange 0.000085, angledelta 46.8 deg, Crate_Y 0.150095, eX -2.260657, eY -2.133568, maxC 0.183429, mc_test 0.185325
+Dataset X step 48 - lrate 0.000602, wchange 0.004035, angledelta 116.6 deg, Crate_X 0.121577, eX -2.266012, eY -2.133568, maxC 0.183150, mc_test 0.185042
+Dataset Y step 49 - lrate 0.000980, wchange 0.000065, angledelta 41.6 deg, Crate_Y 0.135085, eX -2.266012, eY -2.133073, maxC 0.183150, mc_test 0.185042
+Dataset X step 49 - lrate 0.000542, wchange 0.005988, angledelta 119.4 deg, Crate_X 0.121577, eX -2.278134, eY -2.133073, maxC 0.183612, mc_test 0.185359
+Dataset Y step 50 - lrate 0.000882, wchange 0.000173, angledelta 51.8 deg, Crate_Y 0.121577, eX -2.278134, eY -2.141954, maxC 0.183612, mc_test 0.185359
+Dataset X step 50 - lrate 0.000542, wchange 0.009512, angledelta 61.9 deg, Crate_X 0.121577, eX -2.244711, eY -2.141954, maxC 0.184743, mc_test 0.186415
+Dataset Y step 51 - lrate 0.000794, wchange 0.000093, angledelta 37.5 deg, Crate_Y 0.109419, eX -2.244711, eY -2.146559, maxC 0.184743, mc_test 0.186415
+Dataset X step 51 - lrate 0.000488, wchange 0.010724, angledelta 117.9 deg, Crate_X 0.121577, eX -2.274740, eY -2.146559, maxC 0.182550, mc_test 0.184327
+Dataset Y step 52 - lrate 0.000794, wchange 0.000146, angledelta 36.2 deg, Crate_Y 0.098477, eX -2.274740, eY -2.142061, maxC 0.182550, mc_test 0.184327
+Dataset X step 52 - lrate 0.000488, wchange 0.006380, angledelta 55.1 deg, Crate_X 0.121577, eX -2.252332, eY -2.142061, maxC 0.183336, mc_test 0.184929
+Dataset Y step 53 - lrate 0.000794, wchange 0.000074, angledelta 47.7 deg, Crate_Y 0.098477, eX -2.252332, eY -2.141311, maxC 0.183336, mc_test 0.184929
+Dataset X step 53 - lrate 0.000439, wchange 0.010579, angledelta 120.3 deg, Crate_X 0.121577, eX -2.258046, eY -2.141311, maxC 0.183508, mc_test 0.185083
+Dataset Y step 54 - lrate 0.000715, wchange 0.000109, angledelta 37.5 deg, Crate_Y 0.098477, eX -2.258046, eY -2.147081, maxC 0.183508, mc_test 0.185083
+Dataset X step 54 - lrate 0.000395, wchange 0.007191, angledelta 114.8 deg, Crate_X 0.121577, eX -2.255131, eY -2.147081, maxC 0.182387, mc_test 0.184105
+Dataset Y step 55 - lrate 0.000715, wchange 0.000078, angledelta 34.7 deg, Crate_Y 0.098477, eX -2.255131, eY -2.143440, maxC 0.182387, mc_test 0.184105
+Dataset X step 55 - lrate 0.000395, wchange 0.004725, angledelta 85.2 deg, Crate_X 0.121577, eX -2.237015, eY -2.143440, maxC 0.182238, mc_test 0.183895
+Dataset Y step 56 - lrate 0.000715, wchange 0.000065, angledelta 37.4 deg, Crate_Y 0.098477, eX -2.237015, eY -2.140516, maxC 0.182238, mc_test 0.183895
+Dataset X step 56 - lrate 0.000356, wchange 0.003880, angledelta 117.2 deg, Crate_X 0.109419, eX -2.248170, eY -2.140516, maxC 0.182313, mc_test 0.184005
+Dataset Y step 57 - lrate 0.000715, wchange 0.000060, angledelta 27.1 deg, Crate_Y 0.098477, eX -2.248170, eY -2.135252, maxC 0.182313, mc_test 0.184005
+Dataset X step 57 - lrate 0.000320, wchange 0.001581, angledelta 126.2 deg, Crate_X 0.098477, eX -2.269412, eY -2.135252, maxC 0.183755, mc_test 0.185221
+Dataset Y step 58 - lrate 0.000643, wchange 0.000058, angledelta 55.6 deg, Crate_Y 0.098477, eX -2.269412, eY -2.136924, maxC 0.183755, mc_test 0.185221
+Dataset X step 58 - lrate 0.000320, wchange 0.005013, angledelta 91.3 deg, Crate_X 0.088629, eX -2.256546, eY -2.136924, maxC 0.185134, mc_test 0.186418
+Dataset Y step 59 - lrate 0.000579, wchange 0.000119, angledelta 51.3 deg, Crate_Y 0.098477, eX -2.256546, eY -2.143246, maxC 0.185134, mc_test 0.186418
+Dataset X step 59 - lrate 0.000288, wchange 0.005542, angledelta 121.8 deg, Crate_X 0.079766, eX -2.273013, eY -2.143246, maxC 0.183224, mc_test 0.184535
+Dataset Y step 60 - lrate 0.000579, wchange 0.000091, angledelta 27.5 deg, Crate_Y 0.098477, eX -2.273013, eY -2.132968, maxC 0.183224, mc_test 0.184535
+Dataset X step 60 - lrate 0.000288, wchange 0.004084, angledelta 59.4 deg, Crate_X 0.079766, eX -2.260704, eY -2.132968, maxC 0.183298, mc_test 0.184521
+Dataset Y step 61 - lrate 0.000521, wchange 0.000056, angledelta 64.6 deg, Crate_Y 0.098477, eX -2.260704, eY -2.134253, maxC 0.183298, mc_test 0.184521
+Dataset X step 61 - lrate 0.000259, wchange 0.004438, angledelta 134.0 deg, Crate_X 0.079766, eX -2.272020, eY -2.134253, maxC 0.183030, mc_test 0.184262
+Dataset Y step 62 - lrate 0.000469, wchange 0.000056, angledelta 54.2 deg, Crate_Y 0.098477, eX -2.272020, eY -2.135958, maxC 0.183030, mc_test 0.184262
+Dataset X step 62 - lrate 0.000259, wchange 0.004050, angledelta 76.4 deg, Crate_X 0.079766, eX -2.252386, eY -2.135958, maxC 0.183730, mc_test 0.184930
+Dataset Y step 63 - lrate 0.000422, wchange 0.000024, angledelta 39.8 deg, Crate_Y 0.088629, eX -2.252386, eY -2.136982, maxC 0.183730, mc_test 0.184930
+Dataset X step 63 - lrate 0.000233, wchange 0.005305, angledelta 121.1 deg, Crate_X 0.079766, eX -2.270950, eY -2.136982, maxC 0.182614, mc_test 0.183803
+Dataset Y step 64 - lrate 0.000380, wchange 0.000033, angledelta 28.0 deg, Crate_Y 0.079766, eX -2.270950, eY -2.138265, maxC 0.182614, mc_test 0.183803
+Dataset X step 64 - lrate 0.000233, wchange 0.003897, angledelta 96.5 deg, Crate_X 0.071790, eX -2.257655, eY -2.138265, maxC 0.183746, mc_test 0.184863
+Dataset Y step 65 - lrate 0.000342, wchange 0.000028, angledelta 27.9 deg, Crate_Y 0.071790, eX -2.257655, eY -2.141346, maxC 0.183746, mc_test 0.184863
+Dataset X step 65 - lrate 0.000210, wchange 0.005417, angledelta 141.1 deg, Crate_X 0.071790, eX -2.275729, eY -2.141346, maxC 0.182802, mc_test 0.183828
+Dataset Y step 66 - lrate 0.000342, wchange 0.000023, angledelta 32.2 deg, Crate_Y 0.071790, eX -2.275729, eY -2.141539, maxC 0.182802, mc_test 0.183828
+Dataset X step 66 - lrate 0.000210, wchange 0.003052, angledelta 79.8 deg, Crate_X 0.064611, eX -2.251223, eY -2.141539, maxC 0.184229, mc_test 0.185232
+Dataset Y step 67 - lrate 0.000342, wchange 0.000018, angledelta 36.6 deg, Crate_Y 0.071790, eX -2.251223, eY -2.139689, maxC 0.184229, mc_test 0.185232
+Dataset X step 67 - lrate 0.000189, wchange 0.004542, angledelta 128.2 deg, Crate_X 0.064611, eX -2.271378, eY -2.139689, maxC 0.184591, mc_test 0.185502
+Dataset Y step 68 - lrate 0.000342, wchange 0.000016, angledelta 37.6 deg, Crate_Y 0.071790, eX -2.271378, eY -2.138885, maxC 0.184591, mc_test 0.185502
+Dataset X step 68 - lrate 0.000189, wchange 0.002818, angledelta 62.0 deg, Crate_X 0.064611, eX -2.258656, eY -2.138885, maxC 0.183222, mc_test 0.184157
+Dataset Y step 69 - lrate 0.000342, wchange 0.000027, angledelta 24.5 deg, Crate_Y 0.071790, eX -2.258656, eY -2.137849, maxC 0.183222, mc_test 0.184157
+Dataset X step 69 - lrate 0.000170, wchange 0.002405, angledelta 99.9 deg, Crate_X 0.058150, eX -2.262022, eY -2.137849, maxC 0.183473, mc_test 0.184411
+Dataset Y step 70 - lrate 0.000308, wchange 0.000014, angledelta 55.0 deg, Crate_Y 0.071790, eX -2.262022, eY -2.138217, maxC 0.183473, mc_test 0.184411
+Dataset X step 70 - lrate 0.000153, wchange 0.001573, angledelta 120.2 deg, Crate_X 0.058150, eX -2.272800, eY -2.138217, maxC 0.183470, mc_test 0.184328
+Dataset Y step 71 - lrate 0.000308, wchange 0.000019, angledelta 25.2 deg, Crate_Y 0.064611, eX -2.272800, eY -2.138211, maxC 0.183470, mc_test 0.184328
+Dataset X step 71 - lrate 0.000153, wchange 0.000915, angledelta 122.0 deg, Crate_X 0.052335, eX -2.265748, eY -2.138211, maxC 0.183955, mc_test 0.184766
+Dataset Y step 72 - lrate 0.000308, wchange 0.000023, angledelta 23.1 deg, Crate_Y 0.058150, eX -2.265748, eY -2.137361, maxC 0.183955, mc_test 0.184766
+Dataset X step 72 - lrate 0.000138, wchange 0.002140, angledelta 105.7 deg, Crate_X 0.047101, eX -2.268893, eY -2.137361, maxC 0.184003, mc_test 0.184731
+Dataset Y step 73 - lrate 0.000308, wchange 0.000023, angledelta 22.7 deg, Crate_Y 0.058150, eX -2.268893, eY -2.137537, maxC 0.184003, mc_test 0.184731
+Dataset X step 73 - lrate 0.000138, wchange 0.001442, angledelta 82.6 deg, Crate_X 0.047101, eX -2.251001, eY -2.137537, maxC 0.184645, mc_test 0.185324
+Dataset Y step 74 - lrate 0.000277, wchange 0.000021, angledelta 15.9 deg, Crate_Y 0.058150, eX -2.251001, eY -2.138462, maxC 0.184645, mc_test 0.185324
+Dataset X step 74 - lrate 0.000124, wchange 0.001806, angledelta 118.2 deg, Crate_X 0.042391, eX -2.269978, eY -2.138462, maxC 0.184339, mc_test 0.185028
+Dataset Y step 75 - lrate 0.000249, wchange 0.000015, angledelta 36.9 deg, Crate_Y 0.058150, eX -2.269978, eY -2.140960, maxC 0.184339, mc_test 0.185028
+Dataset X step 75 - lrate 0.000124, wchange 0.000521, angledelta 86.3 deg, Crate_X 0.042391, eX -2.253047, eY -2.140960, maxC 0.183744, mc_test 0.184393
+Dataset Y step 76 - lrate 0.000249, wchange 0.000018, angledelta 18.9 deg, Crate_Y 0.052335, eX -2.253047, eY -2.139657, maxC 0.183744, mc_test 0.184393
+Dataset X step 76 - lrate 0.000112, wchange 0.001112, angledelta 102.5 deg, Crate_X 0.038152, eX -2.255088, eY -2.139657, maxC 0.184071, mc_test 0.184694
+Dataset Y step 77 - lrate 0.000224, wchange 0.000012, angledelta 21.7 deg, Crate_Y 0.052335, eX -2.255088, eY -2.142183, maxC 0.184071, mc_test 0.184694
+Dataset X step 77 - lrate 0.000100, wchange 0.000959, angledelta 111.2 deg, Crate_X 0.034337, eX -2.267166, eY -2.142183, maxC 0.184402, mc_test 0.184967
+Dataset Y step 78 - lrate 0.000224, wchange 0.000014, angledelta 22.3 deg, Crate_Y 0.052335, eX -2.267166, eY -2.142591, maxC 0.184402, mc_test 0.184967
+Dataset X step 78 - lrate 0.000090, wchange 0.000807, angledelta 113.5 deg, Crate_X 0.030903, eX -2.274010, eY -2.142591, maxC 0.183464, mc_test 0.184015
+Dataset Y step 79 - lrate 0.000224, wchange 0.000013, angledelta 24.0 deg, Crate_Y 0.052335, eX -2.274010, eY -2.139860, maxC 0.183464, mc_test 0.184015
+Dataset X step 79 - lrate 0.000090, wchange 0.002013, angledelta 95.2 deg, Crate_X 0.030903, eX -2.271202, eY -2.139860, maxC 0.183986, mc_test 0.184491
+Dataset Y step 80 - lrate 0.000224, wchange 0.000011, angledelta 13.8 deg, Crate_Y 0.047101, eX -2.271202, eY -2.138233, maxC 0.183986, mc_test 0.184491
+Dataset X step 80 - lrate 0.000090, wchange 0.001385, angledelta 80.6 deg, Crate_X 0.030903, eX -2.253271, eY -2.138233, maxC 0.184183, mc_test 0.184664
+Dataset Y step 81 - lrate 0.000202, wchange 0.000012, angledelta 26.3 deg, Crate_Y 0.047101, eX -2.253271, eY -2.139635, maxC 0.184183, mc_test 0.184664
+Dataset X step 81 - lrate 0.000081, wchange 0.000591, angledelta 124.7 deg, Crate_X 0.030903, eX -2.268490, eY -2.139635, maxC 0.184304, mc_test 0.184785
+Dataset Y step 82 - lrate 0.000182, wchange 0.000006, angledelta 21.7 deg, Crate_Y 0.042391, eX -2.268490, eY -2.140379, maxC 0.184304, mc_test 0.184785
+Dataset X step 82 - lrate 0.000081, wchange 0.001273, angledelta 84.4 deg, Crate_X 0.027813, eX -2.258891, eY -2.140379, maxC 0.184530, mc_test 0.184987
+Dataset Y step 83 - lrate 0.000163, wchange 0.000005, angledelta 21.1 deg, Crate_Y 0.042391, eX -2.258891, eY -2.141289, maxC 0.184530, mc_test 0.184987
+Dataset X step 83 - lrate 0.000073, wchange 0.001146, angledelta 145.4 deg, Crate_X 0.027813, eX -2.269256, eY -2.141289, maxC 0.183843, mc_test 0.184276
+Dataset Y step 84 - lrate 0.000163, wchange 0.000007, angledelta 30.0 deg, Crate_Y 0.042391, eX -2.269256, eY -2.141038, maxC 0.183843, mc_test 0.184276
+Dataset X step 84 - lrate 0.000073, wchange 0.000595, angledelta 73.2 deg, Crate_X 0.027813, eX -2.256355, eY -2.141038, maxC 0.184356, mc_test 0.184783
+Dataset Y step 85 - lrate 0.000163, wchange 0.000007, angledelta 32.6 deg, Crate_Y 0.042391, eX -2.256355, eY -2.139625, maxC 0.184356, mc_test 0.184783
+Dataset X step 85 - lrate 0.000066, wchange 0.000801, angledelta 110.6 deg, Crate_X 0.027813, eX -2.261896, eY -2.139625, maxC 0.184510, mc_test 0.184935
+Dataset Y step 86 - lrate 0.000163, wchange 0.000012, angledelta 30.8 deg, Crate_Y 0.042391, eX -2.261896, eY -2.138420, maxC 0.184510, mc_test 0.184935
+Dataset X step 86 - lrate 0.000066, wchange 0.000882, angledelta 71.2 deg, Crate_X 0.027813, eX -2.252156, eY -2.138420, maxC 0.184500, mc_test 0.184925
+Dataset Y step 87 - lrate 0.000147, wchange 0.000003, angledelta 41.3 deg, Crate_Y 0.038152, eX -2.252156, eY -2.139402, maxC 0.184500, mc_test 0.184925
+Dataset X step 87 - lrate 0.000059, wchange 0.001025, angledelta 129.9 deg, Crate_X 0.025032, eX -2.255835, eY -2.139402, maxC 0.184867, mc_test 0.185265
+Dataset Y step 88 - lrate 0.000132, wchange 0.000004, angledelta 34.2 deg, Crate_Y 0.034337, eX -2.255835, eY -2.140174, maxC 0.184867, mc_test 0.185265
+Dataset X step 88 - lrate 0.000053, wchange 0.000690, angledelta 125.8 deg, Crate_X 0.022528, eX -2.265234, eY -2.140174, maxC 0.184127, mc_test 0.184497
+Dataset Y step 89 - lrate 0.000119, wchange 0.000006, angledelta 18.4 deg, Crate_Y 0.030903, eX -2.265234, eY -2.140678, maxC 0.184127, mc_test 0.184497
+Dataset X step 89 - lrate 0.000053, wchange 0.000282, angledelta 73.2 deg, Crate_X 0.020276, eX -2.263519, eY -2.140678, maxC 0.184513, mc_test 0.184842
+Dataset Y step 90 - lrate 0.000107, wchange 0.000003, angledelta 24.0 deg, Crate_Y 0.027813, eX -2.263519, eY -2.141874, maxC 0.184513, mc_test 0.184842
+Dataset X step 90 - lrate 0.000053, wchange 0.000320, angledelta 80.7 deg, Crate_X 0.020276, eX -2.260082, eY -2.141874, maxC 0.184731, mc_test 0.185025
+Dataset Y step 91 - lrate 0.000107, wchange 0.000001, angledelta 48.0 deg, Crate_Y 0.025032, eX -2.260082, eY -2.141792, maxC 0.184731, mc_test 0.185025
+Dataset X step 91 - lrate 0.000053, wchange 0.000702, angledelta 66.3 deg, Crate_X 0.020276, eX -2.253152, eY -2.141792, maxC 0.184654, mc_test 0.184938
+Dataset Y step 92 - lrate 0.000107, wchange 0.000002, angledelta 22.2 deg, Crate_Y 0.022528, eX -2.253152, eY -2.141534, maxC 0.184654, mc_test 0.184938
+Dataset X step 92 - lrate 0.000048, wchange 0.000691, angledelta 145.7 deg, Crate_X 0.020276, eX -2.257693, eY -2.141534, maxC 0.184342, mc_test 0.184624
+Dataset Y step 93 - lrate 0.000107, wchange 0.000004, angledelta 21.5 deg, Crate_Y 0.020276, eX -2.257693, eY -2.141592, maxC 0.184342, mc_test 0.184624
+Dataset X step 93 - lrate 0.000048, wchange 0.000651, angledelta 56.7 deg, Crate_X 0.018248, eX -2.256289, eY -2.141592, maxC 0.184898, mc_test 0.185161
+Dataset Y step 94 - lrate 0.000107, wchange 0.000004, angledelta 22.3 deg, Crate_Y 0.018248, eX -2.256289, eY -2.141084, maxC 0.184898, mc_test 0.185161
+Dataset X step 94 - lrate 0.000043, wchange 0.000448, angledelta 123.8 deg, Crate_X 0.016423, eX -2.267667, eY -2.141084, maxC 0.184467, mc_test 0.184710
+Dataset Y step 95 - lrate 0.000107, wchange 0.000003, angledelta 29.0 deg, Crate_Y 0.016423, eX -2.267667, eY -2.140927, maxC 0.184467, mc_test 0.184710
+Dataset X step 95 - lrate 0.000043, wchange 0.000413, angledelta 87.0 deg, Crate_X 0.014781, eX -2.257045, eY -2.140927, maxC 0.184814, mc_test 0.185030
+Dataset Y step 96 - lrate 0.000107, wchange 0.000004, angledelta 29.2 deg, Crate_Y 0.014781, eX -2.257045, eY -2.140254, maxC 0.184814, mc_test 0.185030
+Dataset X step 96 - lrate 0.000039, wchange 0.000426, angledelta 126.6 deg, Crate_X 0.013303, eX -2.263557, eY -2.140254, maxC 0.184766, mc_test 0.184960
+Dataset Y step 97 - lrate 0.000107, wchange 0.000003, angledelta 21.7 deg, Crate_Y 0.013303, eX -2.263557, eY -2.139185, maxC 0.184766, mc_test 0.184960
+Dataset X step 97 - lrate 0.000039, wchange 0.000169, angledelta 77.6 deg, Crate_X 0.011973, eX -2.260384, eY -2.139185, maxC 0.184518, mc_test 0.184695
+Dataset Y step 98 - lrate 0.000097, wchange 0.000002, angledelta 28.9 deg, Crate_Y 0.011973, eX -2.260384, eY -2.139471, maxC 0.184518, mc_test 0.184695
+Dataset X step 98 - lrate 0.000035, wchange 0.000283, angledelta 116.2 deg, Crate_X 0.010775, eX -2.264774, eY -2.139471, maxC 0.184468, mc_test 0.184629
+Dataset Y step 99 - lrate 0.000097, wchange 0.000003, angledelta 12.4 deg, Crate_Y 0.010775, eX -2.264774, eY -2.139094, maxC 0.184468, mc_test 0.184629
+Dataset X step 99 - lrate 0.000032, wchange 0.000202, angledelta 136.5 deg, Crate_X 0.009698, eX -2.266135, eY -2.139094, maxC 0.184331, mc_test 0.184475
+Dataset Y step 100 - lrate 0.000087, wchange 0.000001, angledelta 24.0 deg, Crate_Y 0.009698, eX -2.266135, eY -2.139585, maxC 0.184331, mc_test 0.184475
+Dataset X step 100 - lrate 0.000032, wchange 0.000264, angledelta 79.3 deg, Crate_X 0.008728, eX -2.263810, eY -2.139585, maxC 0.184533, mc_test 0.184662
+Dataset Y step 101 - lrate 0.000087, wchange 0.000001, angledelta 27.6 deg, Crate_Y 0.008728, eX -2.263810, eY -2.139252, maxC 0.184533, mc_test 0.184662
+Dataset X step 101 - lrate 0.000028, wchange 0.000160, angledelta 132.9 deg, Crate_X 0.007855, eX -2.270343, eY -2.139252, maxC 0.184217, mc_test 0.184335
+Dataset Y step 102 - lrate 0.000078, wchange 0.000002, angledelta 33.5 deg, Crate_Y 0.007855, eX -2.270343, eY -2.139443, maxC 0.184217, mc_test 0.184335
+Dataset X step 102 - lrate 0.000028, wchange 0.000136, angledelta 84.4 deg, Crate_X 0.007070, eX -2.265976, eY -2.139443, maxC 0.184421, mc_test 0.184527
+Dataset Y step 103 - lrate 0.000078, wchange 0.000001, angledelta 27.2 deg, Crate_Y 0.007070, eX -2.265976, eY -2.138968, maxC 0.184421, mc_test 0.184527
+Dataset X step 103 - lrate 0.000028, wchange 0.000206, angledelta 112.3 deg, Crate_X 0.006363, eX -2.265688, eY -2.138968, maxC 0.184199, mc_test 0.184295
+Dataset Y step 104 - lrate 0.000070, wchange 0.000001, angledelta 27.3 deg, Crate_Y 0.006363, eX -2.265688, eY -2.139078, maxC 0.184199, mc_test 0.184295
+STOPSIGN_Y = True
+Dataset X step 104 - lrate 0.000028, wchange 0.000078, angledelta 76.1 deg, Crate_X 0.005726, eX -2.258506, eY -2.139078, maxC 0.184245, mc_test 0.184307
+Dataset X step 105 - lrate 0.000026, wchange 0.000107, angledelta 102.1 deg, Crate_X 0.005154, eX -2.260694, eY -2.139078, maxC 0.184139, mc_test 0.184195
+Dataset X step 106 - lrate 0.000023, wchange 0.000124, angledelta 125.6 deg, Crate_X 0.004638, eX -2.261625, eY -2.139078, maxC 0.184371, mc_test 0.184421
+Dataset X step 107 - lrate 0.000021, wchange 0.000157, angledelta 112.1 deg, Crate_X 0.004175, eX -2.262513, eY -2.139078, maxC 0.184285, mc_test 0.184331
+Dataset X step 108 - lrate 0.000021, wchange 0.000214, angledelta 92.2 deg, Crate_X 0.003757, eX -2.259367, eY -2.139078, maxC 0.184238, mc_test 0.184279
+Dataset X step 109 - lrate 0.000019, wchange 0.000119, angledelta 134.0 deg, Crate_X 0.003381, eX -2.264729, eY -2.139078, maxC 0.184231, mc_test 0.184268
+Dataset X step 110 - lrate 0.000019, wchange 0.000051, angledelta 81.6 deg, Crate_X 0.003043, eX -2.261997, eY -2.139078, maxC 0.184324, mc_test 0.184357
+Dataset X step 111 - lrate 0.000017, wchange 0.000037, angledelta 119.9 deg, Crate_X 0.002739, eX -2.262150, eY -2.139078, maxC 0.184257, mc_test 0.184286
+Dataset X step 112 - lrate 0.000015, wchange 0.000024, angledelta 108.1 deg, Crate_X 0.002465, eX -2.262596, eY -2.139078, maxC 0.184145, mc_test 0.184172
+Dataset X step 113 - lrate 0.000014, wchange 0.000022, angledelta 112.8 deg, Crate_X 0.002219, eX -2.262792, eY -2.139078, maxC 0.184194, mc_test 0.184218
+Dataset X step 114 - lrate 0.000012, wchange 0.000008, angledelta 89.4 deg, Crate_X 0.001997, eX -2.263891, eY -2.139078, maxC 0.184268, mc_test 0.184289
+Dataset X step 115 - lrate 0.000011, wchange 0.000007, angledelta 110.1 deg, Crate_X 0.001797, eX -2.263852, eY -2.139078, maxC 0.184342, mc_test 0.184362
+Dataset X step 116 - lrate 0.000011, wchange 0.000014, angledelta 106.0 deg, Crate_X 0.001617, eX -2.263528, eY -2.139078, maxC 0.184370, mc_test 0.184387
+Dataset X step 117 - lrate 0.000010, wchange 0.000009, angledelta 99.8 deg, Crate_X 0.001456, eX -2.265084, eY -2.139078, maxC 0.184241, mc_test 0.184257
+Dataset X step 118 - lrate 0.000010, wchange 0.000009, angledelta 108.6 deg, Crate_X 0.001310, eX -2.264937, eY -2.139078, maxC 0.184185, mc_test 0.184199
+Dataset X step 119 - lrate 0.000010, wchange 0.000007, angledelta 90.6 deg, Crate_X 0.001179, eX -2.263517, eY -2.139078, maxC 0.184224, mc_test 0.184237
+Dataset X step 120 - lrate 0.000010, wchange 0.000010, angledelta 74.2 deg, Crate_X 0.001061, eX -2.262797, eY -2.139078, maxC 0.184215, mc_test 0.184227
+Dataset X step 121 - lrate 0.000009, wchange 0.000005, angledelta 121.2 deg, Crate_X 0.000955, eX -2.264059, eY -2.139078, maxC 0.184230, mc_test 0.184240
+Dataset X step 122 - lrate 0.000009, wchange 0.000004, angledelta 97.5 deg, Crate_X 0.000860, eX -2.263777, eY -2.139078, maxC 0.184269, mc_test 0.184278
+Dataset X step 123 - lrate 0.000009, wchange 0.000009, angledelta 84.5 deg, Crate_X 0.000774, eX -2.263480, eY -2.139078, maxC 0.184282, mc_test 0.184291
+Dataset X step 124 - lrate 0.000009, wchange 0.000004, angledelta 103.7 deg, Crate_X 0.000696, eX -2.263442, eY -2.139078, maxC 0.184235, mc_test 0.184243
+Dataset X step 125 - lrate 0.000008, wchange 0.000008, angledelta 94.0 deg, Crate_X 0.000627, eX -2.263467, eY -2.139078, maxC 0.184255, mc_test 0.184262
+Dataset X step 126 - lrate 0.000008, wchange 0.000005, angledelta 105.2 deg, Crate_X 0.000564, eX -2.262528, eY -2.139078, maxC 0.184273, mc_test 0.184279
+Dataset X step 127 - lrate 0.000007, wchange 0.000001, angledelta 73.3 deg, Crate_X 0.000508, eX -2.263188, eY -2.139078, maxC 0.184200, mc_test 0.184206
+Dataset X step 128 - lrate 0.000006, wchange 0.000002, angledelta 112.7 deg, Crate_X 0.000457, eX -2.263236, eY -2.139078, maxC 0.184199, mc_test 0.184204
+Dataset X step 129 - lrate 0.000006, wchange 0.000001, angledelta 87.2 deg, Crate_X 0.000411, eX -2.262819, eY -2.139078, maxC 0.184234, mc_test 0.184239
+Dataset X step 130 - lrate 0.000006, wchange 0.000002, angledelta 81.0 deg, Crate_X 0.000370, eX -2.263124, eY -2.139078, maxC 0.184236, mc_test 0.184240
+Dataset X step 131 - lrate 0.000005, wchange 0.000001, angledelta 122.1 deg, Crate_X 0.000333, eX -2.263650, eY -2.139078, maxC 0.184223, mc_test 0.184226
+STOPSIGN_X = True
+[LOG]=====INFOMAX=====Current_STEP_X = 131 and STEP_Y  =104 STOPSIGN_X = 1 STOPSIGN_Y  = 1
+[LOG]=====INFOMAX=====Finish.
+[LOG][Flow_5_Global_ICA]
+[LOG][Flow_6_Parallel_ICA-Local_reconstruction]
+[LOG][Flow_7_Parallel_ICA-Correlation_A]
+[LOG][Flow_8_Parallel_ICA-Global_reconstruction]
+[LOG][Flow_8a_Parallel_ICA-Global_Weight_update]
+[LOG][Flow_8a_Parallel_ICA-Global] Save all A, W, S cvs files.
+[LOG][Flow_8a_Parallel_ICA-Global] Finish run 0.
+DATA_PATH_OUTPUT = /output/remote/simulatorRun
+maxcorr = [[1, 0.1842]]
+ENTROPY_X =  [[1, -2.2636]]
+ENTROPY_Y =  [[1, -2.1391]]
+STEP_X =  [[1, 131]]
+STEP_Y =  [[1, 104]]
+======================================
+
+
+
+[LOG]=====INFOMAX=====
+[LOG]Number of subject =  63.0
+[LOG]Global_NCOM_X =  5
+[LOG]Global_NCOM_Y =  3
+[LOG]CONSTRAINED_CONNECTION = 0.17
+[LOG]CONSTRAINED_CONNECTION_PROABILITY =  0.05
+ Input data X size [5,57705] = 5 channels, 57705 frames.
+ Input data Y size [3,367] = 3 channels, 367 frames.
+ Finding 
+ 5 ICA components using logistic ICA.
+Initial X learning rate will be 0.00932002, block size 138.
+Initial Y learning rate will be 0.0136536, block size 11.
+Learning rate will be multiplied by 0.9 whenever angledelta >= 60 deg.
+Training will end when wchange < 1e-06 or after 1000 steps.
+Online bias adjustment will be used.
+Not removing mean of each channel!!!
+Final training data1 range: -4.7914 to 7.72641
+Final training data1 range: -4.44384 to 3.42886
+Computing the sphering matrix...
+ Starting weights are the identity matrix ...
+ Sphering the data ...
+Beginning ICA training ...
+
+[LOG]=====INFOMAX=====maxsteps=1000
+
+Lowering learning rate to 0.00838802 and starting again.
+Dataset Y step 1 - lrate 0.013654, wchange 0.176035
+Dataset X step 1 - lrate 0.008388, wchange 6.668402
+Dataset Y step 2 - lrate 0.013654, wchange 0.083071
+Dataset X step 2 - lrate 0.008388, wchange 7.878744
+Dataset Y step 3 - lrate 0.012288, wchange 0.028425, angledelta 89.4 deg, Crate_Y 1.000000, eX -2.676853, eY -2.128417, maxC 0.000000, mc_test 0.000000
+Dataset X step 3 - lrate 0.008388, wchange 8.513014, angledelta 108.2 deg, Crate_X 1.000000, eX -2.170595, eY -2.128417, maxC 0.000000, mc_test 0.000000
+Dataset Y step 4 - lrate 0.011059, wchange 0.050537, angledelta 108.9 deg, Crate_Y 1.000000, eX -2.170595, eY -2.160207, maxC 0.000000, mc_test 0.000000
+Dataset X step 4 - lrate 0.007549, wchange 7.417505, angledelta 114.8 deg, Crate_X 1.000000, eX -2.373534, eY -2.160207, maxC 0.167899, mc_test 0.000000
+Dataset Y step 5 - lrate 0.009953, wchange 0.033066, angledelta 134.0 deg, Crate_Y 1.000000, eX -2.373534, eY -2.165745, maxC 0.167899, mc_test 0.000000
+Dataset X step 5 - lrate 0.007549, wchange 7.202921, angledelta 96.3 deg, Crate_X 1.000000, eX -2.062743, eY -2.165745, maxC 0.134471, mc_test 0.000000
+Dataset Y step 6 - lrate 0.008958, wchange 0.026507, angledelta 105.8 deg, Crate_Y 0.900000, eX -2.062743, eY -2.336455, maxC 0.134471, mc_test 0.000000
+Dataset X step 6 - lrate 0.007549, wchange 8.945918, angledelta 71.0 deg, Crate_X 0.900000, eX -2.051008, eY -2.336455, maxC 0.188317, mc_test 0.203126
+Dataset Y step 7 - lrate 0.008958, wchange 0.079814, angledelta 128.4 deg, Crate_Y 0.900000, eX -2.051008, eY -2.216994, maxC 0.188317, mc_test 0.203126
+Dataset X step 7 - lrate 0.006794, wchange 2.207160, angledelta 106.9 deg, Crate_X 0.900000, eX -2.408399, eY -2.216994, maxC 0.178670, mc_test 0.200471
+Dataset Y step 8 - lrate 0.008958, wchange 0.047105, angledelta 53.4 deg, Crate_Y 0.900000, eX -2.408399, eY -2.159956, maxC 0.178670, mc_test 0.200471
+Dataset X step 8 - lrate 0.006794, wchange 10.013999, angledelta 120.8 deg, Crate_X 0.810000, eX -2.177284, eY -2.159956, maxC 0.145303, mc_test 0.200471
+Dataset Y step 9 - lrate 0.008062, wchange 0.028430, angledelta 105.8 deg, Crate_Y 0.900000, eX -2.177284, eY -2.262544, maxC 0.145303, mc_test 0.200471
+Dataset X step 9 - lrate 0.006115, wchange 0.870101, angledelta 104.1 deg, Crate_X 0.729000, eX -2.500627, eY -2.262544, maxC 0.164199, mc_test 0.200471
+Dataset Y step 10 - lrate 0.008062, wchange 0.020790, angledelta 129.2 deg, Crate_Y 0.810000, eX -2.500627, eY -2.200929, maxC 0.164199, mc_test 0.200471
+Dataset X step 10 - lrate 0.006115, wchange 0.455221, angledelta 92.5 deg, Crate_X 0.729000, eX -2.067981, eY -2.200929, maxC 0.189465, mc_test 0.196896
+Dataset Y step 11 - lrate 0.007256, wchange 0.012002, angledelta 142.2 deg, Crate_Y 0.729000, eX -2.067981, eY -2.320469, maxC 0.189465, mc_test 0.196896
+Dataset X step 11 - lrate 0.005503, wchange 0.225165, angledelta 106.0 deg, Crate_X 0.656100, eX -2.289597, eY -2.320469, maxC 0.176813, mc_test 0.186329
+Dataset Y step 12 - lrate 0.007256, wchange 0.012062, angledelta 106.3 deg, Crate_Y 0.729000, eX -2.289597, eY -2.277786, maxC 0.176813, mc_test 0.186329
+Dataset X step 12 - lrate 0.004953, wchange 0.301235, angledelta 102.5 deg, Crate_X 0.656100, eX -2.355966, eY -2.277786, maxC 0.175395, mc_test 0.185233
+Dataset Y step 13 - lrate 0.007256, wchange 0.015130, angledelta 120.9 deg, Crate_Y 0.729000, eX -2.355966, eY -2.161437, maxC 0.175395, mc_test 0.185233
+Dataset X step 13 - lrate 0.004953, wchange 0.339317, angledelta 89.1 deg, Crate_X 0.590490, eX -2.145454, eY -2.161437, maxC 0.181489, mc_test 0.190525
+Dataset Y step 14 - lrate 0.007256, wchange 0.013427, angledelta 66.7 deg, Crate_Y 0.729000, eX -2.145454, eY -2.134049, maxC 0.181489, mc_test 0.190525
+Dataset X step 14 - lrate 0.004458, wchange 0.325930, angledelta 134.1 deg, Crate_X 0.590490, eX -2.324879, eY -2.134049, maxC 0.177429, mc_test 0.185604
+Dataset Y step 15 - lrate 0.007256, wchange 0.020549, angledelta 100.7 deg, Crate_Y 0.729000, eX -2.324879, eY -2.067558, maxC 0.177429, mc_test 0.185604
+Dataset X step 15 - lrate 0.004458, wchange 0.279974, angledelta 75.5 deg, Crate_X 0.531441, eX -2.215083, eY -2.067558, maxC 0.178409, mc_test 0.185280
+Dataset Y step 16 - lrate 0.006530, wchange 0.007388, angledelta 80.7 deg, Crate_Y 0.656100, eX -2.215083, eY -2.172634, maxC 0.178409, mc_test 0.185280
+Dataset X step 16 - lrate 0.004012, wchange 0.223848, angledelta 137.4 deg, Crate_X 0.478297, eX -2.341094, eY -2.172634, maxC 0.184682, mc_test 0.189884
+Dataset Y step 17 - lrate 0.006530, wchange 0.014824, angledelta 79.9 deg, Crate_Y 0.590490, eX -2.341094, eY -2.155131, maxC 0.184682, mc_test 0.189884
+Dataset X step 17 - lrate 0.004012, wchange 0.181848, angledelta 68.5 deg, Crate_X 0.478297, eX -2.290335, eY -2.155131, maxC 0.180947, mc_test 0.187740
+Dataset Y step 18 - lrate 0.005877, wchange 0.016540, angledelta 65.8 deg, Crate_Y 0.531441, eX -2.290335, eY -2.258932, maxC 0.180947, mc_test 0.187740
+Dataset X step 18 - lrate 0.004012, wchange 0.236229, angledelta 97.6 deg, Crate_X 0.478297, eX -2.189773, eY -2.258932, maxC 0.185371, mc_test 0.202920
+Dataset Y step 19 - lrate 0.005877, wchange 0.016306, angledelta 134.6 deg, Crate_Y 0.531441, eX -2.189773, eY -2.178269, maxC 0.185371, mc_test 0.202920
+Dataset X step 19 - lrate 0.003611, wchange 0.201884, angledelta 126.5 deg, Crate_X 0.478297, eX -2.227304, eY -2.178269, maxC 0.190451, mc_test 0.194973
+Dataset Y step 20 - lrate 0.005877, wchange 0.009256, angledelta 77.5 deg, Crate_Y 0.531441, eX -2.227304, eY -2.165458, maxC 0.190451, mc_test 0.194973
+Dataset X step 20 - lrate 0.003250, wchange 0.079370, angledelta 130.0 deg, Crate_X 0.478297, eX -2.235342, eY -2.165458, maxC 0.178562, mc_test 0.184571
+Dataset Y step 21 - lrate 0.005290, wchange 0.026686, angledelta 105.5 deg, Crate_Y 0.531441, eX -2.235342, eY -2.183427, maxC 0.178562, mc_test 0.184571
+Dataset X step 21 - lrate 0.002925, wchange 0.067408, angledelta 106.1 deg, Crate_X 0.478297, eX -2.272172, eY -2.183427, maxC 0.176908, mc_test 0.183605
+Dataset Y step 22 - lrate 0.005290, wchange 0.015598, angledelta 101.5 deg, Crate_Y 0.531441, eX -2.272172, eY -2.081034, maxC 0.176908, mc_test 0.183605
+Dataset X step 22 - lrate 0.002925, wchange 0.133809, angledelta 78.5 deg, Crate_X 0.430467, eX -2.141968, eY -2.081034, maxC 0.188526, mc_test 0.192848
+Dataset Y step 23 - lrate 0.004761, wchange 0.013152, angledelta 124.5 deg, Crate_Y 0.531441, eX -2.141968, eY -2.127469, maxC 0.188526, mc_test 0.192848
+Dataset X step 23 - lrate 0.002632, wchange 0.115829, angledelta 97.8 deg, Crate_X 0.387420, eX -2.317486, eY -2.127469, maxC 0.179362, mc_test 0.186209
+Dataset Y step 24 - lrate 0.004285, wchange 0.005368, angledelta 54.0 deg, Crate_Y 0.478297, eX -2.317486, eY -2.136804, maxC 0.179362, mc_test 0.186209
+Dataset X step 24 - lrate 0.002632, wchange 0.153623, angledelta 113.2 deg, Crate_X 0.387420, eX -2.217527, eY -2.136804, maxC 0.172506, mc_test 0.180413
+Dataset Y step 25 - lrate 0.003856, wchange 0.005720, angledelta 118.5 deg, Crate_Y 0.430467, eX -2.217527, eY -2.245559, maxC 0.172506, mc_test 0.180413
+Dataset X step 25 - lrate 0.002632, wchange 0.118992, angledelta 71.9 deg, Crate_X 0.387420, eX -2.165794, eY -2.245559, maxC 0.182467, mc_test 0.187464
+Dataset Y step 26 - lrate 0.003856, wchange 0.004374, angledelta 51.4 deg, Crate_Y 0.387420, eX -2.165794, eY -2.188597, maxC 0.182467, mc_test 0.187464
+Dataset X step 26 - lrate 0.002369, wchange 0.044261, angledelta 104.4 deg, Crate_X 0.387420, eX -2.205827, eY -2.188597, maxC 0.183694, mc_test 0.188412
+Dataset Y step 27 - lrate 0.003471, wchange 0.006563, angledelta 97.4 deg, Crate_Y 0.348678, eX -2.205827, eY -2.286337, maxC 0.183694, mc_test 0.188412
+Dataset X step 27 - lrate 0.002132, wchange 0.044721, angledelta 105.8 deg, Crate_X 0.348678, eX -2.231420, eY -2.286337, maxC 0.179660, mc_test 0.185082
+Dataset Y step 28 - lrate 0.003471, wchange 0.007341, angledelta 86.8 deg, Crate_Y 0.348678, eX -2.231420, eY -2.134209, maxC 0.179660, mc_test 0.185082
+Dataset X step 28 - lrate 0.001919, wchange 0.054142, angledelta 106.1 deg, Crate_X 0.313811, eX -2.238988, eY -2.134209, maxC 0.181782, mc_test 0.186611
+Dataset Y step 29 - lrate 0.003124, wchange 0.002984, angledelta 113.2 deg, Crate_Y 0.348678, eX -2.238988, eY -2.236758, maxC 0.181782, mc_test 0.186611
+Dataset X step 29 - lrate 0.001727, wchange 0.069288, angledelta 135.2 deg, Crate_X 0.282430, eX -2.245903, eY -2.236758, maxC 0.179841, mc_test 0.184602
+Dataset Y step 30 - lrate 0.003124, wchange 0.000684, angledelta 75.3 deg, Crate_Y 0.348678, eX -2.245903, eY -2.172525, maxC 0.179841, mc_test 0.184602
+Dataset X step 30 - lrate 0.001554, wchange 0.047316, angledelta 112.2 deg, Crate_X 0.254187, eX -2.273982, eY -2.172525, maxC 0.180446, mc_test 0.184399
+Dataset Y step 31 - lrate 0.003124, wchange 0.008182, angledelta 113.0 deg, Crate_Y 0.348678, eX -2.273982, eY -2.156941, maxC 0.180446, mc_test 0.184399
+Dataset X step 31 - lrate 0.001554, wchange 0.028019, angledelta 97.3 deg, Crate_X 0.254187, eX -2.231515, eY -2.156941, maxC 0.178677, mc_test 0.182943
+Dataset Y step 32 - lrate 0.003124, wchange 0.002477, angledelta 50.2 deg, Crate_Y 0.348678, eX -2.231515, eY -2.078236, maxC 0.178677, mc_test 0.182943
+Dataset X step 32 - lrate 0.001399, wchange 0.025363, angledelta 109.0 deg, Crate_X 0.254187, eX -2.251564, eY -2.078236, maxC 0.179410, mc_test 0.183704
+Dataset Y step 33 - lrate 0.002811, wchange 0.002642, angledelta 50.8 deg, Crate_Y 0.313811, eX -2.251564, eY -2.123539, maxC 0.179410, mc_test 0.183704
+Dataset X step 33 - lrate 0.001259, wchange 0.038429, angledelta 99.0 deg, Crate_X 0.254187, eX -2.260333, eY -2.123539, maxC 0.179580, mc_test 0.184085
+Dataset Y step 34 - lrate 0.002530, wchange 0.002504, angledelta 127.2 deg, Crate_Y 0.282430, eX -2.260333, eY -2.208583, maxC 0.179580, mc_test 0.184085
+Dataset X step 34 - lrate 0.001259, wchange 0.046184, angledelta 84.8 deg, Crate_X 0.254187, eX -2.211525, eY -2.208583, maxC 0.183192, mc_test 0.186542
+Dataset Y step 35 - lrate 0.002530, wchange 0.003086, angledelta 64.9 deg, Crate_Y 0.254187, eX -2.211525, eY -2.116798, maxC 0.183192, mc_test 0.186542
+Dataset X step 35 - lrate 0.001133, wchange 0.027329, angledelta 122.4 deg, Crate_X 0.254187, eX -2.218349, eY -2.116798, maxC 0.178491, mc_test 0.182546
+Dataset Y step 36 - lrate 0.002530, wchange 0.001717, angledelta 72.3 deg, Crate_Y 0.254187, eX -2.218349, eY -2.099031, maxC 0.178491, mc_test 0.182546
+Dataset X step 36 - lrate 0.001020, wchange 0.018505, angledelta 118.8 deg, Crate_X 0.254187, eX -2.223189, eY -2.099031, maxC 0.182562, mc_test 0.186048
+Dataset Y step 37 - lrate 0.002277, wchange 0.001684, angledelta 108.3 deg, Crate_Y 0.254187, eX -2.223189, eY -2.150313, maxC 0.182562, mc_test 0.186048
+Dataset X step 37 - lrate 0.001020, wchange 0.020250, angledelta 102.6 deg, Crate_X 0.228768, eX -2.208546, eY -2.150313, maxC 0.180717, mc_test 0.184369
+Dataset Y step 38 - lrate 0.002049, wchange 0.000298, angledelta 77.0 deg, Crate_Y 0.228768, eX -2.208546, eY -2.147159, maxC 0.180717, mc_test 0.184369
+Dataset X step 38 - lrate 0.000918, wchange 0.030388, angledelta 107.0 deg, Crate_X 0.205891, eX -2.240261, eY -2.147159, maxC 0.180639, mc_test 0.184102
+Dataset Y step 39 - lrate 0.002049, wchange 0.000462, angledelta 99.6 deg, Crate_Y 0.205891, eX -2.240261, eY -2.133334, maxC 0.180639, mc_test 0.184102
+Dataset X step 39 - lrate 0.000918, wchange 0.041652, angledelta 95.5 deg, Crate_X 0.185302, eX -2.232159, eY -2.133334, maxC 0.181661, mc_test 0.184491
+Dataset Y step 40 - lrate 0.001844, wchange 0.002392, angledelta 105.6 deg, Crate_Y 0.205891, eX -2.232159, eY -2.152042, maxC 0.181661, mc_test 0.184491
+Dataset X step 40 - lrate 0.000826, wchange 0.017197, angledelta 128.1 deg, Crate_X 0.166772, eX -2.230201, eY -2.152042, maxC 0.179932, mc_test 0.182911
+Dataset Y step 41 - lrate 0.001844, wchange 0.000682, angledelta 93.2 deg, Crate_Y 0.185302, eX -2.230201, eY -2.145857, maxC 0.179932, mc_test 0.182911
+Dataset X step 41 - lrate 0.000743, wchange 0.017285, angledelta 113.1 deg, Crate_X 0.166772, eX -2.241885, eY -2.145857, maxC 0.182994, mc_test 0.185451
+Dataset Y step 42 - lrate 0.001660, wchange 0.000540, angledelta 100.4 deg, Crate_Y 0.166772, eX -2.241885, eY -2.155116, maxC 0.182994, mc_test 0.185451
+Dataset X step 42 - lrate 0.000743, wchange 0.013633, angledelta 98.9 deg, Crate_X 0.166772, eX -2.172529, eY -2.155116, maxC 0.183921, mc_test 0.186114
+Dataset Y step 43 - lrate 0.001494, wchange 0.000697, angledelta 110.5 deg, Crate_Y 0.150095, eX -2.172529, eY -2.196013, maxC 0.183921, mc_test 0.186114
+Dataset X step 43 - lrate 0.000669, wchange 0.012638, angledelta 110.0 deg, Crate_X 0.166772, eX -2.214301, eY -2.196013, maxC 0.183550, mc_test 0.185732
+Dataset Y step 44 - lrate 0.001494, wchange 0.000364, angledelta 78.6 deg, Crate_Y 0.135085, eX -2.214301, eY -2.174116, maxC 0.183550, mc_test 0.185732
+Dataset X step 44 - lrate 0.000602, wchange 0.006051, angledelta 102.1 deg, Crate_X 0.166772, eX -2.221334, eY -2.174116, maxC 0.181026, mc_test 0.183271
+Dataset Y step 45 - lrate 0.001494, wchange 0.000841, angledelta 96.4 deg, Crate_Y 0.135085, eX -2.221334, eY -2.167615, maxC 0.181026, mc_test 0.183271
+Dataset X step 45 - lrate 0.000542, wchange 0.006031, angledelta 95.6 deg, Crate_X 0.150095, eX -2.218645, eY -2.167615, maxC 0.181702, mc_test 0.183966
+Dataset Y step 46 - lrate 0.001345, wchange 0.000246, angledelta 84.5 deg, Crate_Y 0.135085, eX -2.218645, eY -2.169989, maxC 0.181702, mc_test 0.183966
+Dataset X step 46 - lrate 0.000488, wchange 0.007287, angledelta 106.8 deg, Crate_X 0.135085, eX -2.217530, eY -2.169989, maxC 0.183454, mc_test 0.185478
+Dataset Y step 47 - lrate 0.001345, wchange 0.000338, angledelta 54.5 deg, Crate_Y 0.135085, eX -2.217530, eY -2.151251, maxC 0.183454, mc_test 0.185478
+Dataset X step 47 - lrate 0.000439, wchange 0.007319, angledelta 92.1 deg, Crate_X 0.135085, eX -2.225307, eY -2.151251, maxC 0.179632, mc_test 0.181672
+Dataset Y step 48 - lrate 0.001345, wchange 0.000192, angledelta 47.0 deg, Crate_Y 0.135085, eX -2.225307, eY -2.145676, maxC 0.179632, mc_test 0.181672
+Dataset X step 48 - lrate 0.000439, wchange 0.009205, angledelta 99.3 deg, Crate_X 0.135085, eX -2.199865, eY -2.145676, maxC 0.181081, mc_test 0.183055
+Dataset Y step 49 - lrate 0.001345, wchange 0.000249, angledelta 52.2 deg, Crate_Y 0.135085, eX -2.199865, eY -2.142587, maxC 0.181081, mc_test 0.183055
+Dataset X step 49 - lrate 0.000439, wchange 0.007998, angledelta 77.2 deg, Crate_X 0.135085, eX -2.193078, eY -2.142587, maxC 0.181740, mc_test 0.183775
+Dataset Y step 50 - lrate 0.001210, wchange 0.000391, angledelta 75.8 deg, Crate_Y 0.135085, eX -2.193078, eY -2.145358, maxC 0.181740, mc_test 0.183775
+Dataset X step 50 - lrate 0.000395, wchange 0.007214, angledelta 123.1 deg, Crate_X 0.135085, eX -2.209361, eY -2.145358, maxC 0.181122, mc_test 0.183167
+Dataset Y step 51 - lrate 0.001210, wchange 0.000222, angledelta 106.8 deg, Crate_Y 0.135085, eX -2.209361, eY -2.135806, maxC 0.181122, mc_test 0.183167
+Dataset X step 51 - lrate 0.000395, wchange 0.008485, angledelta 71.3 deg, Crate_X 0.121577, eX -2.204246, eY -2.135806, maxC 0.179659, mc_test 0.181702
+Dataset Y step 52 - lrate 0.001089, wchange 0.000314, angledelta 92.3 deg, Crate_Y 0.121577, eX -2.204246, eY -2.143189, maxC 0.179659, mc_test 0.181702
+Dataset X step 52 - lrate 0.000356, wchange 0.004257, angledelta 116.9 deg, Crate_X 0.121577, eX -2.205420, eY -2.143189, maxC 0.180700, mc_test 0.182568
+Dataset Y step 53 - lrate 0.000980, wchange 0.000156, angledelta 26.4 deg, Crate_Y 0.109419, eX -2.205420, eY -2.151717, maxC 0.180700, mc_test 0.182568
+Dataset X step 53 - lrate 0.000356, wchange 0.004405, angledelta 98.3 deg, Crate_X 0.121577, eX -2.196480, eY -2.151717, maxC 0.182351, mc_test 0.184091
+Dataset Y step 54 - lrate 0.000882, wchange 0.000233, angledelta 84.7 deg, Crate_Y 0.098477, eX -2.196480, eY -2.154204, maxC 0.182351, mc_test 0.184091
+Dataset X step 54 - lrate 0.000320, wchange 0.006139, angledelta 93.5 deg, Crate_X 0.109419, eX -2.214363, eY -2.154204, maxC 0.180540, mc_test 0.182231
+Dataset Y step 55 - lrate 0.000882, wchange 0.000056, angledelta 61.9 deg, Crate_Y 0.098477, eX -2.214363, eY -2.150730, maxC 0.180540, mc_test 0.182231
+Dataset X step 55 - lrate 0.000320, wchange 0.007696, angledelta 73.1 deg, Crate_X 0.098477, eX -2.210653, eY -2.150730, maxC 0.181367, mc_test 0.182894
+Dataset Y step 56 - lrate 0.000882, wchange 0.000074, angledelta 33.6 deg, Crate_Y 0.098477, eX -2.210653, eY -2.146882, maxC 0.181367, mc_test 0.182894
+Dataset X step 56 - lrate 0.000288, wchange 0.004462, angledelta 118.1 deg, Crate_X 0.088629, eX -2.217625, eY -2.146882, maxC 0.180290, mc_test 0.181779
+Dataset Y step 57 - lrate 0.000794, wchange 0.000058, angledelta 63.2 deg, Crate_Y 0.098477, eX -2.217625, eY -2.148446, maxC 0.180290, mc_test 0.181779
+Dataset X step 57 - lrate 0.000259, wchange 0.002626, angledelta 125.2 deg, Crate_X 0.088629, eX -2.216482, eY -2.148446, maxC 0.180270, mc_test 0.181653
+Dataset Y step 58 - lrate 0.000794, wchange 0.000028, angledelta 76.0 deg, Crate_Y 0.098477, eX -2.216482, eY -2.152723, maxC 0.180270, mc_test 0.181653
+Dataset X step 58 - lrate 0.000233, wchange 0.005680, angledelta 110.0 deg, Crate_X 0.088629, eX -2.215629, eY -2.152723, maxC 0.181464, mc_test 0.182781
+Dataset Y step 59 - lrate 0.000794, wchange 0.000069, angledelta 14.0 deg, Crate_Y 0.098477, eX -2.215629, eY -2.146425, maxC 0.181464, mc_test 0.182781
+Dataset X step 59 - lrate 0.000233, wchange 0.003132, angledelta 67.2 deg, Crate_X 0.088629, eX -2.187244, eY -2.146425, maxC 0.181234, mc_test 0.182598
+Dataset Y step 60 - lrate 0.000715, wchange 0.000031, angledelta 60.8 deg, Crate_Y 0.098477, eX -2.187244, eY -2.150256, maxC 0.181234, mc_test 0.182598
+Dataset X step 60 - lrate 0.000210, wchange 0.001671, angledelta 105.6 deg, Crate_X 0.088629, eX -2.201863, eY -2.150256, maxC 0.181103, mc_test 0.182468
+Dataset Y step 61 - lrate 0.000715, wchange 0.000119, angledelta 25.1 deg, Crate_Y 0.088629, eX -2.201863, eY -2.148537, maxC 0.181103, mc_test 0.182468
+Dataset X step 61 - lrate 0.000189, wchange 0.002759, angledelta 98.8 deg, Crate_X 0.088629, eX -2.214250, eY -2.148537, maxC 0.181353, mc_test 0.182636
+Dataset Y step 62 - lrate 0.000643, wchange 0.000093, angledelta 32.7 deg, Crate_Y 0.079766, eX -2.214250, eY -2.152016, maxC 0.181353, mc_test 0.182636
+Dataset X step 62 - lrate 0.000189, wchange 0.002742, angledelta 83.8 deg, Crate_X 0.079766, eX -2.206790, eY -2.152016, maxC 0.181674, mc_test 0.182906
+Dataset Y step 63 - lrate 0.000579, wchange 0.000022, angledelta 89.1 deg, Crate_Y 0.079766, eX -2.206790, eY -2.155591, maxC 0.181674, mc_test 0.182906
+Dataset X step 63 - lrate 0.000189, wchange 0.001653, angledelta 82.6 deg, Crate_X 0.071790, eX -2.202368, eY -2.155591, maxC 0.181779, mc_test 0.182928
+Dataset Y step 64 - lrate 0.000579, wchange 0.000022, angledelta 61.7 deg, Crate_Y 0.079766, eX -2.202368, eY -2.151199, maxC 0.181779, mc_test 0.182928
+Dataset X step 64 - lrate 0.000170, wchange 0.002791, angledelta 122.9 deg, Crate_X 0.064611, eX -2.215415, eY -2.151199, maxC 0.181983, mc_test 0.183026
+Dataset Y step 65 - lrate 0.000579, wchange 0.000086, angledelta 31.6 deg, Crate_Y 0.079766, eX -2.215415, eY -2.148583, maxC 0.181983, mc_test 0.183026
+Dataset X step 65 - lrate 0.000153, wchange 0.002225, angledelta 104.1 deg, Crate_X 0.058150, eX -2.226349, eY -2.148583, maxC 0.181204, mc_test 0.182217
+Dataset Y step 66 - lrate 0.000521, wchange 0.000015, angledelta 45.1 deg, Crate_Y 0.079766, eX -2.226349, eY -2.148532, maxC 0.181204, mc_test 0.182217
+Dataset X step 66 - lrate 0.000153, wchange 0.002859, angledelta 98.0 deg, Crate_X 0.058150, eX -2.215533, eY -2.148532, maxC 0.182089, mc_test 0.183011
+Dataset Y step 67 - lrate 0.000469, wchange 0.000024, angledelta 40.5 deg, Crate_Y 0.079766, eX -2.215533, eY -2.148539, maxC 0.182089, mc_test 0.183011
+Dataset X step 67 - lrate 0.000153, wchange 0.004960, angledelta 93.9 deg, Crate_X 0.058150, eX -2.191058, eY -2.148539, maxC 0.183219, mc_test 0.184108
+Dataset Y step 68 - lrate 0.000469, wchange 0.000033, angledelta 53.9 deg, Crate_Y 0.079766, eX -2.191058, eY -2.147051, maxC 0.183219, mc_test 0.184108
+Dataset X step 68 - lrate 0.000138, wchange 0.002606, angledelta 124.7 deg, Crate_X 0.058150, eX -2.216273, eY -2.147051, maxC 0.182199, mc_test 0.183095
+Dataset Y step 69 - lrate 0.000422, wchange 0.000038, angledelta 58.7 deg, Crate_Y 0.079766, eX -2.216273, eY -2.151597, maxC 0.182199, mc_test 0.183095
+Dataset X step 69 - lrate 0.000124, wchange 0.002786, angledelta 133.0 deg, Crate_X 0.052335, eX -2.217296, eY -2.151597, maxC 0.181826, mc_test 0.182751
+Dataset Y step 70 - lrate 0.000380, wchange 0.000024, angledelta 18.7 deg, Crate_Y 0.071790, eX -2.217296, eY -2.151841, maxC 0.181826, mc_test 0.182751
+Dataset X step 70 - lrate 0.000112, wchange 0.001592, angledelta 133.5 deg, Crate_X 0.047101, eX -2.222482, eY -2.151841, maxC 0.181797, mc_test 0.182611
+Dataset Y step 71 - lrate 0.000342, wchange 0.000034, angledelta 27.4 deg, Crate_Y 0.064611, eX -2.222482, eY -2.153881, maxC 0.181797, mc_test 0.182611
+Dataset X step 71 - lrate 0.000112, wchange 0.000818, angledelta 88.5 deg, Crate_X 0.047101, eX -2.215034, eY -2.153881, maxC 0.182182, mc_test 0.182918
+Dataset Y step 72 - lrate 0.000308, wchange 0.000018, angledelta 28.1 deg, Crate_Y 0.058150, eX -2.215034, eY -2.153397, maxC 0.182182, mc_test 0.182918
+Dataset X step 72 - lrate 0.000100, wchange 0.001137, angledelta 152.1 deg, Crate_X 0.047101, eX -2.214327, eY -2.153397, maxC 0.182220, mc_test 0.182921
+Dataset Y step 73 - lrate 0.000277, wchange 0.000016, angledelta 37.6 deg, Crate_Y 0.058150, eX -2.214327, eY -2.155313, maxC 0.182220, mc_test 0.182921
+Dataset X step 73 - lrate 0.000100, wchange 0.000872, angledelta 70.1 deg, Crate_X 0.047101, eX -2.207705, eY -2.155313, maxC 0.182993, mc_test 0.183685
+Dataset Y step 74 - lrate 0.000277, wchange 0.000005, angledelta 33.6 deg, Crate_Y 0.058150, eX -2.207705, eY -2.154383, maxC 0.182993, mc_test 0.183685
+Dataset X step 74 - lrate 0.000100, wchange 0.001083, angledelta 84.5 deg, Crate_X 0.047101, eX -2.206707, eY -2.154383, maxC 0.182752, mc_test 0.183443
+Dataset Y step 75 - lrate 0.000249, wchange 0.000015, angledelta 53.1 deg, Crate_Y 0.058150, eX -2.206707, eY -2.154185, maxC 0.182752, mc_test 0.183443
+Dataset X step 75 - lrate 0.000090, wchange 0.001205, angledelta 105.0 deg, Crate_X 0.042391, eX -2.219780, eY -2.154185, maxC 0.183137, mc_test 0.183816
+Dataset Y step 76 - lrate 0.000249, wchange 0.000013, angledelta 43.9 deg, Crate_Y 0.052335, eX -2.219780, eY -2.155358, maxC 0.183137, mc_test 0.183816
+Dataset X step 76 - lrate 0.000090, wchange 0.001249, angledelta 109.1 deg, Crate_X 0.042391, eX -2.215863, eY -2.155358, maxC 0.182665, mc_test 0.183277
+Dataset Y step 77 - lrate 0.000249, wchange 0.000010, angledelta 39.2 deg, Crate_Y 0.047101, eX -2.215863, eY -2.150881, maxC 0.182665, mc_test 0.183277
+Dataset X step 77 - lrate 0.000090, wchange 0.000903, angledelta 78.2 deg, Crate_X 0.042391, eX -2.205718, eY -2.150881, maxC 0.182833, mc_test 0.183426
+Dataset Y step 78 - lrate 0.000249, wchange 0.000016, angledelta 48.4 deg, Crate_Y 0.047101, eX -2.205718, eY -2.150037, maxC 0.182833, mc_test 0.183426
+Dataset X step 78 - lrate 0.000081, wchange 0.000662, angledelta 105.4 deg, Crate_X 0.042391, eX -2.209301, eY -2.150037, maxC 0.183345, mc_test 0.183925
+Dataset Y step 79 - lrate 0.000224, wchange 0.000005, angledelta 41.0 deg, Crate_Y 0.047101, eX -2.209301, eY -2.150393, maxC 0.183345, mc_test 0.183925
+Dataset X step 79 - lrate 0.000073, wchange 0.000479, angledelta 104.2 deg, Crate_X 0.038152, eX -2.215590, eY -2.150393, maxC 0.183132, mc_test 0.183714
+Dataset Y step 80 - lrate 0.000202, wchange 0.000005, angledelta 29.7 deg, Crate_Y 0.047101, eX -2.215590, eY -2.150628, maxC 0.183132, mc_test 0.183714
+Dataset X step 80 - lrate 0.000066, wchange 0.000433, angledelta 111.2 deg, Crate_X 0.034337, eX -2.219545, eY -2.150628, maxC 0.182671, mc_test 0.183221
+Dataset Y step 81 - lrate 0.000202, wchange 0.000010, angledelta 32.6 deg, Crate_Y 0.042391, eX -2.219545, eY -2.149816, maxC 0.182671, mc_test 0.183221
+Dataset X step 81 - lrate 0.000066, wchange 0.000896, angledelta 106.4 deg, Crate_X 0.034337, eX -2.209879, eY -2.149816, maxC 0.183113, mc_test 0.183599
+Dataset Y step 82 - lrate 0.000202, wchange 0.000007, angledelta 34.3 deg, Crate_Y 0.038152, eX -2.209879, eY -2.148855, maxC 0.183113, mc_test 0.183599
+Dataset X step 82 - lrate 0.000059, wchange 0.000915, angledelta 125.5 deg, Crate_X 0.034337, eX -2.209858, eY -2.148855, maxC 0.183095, mc_test 0.183565
+Dataset Y step 83 - lrate 0.000182, wchange 0.000006, angledelta 30.8 deg, Crate_Y 0.038152, eX -2.209858, eY -2.153424, maxC 0.183095, mc_test 0.183565
+Dataset X step 83 - lrate 0.000053, wchange 0.000490, angledelta 125.1 deg, Crate_X 0.034337, eX -2.216143, eY -2.153424, maxC 0.182854, mc_test 0.183331
+Dataset Y step 84 - lrate 0.000182, wchange 0.000005, angledelta 30.7 deg, Crate_Y 0.034337, eX -2.216143, eY -2.150521, maxC 0.182854, mc_test 0.183331
+Dataset X step 84 - lrate 0.000053, wchange 0.000380, angledelta 46.5 deg, Crate_X 0.034337, eX -2.210001, eY -2.150521, maxC 0.183111, mc_test 0.183568
+Dataset Y step 85 - lrate 0.000182, wchange 0.000006, angledelta 33.7 deg, Crate_Y 0.034337, eX -2.210001, eY -2.149768, maxC 0.183111, mc_test 0.183568
+Dataset X step 85 - lrate 0.000048, wchange 0.000617, angledelta 131.5 deg, Crate_X 0.030903, eX -2.210717, eY -2.149768, maxC 0.183152, mc_test 0.183609
+Dataset Y step 86 - lrate 0.000182, wchange 0.000007, angledelta 36.6 deg, Crate_Y 0.034337, eX -2.210717, eY -2.147479, maxC 0.183152, mc_test 0.183609
+Dataset X step 86 - lrate 0.000043, wchange 0.000542, angledelta 134.6 deg, Crate_X 0.030903, eX -2.219207, eY -2.147479, maxC 0.183340, mc_test 0.183759
+Dataset Y step 87 - lrate 0.000182, wchange 0.000006, angledelta 23.1 deg, Crate_Y 0.034337, eX -2.219207, eY -2.146484, maxC 0.183340, mc_test 0.183759
+Dataset X step 87 - lrate 0.000043, wchange 0.000446, angledelta 66.8 deg, Crate_X 0.027813, eX -2.208777, eY -2.146484, maxC 0.183276, mc_test 0.183698
+Dataset Y step 88 - lrate 0.000163, wchange 0.000012, angledelta 28.5 deg, Crate_Y 0.034337, eX -2.208777, eY -2.148096, maxC 0.183276, mc_test 0.183698
+Dataset X step 88 - lrate 0.000043, wchange 0.000468, angledelta 105.2 deg, Crate_X 0.025032, eX -2.207039, eY -2.148096, maxC 0.183339, mc_test 0.183736
+Dataset Y step 89 - lrate 0.000163, wchange 0.000003, angledelta 16.5 deg, Crate_Y 0.034337, eX -2.207039, eY -2.147711, maxC 0.183339, mc_test 0.183736
+Dataset X step 89 - lrate 0.000039, wchange 0.000443, angledelta 122.1 deg, Crate_X 0.022528, eX -2.210917, eY -2.147711, maxC 0.183386, mc_test 0.183756
+Dataset Y step 90 - lrate 0.000147, wchange 0.000005, angledelta 29.6 deg, Crate_Y 0.034337, eX -2.210917, eY -2.148639, maxC 0.183386, mc_test 0.183756
+Dataset X step 90 - lrate 0.000035, wchange 0.000187, angledelta 111.4 deg, Crate_X 0.020276, eX -2.211093, eY -2.148639, maxC 0.183107, mc_test 0.183456
+Dataset Y step 91 - lrate 0.000147, wchange 0.000002, angledelta 22.7 deg, Crate_Y 0.034337, eX -2.211093, eY -2.147463, maxC 0.183107, mc_test 0.183456
+Dataset X step 91 - lrate 0.000032, wchange 0.000332, angledelta 97.2 deg, Crate_X 0.018248, eX -2.212482, eY -2.147463, maxC 0.183091, mc_test 0.183419
+Dataset Y step 92 - lrate 0.000147, wchange 0.000007, angledelta 40.2 deg, Crate_Y 0.034337, eX -2.212482, eY -2.147404, maxC 0.183091, mc_test 0.183419
+Dataset X step 92 - lrate 0.000028, wchange 0.000266, angledelta 129.0 deg, Crate_X 0.016423, eX -2.217860, eY -2.147404, maxC 0.183088, mc_test 0.183395
+Dataset Y step 93 - lrate 0.000147, wchange 0.000002, angledelta 31.9 deg, Crate_Y 0.034337, eX -2.217860, eY -2.144956, maxC 0.183088, mc_test 0.183395
+Dataset X step 93 - lrate 0.000028, wchange 0.000134, angledelta 88.7 deg, Crate_X 0.014781, eX -2.214400, eY -2.144956, maxC 0.182983, mc_test 0.183273
+Dataset Y step 94 - lrate 0.000132, wchange 0.000004, angledelta 28.6 deg, Crate_Y 0.030903, eX -2.214400, eY -2.145481, maxC 0.182983, mc_test 0.183273
+Dataset X step 94 - lrate 0.000026, wchange 0.000118, angledelta 104.0 deg, Crate_X 0.013303, eX -2.214491, eY -2.145481, maxC 0.183388, mc_test 0.183646
+Dataset Y step 95 - lrate 0.000119, wchange 0.000003, angledelta 18.4 deg, Crate_Y 0.027813, eX -2.214491, eY -2.145652, maxC 0.183388, mc_test 0.183646
+Dataset X step 95 - lrate 0.000026, wchange 0.000114, angledelta 101.0 deg, Crate_X 0.013303, eX -2.211590, eY -2.145652, maxC 0.183368, mc_test 0.183601
+Dataset Y step 96 - lrate 0.000119, wchange 0.000003, angledelta 31.6 deg, Crate_Y 0.025032, eX -2.211590, eY -2.145352, maxC 0.183368, mc_test 0.183601
+Dataset X step 96 - lrate 0.000023, wchange 0.000102, angledelta 121.6 deg, Crate_X 0.013303, eX -2.213437, eY -2.145352, maxC 0.183442, mc_test 0.183662
+Dataset Y step 97 - lrate 0.000119, wchange 0.000004, angledelta 33.7 deg, Crate_Y 0.022528, eX -2.213437, eY -2.145070, maxC 0.183442, mc_test 0.183662
+Dataset X step 97 - lrate 0.000023, wchange 0.000201, angledelta 65.1 deg, Crate_X 0.013303, eX -2.208580, eY -2.145070, maxC 0.183536, mc_test 0.183746
+Dataset Y step 98 - lrate 0.000119, wchange 0.000003, angledelta 27.9 deg, Crate_Y 0.020276, eX -2.208580, eY -2.143980, maxC 0.183536, mc_test 0.183746
+Dataset X step 98 - lrate 0.000021, wchange 0.000092, angledelta 106.7 deg, Crate_X 0.011973, eX -2.215363, eY -2.143980, maxC 0.183257, mc_test 0.183460
+Dataset Y step 99 - lrate 0.000107, wchange 0.000002, angledelta 26.4 deg, Crate_Y 0.020276, eX -2.215363, eY -2.144623, maxC 0.183257, mc_test 0.183460
+Dataset X step 99 - lrate 0.000021, wchange 0.000174, angledelta 101.0 deg, Crate_X 0.010775, eX -2.214634, eY -2.144623, maxC 0.183268, mc_test 0.183458
+Dataset Y step 100 - lrate 0.000097, wchange 0.000002, angledelta 16.9 deg, Crate_Y 0.020276, eX -2.214634, eY -2.144912, maxC 0.183268, mc_test 0.183458
+Dataset X step 100 - lrate 0.000021, wchange 0.000155, angledelta 90.3 deg, Crate_X 0.009698, eX -2.212151, eY -2.144912, maxC 0.183496, mc_test 0.183675
+Dataset Y step 101 - lrate 0.000087, wchange 0.000003, angledelta 32.4 deg, Crate_Y 0.020276, eX -2.212151, eY -2.145097, maxC 0.183496, mc_test 0.183675
+Dataset X step 101 - lrate 0.000019, wchange 0.000107, angledelta 134.1 deg, Crate_X 0.008728, eX -2.214579, eY -2.145097, maxC 0.183545, mc_test 0.183714
+Dataset Y step 102 - lrate 0.000078, wchange 0.000001, angledelta 37.8 deg, Crate_Y 0.020276, eX -2.214579, eY -2.146689, maxC 0.183545, mc_test 0.183714
+Dataset X step 102 - lrate 0.000019, wchange 0.000048, angledelta 74.2 deg, Crate_X 0.007855, eX -2.212280, eY -2.146689, maxC 0.183318, mc_test 0.183479
+Dataset Y step 103 - lrate 0.000078, wchange 0.000001, angledelta 29.0 deg, Crate_Y 0.020276, eX -2.212280, eY -2.146053, maxC 0.183318, mc_test 0.183479
+Dataset X step 103 - lrate 0.000019, wchange 0.000069, angledelta 90.6 deg, Crate_X 0.007070, eX -2.211651, eY -2.146053, maxC 0.183563, mc_test 0.183714
+Dataset Y step 104 - lrate 0.000078, wchange 0.000001, angledelta 37.5 deg, Crate_Y 0.020276, eX -2.211651, eY -2.144931, maxC 0.183563, mc_test 0.183714
+Dataset X step 104 - lrate 0.000019, wchange 0.000049, angledelta 74.2 deg, Crate_X 0.006363, eX -2.211466, eY -2.144931, maxC 0.183482, mc_test 0.183626
+Dataset Y step 105 - lrate 0.000078, wchange 0.000002, angledelta 40.4 deg, Crate_Y 0.020276, eX -2.211466, eY -2.143701, maxC 0.183482, mc_test 0.183626
+Dataset X step 105 - lrate 0.000017, wchange 0.000053, angledelta 125.8 deg, Crate_X 0.005726, eX -2.215100, eY -2.143701, maxC 0.183443, mc_test 0.183581
+Dataset Y step 106 - lrate 0.000078, wchange 0.000002, angledelta 19.6 deg, Crate_Y 0.020276, eX -2.215100, eY -2.142491, maxC 0.183443, mc_test 0.183581
+Dataset X step 106 - lrate 0.000017, wchange 0.000073, angledelta 80.5 deg, Crate_X 0.005154, eX -2.211360, eY -2.142491, maxC 0.183547, mc_test 0.183678
+Dataset Y step 107 - lrate 0.000078, wchange 0.000001, angledelta 34.3 deg, Crate_Y 0.020276, eX -2.211360, eY -2.142068, maxC 0.183547, mc_test 0.183678
+Dataset X step 107 - lrate 0.000015, wchange 0.000045, angledelta 133.4 deg, Crate_X 0.004638, eX -2.212784, eY -2.142068, maxC 0.183395, mc_test 0.183522
+Dataset Y step 108 - lrate 0.000078, wchange 0.000001, angledelta 36.1 deg, Crate_Y 0.020276, eX -2.212784, eY -2.142080, maxC 0.183395, mc_test 0.183522
+Dataset X step 108 - lrate 0.000015, wchange 0.000027, angledelta 79.8 deg, Crate_X 0.004175, eX -2.210848, eY -2.142080, maxC 0.183565, mc_test 0.183686
+Dataset Y step 109 - lrate 0.000078, wchange 0.000001, angledelta 32.6 deg, Crate_Y 0.020276, eX -2.210848, eY -2.141572, maxC 0.183565, mc_test 0.183686
+STOPSIGN_Y = True
+Dataset X step 109 - lrate 0.000014, wchange 0.000017, angledelta 111.2 deg, Crate_X 0.003757, eX -2.213934, eY -2.141572, maxC 0.183535, mc_test 0.183573
+Dataset X step 110 - lrate 0.000014, wchange 0.000028, angledelta 82.2 deg, Crate_X 0.003381, eX -2.212456, eY -2.141572, maxC 0.183534, mc_test 0.183569
+Dataset X step 111 - lrate 0.000012, wchange 0.000015, angledelta 107.7 deg, Crate_X 0.003043, eX -2.212479, eY -2.141572, maxC 0.183456, mc_test 0.183487
+Dataset X step 112 - lrate 0.000012, wchange 0.000014, angledelta 90.8 deg, Crate_X 0.002739, eX -2.211529, eY -2.141572, maxC 0.183540, mc_test 0.183568
+Dataset X step 113 - lrate 0.000011, wchange 0.000009, angledelta 117.1 deg, Crate_X 0.002465, eX -2.211582, eY -2.141572, maxC 0.183506, mc_test 0.183531
+Dataset X step 114 - lrate 0.000010, wchange 0.000005, angledelta 116.0 deg, Crate_X 0.002219, eX -2.211779, eY -2.141572, maxC 0.183451, mc_test 0.183474
+Dataset X step 115 - lrate 0.000009, wchange 0.000006, angledelta 82.4 deg, Crate_X 0.001997, eX -2.211752, eY -2.141572, maxC 0.183475, mc_test 0.183495
+Dataset X step 116 - lrate 0.000008, wchange 0.000008, angledelta 124.4 deg, Crate_X 0.001797, eX -2.212271, eY -2.141572, maxC 0.183498, mc_test 0.183517
+Dataset X step 117 - lrate 0.000007, wchange 0.000004, angledelta 99.7 deg, Crate_X 0.001617, eX -2.212614, eY -2.141572, maxC 0.183509, mc_test 0.183525
+Dataset X step 118 - lrate 0.000006, wchange 0.000002, angledelta 91.9 deg, Crate_X 0.001456, eX -2.213615, eY -2.141572, maxC 0.183452, mc_test 0.183467
+Dataset X step 119 - lrate 0.000006, wchange 0.000002, angledelta 74.9 deg, Crate_X 0.001310, eX -2.213231, eY -2.141572, maxC 0.183441, mc_test 0.183454
+Dataset X step 120 - lrate 0.000006, wchange 0.000002, angledelta 107.8 deg, Crate_X 0.001179, eX -2.213194, eY -2.141572, maxC 0.183437, mc_test 0.183449
+Dataset X step 121 - lrate 0.000006, wchange 0.000002, angledelta 85.0 deg, Crate_X 0.001061, eX -2.212930, eY -2.141572, maxC 0.183445, mc_test 0.183456
+Dataset X step 122 - lrate 0.000006, wchange 0.000001, angledelta 105.0 deg, Crate_X 0.000955, eX -2.213060, eY -2.141572, maxC 0.183447, mc_test 0.183457
+STOPSIGN_X = True
+[LOG]=====INFOMAX=====Current_STEP_X = 122 and STEP_Y  =109 STOPSIGN_X = 1 STOPSIGN_Y  = 1
+[LOG]=====INFOMAX=====Finish.
+[LOG][Flow_5_Global_ICA]
+[LOG][Flow_6_Parallel_ICA-Local_reconstruction]
+[LOG][Flow_7_Parallel_ICA-Correlation_A]
+[LOG][Flow_8_Parallel_ICA-Global_reconstruction]
+[LOG][Flow_8a_Parallel_ICA-Global_Weight_update]
+[LOG][Flow_8a_Parallel_ICA-Global] Save all A, W, S cvs files.
+[LOG][Flow_8a_Parallel_ICA-Global] Finish run 1.
+DATA_PATH_OUTPUT = /output/remote/simulatorRun
+maxcorr = [[1, 0.1842], [2, 0.1834]]
+ENTROPY_X =  [[1, -2.2636], [2, -2.2131]]
+ENTROPY_Y =  [[1, -2.1391], [2, -2.1416]]
+STEP_X =  [[1, 131], [2, 122]]
+STEP_Y =  [[1, 104], [2, 109]]
+======================================
+
+run =0
+weight_X_1.shape =(5, 5)
+S_sources_X_1.shape =(5, 57705)
+weight_Y_1.shape =(3, 3)
+S_sources_Y_1.shape =(3, 367)
+
+weight_X_All.shape =(1, 5, 5)
+S_sources_X_All.shape =(1, 5, 57705)
+weight_X_All[run,:,:].shape =(5, 5)
+S_sources_X_All[run,:,:].shape =(5, 57705)
+weight_Y_All[run,:,:].shape =(3, 3)
+S_sources_Y_All[run,:,:].shape =(3, 367)
+run =1
+weight_X_1.shape =(5, 5)
+S_sources_X_1.shape =(5, 57705)
+weight_Y_1.shape =(3, 3)
+S_sources_Y_1.shape =(3, 367)
+
+weight_X_All.shape =(2, 5, 5)
+S_sources_X_All.shape =(2, 5, 57705)
+weight_X_All[run,:,:].shape =(5, 5)
+S_sources_X_All[run,:,:].shape =(5, 57705)
+weight_Y_All[run,:,:].shape =(3, 3)
+S_sources_Y_All[run,:,:].shape =(3, 367)
+
+
+[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of 1 X run. Start.
+
+[LOG][Multirun ICA] De-mean 
+[LOG][Multirun ICA] Clustering 
+[LOG][Multirun ICA] Clustering - Finish
+[LOG][Multirun ICA] Re-arranging - pattern
+[LOG][Multirun ICA] Re-arranging - Component 0of w1_[0] is applied -1 as coef_s0_s1 =-0.9999992303
+[LOG][Multirun ICA] Re-arranging - Component 3of w1_[3] is applied -1 as coef_s0_s1 =-0.9999991261
+[LOG][Multirun ICA] Re-arranging - Component 4of w1_[4] is applied -1 as coef_s0_s1 =-0.9999979969
+[LOG][Multirun ICA] Re-arranging - Finished
+[LOG][Multirun ICA] Centrotype algorithm
+[LOG][Multirun ICA] Centrotype - Component 0========================
+[LOG][Multirun ICA] Centrotype - Component 0 coef_component_w0_w1_sum = -0.9999977554101216
+[LOG][Multirun ICA] Centrotype - Component 0w0_w1_coef_max_sum = -0.9999977554101216
+[LOG][Multirun ICA] Centrotype - Component 0list_m = 1.
+[LOG][Multirun ICA] Centrotype - Component 0========================
+[LOG][Multirun ICA] Centrotype - Component 1========================
+[LOG][Multirun ICA] Centrotype - Component 1 coef_component_w0_w1_sum = 0.9999982476797367
+[LOG][Multirun ICA] Centrotype - Component 1w0_w1_coef_max_sum = 0.9999982476797367
+[LOG][Multirun ICA] Centrotype - Component 1list_m = 2.
+[LOG][Multirun ICA] Centrotype - Component 1========================
+[LOG][Multirun ICA] Centrotype - Component 2========================
+[LOG][Multirun ICA] Centrotype - Component 2 coef_component_w0_w1_sum = 0.9999975116569991
+[LOG][Multirun ICA] Centrotype - Component 2w0_w1_coef_max_sum = 0.9999975116569991
+[LOG][Multirun ICA] Centrotype - Component 2list_m = 3.
+[LOG][Multirun ICA] Centrotype - Component 2========================
+[LOG][Multirun ICA] Centrotype - Component 3========================
+[LOG][Multirun ICA] Centrotype - Component 3 coef_component_w0_w1_sum = -0.9999993573097871
+[LOG][Multirun ICA] Centrotype - Component 3w0_w1_coef_max_sum = -0.9999993573097871
+[LOG][Multirun ICA] Centrotype - Component 3list_m = 4.
+[LOG][Multirun ICA] Centrotype - Component 3========================
+[LOG][Multirun ICA] Centrotype - Component 4========================
+[LOG][Multirun ICA] Centrotype - Component 4 coef_component_w0_w1_sum = -0.9999984870266971
+[LOG][Multirun ICA] Centrotype - Component 4w0_w1_coef_max_sum = -0.9999984870266971
+[LOG][Multirun ICA] Centrotype - Component 4list_m = 5.
+[LOG][Multirun ICA] Centrotype - Component 4========================
+[LOG][Multirun ICA] Centrotype algorithm - Done
+
+[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of 1 X run. Finish.
+[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of 1 Y run. Start.
+
+[LOG][Multirun ICA] De-mean 
+[LOG][Multirun ICA] Clustering 
+[LOG][Multirun ICA] Clustering - Finish
+[LOG][Multirun ICA] Re-arranging - pattern
+[LOG][Multirun ICA] Re-arranging - Finished
+[LOG][Multirun ICA] Centrotype algorithm
+[LOG][Multirun ICA] Centrotype - Component 0========================
+[LOG][Multirun ICA] Centrotype - Component 0 coef_component_w0_w1_sum = 0.999796427545765
+[LOG][Multirun ICA] Centrotype - Component 0w0_w1_coef_max_sum = 0.999796427545765
+[LOG][Multirun ICA] Centrotype - Component 0list_m = 1.
+[LOG][Multirun ICA] Centrotype - Component 0========================
+[LOG][Multirun ICA] Centrotype - Component 1========================
+[LOG][Multirun ICA] Centrotype - Component 1 coef_component_w0_w1_sum = 0.9998498042131557
+[LOG][Multirun ICA] Centrotype - Component 1w0_w1_coef_max_sum = 0.9998498042131557
+[LOG][Multirun ICA] Centrotype - Component 1list_m = 2.
+[LOG][Multirun ICA] Centrotype - Component 1========================
+[LOG][Multirun ICA] Centrotype - Component 2========================
+[LOG][Multirun ICA] Centrotype - Component 2 coef_component_w0_w1_sum = 0.9999964860480965
+[LOG][Multirun ICA] Centrotype - Component 2w0_w1_coef_max_sum = 0.9999964860480965
+[LOG][Multirun ICA] Centrotype - Component 2list_m = 3.
+[LOG][Multirun ICA] Centrotype - Component 2========================
+[LOG][Multirun ICA] Centrotype algorithm - Done
+
+[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of 1 Y run. Finish.
+[LOG][Flow_9_Looping the next iteration of Global ICA (Finding W) via Infomax and pICA (Finding ∆A)]. Finish.
+[LOG][Flow_10_Report_correlation_data-Local_reconstruction]=====Modality_X : Find local A using GlobalPCA_dewhite_X and Con_deWhite_X   =====
+[LOG][Flow_10_Report_correlation_data-Local_reconstruction]=====Modality_Y : Find local A using GlobalPCA_dewhite_Y and Con_deWhite_Y   =====
+[LOG][Flow_10_Report]=====Print all Modality shape=====
+Modality_X === GlobalA_mixer_X.shape (r_X x r_X) = (5, 5)S_sources_X (r_X x d_X) = (5, 57705)GlobalW_unmixer_X (r_X x r_X ) = (5, 5)
+Modality_Y === GlobalA_mixer_Y.shape (r_Y x r_Y) = (3, 3)S_sources_Y (r_Y x d_Y) = (3, 367)GlobalW_unmixer_Y (r_Y x r_Y ) = (3, 3)
+[LOG][Flow_10_Report_correlation_data-Local_reconstruction]=====Start=====
+[LOG][Flow_10_Report_correlation_data-Local_reconstruction]=====Print all Modality local A shape=====
+Modality_X === LocalA_Corr_A1_X (sN_X x r_X)(31, 5)
+Modality_Y === LocalA_Corr_A1_Y (sN_Y x r_Y)(31, 3)
+Modality_X === LocalA_Corr_A2_X (sN_X x r_X)(32, 5)
+Modality_Y === LocalA_Corr_A2_Y (sN_Y x r_Y)(32, 3)
+[LOG][Flow_10_Report_correlation_data-Local_reconstruction]=====Finish=====
+======================================
+======================================
+DATA_PATH_OUTPUT = /output/remote/simulatorRun
+maxcorr = [[1, 0.1842], [2, 0.1834]]
+ENTROPY_X =  [[1, -2.2636], [2, -2.2131]]
+ENTROPY_Y =  [[1, -2.1391], [2, -2.1416]]
+STEP_X =  [[1, 131], [2, 122]]
+STEP_Y =  [[1, 104], [2, 109]]
+======================================
+======================================
+
+Completed  dpICA_infomax.

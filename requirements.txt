@@ -1,0 +1,7 @@
+pydevd-pycharm==212.5457.59
+numpy>=1.21.2
+coinstac>=0.2.0
+coinstac-computation~=0.65
+scikit-learn
+matplotlib
+nibabel

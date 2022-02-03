@@ -1,8 +1,0 @@
-# http://eslint.org/docs/user-guide/configuring#ignoring-files-and-directories
-.nyc_output
-.tmp
-.vscode
-coverage
-node_modules
-packages/coinstac-ui/build/
-papaya.js

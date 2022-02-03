@@ -1,0 +1,26 @@
+{
+  "meta": {
+    "name": "Decentralized Parallel Independent Component Analysis demo",
+    "id": "simulator-dpica",
+    "version": "v1.0.0",
+    "repository": "https://github.com/MartOfTheNorth/dpica/tree/simulator",
+    "description": "Decentralized Parallel Independent Component Analysis on FIT Data",
+    "compspecVersion": 1
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "dpica_simulator",
+    "command": [
+      "python",
+      "\/computation\/scripts\/local_pipeline.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "dpica_simulator",
+      "command": [
+        "python",
+        "\/computation\/scripts\/remote_pipeline.py"
+      ]
+    }
+  }
+}

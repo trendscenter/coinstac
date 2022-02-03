@@ -1,1 +1,0 @@
-require('./render/actions/loading');

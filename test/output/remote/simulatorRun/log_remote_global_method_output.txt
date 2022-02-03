@@ -1,0 +1,105 @@
+==Global logging==
+Global PCA starting...
+Remote_Utils starting...
+state[baseDirectory]= /input/remote/simulatorRun
+sep = /
+
+base_directory = /input/remote/simulatorRun/
+
+Calling dpica.dpica_global_methods 
+dpica_global_methods starting
+==============Global Parameters==============
+SITE_NUM = 2
+NUM_SUBJECT = 63
+MASK_PATH_FILE_NAME =  /input/remote/simulatorRun/mask/mask_fmri_pica_v4.nii.gz
+MASK_PATH_X =  /input/remote/simulatorRun/mask/
+DATA_PATH_X =  /input/remote/simulatorRun/fmri_gene_full/
+DATA_PATH_Y =  /input/remote/simulatorRun/fmri_gene_full/
+
+DATA_PATH_OUTPUT =  /output/remote/simulatorRun/F_Nowhite_ConCon0.17_ConCom1_RUN2_I_E0.001_25_15_5_3_False/
+DATA_SITES_X =  /input/remote/simulatorRun/Clean_data/
+MAX_WEIGHT =  100000000.0
+DEFAULT_STOP =  1e-06
+DEFAULT_ANNEALDEG =  60
+DEFAULT_ANNEALSTEP =  0.9
+DEFAULT_EXTANNEAL =  0.98
+DEFAULT_MAXSTEPS =  1000
+DEFAULT_MOMENTUM =  0.0
+DEFAULT_BLOWUP =  1000000000.0
+DEFAULT_BLOWUP_FAC =  0.8
+DEFAULT_RESTART_FAC =  0.9
+MIN_LRATE =  1e-06
+MAX_LRATE =  0.1
+DEFAULT_EXTENDED =  0
+DEFAULT_EXTBLOCKS =  1
+DEFAULT_NSUB =  1
+DEFAULT_EXTMOMENTUM =  0.5
+SIGNCOUNT_THRESHOLD =  25
+DEFAULT_SPHEREFLAG =  on
+DATA_SDEFAULT_PCAFLAGITES =  off
+DEFAULT_POSACTFLAG =  on
+DEFAULT_VERBOSE =  1
+DEFAULT_BIASFLAG =  1
+CONSTRAINED_COMPONENTS =  1
+CONSTRAINED_CONNECTION =  0.17
+CONSTRAINED_CONNECTION_AUTO =  False
+DATA_ENDURANCESITES =  -0.001
+NCOM_X =  25
+NCOM_Y =  15
+NCOM_X1 =  25
+NCOM_Y1 =  15
+NCOM_X2 =  25
+NCOM_Y2 =  15
+NCOM_X3 =  25
+NCOM_Y3 =  15
+Global_NCOM_X =  5
+Global_NCOM_Y =  3
+Global_NCOM_X1 =  5
+Global_NCOM_Y1 =  3
+Global_NCOM_X2 =  5
+Global_NCOM_Y2 =  3
+Global_NCOM_X3 =  5
+Global_NCOM_Y3 =  3
+signsbias =  0.02
+ANNEAL =  0.9
+MAX_STEP =  1000
+DATA_SITES =  siteAll63.txt
+ICA_RUN_NUMBER =  2
+ICA_RUN_AVERAGE =  False
+ICA_RUN_ICASSO =  True
+ENDURANCE =  -0.001
+CRATE_X =  1
+CRATE_Y =  1
+CRATE_PERCENT =  0.9
+CRATE_OUTBOUND_PERCENT =  0.9
+B_DATASET_FIT =  
+B_DATASET_ABCD =  
+B_DATASET_777 =  
+B_DATASET_XY_SWITCH =  
+
+[LOG][def_setUp]+++++Set up start+++++
+
+[LOG][Flow_3_Global_U, White, and deWhite]=====Start=====
+Modality_X === Global_U_X.shape (sr x d) (50, 57705)
+Modality_Y === Global_U_Y.shape (sr x d) (30, 367)
+Modality_X === Con_White_X.shape (r x sN) (25, 63)
+Modality_Y === Con_White_Y.shape (r x sN) (15, 63)
+Modality_X === Con_deWhite_X.shape (sN x r) (63, 25)
+Modality_Y === Con_deWhite_Y.shape (sN x r) (63, 15)
+NSUB_All_X =[31. 32.]
+NSUB_All_Y =[31. 32.]
+NCOM_All_X =[25. 25.]
+NCOM_All_Y =[15. 15.]
+NVOX_All_X =[57705. 57705.]
+NVOX_All_Y =[367. 367.]
+[LOG][Flow_3_Global_U]Loading Global - Loaded time is 0:00:05.693985
+[LOG][Flow_3_Global_U, White, and deWhite]=====Stop=====
+
+[LOG][Flow_4_Global_PCA]=====Start=====
+[LOG][Flow_4_Global_PCA]=====Global PCA of Modality_X and Modality_Y=====
+
+Modality_X === GlobalPCA_U_X.shape (r_X x d_X)(5, 57705)GlobalPCA_White_X (r_X x sr_X) = (5, 50)GlobalPCA_dewhite_X (sr_X x r_X ) = (50, 5)
+Modality_Y === GlobalPCA_U_Y.shape (r_Y x d_Y)(3, 367)GlobalPCA_White_Y (r_Y x sr_Y) = (3, 30)GlobalPCA_dewhite_Y (sr_Y x r_Y ) = (30, 3)
+[LOG][Flow_4_Global_PCA]=====End=====
+
+Completed dpica.dpica_global_methods.
