@@ -237,7 +237,7 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
             await inquirer.prompt([{
               type: 'confirm',
               name: 'noexit',
-              message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipeline options manually\nProceed with pipeline?.',
+              message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
             }]).then((resp) => {
               if (resp.noexit) {
                 return startPreprocessRun(generatedPipeSpec, baseDir);
