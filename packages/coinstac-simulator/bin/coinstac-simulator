@@ -9,8 +9,6 @@ const program = require('commander');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
 const path = require('path');
-const blessed = require('blessed');
-const bc = require('blessed-contrib');
 const winston = require('winston');
 const fs = require('fs');
 
@@ -77,8 +75,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { option } = require('commander');
-const { pullImages } = require('coinstac-manager');
+const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -144,7 +141,6 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
 };
 
 const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
-  debugger
   let rawSpec;
   try {
     rawSpec = fs.readFileSync(pipelineSpecPath);
@@ -293,32 +289,6 @@ if (program.upload) {
       process.exit(1);
     });
 } else {
-  let table;
-  let screen;
-  let tableData;
-
-  if (!DEBUG_MODE) {
-    screen = blessed.screen({
-      smartCSR: true,
-    });
-
-    tableData = [];
-
-    table = bc.table({
-      keys: true,
-      fg: 'white',
-      selectedFg: 'white',
-      selectedBg: 'blue',
-      interactive: true,
-      label: 'Active Run',
-      width: '100%',
-      height: '100%',
-      border: { type: 'line', fg: 'cyan' },
-      columnSpacing: 5,
-      columnWidth: [12, 12, 30, 6],
-    });
-  }
-
   let fulfilledPipelineSpec;
 
   if (program.pipeline) {
