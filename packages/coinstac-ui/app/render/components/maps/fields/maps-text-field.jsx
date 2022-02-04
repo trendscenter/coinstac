@@ -10,10 +10,15 @@ import TextField from '@material-ui/core/TextField';
 
 const styles = theme => ({
   rootPaper: {
-    ...theme.mixins.gutters(),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
     marginTop: theme.spacing(1.5),
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   header: {
     textTransform: 'capitalize',

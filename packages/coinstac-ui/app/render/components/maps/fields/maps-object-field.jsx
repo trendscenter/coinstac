@@ -11,10 +11,15 @@ import locale from 'react-json-editor-ajrm/locale/en';
 
 const styles = theme => ({
   rootPaper: {
-    ...theme.mixins.gutters(),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
     marginTop: theme.spacing(1.5),
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   header: {
     textTransform: 'capitalize',
@@ -33,18 +38,17 @@ const styles = theme => ({
 function MapsObjectField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
-
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
 
   function changeHandler(e) {
     setVal(e.target.value);
-    const value = fieldDescription.type === 'number' ? parseInt(e.target.value,10) : e.target.value;
+    const value = fieldDescription.type === 'number' ? parseInt(e.target.value, 10) : e.target.value;
     onChange(fieldName, { fieldType: fieldDescription.type, value });
   }
 
-  function defaultHandler(e) {
+  function defaultHandler() {
     setUseDefault(!useDefault);
     if (!useDefault) {
       setVal(fieldDescription.default);
@@ -68,7 +72,7 @@ function MapsObjectField({
         disabled={useDefault}
         onChange={e => changeHandler(e)}
         value={val}
-        placeholder={val ? val : fieldDescription.default}
+        placeholder={val || fieldDescription.default}
         locale={locale}
         height="250px"
         theme="light_mitsuketa_tribute"
