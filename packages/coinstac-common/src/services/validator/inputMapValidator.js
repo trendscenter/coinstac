@@ -37,7 +37,8 @@ function inputMapValidator(compSpecInput, fulFilledInputMap) {
   Object.keys(fulFilledInputMap).forEach((key) => {
     const validationResult = validator(compSpecInput[key], fulFilledInputMap[key].value);
     if (validationResult.error) {
-      throw validationResult;
+      const message = `${key}: ${validationResult.error.message}`;
+      throw message;
     }
   });
   return true;

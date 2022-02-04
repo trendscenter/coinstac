@@ -526,11 +526,17 @@ class Pipeline extends Component {
     this.setState({ savingStatus: 'pending' });
     try {
       // validate here
-      omittedPipeline.steps.forEach((step) => {
-        const compSpecInput = step.computations[0].computation.input;
-        const { inputMap } = step;
-        inputMapValidator(compSpecInput, inputMap);
-      });
+      try {
+        omittedPipeline.steps.forEach((step) => {
+          const compSpecInput = step.computations[0].computation.input;
+          const { inputMap } = step;
+          inputMapValidator(compSpecInput, inputMap);
+        });
+      } catch (error) {
+        this.setState({ savingStatus: 'fail' });
+        notifyError(getGraphQLErrorMessage(error, error));
+        throw error;
+      }
 
       const { data } = await savePipeline({
         ...omittedPipeline,
