@@ -42,6 +42,9 @@ const styles = theme => ({
     fontSize: '0.75rem',
     color: 'red',
   },
+  defaultCheckbox: {
+    marginLeft: theme.spacing(1.5),
+  },
 });
 
 
@@ -78,6 +81,11 @@ function MapsTextField({
     return !!fieldDataMap;
   }
 
+  const isFieldDescriptionValid = fieldDescription.default !== null
+    && fieldDescription.default !== undefined;
+
+  const placeholder = val || (isFieldDescriptionValid ? String(fieldDescription.default) : '');
+
   return (
     <div>
       <Typography variant="h6" className={classes.header}>
@@ -92,16 +100,17 @@ function MapsTextField({
         disabled={useDefault}
         type={fieldDescription.type}
         onChange={e => changeHandler(e)}
-        value={val}
-        placeholder={val || fieldDescription.default}
+        value={val || ''}
+        placeholder={placeholder}
       />
-      {fieldDescription.default && (
+      {isFieldDescriptionValid && (
         <FormControlLabel
           control={(
             <Checkbox
+              className={classes.defaultCheckbox}
               checked={useDefault}
-              onChange={e => defaultHandler(e)}
               value={useDefault}
+              onChange={e => defaultHandler(e)}
             />
         )}
           label={

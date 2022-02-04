@@ -73,7 +73,7 @@ function MapsFilesField({
         extensions={fieldDescription.extensions}
         onChange={files => appendSelectedFiles(files)}
         selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
-        deleteFile={fileIndex => deleteFile(fileIndex)}
+        deleteItem={fileIndex => deleteFile(fileIndex)}
       />
     </div>
   );
