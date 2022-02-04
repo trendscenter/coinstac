@@ -32,6 +32,7 @@ import InfoIcon from '@material-ui/icons/Info';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
 
+import { inputMapValidator } from 'coinstac-common';
 import ListDeleteModal from '../common/list-delete-modal';
 import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
@@ -473,7 +474,7 @@ class Pipeline extends Component {
         }),
       },
     }),
-    () => this.updateStorePipeline());
+      () => this.updateStorePipeline());
     this.closeModal();
   }
 
@@ -523,8 +524,14 @@ class Pipeline extends Component {
     const omittedPipeline = omit(pipeline, ['isActive']);
 
     this.setState({ savingStatus: 'pending' });
-
     try {
+      // validate here
+      omittedPipeline.steps.forEach((step) => {
+        const compSpecInput = step.computations[0].computation.input;
+        const { inputMap } = step;
+        inputMapValidator(compSpecInput, inputMap);
+      });
+
       const { data } = await savePipeline({
         ...omittedPipeline,
         owner: user.id,
@@ -707,7 +714,7 @@ class Pipeline extends Component {
     return connectDropTarget(
       <div>
         <Box className="page-header" marginBottom={2}>
-          <Typography variant="h4">{ title }</Typography>
+          <Typography variant="h4">{title}</Typography>
         </Box>
         <ValidatorForm instantValidate noValidate onSubmit={this.savePipeline}>
           <TextValidator
@@ -864,7 +871,7 @@ class Pipeline extends Component {
                   <Typography variant="h6" className={classes.cloudUserTitle}>Cloud Users:</Typography>
                   <Tooltip
                     title={
-                      <Typography variant="body1">{ CLOUD_USERS_TOOLTIP }</Typography>
+                      <Typography variant="body1">{CLOUD_USERS_TOOLTIP}</Typography>
                     }
                   >
                     <InfoIcon />

@@ -2,6 +2,7 @@
 
 const Manager = require('coinstac-manager');
 const validator = require('./services/validator');
+const inputMapValidator = require('./services/validator/inputMapValidator');
 
 
 module.exports = {
@@ -9,4 +10,5 @@ module.exports = {
     Manager,
     validator,
   },
+  inputMapValidator,
 };
