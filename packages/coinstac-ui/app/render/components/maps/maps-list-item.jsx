@@ -15,9 +15,6 @@ const styles = theme => ({
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
     [theme.breakpoints.up('sm')]: {
       paddingLeft: theme.spacing(3),
       paddingRight: theme.spacing(3),
@@ -27,16 +24,19 @@ const styles = theme => ({
     marginBottom: theme.spacing(1),
   },
   contentContainer: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1),
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
   },
   labelInline: {
+    display: 'inline-block',
     fontWeight: 'bold',
     marginRight: theme.spacing(1),
-    display: 'inline-block',
   },
   value: {
     display: 'inline-block',
+  },
+  mapButton: {
+    marginBottom: theme.spacing(2),
   },
 });
 
@@ -65,15 +65,18 @@ const MapsListItem = ({
     </div>
     <div className="list-item__actions">
       <div className="list-item__actions-primary">
-        <Button
-          variant="contained"
-          color={needsDataMapping ? 'secondary' : 'primary'}
-          component={Link}
-          to={`/dashboard/maps/${consortium.id}`}
-          name={consortium.name}
-        >
-          { needsDataMapping ? 'Map Data to Consortium' : 'Edit Mapped Data' }
-        </Button>
+        {needsDataMapping && (
+          <Button
+            variant="contained"
+            color="secondary"
+            component={Link}
+            to={`/dashboard/maps/${consortium.id}`}
+            name={consortium.name}
+            className={classes.mapButton}
+          >
+            Map Data to Consortium
+          </Button>
+        )}
       </div>
       {
         canDelete && (
