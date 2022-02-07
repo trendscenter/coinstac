@@ -26,8 +26,15 @@ const schema = {
     }));
     return schema;
   },
-  range: () => {
-
+  range: ({ min, max }) => {
+    let schema = Joi.number();
+    if (min !== undefined) {
+      schema = schema.min(min);
+    }
+    if (max !== undefined) {
+      schema = schema.max(max);
+    }
+    return schema;
   },
   set: ({ limit }) => {
     const schema = Joi.array();
@@ -41,14 +48,14 @@ const schema = {
     return schema;
   },
   object: () => {
-    const schema = Joi.Object();
+    const schema = Joi.any();
     return schema;
   },
   boolean: () => {
     const schema = Joi.boolean();
     return schema;
   },
-  select: (values) => {
+  select: ({ values }) => {
     const schema = Joi.string().valid(...values);
     return schema;
   },
@@ -63,16 +70,27 @@ const schema = {
 };
 
 function validator(opts, value) {
-  return schema[opts.type](opts).validate(value);
+
+  try {
+
+    return schema[opts.type](opts).validate(value);
+  } catch (error) {
+    console.log(error);
+  }
+
 }
 
 
 function inputMapValidator(compSpecInput, fulFilledInputMap) {
   Object.keys(fulFilledInputMap).forEach((key) => {
-    const validationResult = validator(compSpecInput[key], fulFilledInputMap[key].value);
-    if (validationResult.error) {
-      const message = `${key}: ${validationResult.error.message}`;
-      throw message;
+    try {
+      const validationResult = validator(compSpecInput[key], fulFilledInputMap[key].value);
+      if (validationResult.error) {
+        const message = `${key}: ${validationResult.error.message}`;
+        throw message;
+      }
+    } catch (error) {
+      throw error;
     }
   });
   return true;
