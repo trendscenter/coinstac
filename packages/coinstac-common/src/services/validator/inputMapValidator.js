@@ -26,6 +26,40 @@ const schema = {
     }));
     return schema;
   },
+  range: () => {
+
+  },
+  set: ({ limit }) => {
+    const schema = Joi.array();
+    if (limit) {
+      schema.length(limit);
+    }
+    return schema;
+  },
+  string: () => {
+    const schema = Joi.string();
+    return schema;
+  },
+  object: () => {
+    const schema = Joi.Object();
+    return schema;
+  },
+  boolean: () => {
+    const schema = Joi.boolean();
+    return schema;
+  },
+  select: (values) => {
+    const schema = Joi.string().valid(...values);
+    return schema;
+  },
+  files: () => {
+    const schema = Joi.string();
+    return schema;
+  },
+  directory: () => {
+    const schema = Joi.string();
+    return schema;
+  },
 };
 
 function validator(opts, value) {
