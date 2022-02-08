@@ -76,7 +76,7 @@ if (program.loglevel) {
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
-const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
+const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
@@ -229,8 +229,8 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
             const baseInputSpec = JSON.parse(
               JSON.stringify(selectedComputation.computation.input)
             );
-            const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
-            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
+            const fulfilledInputMap = createInputMap(baseInputSpec, csvs[answer]);
+            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
             if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
             fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
@@ -388,7 +388,7 @@ if (program.upload) {
           const memo = {};
           specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
             return prom.then(() => {
-              return createInputSpec(comp.computation.input[variable], variable);
+              return createInputMap(comp.computation.input[variable], variable);
             }).then(res => Object.assign(memo, res));
           }, Promise.resolve())
             .then((res) => {
