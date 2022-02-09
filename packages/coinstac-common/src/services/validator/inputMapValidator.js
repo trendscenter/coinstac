@@ -12,11 +12,8 @@ const schema = {
     }
     return schema;
   },
-  csv: ({ items }) => {
-    const schema = Joi.array().items(Joi.object({
-      type: Joi.string().valid(...items),
-      name: Joi.string(),
-    }));
+  csv: () => {
+    const schema = Joi.object();
     return schema;
   },
   freesurfer: () => {
@@ -70,30 +67,28 @@ const schema = {
 };
 
 function validator(opts, value) {
-
   try {
-
     return schema[opts.type](opts).validate(value);
   } catch (error) {
     console.log(error);
   }
-
 }
 
 
-function inputMapValidator(compSpecInput, fulFilledInputMap) {
-  Object.keys(fulFilledInputMap).forEach((key) => {
-    try {
-      const validationResult = validator(compSpecInput[key], fulFilledInputMap[key].value);
-      if (validationResult.error) {
-        const message = `${key}: ${validationResult.error.message}`;
-        throw message;
+function inputMapValidator(compSpecInput, inputMap, ownerOnly = false) {
+  Object.keys(inputMap).forEach((key) => {
+    if (!ownerOnly || compSpecInput[key].source === 'owner') {
+      try {
+        const validationResult = validator(compSpecInput[key], inputMap[key].value);
+        if (validationResult.error) {
+          const message = `${key}: ${validationResult.error.message}`;
+          throw message;
+        }
+      } catch (error) {
+        throw error;
       }
-    } catch (error) {
-      throw error;
     }
   });
-  return true;
 }
 
 

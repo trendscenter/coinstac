@@ -12,7 +12,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
 const { ncp } = require('ncp');
-
+const { inputMapValidator } = require('coinstac-common');
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
@@ -271,6 +271,14 @@ class CoinstacClient {
     networkVolume = false
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
+    // validate inputMap here
+    clientPipeline.steps.forEach((step) => {
+      const { inputMap, computations } = step;
+
+      computations.forEach((computation) => {
+        inputMapValidator(computation.computation.input, inputMap);
+      });
+    });
 
     if (clients) {
       runObj.clients = clients;

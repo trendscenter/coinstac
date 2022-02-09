@@ -530,7 +530,7 @@ class Pipeline extends Component {
         omittedPipeline.steps.forEach((step) => {
           const compSpecInput = step.computations[0].computation.input;
           const { inputMap } = step;
-          inputMapValidator(compSpecInput, inputMap);
+          inputMapValidator(compSpecInput, inputMap, true);
         });
       } catch (error) {
         this.setState({ savingStatus: 'fail' });
