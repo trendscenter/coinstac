@@ -15,10 +15,10 @@ const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium-2-member';
-const CONS_DESC = 'e2e-description-2-member';
-const PIPE_NAME = 'e2e-pipeline-2-member';
-const PIPE_DESC = 'e2e-pipeline-description-2-member';
+const CONS_NAME = 'fsl-consortium-2-member';
+const CONS_DESC = 'fsl-description-2-member';
+const PIPE_NAME = 'fsl-pipeline-2-member';
+const PIPE_DESC = 'fsl-pipeline-description-2-member';
 const COMPUTATION_NAME = 'Ridge Regression (Singleshot) - FreeSurfer Volumes';
 
 chai.should();
