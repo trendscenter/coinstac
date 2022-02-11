@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-empty */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
@@ -109,6 +109,10 @@ describe('e2e consortia permissions', () => {
 
     await appWindow1.click('button:has-text("Log In")');
 
+    try {
+      await appWindow1.click('button:has-text("Never Show Again")');
+    } catch {}
+
     // Assert
     return appWindow1.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_1);
   });
@@ -119,6 +123,10 @@ describe('e2e consortia permissions', () => {
     await appWindow2.fill('#login-password', PASS);
 
     await appWindow2.click('button:has-text("Log In")');
+
+    try {
+      await appWindow2.click('button:has-text("Never Show Again")');
+    } catch {}
 
     // Assert
     return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
