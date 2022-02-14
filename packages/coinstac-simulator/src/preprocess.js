@@ -23,6 +23,9 @@ async function getIdToken(username, password) {
     return data.id_token;
   } catch (error) {
     logger.error('Error connecting to API');
+    if (error.response && error.response.status && error.response.status === 401) {
+      logger.error('Unauthorized: Check username and password.');
+    }
     throw error;
   }
 }
