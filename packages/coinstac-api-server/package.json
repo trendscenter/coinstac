@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "test": "docker-compose down && sleep 3 && docker-compose up -d && cross-env NODE_ENV=test nyc ava",
-    "test-setup": "docker-compose up -d && node seed/test-setup.js"
+    "test-setup": "docker-compose up -d && node seed/test-setup.js",
+    "migrate-db": "node src/database/migrations/migrate.js"
   },
   "author": "",
   "license": "ISC",
@@ -24,6 +25,7 @@
     "graphql-type-json": "^0.1.4",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
+    "migrate": "^1.7.0",
     "mongodb": "^3.5.7",
     "subscriptions-transport-ws": "^0.11.0"
   },
