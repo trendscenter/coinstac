@@ -126,28 +126,13 @@ function pipelineSpecFactory(inputSpec, mode, comp) {
 }
 
 const startPreprocessRun = async (pipelineSpec, baseDir) => {
-  let tree = directoryTree('./coinstac', { attributes: ['size', 'type', 'extension'] });
-  logger.debug('directory before preparing');
-  logger.debug(JSON.stringify(tree));
-
   await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
   await prepareDirectory(pipelineSpec, baseDir);
-
-  tree = directoryTree('./coinstac', { attributes: ['size', 'type', 'extension'] });
-  logger.debug('directory before running pipeline');
-  logger.debug(JSON.stringify(tree));
-
   const run = await runPipeline(pipelineSpec, baseDir);
 
-  tree = directoryTree('./coinstac', { attributes: ['size', 'type', 'extension'] });
-  logger.debug('directory before cleaning up');
-  logger.debug(JSON.stringify(tree));
   // cleanup input dir
   await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
 
-  tree = directoryTree('./coinstac', { attributes: ['size', 'type', 'extension'] });
-  logger.debug('directory before moving results dir');
-  logger.debug(JSON.stringify(tree));
   //  move dir to better store results
   const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
   const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
@@ -156,10 +141,6 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
     originalDir,
     destinationDir
   );
-
-  tree = directoryTree('./coinstac', { attributes: ['size', 'type', 'extension'] });
-  logger.debug('directory after renaming');
-  logger.debug(JSON.stringify(tree));
 
   return run;
 };

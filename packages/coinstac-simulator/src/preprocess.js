@@ -156,9 +156,10 @@ function createInputMap(baseInputSpec, csvPath) {
 
 async function prepareDirectory(pipelineSpec, baseDir) {
   await fs.promises.mkdir(path.resolve(baseDir, 'input/local0/simulatorRun'), { recursive: true });
-  Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value).map((filename) => {
-    return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
-  }));
+  return Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value)
+    .map((filename) => {
+      return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
+    }));
 }
 
 module.exports = { fetchPreprocessComputations, createInputMap, prepareDirectory };
