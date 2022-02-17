@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-
-'use strict';
-
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
@@ -11,7 +8,7 @@ const glob = util.promisify(require('glob'));
 const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
-const directoryTree = require('directory-tree');
+const parseJson = require('json-parse-even-better-errors');
 
 const pkg = require('../package.json');
 
@@ -147,6 +144,8 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
 
 const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
   let rawSpec;
+  let pipelineSpec;
+  let specError;
   try {
     rawSpec = fs.readFileSync(pipelineSpecPath);
   } catch (e) {
@@ -155,9 +154,15 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     rawSpec = null;
   }
 
-  let pipelineSpec;
   if (rawSpec) {
-    pipelineSpec = JSON.parse(rawSpec);
+    try {
+      pipelineSpec = parseJson(rawSpec);
+    } catch (e) {
+      specError = `Your pipelineSpec's JSON formatted incorrectly
+      please edit it to fix any errors:
+      ${e}
+      Do you want to generate a new one?`;
+    }
   }
   // authenticate and fetch computations
   const genSpecAndProcess = async (pipelineSpec, baseDir) => {
@@ -243,7 +248,7 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
             if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
             fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
-            await inquirer.prompt([{
+            return inquirer.prompt([{
               type: 'confirm',
               name: 'noexit',
               message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
@@ -259,19 +264,22 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     });
   };
 
-  if (!pipelineSpec) {
+  if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
   } else {
     await inquirer.prompt([{
       type: 'confirm',
       name: 'run',
-      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
+      message: specError || `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
     }]).then(async (resp) => {
-      if (resp.run) {
+      if (resp.run && !specError) {
         return startPreprocessRun(pipelineSpec, baseDir);
       }
-      // make new spec, ask to rename old
-      await genSpecAndProcess(pipelineSpec, baseDir);
+      if (!resp.run) {
+        // make new spec, ask to rename old
+        await genSpecAndProcess(pipelineSpec, baseDir);
+      }
+      process.exit();
     });
   }
 };
