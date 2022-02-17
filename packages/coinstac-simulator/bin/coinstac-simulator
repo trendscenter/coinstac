@@ -267,22 +267,26 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
 
   if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
+  } else if (specError) {
+    await inquirer.prompt([{
+      type: 'confirm',
+      name: 'newSpec',
+      message: specError,
+    }]).then(async (resp) => {
+      if (resp.newSpec) {
+        await genSpecAndProcess(pipelineSpec, baseDir);
+      }
+    });
   } else {
     await inquirer.prompt([{
       type: 'confirm',
       name: 'run',
-      message: specError || `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
+      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
     }]).then(async (resp) => {
-      if (resp.run && !specError) {
+      if (resp.run) {
         return startPreprocessRun(pipelineSpec, baseDir);
       }
-      // gen if there isnt an error and they want to, or if there is
-      // an error and they want a new one
-      if ((resp.run && specError) || (resp.run || !specError)) {
-        // make new spec, ask to rename old
-        await genSpecAndProcess(pipelineSpec, baseDir);
-      }
-      process.exit();
+      await genSpecAndProcess(pipelineSpec, baseDir);
     });
   }
 };
