@@ -154,16 +154,6 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     rawSpec = null;
   }
 
-  if (rawSpec) {
-    try {
-      pipelineSpec = parseJson(rawSpec);
-    } catch (e) {
-      specError = `Your pipelineSpec's JSON formatted incorrectly
-      please edit it to fix any errors:
-      ${e}
-      Do you want to generate a new one?`;
-    }
-  }
   // authenticate and fetch computations
   const genSpecAndProcess = async (pipelineSpec, baseDir) => {
     if (program.username === undefined || program.password === undefined) {
@@ -264,6 +254,17 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     });
   };
 
+  if (rawSpec) {
+    try {
+      pipelineSpec = parseJson(rawSpec);
+    } catch (e) {
+      specError = `Your pipelineSpec's JSON formatted incorrectly
+      please edit it to fix any errors:
+      ${e}
+      Do you want to generate a new one?`;
+    }
+  }
+
   if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
   } else {
@@ -275,7 +276,9 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
       if (resp.run && !specError) {
         return startPreprocessRun(pipelineSpec, baseDir);
       }
-      if (!resp.run) {
+      // gen if there isnt an error and they want to, or if there is
+      // an error and they want a new one
+      if ((resp.run && specError) || (resp.run || !specError)) {
         // make new spec, ask to rename old
         await genSpecAndProcess(pipelineSpec, baseDir);
       }
