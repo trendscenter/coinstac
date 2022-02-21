@@ -1,7 +1,7 @@
 {
   "meta": {
     "name": "ENIGMA in COINSTAC demo",
-    "id": "szx",
+    "id": "enigma-sans",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-enigma-sans",
     "description": "A test for decentralized PCA"
