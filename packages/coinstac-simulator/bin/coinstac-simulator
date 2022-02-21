@@ -1,18 +1,13 @@
 #!/usr/bin/env node
-
-/* eslint-disable no-unused-vars */
-
-'use strict';
-
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
 const inquirer = require('inquirer');
-const glob = util.promisify(require('glob'));
 const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
+const parseJson = require('json-parse-even-better-errors');
 
 const pkg = require('../package.json');
 
@@ -32,7 +27,7 @@ process.on('unhandledRejection', (error) => {
 
 program
   .version(pkg.version)
-  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
+  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
@@ -78,7 +73,7 @@ if (program.loglevel) {
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
-const { fetchPreprocessComputations, createInputSpec, prepareDirectory } = require('../src/preprocess');
+const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
@@ -130,20 +125,26 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
   await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
   await prepareDirectory(pipelineSpec, baseDir);
   const run = await runPipeline(pipelineSpec, baseDir);
+
   // cleanup input dir
   await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+
   //  move dir to better store results
   const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
   const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
+
   await fs.promises.rename(
     originalDir,
     destinationDir
   );
+
   return run;
 };
 
 const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
   let rawSpec;
+  let pipelineSpec;
+  let specError;
   try {
     rawSpec = fs.readFileSync(pipelineSpecPath);
   } catch (e) {
@@ -152,12 +153,12 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     rawSpec = null;
   }
 
-  let pipelineSpec;
-  if (rawSpec) {
-    pipelineSpec = JSON.parse(rawSpec);
-  }
   // authenticate and fetch computations
   const genSpecAndProcess = async (pipelineSpec, baseDir) => {
+    if (program.username === undefined || program.password === undefined) {
+      logger.error('Username and password required');
+      process.exit(1);
+    }
     const computations = await fetchPreprocessComputations(program.username, program.password);
     // list options of computations
     await inquirer.prompt([{
@@ -231,12 +232,12 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
             const baseInputSpec = JSON.parse(
               JSON.stringify(selectedComputation.computation.input)
             );
-            const fulfilledInputSpec = createInputSpec(baseInputSpec, csvs[answer]);
-            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputSpec, ['local'], selectedComputation);
+            const fulfilledInputMap = createInputMap(baseInputSpec, csvs[answer]);
+            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
             if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
             fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
-            await inquirer.prompt([{
+            return inquirer.prompt([{
               type: 'confirm',
               name: 'noexit',
               message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
@@ -252,8 +253,29 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     });
   };
 
-  if (!pipelineSpec) {
+  if (rawSpec) {
+    try {
+      pipelineSpec = parseJson(rawSpec);
+    } catch (e) {
+      specError = `Your pipelineSpec's JSON formatted incorrectly
+      please edit it to fix any errors:
+      ${e}
+      Do you want to generate a new one?`;
+    }
+  }
+
+  if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
+  } else if (specError) {
+    await inquirer.prompt([{
+      type: 'confirm',
+      name: 'newSpec',
+      message: specError,
+    }]).then(async (resp) => {
+      if (resp.newSpec) {
+        await genSpecAndProcess(pipelineSpec, baseDir);
+      }
+    });
   } else {
     await inquirer.prompt([{
       type: 'confirm',
@@ -263,7 +285,6 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
       if (resp.run) {
         return startPreprocessRun(pipelineSpec, baseDir);
       }
-      // make new spec, ask to rename old
       await genSpecAndProcess(pipelineSpec, baseDir);
     });
   }
@@ -366,31 +387,32 @@ if (program.upload) {
          * @param  {[type]} key      [description]
          * @return {[type]}          [description]
          */
-        const createInputSpec = (variable, key) => {
-          return inquirer.prompt({
-            type: 'input',
-            name: `${key}`,
-            message: `Please give a ${variable.type} input for variable: ${key}
-          Files can use glob paterns to resolve to multiple file paths from the input dir
-          ie: **/*.txt`,
-          }).then((value) => {
-            return Promise.all([
-              variable.type === 'files' ? glob(value[key]) : value[key],
-            ]).then((resolvedVal) => {
-              const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-              return {
-                [key]: { value: coerce },
-              };
-            });
-          });
-        };
+        // const createInputSpec = (variable, key) => {
+        //   return inquirer.prompt({
+        //     type: 'input',
+        //     name: `${key}`,
+        //     message: `Please give a ${variable.type} input for variable: ${key}
+        //   Files can use glob paterns to resolve to multiple file paths from the input dir
+        //   ie: **/*.txt`,
+        //   }).then((value) => {
+        //     return Promise.all([
+        //       variable.type === 'files' ? glob(value[key]) : value[key],
+        //     ]).then((resolvedVal) => {
+        //       const coerce = variable.type === 'number'
+        //         ? parseFloat(resolvedVal[0]) : resolvedVal[0];
+        //       return {
+        //         [key]: { value: coerce },
+        //       };
+        //     });
+        //   });
+        // };
 
         let specProm;
         if (specs[1].code === 'ENOENT') {
           const memo = {};
           specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
             return prom.then(() => {
-              return createInputSpec(comp.computation.input[variable], variable);
+              return createInputMap(comp.computation.input[variable], variable);
             }).then(res => Object.assign(memo, res));
           }, Promise.resolve())
             .then((res) => {
