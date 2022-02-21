@@ -207,17 +207,13 @@ describe('e2e run computation with 1 member', () => {
 
   it('runs a computation', async () => {
     try {
+      await appWindow.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
-
-
-
-    await appWindow.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
-
-    // Assert
-    return appWindow.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
-      state: 'visible',
-      timeout: EXIST_TIMEOUT,
-    }).should.eventually.not.equal(null);
+      // Assert
+      return appWindow.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null);
     } catch (e) {
       console.log(`-----------------------------------------${e}`);
     }

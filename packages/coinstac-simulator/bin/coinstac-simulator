@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+/* eslint-disable no-unused-vars */
+
 'use strict';
 
 const util = require('util');
