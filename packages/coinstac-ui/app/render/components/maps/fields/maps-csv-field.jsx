@@ -127,8 +127,8 @@ class MapsCsvField extends React.Component {
 
   setSelectedFiles(selectedFiles) {
     const {
-          onChange, fieldName, fieldDataMap, fieldDescription,
-        } = this.props;
+      onChange, fieldName, fieldDataMap, fieldDescription,
+    } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);

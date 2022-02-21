@@ -4,7 +4,6 @@ const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
 const inquirer = require('inquirer');
-const glob = util.promisify(require('glob'));
 const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
@@ -28,7 +27,7 @@ process.on('unhandledRejection', (error) => {
 
 program
   .version(pkg.version)
-  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
+  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
@@ -388,24 +387,25 @@ if (program.upload) {
          * @param  {[type]} key      [description]
          * @return {[type]}          [description]
          */
-        const createInputSpec = (variable, key) => {
-          return inquirer.prompt({
-            type: 'input',
-            name: `${key}`,
-            message: `Please give a ${variable.type} input for variable: ${key}
-          Files can use glob paterns to resolve to multiple file paths from the input dir
-          ie: **/*.txt`,
-          }).then((value) => {
-            return Promise.all([
-              variable.type === 'files' ? glob(value[key]) : value[key],
-            ]).then((resolvedVal) => {
-              const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-              return {
-                [key]: { value: coerce },
-              };
-            });
-          });
-        };
+        // const createInputSpec = (variable, key) => {
+        //   return inquirer.prompt({
+        //     type: 'input',
+        //     name: `${key}`,
+        //     message: `Please give a ${variable.type} input for variable: ${key}
+        //   Files can use glob paterns to resolve to multiple file paths from the input dir
+        //   ie: **/*.txt`,
+        //   }).then((value) => {
+        //     return Promise.all([
+        //       variable.type === 'files' ? glob(value[key]) : value[key],
+        //     ]).then((resolvedVal) => {
+        //       const coerce = variable.type === 'number'
+        //         ? parseFloat(resolvedVal[0]) : resolvedVal[0];
+        //       return {
+        //         [key]: { value: coerce },
+        //       };
+        //     });
+        //   });
+        // };
 
         let specProm;
         if (specs[1].code === 'ENOENT') {
