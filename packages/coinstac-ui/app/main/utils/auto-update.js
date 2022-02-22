@@ -13,7 +13,7 @@ autoUpdater.on('update-downloaded', async () => {
   const { response } = await dialog.showMessageBox(window, {
     type: 'info',
     title: 'COINSTAC Updates',
-    message: 'Donwload finished. Do you want to close the app now and install the update immediately?',
+    message: 'Download finished. Do you want to close the app now and install the update immediately? Some updates may be necessary to use Coinstac',
     buttons: ['Install when I quit', 'Install immediately'],
   });
 
