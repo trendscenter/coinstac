@@ -6,7 +6,7 @@ let window;
 autoUpdater.autoDownload = false;
 
 autoUpdater.on('error', (error) => {
-  dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
+  console.error('Auto update error', error && (error.stack || error).toString());
 });
 
 autoUpdater.on('update-downloaded', async () => {

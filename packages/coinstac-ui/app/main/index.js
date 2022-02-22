@@ -146,8 +146,10 @@ loadConfig()
         return { action: 'deny' };
       });
 
+      if (process.env.NODE_ENV === 'production') {
+        checkForUpdates(mainWindow);
+      }
 
-      checkForUpdates(mainWindow);
 
       logger.on('log-message', (arg) => {
         mainWindow.webContents.send('log-message', arg);
