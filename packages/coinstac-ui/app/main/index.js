@@ -165,7 +165,7 @@ loadConfig()
           initializedCore.unlinkFiles(runId)
             .catch((err) => {
               logger.error(err);
-              mainWindow.webContents.send('docker-error', {
+              mainWindow.webContents.send('main-error', {
                 err: {
                   message: err.message,
                   stack: err.stack,
