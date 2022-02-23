@@ -292,6 +292,7 @@ module.exports = {
           })
           .catch((err) => {
             if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
+              debugger
               if (mode === 'remote') {
                 clientPublish(
                   activePipelines[runId].clients,
@@ -328,6 +329,10 @@ module.exports = {
       },
       suspendPipeline(runId) {
         const run = activePipelines[runId];
+        if (!run) {
+          throw new Error('Invalid pipeline ID');
+        }
+
         const packagedState = {
           activePipelineState: {
             currentState: run.currentState,

@@ -31,7 +31,7 @@ function LocalRunStatusListeners({
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
-      if (arg.run.error.message === 'Pipeline operation suspended by user') {
+      if (arg.run && arg.run.error && arg.run.error.message === 'Pipeline operation suspended by user') {
         notifyInfo(`${arg.consName} Pipeline suspended.`);
         updateLocalRun(arg.run.id, { status: 'suspended', type: arg.run.type });
         return;

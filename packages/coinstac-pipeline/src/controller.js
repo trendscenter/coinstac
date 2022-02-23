@@ -111,6 +111,7 @@ module.exports = {
       pipelineErrorCallback,
       stop: (type) => {
         return new Promise((resolve, reject) => {
+          debugger
           if (stopTypes[type]) {
             // decorate stop type for interaction with the waterfall
             return setStateProp('stopSignal', Object.assign({ resolve, reject }, { type: stopTypes[type] }));

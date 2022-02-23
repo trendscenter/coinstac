@@ -524,7 +524,7 @@ loadConfig()
           return initializedCore.requestPipelineStop(pipelineId, runId);
         } catch (err) {
           logger.error(err);
-          mainWindow.webContents.send('docker-error', {
+          mainWindow.webContents.send('main-error', {
             err: {
               message: err.message,
               stack: err.stack,
@@ -533,12 +533,12 @@ loadConfig()
         }
       });
 
-      ipcPromise.on('suspend-pipeline', async ({ runId }) => {
+      ipcMain.on('suspend-pipeline', async (e, { runId }) => {
         try {
-          return initializedCore.suspendPipeline(runId);
+          return initializedCore.pipelineManager.suspendPipeline(runId);
         } catch (err) {
           logger.error(err);
-          mainWindow.webContents.send('docker-error', {
+          mainWindow.webContents.send('main-error', {
             err: {
               message: err.message,
               stack: err.stack,

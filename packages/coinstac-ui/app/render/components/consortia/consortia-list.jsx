@@ -443,7 +443,7 @@ class ConsortiaList extends Component {
       });
 
     if (presentRun) {
-      ipcRenderer.send('suspend-pipeline', presentRun.id);
+      ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
     }
   }
 

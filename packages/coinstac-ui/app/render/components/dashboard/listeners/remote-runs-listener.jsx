@@ -13,7 +13,14 @@ function runIsFinished(run) {
 }
 
 function RemoteRunsListener({
-  userId, localRuns, consortia, saveLocalRun, updateLocalRun, suspendedRuns, notifyError, notifySuccess,
+  userId,
+  localRuns,
+  consortia,
+  saveLocalRun,
+  updateLocalRun,
+  suspendedRuns,
+  notifyError,
+  notifySuccess,
 }) {
   const ranFirstQuery = useRef(false);
 

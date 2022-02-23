@@ -407,13 +407,10 @@ class CoinstacClient {
   }
 
   /**
-   * Suspends a pipeline and returns its current state, so it can be resumed later
-   * @param {string} runId id of the pipeline run
+   * deletes any symlink/hardlinked files for a specific run
+   * @param  {string} runId  run to unlink
+   * @return {Promise}       resolves on unlink
    */
-  suspendPipeline(runId) {
-    return this.pipelineManager.suspendPipeline(runId);
-  }
-
   unlinkFiles(runId) {
     const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 

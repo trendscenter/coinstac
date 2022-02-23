@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { ipcRenderer } from 'electron';
-import ipcPromise from 'ipc-promise';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core/styles';
@@ -34,7 +33,7 @@ function DashboardHome({
   networkVolume, classes, notifyError, notifyInfo,
 }) {
   const suspendPipeline = runId => async () => {
-    const runSaveState = await ipcPromise.send('suspend-pipeline', { runId });
+    const runSaveState = await ipcRenderer.send('suspend-pipeline', { runId });
     saveSuspendedRun(runId, runSaveState);
   };
 
