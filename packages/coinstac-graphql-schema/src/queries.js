@@ -130,10 +130,25 @@ const queries = {
     {
       fetchComputation(computationIds: $computationIds) {
         id
+        meta {
+          name
+          id
+          version
+          repository
+          description
+        }
         computation {
           display
           input
           output
+          type
+          dockerImage
+          command
+          remote {
+            type
+            dockerImage
+            command
+          }
         }
       }
     }

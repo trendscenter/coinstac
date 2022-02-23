@@ -22,7 +22,8 @@ const ComputationIO = ({ compIO, classes }) => {
   // get the complete compspec
   // display the complete compspec
   const compSpecDbObject = JSON.parse(JSON.stringify(compIO));
-  const inputSpec = JSON.stringify(compSpecDbObject.computation.input, null, 4);
+  delete compSpecDbObject.id;
+  const inputSpec = JSON.stringify(compSpecDbObject, null, 4);
   const [textAreaValue, setTextAreaValue] = useState(inputSpec);
   const [isModified, setIsModified] = useState(false);
 
@@ -36,9 +37,8 @@ const ComputationIO = ({ compIO, classes }) => {
 
   const updateComputation = () => {
     // merge what has been changed into the complete compspec
-    compSpecDbObject.computation.input = JSON.parse(textAreaValue);
-    compSpecDbObject.meta = { id: compSpecDbObject.id };
-    addComputation({ variables: { computationSchema: compSpecDbObject } });
+    addComputation({ variables: { computationSchema: JSON.parse(textAreaValue) } });
+    console.log('did it');
   };
 
 
