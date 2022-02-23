@@ -120,7 +120,6 @@
     "build:webpack": "cross-env NODE_ENV=production webpack --mode=production",
     "deploy": "npm i && npm run build:webpack && NODE_ENV=production DEPLOY=true node ./scripts/build.js",
     "build-prod": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/build.js && node ./scripts/mac-zip.js",
-    "build-prod": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/build.js && node ./scripts/mac-zip.js",
     "build-dev": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=development node ./scripts/build.js && node ./scripts/mac-zip.js",
     "build-local": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=local node ./scripts/build.js && node ./scripts/mac-zip.js",
     "start": "electron . --log-level=debug",

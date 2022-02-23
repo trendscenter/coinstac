@@ -6,10 +6,28 @@ let window;
 autoUpdater.autoDownload = false;
 
 autoUpdater.on('error', (error) => {
-  console.error('Auto update error', error && (error.stack || error).toString());
+  debugger
+  console.error('Auto update error', error && (error.stack || error).toString()); // eslint-disable-line no-console
+});
+
+autoUpdater.on('update-not-available', async (a) => {
+  debugger
+});
+autoUpdater.on('update-available', async (a) => {
+  debugger
+});
+autoUpdater.on('download-progress', async (a) => {
+  debugger
+});
+autoUpdater.on('update-downloaded', async (a) => {
+  debugger
+});
+autoUpdater.on('checking-for-update', async (a) => {
+  debugger
 });
 
 autoUpdater.on('update-downloaded', async () => {
+  debugger
   const { response } = await dialog.showMessageBox(window, {
     type: 'info',
     title: 'COINSTAC Updates',

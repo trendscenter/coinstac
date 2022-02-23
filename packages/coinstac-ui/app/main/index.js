@@ -141,15 +141,13 @@ loadConfig()
 
     logger.verbose('main process booted');
     createWindow().then((mainWindow) => {
+      if (process.env.NODE_ENV === 'production') {
+        checkForUpdates(mainWindow);
+      }
       mainWindow.webContents.setWindowOpenHandler((url) => {
         electron.shell.openExternal(url);
         return { action: 'deny' };
       });
-
-      if (process.env.NODE_ENV === 'production') {
-        checkForUpdates(mainWindow);
-      }
-
 
       logger.on('log-message', (arg) => {
         mainWindow.webContents.send('log-message', arg);
