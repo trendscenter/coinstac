@@ -1,6 +1,6 @@
 {
   "name": "coinstac-graphql-schema",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
