@@ -6,6 +6,8 @@
   align-items: center;
   background: #eee;
   transition: opacity 0.5s ease-out;
+  padding-top: 6rem;
+  margin: 0;
 }
 
 #splash-component.fade-out {
@@ -13,45 +15,27 @@
 }
 
 #splash-component .logo {
-  margin: 0 0 0 4rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 0 0 auto;
-  padding: 1rem 0;
-}
-
-#splash-component .logo abbr[title] {
-  border: none;
-  text-decoration: none;
-}
-
-#splash-component .logo abbr {
-  position: relative;
-  color: rgba(0, 0, 0, 0.87);
-  font-size: 3rem;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
-  font-weight: 400;
-  line-height: 1.04;
-  letter-spacing: 0em;
-  margin: 0;
   display: block;
+  position: relative;
+  margin: 0;
+  padding: 0;
 }
 
-#splash-component .logo abbr::before {
-  background: url('../../../img/icons/coinstac.png') no-repeat;
+#splash-component .logo::before {
+  background: url('../../../img/icons/coinstac-icon.png') no-repeat;
   background-size: contain;
   content: '';
-  height: 4rem;
-  width: 4rem;
+  height: 8rem;
+  width: 8rem;
   vertical-align: top;
   position: absolute;
-  left: -4.75rem;
-  top: -0.5rem;
+  left: -4rem;
+  top: -9rem;
 }
 
 #splash-component .loading-text {
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-size: 1rem;
 }
 
 #splash-component .activity-indicator {

@@ -238,7 +238,7 @@ class CoinstacClient {
         const thisExtension = path.extname(p);
 
         if ((!multext && group.extension && thisExtension !== group.extension)
-             || (!multext && extension && extension !== thisExtension)) {
+          || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
@@ -305,33 +305,40 @@ class CoinstacClient {
       if (dataType !== 'directory') {
         return mkdirp(fp)
           .then(() => {
-          // TODO: validate runPipeline against clientPipeline
+            // TODO: validate runPipeline against clientPipeline
             const linkPromises = [];
 
             if (filePaths) {
               let stageFiles = process.env.CI ? fs.copyFile : fs.link;
               if (networkVolume) {
                 stageFiles = fs.symlink;
-                runObj.alternateInputDirectory = filePaths.baseDirectory;
+                runObj.alternateInputDirectory = {
+                  in: filePaths.baseDirectory,
+                  out: '/c/user/data/input/',
+                };
               }
 
               for (let i = 0; i < filePaths.files.length; i += 1) {
                 const mkdir = path.normalize(filePaths.files[i])
-                === path.basename(filePaths.files[i])
+                  === path.basename(filePaths.files[i])
                   ? Promise.resolve()
                   : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
 
                 linkPromises.push( // eslint-disable-next-line no-loop-func
-                  mkdir.then(() => stageFiles(
-                    path.resolve(filePaths.baseDirectory, filePaths.files[i]),
-                    path.resolve(fp, path.basename(filePaths.files[i]))
-                  )
+                  mkdir.then(async () => {
+                    await stageFiles(
+                      (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
+                        : path.resolve(filePaths.baseDirectory, filePaths.files[i])
+                      ),
+                      path.resolve(fp, path.basename(filePaths.files[i]))
+                    );
+                  })
                     .catch((e) => {
                       // permit dupes
                       if (e.code && e.code !== 'EEXIST') {
                         throw e;
                       }
-                    }))
+                    })
                 );
               }
             }
@@ -429,8 +436,7 @@ class CoinstacClient {
         filesArray.forEach(async (file) => {
           file = path.resolve(fullPath, file);
           fs.stat(file).then(async (fstats) => {
-            const hasFiles = await fs.readdir(file);
-            if (fstats.isDirectory() && hasFiles) {
+            if (fstats.isDirectory()) {
               unlinkPromises.push(
                 fs.rmdir(file, { recursive: true })
               );
@@ -439,6 +445,8 @@ class CoinstacClient {
                 fs.unlink(file)
               );
             }
+          }).catch((e) => {
+            this.logger.error(`Failed fs call unlinking files: ${e}`);
           });
         });
         return Promise.all(unlinkPromises);

@@ -16,7 +16,7 @@ const INITIAL_STATE = {
 };
 
 const getAllFiles = ((dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath)
+  const files = fs.readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
 
@@ -40,7 +40,7 @@ export const saveDataMapping = applyAsyncLoading(
       let filesArray = [];
       const inputMap = {};
       let baseDirectory = null;
-      let dataType = null;
+      const dataType = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
         inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
@@ -107,10 +107,7 @@ export const saveDataMapping = applyAsyncLoading(
         inputMap[inputMapKey].fulfilled = true;
 
         // carry dataType to the pipeline for processing files
-        if ( mappedData && mappedData.fieldType === 'csv'
-          || mappedData && mappedData.fieldType === 'files'
-          || mappedData && mappedData.fieldType === 'directory'
-        ) {
+        if (mappedData && ['csv', 'files', 'directory'].includes(mappedData.fieldType)) {
           inputMap[inputMapKey].type = mappedData.fieldType;
         }
       });
@@ -119,7 +116,7 @@ export const saveDataMapping = applyAsyncLoading(
         filesArray,
         baseDirectory,
         inputMap,
-        dataType
+        dataType,
       });
     });
 

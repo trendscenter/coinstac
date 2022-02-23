@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import ipcPromise from 'ipc-promise';
+import { ipcRenderer } from 'electron';
 
 function useDockerStatus() {
   const [dockerStatus, setDockerStatus] = useState(true);
@@ -7,7 +7,7 @@ function useDockerStatus() {
   useEffect(() => {
     const dockerInterval = setInterval(async () => {
       try {
-        const status = await ipcPromise.send('get-status');
+        const status = await ipcRenderer.invoke('get-status');
         setDockerStatus(status === 'OK');
       } catch (_) {
         setDockerStatus(false);

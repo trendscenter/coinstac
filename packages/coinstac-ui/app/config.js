@@ -1,6 +1,7 @@
 'use strict';
 
 const convict = require('convict');
+const { app } = require('electron');
 const pify = require('util').promisify;
 const access = pify(require('fs').access);
 const path = require('path');
@@ -63,6 +64,7 @@ const conf = convict({
   },
   coinstacHome: path.join(home(), '.coinstac'),
   clientServerURL: '',
+  version: app.getVersion(),
 });
 
 module.exports = function loadConfig() {

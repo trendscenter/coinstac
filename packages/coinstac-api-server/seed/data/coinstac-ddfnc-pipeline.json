@@ -27,7 +27,8 @@
               "type": "files",
               "items": ["NIfTI"],
               "extensions": [["nii"]],
-              "order": 0
+              "order": 0,
+              "source": "member"
             },
             "mask": {
                 "label": "Mask",

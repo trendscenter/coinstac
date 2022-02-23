@@ -74,10 +74,10 @@ class App extends Component {
           <MuiThemeProvider theme={theme}>
             <CssBaseline />
             <ActivityIndicator visible={isLoading} />
-              
-              {checkJWT && children}
 
-              <DisplayNotificationsListener />
+            {checkJWT && children}
+
+            <DisplayNotificationsListener />
           </MuiThemeProvider>
         </div>
       </ErrorBoundary>

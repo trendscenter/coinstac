@@ -37,6 +37,7 @@ const styles = theme => ({
   },
   value: {
     display: 'inline-block',
+    whiteSpace: 'nowrap',
   },
   contentContainer: {
     marginBottom: theme.spacing(1),
@@ -54,8 +55,11 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
   },
-  runStatePaper: {
-    width: `calc(50% - ${theme.spacing(1)}px)`,
+  runStateInnerContainer: {
+    paddingBottom: '1em',
+  },
+  runStateKeyValueContainer: {
+    whiteSpace: 'nowrap',
   },
   runTitle: {
     textDecoration: 'underline',
@@ -75,74 +79,60 @@ function parseWaiting(runObject, stateKey) {
     .filter(clientId => Boolean(clientId));
 }
 
-function getStateWell(runObject, stateName, stateKey, classes) {
-  const {
-    mode, waitingOn, controllerState, currentIteration, pipelineStep, totalSteps,
-  } = runObject[stateKey];
+function getStateWell(runObject, classes) {
+  const OuterNodeRunObject = runObject.localPipelineState;
+  const CentralNodeRunObject = runObject.remotePipelineState;
+
 
   return (
-    <Paper
-      className={classNames(classes.rootPaper, classes.runStatePaper)}
-    >
-      <Typography variant="h5" className={classes.runTitle}>
-        {`${stateName} Pipeline State:`}
-      </Typography>
-      {
-        mode
+    <div className={classes.runStateInnerContainer}>
+
+      <div className={classes.runStateKeyValueContainer}>
+        <Typography className={classes.label}>Pipeline Step:</Typography>
+        <Typography className={classes.value}>
+          {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
+        </Typography>
+      </div>
+
+      <div className={classes.runStateKeyValueContainer}>
+        <Typography className={classes.label}>Iteration:</Typography>
+        <Typography className={classes.value}>
+          {OuterNodeRunObject.currentIteration}
+        </Typography>
+      </div>
+
+      <div className={classes.runStateKeyValueContainer}>
+        <Typography className={classes.label}>Local Node Status:</Typography>
+        <Typography className={classes.value}>
+          {OuterNodeRunObject.controllerState}
+        </Typography>
+      </div>
+
+      {CentralNodeRunObject
         && (
-          <div>
-            <Typography className={classes.label}>Mode:</Typography>
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Central Node Status:</Typography>
             <Typography className={classes.value}>
-              {mode}
+              {CentralNodeRunObject.controllerState}
             </Typography>
           </div>
         )
       }
       {
-        waitingOn && waitingOn.length > 0
+        CentralNodeRunObject
+        && CentralNodeRunObject.controllerState
+        && CentralNodeRunObject.waitingOn
+        && CentralNodeRunObject.waitingOn.length > 0
+        && CentralNodeRunObject.controllerState.includes('waiting on')
         && (
-          <div>
+          <div className={classes.runStateKeyValueContainer}>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
+              {parseWaiting(runObject, 'remotePipelineState')}
             </Typography>
-          </div>
-        )
+          </div>)
       }
-      {
-        controllerState
-        && (
-          <div>
-            <Typography className={classes.label}>Controller State:</Typography>
-            <Typography className={classes.value}>
-              {controllerState}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        currentIteration >= 0
-        && (
-          <div>
-            <Typography className={classes.label}>Current Iteration:</Typography>
-            <Typography className={classes.value}>
-              {currentIteration}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        pipelineStep >= 0
-        && (
-          <div>
-            <Typography className={classes.label}>Step Count:</Typography>
-            <Typography className={classes.value}>
-              {`${pipelineStep + 1} / ${totalSteps}`}
-            </Typography>
-          </div>
-        )
-      }
-    </Paper>
+    </div>
   );
 }
 
@@ -186,10 +176,10 @@ class RunItem extends Component {
       >
         <div className={classes.titleContainer}>
           <Typography variant="h5">
-            { consortiumName }
+            {consortiumName}
             {
               pipelineSnapshot
-              && <span>{ ` || ${pipelineSnapshot.name}`}</span>
+              && <span>{` || ${pipelineSnapshot.name}`}</span>
             }
           </Typography>
           {
@@ -225,7 +215,10 @@ class RunItem extends Component {
             )
           }
           <div>
-            <Typography className={classes.label}>
+            <Typography
+              className={classes.label}
+              style={{ paddingTop: '30px' }}
+            >
               Status:
             </Typography>
             <Typography className={classes.value}>
@@ -289,11 +282,7 @@ class RunItem extends Component {
           <div className={classes.runStateContainer}>
             {
               localPipelineState && status === 'started'
-              && getStateWell(runObject, 'Local', 'localPipelineState', classes)
-            }
-            {
-              remotePipelineState && status === 'started'
-              && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
+              && getStateWell(runObject, classes)
             }
           </div>
         </div>
@@ -391,9 +380,9 @@ class RunItem extends Component {
 }
 
 RunItem.defaultProps = {
-  stopPipeline: () => {},
-  suspendPipeline: () => {},
-  resumePipeline: () => {},
+  stopPipeline: () => { },
+  suspendPipeline: () => { },
+  resumePipeline: () => { },
   isSuspended: false,
 };
 

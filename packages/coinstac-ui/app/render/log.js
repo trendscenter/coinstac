@@ -7,7 +7,7 @@ const { Tail } = require('tail');
 const serializeError = require('serialize-error');
 const pify = require('util').promisify;
 const access = pify(require('fs').access);
-const loadConfig = require('../config.js');
+const loadConfig = require('../config');
 
 const outputEl = typeof document !== 'undefined'
   ? document.getElementById('output')

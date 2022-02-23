@@ -9,7 +9,8 @@ const readFile = pify(require('fs').readFile);
 const writeFile = pify(require('fs').writeFile);
 const open = pify(require('fs').open);
 const close = pify(require('fs').close);
-const cliOpts = require('./parse-cli-input.js').get();
+const { Buffer } = require('buffer');
+const cliOpts = require('./parse-cli-input').get();
 
 function buildLogFilePath(config) {
   return path.join(config.get('logLocations')[process.platform], config.get('logFile'));
@@ -31,10 +32,10 @@ async function configureLogger(config) {
     const len = file.split('\n').length;
     if (len > 1000) {
       const trimmed = file.split('\n').slice(len - 1000, len);
-      await writeFile(logFilePath, trimmed);
+      await writeFile(logFilePath, Buffer.from(trimmed));
     }
 
-    const logger = winston.loggers.add('coinstac-main', {
+    const logger = winston.createLogger({
       level: 'silly',
       format: winston.format.combine(
         winston.format.timestamp(),
@@ -65,7 +66,7 @@ async function configureLogger(config) {
     console.log(`Error: ${err}`);
     /* eslint-enable no-console */
 
-    const logger = winston.loggers.add('coinstac-main', {
+    const logger = winston.createLogger({
       level: 'silly',
       transports: [
         new winston.transports.Console({ format: winston.format.cli() }),

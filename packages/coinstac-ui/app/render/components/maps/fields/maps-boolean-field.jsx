@@ -32,17 +32,16 @@ const styles = theme => ({
 function MapsBooleanField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
-
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
 
-  function changeHandler(e) {
+  function changeHandler() {
     setVal(!val);
     onChange(fieldName, { fieldType: fieldDescription.type, value: !val });
   }
 
-  function defaultHandler(e) {
+  function defaultHandler() {
     setUseDefault(!useDefault);
     if (!useDefault) {
       setVal(fieldDescription.default);
@@ -64,8 +63,8 @@ function MapsBooleanField({
       </Typography>
       <Switch
         onChange={e => changeHandler(e)}
-        value = {val ? val : fieldDescription.default}
-        checked = {val ? val : fieldDescription.default}
+        value={val || fieldDescription.default}
+        checked={val || fieldDescription.default}
       />
       <FormControlLabel
         control={(
@@ -76,7 +75,7 @@ function MapsBooleanField({
           />
         )}
         label={
-          <Box component="div" fontSize={15} style={{color: '#b7b7b7'}}>Use Default</Box>
+          <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
         }
       />
     </div>

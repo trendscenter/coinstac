@@ -218,7 +218,7 @@ const typeDefs = `
   # This is a description of the queries
   type Query {
     # This is a description of the fetchAllComputations query
-    fetchAllComputations: [Computation]
+    fetchAllComputations(preprocess: Boolean): [Computation]
     fetchAllConsortia: [Consortium]
     fetchAllPipelines: [Pipeline]
     fetchAllResults: [Result]
