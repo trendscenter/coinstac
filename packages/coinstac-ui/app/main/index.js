@@ -141,7 +141,7 @@ loadConfig()
 
     logger.verbose('main process booted');
     createWindow().then((mainWindow) => {
-      if (process.env.NODE_ENV === 'production') {
+      if (electron.app.isPackaged || process.env.NODE_ENV === 'production') {
         checkForUpdates(mainWindow, logger);
       }
       mainWindow.webContents.setWindowOpenHandler((url) => {
@@ -163,7 +163,7 @@ loadConfig()
           initializedCore.unlinkFiles(runId)
             .catch((err) => {
               logger.error(err);
-              mainWindow.webContents.send('docker-error', {
+              mainWindow.webContents.send('main-error', {
                 err: {
                   message: err.message,
                   stack: err.stack,
@@ -301,7 +301,7 @@ loadConfig()
         resolve();
       }));
 
-      function startPipelineRun(run, filesArray, consortium, networkVolume) {
+      function startPipelineRun(run, filesArray, consortium, networkVolume, runState) {
         const pipeline = run.pipelineSnapshot;
 
         const computationImageList = pipeline.steps
@@ -386,7 +386,8 @@ loadConfig()
               filesArray,
               run.id,
               run.pipelineSteps,
-              networkVolume
+              networkVolume,
+              runState
             )
               .then(({ pipeline, result }) => {
                 // Listen for local pipeline state updates
@@ -468,7 +469,7 @@ loadConfig()
           });
       }
 
-      async function startPipeline(consortium, dataMappings, pipelineRun, networkVolume) {
+      async function startPipeline(consortium, dataMappings, pipelineRun, networkVolume, runState) {
         try {
           const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
             pipelineRun.pipelineSnapshot, dataMappings
@@ -483,7 +484,7 @@ loadConfig()
 
           mainWindow.webContents.send('save-local-run', { run: pipelineRun });
 
-          await startPipelineRun(run, filesArray, consortium, networkVolume);
+          await startPipelineRun(run, filesArray, consortium, networkVolume, runState);
         } catch (error) {
           mainWindow.webContents.send('notify-warning', error.message);
         }
@@ -497,7 +498,7 @@ loadConfig()
      * @return {Promise<String>} Status message
      */
       ipcMain.on('start-pipeline', (event, {
-        consortium, dataMappings, pipelineRun, networkVolume,
+        consortium, dataMappings, pipelineRun, networkVolume, runState,
       }) => {
         // This is a way to avoid multiple instances of COINSTAC
         // running on the same machine to start
@@ -506,7 +507,7 @@ loadConfig()
         const delayAmount = Math.floor(Math.random() * 3000);
 
         setTimeout(() => {
-          startPipeline(consortium, dataMappings, pipelineRun, networkVolume);
+          startPipeline(consortium, dataMappings, pipelineRun, networkVolume, runState);
         }, delayAmount);
       });
 
@@ -521,7 +522,21 @@ loadConfig()
           return initializedCore.requestPipelineStop(pipelineId, runId);
         } catch (err) {
           logger.error(err);
-          mainWindow.webContents.send('docker-error', {
+          mainWindow.webContents.send('main-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      ipcMain.on('suspend-pipeline', async (e, { runId }) => {
+        try {
+          return initializedCore.pipelineManager.suspendPipeline(runId);
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('main-error', {
             err: {
               message: err.message,
               stack: err.stack,

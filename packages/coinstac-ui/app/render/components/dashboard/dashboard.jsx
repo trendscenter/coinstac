@@ -41,9 +41,16 @@ import TreeviewListener from './listeners/treeview-listener';
 import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
+import { notifyError } from '../../state/ducks/notifyAndLog';
+
 
 function Dashboard({
-  auth, children, runs, maps, router,
+  auth,
+  children,
+  runs,
+  maps,
+  router,
+  notifyError,
 }) {
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
@@ -67,6 +74,9 @@ function Dashboard({
 
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
+    ipcRenderer.on('main-error', (event, arg) => {
+      notifyError(`Unexpected error: ${arg.message || arg.error || arg}`);
+    });
   }, []);
 
   useEffect(() => {
@@ -177,6 +187,7 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
+  notifyError: PropTypes.func.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -213,6 +224,8 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
-const connectedComponent = connect(mapStateToProps)(withRouter(ConnectedDashboard));
+const connectedComponent = connect(
+  mapStateToProps, { notifyError }
+)(withRouter(ConnectedDashboard));
 
 export default connectedComponent;
