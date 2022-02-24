@@ -433,6 +433,20 @@ class ConsortiaList extends Component {
     };
   }
 
+  suspendPipeline = consortiumId => () => {
+    const { runs } = this.props;
+
+    const presentRun = runs
+      .filter(run => run.consortiumId === consortiumId)
+      .reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
+      });
+
+    if (presentRun) {
+      ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
+    }
+  }
+
   startPipeline(consortiumId) {
     return async () => {
       const {
