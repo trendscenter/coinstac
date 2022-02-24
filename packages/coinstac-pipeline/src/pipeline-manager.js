@@ -292,7 +292,6 @@ module.exports = {
           })
           .catch((err) => {
             if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
-              debugger
               if (mode === 'remote') {
                 clientPublish(
                   activePipelines[runId].clients,
