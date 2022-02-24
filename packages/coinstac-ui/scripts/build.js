@@ -11,6 +11,7 @@ if (NODE_ENV === 'production' && DEPLOY) {
   buildConfig.win = ['nsis'];
   buildConfig.mac = ['default'];
   buildConfig.linux = ['AppImage'];
+  buildConfig.publish = { provider: 'github' };
 } else {
   buildConfig.dir = true;
   buildConfig.win = ['zip'];
