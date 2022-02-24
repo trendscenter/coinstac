@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { graphql, useMutation } from '@apollo/react-hoc';
 import ReactJson from 'react-json-view';
-import { Button, TextareaAutosize } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { useQuery } from '@apollo/client';
-import { FETCH_COMPUTATION_QUERY, ADD_COMPUTATION_MUTATION } from '../../state/graphql/functions';
+import { Button, TextareaAutosize } from '@material-ui/core';
+import { ADD_COMPUTATION_MUTATION, FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
 const styles = theme => ({
@@ -14,45 +13,25 @@ const styles = theme => ({
   },
 });
 
-const ComputationIO = ({ computationId, classes }) => {
-  const fetchComputationQueryObj = useQuery(FETCH_COMPUTATION_QUERY,
-    {
-      variables:
-      {
-        computationIds: computationId,
-      },
-    });
+const ComputationIO = ({ compIO, classes }) => {
+  if (!compIO) {
+    return null;
+  }
 
-  if (fetchComputationQueryObj.loading) {
-    return <div>loading</div>;
-  }
-  if (fetchComputationQueryObj.error) {
-    return `Error! ${fetchComputationQueryObj.error}`;
-  }
-  if (fetchComputationQueryObj.data) {
-    const compspec = fetchComputationQueryObj.data.fetchComputation[0];
-    return (
-      <div className={classes.wrapper}>
-        <ComputationInner data={compspec} />
-      </div>
-    );
-  }
-};
-
-const ComputationInner = ({ data }) => {
-  const compSpecDbObject = JSON.parse(JSON.stringify(data));
+  const compSpecDbObject = JSON.parse(JSON.stringify(compIO));
   delete compSpecDbObject.id;
+  delete compSpecDbObject.__typename;
+  delete compSpecDbObject.computation.__typename;
+  delete compSpecDbObject.computation.remote.__typename;
+  delete compSpecDbObject.meta.__typename;
   const inputSpec = JSON.stringify(compSpecDbObject, null, 4);
   const [textAreaValue, setTextAreaValue] = useState(inputSpec);
   const [isModified, setIsModified] = useState(false);
-  const [addComputation, { data: addComputationData, loading, error }] = useMutation(ADD_COMPUTATION_MUTATION);
+  const [addComputation] = useMutation(ADD_COMPUTATION_MUTATION);
 
   const updateComputation = () => {
     const val = JSON.parse(textAreaValue);
-    delete val.__typename;
-    delete val.computation.__typename;
-    delete val.computation.remote.__typename;
-    delete val.meta.__typename;
+
     addComputation({ variables: { computationSchema: val } });
   };
 
@@ -71,6 +50,7 @@ const ComputationInner = ({ data }) => {
       />
 
       <Button
+        color="primary"
         disabled={!isModified}
         onClick={updateComputation}
       >
@@ -81,14 +61,14 @@ const ComputationInner = ({ data }) => {
 };
 
 ComputationIO.defaultProps = {
-  computationId: null,
+  compIO: null,
 };
 
 ComputationIO.propTypes = {
-  computationId: PropTypes.string,
+  compIO: PropTypes.object,
   classes: PropTypes.object.isRequired,
 };
 
-// const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
+const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
 
-export default withStyles(styles)(ComputationIO);
+export default withStyles(styles)(ComputationIOWithData);
