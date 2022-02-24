@@ -1,47 +1,47 @@
 module.exports = {
-  appId: "com.github.trendscenter.coinstac",
+  appId: 'com.github.trendscenter.coinstac',
   publish: {
-    provider: "github",
+    provider: 'github',
   },
-  productName: "COINSTAC",
-  afterSign: "./scripts/utils/notarize.js",
+  productName: 'COINSTAC',
+  afterSign: './scripts/utils/notarize.js',
   files: [
-    "**/*",
-    "build/render",
-    "!config/local-development.json",
-    "!config/local-example.json",
-    "!config/local-production.json",
-    "!CONTRIBUTING.md",
-    "!coverage",
-    "!scripts",
-    "!test",
-    "!webpack.config.js"
+    '**/*',
+    'build/render',
+    '!config/local-development.json',
+    '!config/local-example.json',
+    '!config/local-production.json',
+    '!CONTRIBUTING.md',
+    '!coverage',
+    '!scripts',
+    '!test',
+    '!webpack.config.js',
   ],
   mac: {
-    icon: "img/icons/coinstac.icns",
-    target: "dmg",
-    category: "public.app-category.education",
-    hardenedRuntime: true
+    icon: 'img/icons/coinstac.icns',
+    target: 'default',
+    category: 'public.app-category.education',
+    hardenedRuntime: true,
   },
   dmg: {
-    sign: false
+    sign: false,
   },
   win: {
-    target: "nsis",
-    icon: "img/icons/coinstac.ico"
+    target: 'nsis',
+    icon: 'img/icons/coinstac.ico',
   },
   nsis: {
     oneClick: true,
     runAfterFinish: true,
-    installerIcon: "img/icons/coinstac.ico",
-    uninstallerIcon: "img/icons/coinstac.ico",
+    installerIcon: 'img/icons/coinstac.ico',
+    uninstallerIcon: 'img/icons/coinstac.ico',
     deleteAppDataOnUninstall: true,
-    license: "LICENSE"
+    license: 'LICENSE',
   },
   linux: {
-    target: "AppImage",
-    category: "Science",
-    artifactName: "COINSTAC-${version}-linux.AppImage",
-    icon: "img/icons/coinstac.png"
-  }
-}
+    target: 'AppImage',
+    category: 'Science',
+    artifactName: `COINSTAC-${version}-linux.AppImage`,
+    icon: 'img/icons/coinstac.png',
+  },
+};

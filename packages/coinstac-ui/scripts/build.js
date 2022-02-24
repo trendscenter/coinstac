@@ -9,7 +9,7 @@ const buildConfig = {};
 if (NODE_ENV === 'production' && DEPLOY) {
   console.log('Preparing to deploy...');
   buildConfig.win = ['nsis'];
-  buildConfig.mac = ['dmg'];
+  buildConfig.mac = ['default'];
   buildConfig.linux = ['AppImage'];
 } else {
   buildConfig.dir = true;
