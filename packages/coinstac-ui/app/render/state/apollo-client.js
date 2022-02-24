@@ -77,6 +77,7 @@ function getApolloClient({ apiServer, subApiServer }) {
               searchDatasets: { merge: false },
               fetchAllConsortia: { merge: false },
               fetchAllPipelines: { merge: false },
+              fetchAllComputations: { merge: false },
             },
           },
         },
