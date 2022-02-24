@@ -15,7 +15,6 @@ function useEntityListSubscription(subscriptionFunc, document, query, subscripti
         }
 
         const index = prev[query].findIndex(c => c.id === data[subscriptionName].id);
-        console.log(data)
         if (index === -1) {
           return {
             [query]: [...prev[query], data[subscriptionName]],

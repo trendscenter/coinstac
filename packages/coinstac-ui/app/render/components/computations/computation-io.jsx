@@ -48,7 +48,12 @@ const ComputationInner = ({ data }) => {
   const [addComputation, { data: addComputationData, loading, error }] = useMutation(ADD_COMPUTATION_MUTATION);
 
   const updateComputation = () => {
-    addComputation({ variables: { computationSchema: JSON.parse(textAreaValue) } });
+    const val = JSON.parse(textAreaValue);
+    delete val.__typename;
+    delete val.computation.__typename;
+    delete val.computation.remote.__typename;
+    delete val.meta.__typename;
+    addComputation({ variables: { computationSchema: val } });
   };
 
   useEffect(() => {

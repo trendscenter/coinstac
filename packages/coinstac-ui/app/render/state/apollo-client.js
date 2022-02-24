@@ -69,7 +69,7 @@ function getApolloClient({ apiServer, subApiServer }) {
     client: new ApolloClient({
       link: unauthorizedLink.concat(splitLink),
       cache: new InMemoryCache({
-        addTypename: false,
+        // addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -77,7 +77,6 @@ function getApolloClient({ apiServer, subApiServer }) {
               searchDatasets: { merge: false },
               fetchAllConsortia: { merge: false },
               fetchAllPipelines: { merge: false },
-              fetchAllComputations: { merge: false },
             },
           },
         },

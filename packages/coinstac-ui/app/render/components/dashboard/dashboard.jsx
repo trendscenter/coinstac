@@ -82,7 +82,6 @@ function Dashboard({
   const pipelines = get(pipelinesData, 'fetchAllPipelines');
   const threads = get(threadsData, 'fetchAllThreads');
 
-
   const dockerStatus = useDockerStatus();
 
   useStartInitialRuns(); // starts pipelines on app startup
