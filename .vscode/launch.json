@@ -14,7 +14,7 @@
             "protocol": "inspector",
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": "${workspaceRoot}/packages/coinstac-ui/node_modules/.bin/electron",
-            "program": "${workspaceRoot}/packages/coinstac-ui/app/main/index.js",
+            "program": "${workspaceRoot}/packages/coinstac-ui/",
             "env": {
                 "COINS_ENV": "development",
                 "NODE_ENV": "development"

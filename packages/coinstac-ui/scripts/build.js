@@ -9,8 +9,9 @@ const buildConfig = {};
 if (NODE_ENV === 'production' && DEPLOY) {
   console.log('Preparing to deploy...');
   buildConfig.win = ['nsis'];
-  buildConfig.mac = ['dmg'];
+  buildConfig.mac = ['default'];
   buildConfig.linux = ['AppImage'];
+  buildConfig.publish = { provider: 'github' };
 } else {
   buildConfig.dir = true;
   buildConfig.win = ['zip'];
