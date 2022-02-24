@@ -3,36 +3,35 @@ const { autoUpdater } = require('electron-updater');
 
 let window;
 
-autoUpdater.autoDownload = false;
-
 autoUpdater.on('error', (error) => {
-  debugger
-  console.error('Auto update error', error && (error.stack || error).toString()); // eslint-disable-line no-console
+  console.error('Auto update error', error && (error.stack || error).toString());
+  window.webContents.send('auto-update-log', `An error has occurred while searching for updates: ${error && (error.message || error).toString()}`);
 });
 
-autoUpdater.on('update-not-available', async (a) => {
-  debugger
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for updates...');
+  window.webContents.send('auto-update-log', 'Checking for updates...');
 });
-autoUpdater.on('update-available', async (a) => {
-  debugger
+autoUpdater.on('update-not-available', () => {
+  window.webContents.send('auto-update-log', 'No updates were found');
 });
-autoUpdater.on('download-progress', async (a) => {
-  debugger
+autoUpdater.on('update-available', (info) => {
+  console.log('An update is available', info);
+  window.webContents.send('auto-update-log', `An update is available. Version ${info.version}.`);
 });
-autoUpdater.on('update-downloaded', async (a) => {
-  debugger
-});
-autoUpdater.on('checking-for-update', async (a) => {
-  debugger
+autoUpdater.on('download-progress', (progressObj) => {
+  window.webContents.send('auto-update-log', `Downloading update... ${progressObj.percent}% complete.`);
 });
 
-autoUpdater.on('update-downloaded', async () => {
-  debugger
+autoUpdater.on('update-downloaded', async (info) => {
+  console.log('An update was downloaded', info);
+  window.webContents.send('auto-update-log', `An update was downloaded. Version ${info.version}.`);
+
   const { response } = await dialog.showMessageBox(window, {
     type: 'info',
     title: 'COINSTAC Updates',
     message: 'Download finished. Do you want to close the app now and install the update immediately? Some updates may be necessary to use Coinstac',
-    buttons: ['Install when I quit', 'Install immediately'],
+    buttons: ['Install later', 'Install immediately'],
   });
 
   if (response === 1) {
@@ -40,9 +39,10 @@ autoUpdater.on('update-downloaded', async () => {
   }
 });
 
-function checkForUpdates(mainWindow) {
+function checkForUpdates(mainWindow, logger) {
   window = mainWindow;
 
+  autoUpdater.logger = logger;
   autoUpdater.checkForUpdatesAndNotify();
 }
 

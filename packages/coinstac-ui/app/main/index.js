@@ -142,7 +142,7 @@ loadConfig()
     logger.verbose('main process booted');
     createWindow().then((mainWindow) => {
       if (process.env.NODE_ENV === 'production') {
-        checkForUpdates(mainWindow);
+        checkForUpdates(mainWindow, logger);
       }
       mainWindow.webContents.setWindowOpenHandler((url) => {
         electron.shell.openExternal(url);
