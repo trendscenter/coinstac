@@ -4,10 +4,10 @@ import { graphql, useMutation } from '@apollo/react-hoc';
 import ReactJson from 'react-json-view';
 import { withStyles } from '@material-ui/core/styles';
 import { Button, TextareaAutosize } from '@material-ui/core';
+import { connect } from 'react-redux';
 import { ADD_COMPUTATION_MUTATION, FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { connect } from 'react-redux';
 
 const styles = theme => ({
   wrapper: {
@@ -15,7 +15,9 @@ const styles = theme => ({
   },
 });
 
-const ComputationIO = ({ compIO, classes, notifySuccess, notifyError }) => {
+const ComputationIO = ({
+  compIO, classes, notifySuccess, notifyError,
+}) => {
   if (!compIO) {
     return null;
   }
