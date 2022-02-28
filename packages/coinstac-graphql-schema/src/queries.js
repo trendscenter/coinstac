@@ -150,6 +150,7 @@ const queries = {
             command
           }
         }
+        submittedBy
       }
     }
   `,

@@ -13,24 +13,37 @@ const styles = theme => ({
   wrapper: {
     marginTop: theme.spacing(1),
   },
+  computationActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
 });
 
 const ComputationIO = ({
-  compIO, classes, notifySuccess, notifyError,
+  compIO, classes, notifySuccess, notifyError, auth,
 }) => {
   if (!compIO) {
     return null;
   }
 
+  const showEdit = auth.user.permissions.roles?.admin
+    || (auth.user.permissions.roles?.author && compIO.submittedBy === auth.user.id);
+
   const prepareJSON = (info) => {
     const compSpecDbObject = JSON.parse(JSON.stringify(info));
+
     try {
       delete compSpecDbObject.id;
       delete compSpecDbObject.__typename;
       delete compSpecDbObject.computation.__typename;
       delete compSpecDbObject.computation.remote.__typename;
       delete compSpecDbObject.meta.__typename;
-    } catch { }
+      delete compSpecDbObject.submittedBy;
+    } catch (e) {
+      console.error(e);
+    }
+
+
     return JSON.stringify(compSpecDbObject, null, 4);
   };
 
@@ -80,24 +93,33 @@ const ComputationIO = ({
           />
         )
       }
-      <Button
-        color="primary"
-        onClick={() => {
-          setIsEditing(!isEditing);
-        }}
-      >
-        {isEditing ? 'cancel' : 'edit'}
-      </Button>
-      {isEditing
-        && (
-          <Button
-            color="primary"
-            onClick={updateComputation}
-          >
-            update
-          </Button>
-        )
-      }
+      <div className={classes.computationActions}>
+        {showEdit
+          && (
+            <Button
+              variant="contained"
+              color={isEditing ? 'secondary' : 'primary'}
+              onClick={() => {
+                setIsEditing(!isEditing);
+              }}
+            >
+              {isEditing ? 'cancel' : 'edit'}
+            </Button>
+          )
+        }
+
+        {isEditing
+          && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={updateComputation}
+            >
+              update
+            </Button>
+          )
+        }
+      </div>
     </div>
   );
 };
@@ -111,9 +133,14 @@ ComputationIO.propTypes = {
   classes: PropTypes.object.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired,
 };
 
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
+
 const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
-const ComputationIOWithAlert = connect(null, { notifySuccess, notifyError })(ComputationIOWithData);
+const ComputationIOWithAlert = connect(mapStateToProps, { notifySuccess, notifyError })(ComputationIOWithData);
 
 export default withStyles(styles)(ComputationIOWithAlert);
