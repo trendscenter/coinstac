@@ -26,11 +26,13 @@ test('authenticate', (t) => {
     },
   };
 
-  const res = (payload) => {
-    t.true('id_token' in payload);
-    t.deepEqual(payload.user.username, req.pre.user.username);
+  const res = {
+    response: (payload) => {
+      t.true('id_token' in payload);
+      t.deepEqual(payload.user.username, req.pre.user.username);
 
-    return resMock;
+      return resMock;
+    },
   };
 
   authenticateRoute.config.handler(req, res);
@@ -55,11 +57,13 @@ test('authenticateByToken', (t) => {
     },
   };
 
-  const res = (payload) => {
-    t.true('id_token' in payload);
-    t.deepEqual(payload.user, req.auth.credentials);
+  const res = {
+    response: (payload) => {
+      t.true('id_token' in payload);
+      t.deepEqual(payload.user, req.auth.credentials);
 
-    return resMock;
+      return resMock;
+    },
   };
 
   authenticateByToken.config.handler(req, res);
@@ -85,11 +89,13 @@ test('createAccount', async (t) => {
     permissions: {},
   });
 
-  const res = (payload) => {
-    t.true('id_token' in payload);
-    t.is(payload.user.username, req.payload.username);
+  const res = {
+    response: (payload) => {
+      t.true('id_token' in payload);
+      t.is(payload.user.username, req.payload.username);
 
-    return resMock;
+      return resMock;
+    },
   };
 
   await createAccount.config.handler(req, res);
@@ -118,10 +124,12 @@ test('updateAccount', async (t) => {
     permissions: {},
   });
 
-  const res = (payload) => {
-    t.is(payload.user.username, req.payload.username);
+  const res = {
+    response: (payload) => {
+      t.is(payload.user.username, req.payload.username);
 
-    return resMock;
+      return resMock;
+    },
   };
 
   await updateAccount.config.handler(req, res);
@@ -140,11 +148,13 @@ test('sendPasswordResetEmail', async (t) => {
 
   sinon.stub(helperFunctions, 'savePasswordResetToken').resolves();
 
-  const successRes = () => ({
-    code: (status) => {
-      t.is(status, 204);
-    },
-  });
+  const successRes = {
+    response: () => ({
+      code: (status) => {
+        t.is(status, 204);
+      },
+    }),
+  };
 
   await createAccount.config.handler(req, successRes);
 
@@ -152,11 +162,13 @@ test('sendPasswordResetEmail', async (t) => {
 
   sinon.stub(helperFunctions, 'savePasswordResetToken').rejects();
 
-  const failRes = () => ({
-    code: (status) => {
-      t.is(status, 400);
-    },
-  });
+  const failRes = {
+    response: () => ({
+      code: (status) => {
+        t.is(status, 400);
+      },
+    }),
+  };
 
   await createAccount.config.handler(req, failRes);
 
@@ -176,12 +188,12 @@ test('resetPassword', async (t) => {
 
   sinon.stub(helperFunctions, 'resetPassword').resolves();
 
-  const res = () => {
-    return {
+  const res = {
+    response: () => ({
       code: (status) => {
         t.is(status, 204);
       },
-    };
+    }),
   };
 
   await createAccount.config.handler(req, res);
@@ -192,8 +204,10 @@ test('resetPassword', async (t) => {
 test('version', (t) => {
   const versionRoute = find(versionRoutes, { path: '/version' });
 
-  const res = (version) => {
-    t.truthy(version);
+  const res = {
+    response: (version) => {
+      t.truthy(version);
+    },
   };
 
   versionRoute.config.handler({}, res);
