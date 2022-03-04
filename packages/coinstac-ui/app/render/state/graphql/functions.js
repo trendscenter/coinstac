@@ -112,6 +112,11 @@ export const FETCH_ALL_THREADS_QUERY = gql`
     ${queries.fetchAllThreads}
 `;
 
+export const GET_PIPELINES_QUERY = gql`
+  query getPipelines
+   ${queries.getPipelines}
+`;
+
 export const JOIN_CONSORTIUM_MUTATION = gql`
   mutation joinConsortium($consortiumId: ID!) {
     joinConsortium(consortiumId: $consortiumId){
@@ -302,4 +307,9 @@ export const FETCH_RUN_STATUS = gql`
 export const RUN_STARTED_SUBSCRIPTION = gql`
   subscription runStarted($userId: ID)
     ${queries.runStarted}
+`;
+
+export const STOP_RUN_MUTATION = gql`
+  mutation stopRun($runId: ID!)
+
 `;

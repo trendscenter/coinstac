@@ -6,7 +6,10 @@ import { get } from 'lodash';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
-import RunsList from './runs-list';
+import { Button } from '@material-ui/core';
+import { useLazyQuery } from '@apollo/client';
+import ReactJson from 'react-json-view';
+import { GET_PIPELINES_QUERY } from '../../state/graphql/functions';
 
 const styles = theme => ({
   pageTitle: {
@@ -30,16 +33,25 @@ const PipelineStates = (
     }
   }, []);
 
+
+  const [getPipelines, { data }] = useLazyQuery(GET_PIPELINES_QUERY, { fetchPolicy: 'network-only' });
   return (
     <div>
       <Typography variant="h4" className={classes.pageTitle}>
         Pipeline States
       </Typography>
       <Divider />
-      <RunsList
-        consortia={consortia}
-        runs={runs}
-        stopPipeline={stopPipeline}
+      <Button onClick={getPipelines} variant="contained">
+        Get Pipeline States
+      </Button>
+
+      <ReactJson
+        src={data && data.getPipelines && data.getPipelines.info
+          && JSON.parse(data.getPipelines.info)}
+        theme="monokai"
+        displayDataTypes={false}
+        displayObjectSize={false}
+        enableClipboard={false}
       />
     </div>
   );

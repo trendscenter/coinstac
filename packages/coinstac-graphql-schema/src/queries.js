@@ -228,6 +228,13 @@ const queries = {
       }
     }
   `,
+  getPipelines: `
+  {
+    getPipelines {
+      info
+    }
+  }
+  `,
 };
 
 module.exports = queries;

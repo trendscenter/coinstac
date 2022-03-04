@@ -352,7 +352,7 @@ const resolvers = {
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {
           return consortiaIds.includes(String(pipeline.owningConsortium))
-          || pipeline.shared;
+            || pipeline.shared;
         });
       }
 
@@ -532,6 +532,14 @@ const resolvers = {
 
       return transformToClient(run);
     },
+    getPipelines: async () => {
+      const result = await axios.get(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
+      );
+
+      console.log(result)
+      return { info: JSON.stringify(result.data) };
+    }
   },
   Mutation: {
     /**
@@ -1563,6 +1571,13 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    stopRun: async (parent, args, { credentials }) => {
+      // do a permissions check here
+      
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
+      );
+    }
   },
   Subscription: {
     /**
