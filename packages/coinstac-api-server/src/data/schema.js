@@ -217,7 +217,7 @@ const typeDefs = `
     generateHeadlessClientApiKey(headlessClientId: ID!): String
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
-    stopRun(runId: ID): Run
+    stopRun(runId: ID): JSON
   }
 
   # This is a description of the queries

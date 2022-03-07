@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -6,10 +6,10 @@ import { get } from 'lodash';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
-import { Button } from '@material-ui/core';
-import { useLazyQuery } from '@apollo/client';
+import { Button, Card, TextField } from '@material-ui/core';
+import { useLazyQuery, useMutation } from '@apollo/client';
 import ReactJson from 'react-json-view';
-import { GET_PIPELINES_QUERY } from '../../state/graphql/functions';
+import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../state/graphql/functions';
 
 const styles = theme => ({
   pageTitle: {
@@ -35,6 +35,16 @@ const PipelineStates = (
 
 
   const [getPipelines, { data }] = useLazyQuery(GET_PIPELINES_QUERY, { fetchPolicy: 'network-only' });
+  const [stopRun, stopRunData] = useMutation(STOP_RUN_MUTATION);
+
+  const pipelinesData = data
+    && data.getPipelines
+    && data.getPipelines.info
+    ? JSON.parse(data.getPipelines.info) : {};
+
+  const { activePipelines } = pipelinesData;
+
+
   return (
     <div>
       <Typography variant="h4" className={classes.pageTitle}>
@@ -44,15 +54,38 @@ const PipelineStates = (
       <Button onClick={getPipelines} variant="contained">
         Get Pipeline States
       </Button>
-
-      <ReactJson
-        src={data && data.getPipelines && data.getPipelines.info
-          && JSON.parse(data.getPipelines.info)}
+      {activePipelines
+        && Object.keys(activePipelines).map((pipelineId) => {
+          return (
+            <Card
+              key={pipelineId}
+            >
+              <Typography variant="h5" className={classes.pageTitle}>
+                {pipelineId}
+              </Typography>
+              <Button
+                onClick={() => { stopRun({ variables: { runId: pipelineId } }); }}
+              >
+                Stop Run
+              </Button>
+              <ReactJson
+                src={activePipelines[pipelineId]}
+                theme="monokai"
+                displayDataTypes={false}
+                displayObjectSize={false}
+                enableClipboard={false}
+              />
+            </Card>
+          );
+        })
+      }
+      {/* <ReactJson
+        src={pipelinesData}
         theme="monokai"
         displayDataTypes={false}
         displayObjectSize={false}
         enableClipboard={false}
-      />
+      /> */}
     </div>
   );
 };

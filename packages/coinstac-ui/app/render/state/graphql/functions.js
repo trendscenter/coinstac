@@ -311,5 +311,5 @@ export const RUN_STARTED_SUBSCRIPTION = gql`
 
 export const STOP_RUN_MUTATION = gql`
   mutation stopRun($runId: ID!)
-
+  ${mutations.stopRun}
 `;
