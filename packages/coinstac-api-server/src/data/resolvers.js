@@ -1572,8 +1572,10 @@ const resolvers = {
       return transformToClient(dataset);
     },
     stopRun: async (parent, args, { credentials }) => {
-      // do a permissions check here
-      
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to stop this run')
+      }
+
       await axios.post(
         `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
       );
