@@ -323,7 +323,7 @@ module.exports = {
                         case 'stderr':
                           errfin = res.end;
                           stderr += res.data || '';
-                          if (code !== undefined && outfin && errfin) {
+                          if (res.code !== undefined && errfin) {
                             ws.close(1000, 'Normal Client disconnect');
                             resolve({
                               code,
@@ -335,7 +335,6 @@ module.exports = {
                         case 'stdout':
                           outfin = res.end;
                           stdout = res.data || '';
-                          // if (code !== undefined && outfin && errfin) {
                           if (outfin) {
                             ws.close(1000, 'Normal Client disconnect');
                             resolve({
