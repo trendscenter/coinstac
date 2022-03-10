@@ -292,6 +292,7 @@ async function setupCentral({
                   {
                     error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
                     message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
+                    stack: error.stack,
                   }
                 );
               }
