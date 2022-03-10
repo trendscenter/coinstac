@@ -26,7 +26,6 @@ const { Query, Mutation } = resolvers;
 const UNAUTHENTICATED_ERROR = 'User not authenticated';
 const ACTION_PERMIT_ERROR = 'Action not permitted';
 const DUPLICATE_CONSORTIUM_ERROR = 'Consortium with same name already exists';
-const INVALID_PIPELINE_STEP = 'Some of the covariates are incomplete';
 const INVALID_TOKEN = 'Invalid token';
 const INVALID_EMAIL = 'Invalid email';
 const INVALID_CONSORTIUM = 'Consortium with provided id not found';
@@ -35,13 +34,27 @@ const PIPELINE_SERVER_UNAVAILABLE = 'Pipeline server unavailable';
 const FAILED_CREATE_ISSUE = 'Failed to create issue on GitHub';
 const INVALID_PASSWORD = 'Current password is not correct';
 const RUNS_ON_PIPELINE = 'Runs on this pipeline exist';
+const INVALID_ROLE_TYPE = 'Invalid role type';
+const NO_HEADLESS_CLIENT = 'No headless client is registered with this api key';
 
 /**
  * Variables
  */
 
-function getAuth(id, username) {
-  return { auth: { credentials: { id, username: username || id } } };
+function getAuth(id, username, role) {
+  const permissions = {
+    roles: {},
+  };
+
+  if (role === 'admin') {
+    permissions.roles.admin = true;
+  } else if (role === 'author') {
+    permissions.roles.author = true;
+  }
+
+  return {
+    credentials: { id, username: username || id, permissions },
+  };
 }
 
 function getMessageFromError(error) {
@@ -61,7 +74,15 @@ test.before(async () => {
 test('createToken', (t) => {
   const token = helperFunctions.createToken('test-1');
 
-  t.is(token.length, 147);
+  t.not(token.length, null);
+});
+
+test('decodeToken', (t) => {
+  const username = 'test-1';
+  const token = helperFunctions.createToken(username);
+  const decoded = helperFunctions.decodeToken(token);
+
+  t.is(decoded.id, username);
 });
 
 test('createPasswordResetToken, savePasswordResetToken, validateResetToken and resetPassword', async (t) => {
@@ -69,7 +90,7 @@ test('createPasswordResetToken, savePasswordResetToken, validateResetToken and r
   const email = 'test@mrn.org';
   const token = helperFunctions.createPasswordResetToken(email);
 
-  t.is(token.length, 159);
+  t.not(token.length, null);
 
   /* savePasswordResetToken */
   sinon.stub(sgMail, 'send').resolves();
@@ -169,11 +190,8 @@ test('hashPassword and verifyPassword', async (t) => {
 
   sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
 
-  try {
-    await helperFunctions.hashPassword('password');
-  } catch (err) {
-    t.is(err.message, 'error');
-  }
+  let error = await t.throwsAsync(helperFunctions.hashPassword('password'));
+  t.is(error.message, 'error');
 
   crypto.pbkdf2.restore();
 
@@ -186,25 +204,22 @@ test('hashPassword and verifyPassword', async (t) => {
 
   sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
 
-  try {
-    await helperFunctions.verifyPassword('password', passwordHash);
-  } catch (error) {
-    t.is(error.message, 'error');
-  }
+  error = await t.throwsAsync(helperFunctions.verifyPassword('password', passwordHash));
+  t.is(error.message, 'error');
 
   crypto.pbkdf2.restore();
 });
 
 test('validateToken and validateUser', async (t) => {
   const users = await Query.fetchAllUsers();
-  const decoded1 = { id: users[0].id };
+  const decoded1 = { decoded: { payload: { id: users[0].id } } };
 
   helperFunctions.validateToken(decoded1, null, (_, valid, user) => {
     t.true(valid);
     t.is(user.id, decoded1.id);
   });
 
-  const decoded2 = { id: 'invalid-user' };
+  const decoded2 = { decoded: { payload: { id: 'invalid-user' } } };
 
   helperFunctions.validateToken(decoded2, null, (_, valid, user) => {
     t.false(valid);
@@ -213,21 +228,63 @@ test('validateToken and validateUser', async (t) => {
 
   const req1 = { payload: { username: 'test1', password: 'password' } };
 
-  await helperFunctions.validateUser(req1, (user) => {
-    t.is(user.username, req1.payload.username);
+  await helperFunctions.validateUser(req1, {
+    response: (user) => {
+      t.is(user.username, req1.payload.username);
+    },
   });
 
   const req2 = { payload: { username: 'invalid-user', password: 'password' } };
 
-  await helperFunctions.validateUser(req2, (error) => {
-    t.is(error.output.payload.statusCode, 401);
-  });
+  try {
+    await helperFunctions.validateUser(req2, {
+      response: () => {},
+    });
+  } catch (error) {
+    t.is(error.statusCode, 401);
+  }
 
   const req3 = { payload: { username: 'test1', password: 'password1' } };
 
-  await helperFunctions.validateUser(req3, (error) => {
-    t.is(error.output.payload.statusCode, 401);
+  try {
+    await helperFunctions.validateUser(req3, {
+      response: () => {},
+    });
+  } catch (error) {
+    t.is(error.statusCode, 401);
+  }
+});
+
+test('validateHeadlessClientApiKey', async (t) => {
+  const apiKey = await helperFunctions.hashPassword('testApiKey');
+
+  let req = {
+    payload: {
+      name: 'Headless 1',
+      apiKey,
+    },
+  };
+
+  await helperFunctions.validateHeadlessClientApiKey(req, {
+    response: (headlessClient) => {
+      t.is(headlessClient.name, req.payload.name);
+    },
   });
+
+  req = {
+    payload: {
+      name: 'Headless 2',
+      apiKey,
+    },
+  };
+
+  try {
+    await helperFunctions.validateHeadlessClientApiKey(req, { response: () => { } });
+  } catch (error) {
+    t.is(error.message, NO_HEADLESS_CLIENT);
+  }
+
+  t.pass();
 });
 
 test('validateEmail', async (t) => {
@@ -235,17 +292,23 @@ test('validateEmail', async (t) => {
     payload: { email: 'test@mrn.org' },
   };
 
-  await helperFunctions.validateEmail(req, (exists) => {
-    t.true(exists);
+  await helperFunctions.validateEmail(req, {
+    response: (exists) => {
+      t.true(exists);
+    },
   });
 
   req = {
     payload: { email: 'email@mrn.org' },
   };
 
-  await helperFunctions.validateEmail(req, (error) => {
+  try {
+    await helperFunctions.validateEmail(req, {
+      response: () => {},
+    });
+  } catch (error) {
     t.is(getMessageFromError(error), INVALID_EMAIL);
-  });
+  }
 });
 
 test('validateUniqueEmail', async (t) => {
@@ -266,20 +329,28 @@ test('validateUniqueUsername', async (t) => {
 
 test('validateUniqueUser', async (t) => {
   const req1 = { payload: { username: 'test1', email: 'test@mrn.org' } };
-
-  await helperFunctions.validateUniqueUser(req1, (error) => {
+  try {
+    await helperFunctions.validateUniqueUser(req1, {
+      response: () => {},
+    });
+  } catch (error) {
     t.is(error.output.payload.message, 'Username taken');
-  });
+  }
 
   const req2 = { payload: { username: 'newuser', email: 'test@mrn.org' } };
-
-  await helperFunctions.validateUniqueUser(req2, (error) => {
+  try {
+    await helperFunctions.validateUniqueUser(req2, {
+      response: () => {},
+    });
+  } catch (error) {
     t.is(error.output.payload.message, 'Email taken');
-  });
+  }
 
   const req3 = { payload: { username: 'newuser', email: 'newuser@mrn.org' } };
-  await helperFunctions.validateUniqueUser(req3, (isUnique) => {
-    t.true(isUnique);
+  await helperFunctions.validateUniqueUser(req3, {
+    response: (isUnique) => {
+      t.true(isUnique);
+    },
   });
 });
 
@@ -302,7 +373,7 @@ test('fetchAll Results and fetchResult', async (t) => {
 
 test('fetchAllConsortia', async (t) => {
   const auth = getAuth('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
+  const consortia = await Query.fetchAllConsortia('', {}, auth);
 
   t.is(consortia.length, 2);
 
@@ -316,9 +387,13 @@ test('fetchAllConsortia', async (t) => {
 });
 
 test('fetchAllComputations and fetchComputation', async (t) => {
-  const computations = await Query.fetchAllComputations();
+  const computations = await Query.fetchAllComputations({}, { preprocess: null });
 
-  t.is(computations.length, 16);
+  t.is(computations.length, 20);
+
+  const computations2 = await Query.fetchAllComputations({}, { preprocess: 'process' });
+
+  t.is(computations2.length, 0);
 
   const ids = [computations[0].id, computations[1].id];
 
@@ -342,9 +417,10 @@ test('fetchAllComputations and fetchComputation', async (t) => {
 });
 
 test('fetchAllPipelines and fetchPipeline', async (t) => {
-  const pipelines = await Query.fetchAllPipelines();
+  const auth = getAuth('test1');
+  const pipelines = await Query.fetchAllPipelines('', {}, auth);
 
-  t.is(pipelines.length, 4);
+  t.is(pipelines.length, 2);
 
   const pipeline1 = await Query.fetchPipeline({}, {});
 
@@ -369,14 +445,14 @@ test('fetchAllUsers and fetchUser', async (t) => {
 
 test('fetchAllUserRuns', async (t) => {
   const auth = getAuth(USER_IDS[0].toHexString());
-  const runs = await Query.fetchAllUserRuns(auth);
+  const runs = await Query.fetchAllUserRuns('', {}, auth);
 
   t.is(runs.length, 4);
 });
 
 test('fetchAllThreads', async (t) => {
   const auth = getAuth(USER_IDS[0], 'test1');
-  const threads = await Query.fetchAllThreads(auth);
+  const threads = await Query.fetchAllThreads('', {}, auth);
 
   t.is(threads.length, 0);
 });
@@ -385,12 +461,12 @@ test('fetchAllThreads', async (t) => {
  * Mutation tests
  */
 test('addComputation', async (t) => {
-  const auth = getAuth(USER_IDS[0]);
+  const auth = getAuth(USER_IDS[0], null, 'admin');
   const args = { computationSchema: { meta: {}, id: database.createUniqueId() } };
 
-  const res = await Mutation.addComputation(auth, args);
+  const res = await Mutation.addComputation('', args, auth);
 
-  t.deepEqual(res, args.computationSchema);
+  t.is(res.id, args.computationSchema.id);
 });
 
 test('addUserRole', async (t) => {
@@ -403,15 +479,26 @@ test('addUserRole', async (t) => {
     },
   };
 
-  const args = {
+  let args = {
     table: 'consortia',
     doc: consortiumId,
     role: 'admin',
     userId,
   };
 
-  const error = await Mutation.addUserRole(
-    { auth: { credentials: { permissions: invalidPermissions } } }, args
+  let error = await Mutation.addUserRole(
+    '', args, { credentials: { permissions: invalidPermissions } }
+  );
+  t.is(getMessageFromError(error), INVALID_ROLE_TYPE);
+
+  args = {
+    table: 'consortia',
+    doc: consortiumId,
+    roleType: 'data',
+    userId,
+  };
+  error = await Mutation.addUserRole(
+    '', args, { credentials: { permissions: invalidPermissions } }
   );
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
@@ -422,7 +509,7 @@ test('addUserRole', async (t) => {
   };
 
   const res = await Mutation.addUserRole(
-    { auth: { credentials: { permissions } } }, args
+    '', args, { credentials: { permissions } }
   );
 
   t.is(res.id, userId.toHexString());
@@ -438,15 +525,26 @@ test('removeUserRole', async (t) => {
     },
   };
 
-  const args = {
+  let args = {
     table: 'consortia',
     doc: consortiumId,
     role: 'admin',
     userId,
   };
 
-  const error = await Mutation.removeUserRole(
-    { auth: { credentials: { permissions: invalidPermissions } } }, args
+  let error = await Mutation.removeUserRole(
+    '', args, { credentials: { permissions: invalidPermissions } }
+  );
+  t.is(getMessageFromError(error), INVALID_ROLE_TYPE);
+
+  args = {
+    table: 'consortia',
+    doc: consortiumId,
+    roleType: 'data',
+    userId,
+  };
+  error = await Mutation.removeUserRole(
+    '', args, { credentials: { permissions: invalidPermissions } }
   );
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
@@ -457,49 +555,48 @@ test('removeUserRole', async (t) => {
   };
 
   const res = await Mutation.removeUserRole(
-    { auth: { credentials: { permissions } } }, args
+    '', args, { credentials: { permissions } }
   );
 
   t.deepEqual(res.id, userId.toHexString());
 });
 
 test('createRun', async (t) => {
-  let error = await Mutation.createRun({}, { consortiumId: database.createUniqueId() });
+  let error = await Mutation.createRun('', { consortiumId: database.createUniqueId() }, {});
   t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
 
-  error = await Mutation.createRun({ auth: {} }, { consortiumId: database.createUniqueId() });
+  error = await Mutation.createRun('', { consortiumId: database.createUniqueId() }, {});
   t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
 
   const auth = getAuth(USER_IDS[0], 'test1');
 
-
-  error = await Mutation.createRun(auth, { consortiumId: database.createUniqueId() });
+  error = await Mutation.createRun('', { consortiumId: database.createUniqueId() }, auth);
   t.is(getMessageFromError(error), INVALID_CONSORTIUM);
 
   const consortiumId1 = CONSORTIA_IDS[0];
 
-  error = await Mutation.createRun(auth, { consortiumId: consortiumId1 });
+  error = await Mutation.createRun('', { consortiumId: consortiumId1 }, auth);
   t.is(getMessageFromError(error), MISSING_ACTIVE_PIPELINE);
 
   sinon.stub(axios, 'post').resolves();
 
   const consortiumId2 = CONSORTIA_IDS[1];
 
-  const run = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  const run = await Mutation.createRun('', { consortiumId: consortiumId2 }, auth);
   t.is(run.consortiumId, consortiumId2);
 
   axios.post.restore();
 
   sinon.stub(axios, 'post').rejects({ code: 'ECONNREFUSED' });
 
-  const error1 = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  const error1 = await Mutation.createRun('', { consortiumId: consortiumId2 }, auth);
   t.is(getMessageFromError(error1), PIPELINE_SERVER_UNAVAILABLE);
 
   axios.post.restore();
 
   sinon.stub(axios, 'post').rejects(new Error('error'));
 
-  const error2 = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  const error2 = await Mutation.createRun('', { consortiumId: consortiumId2 }, auth);
   t.is(error2.output.payload.statusCode, 406);
 
   axios.post.restore();
@@ -507,8 +604,8 @@ test('createRun', async (t) => {
 
 test('saveActivePipeline', async (t) => {
   const auth = getAuth('author');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const pipelines = await Query.fetchAllPipelines();
+  const consortia = await Query.fetchAllConsortia('', {}, auth);
+  const pipelines = await Query.fetchAllPipelines('', {}, auth);
 
   const consortiumId = consortia[0].id;
   const pipelineId = pipelines[0].id;
@@ -521,7 +618,7 @@ test('saveActivePipeline', async (t) => {
 test('saveConsortium', async (t) => {
   /* saveConsortium */
   let auth = {
-    auth: { credentials: { id: USER_IDS[0], username: 'test1', permissions: { } } },
+    credentials: { id: USER_IDS[0], username: 'test1', permissions: { } },
   };
 
   const consortium1 = {
@@ -533,10 +630,10 @@ test('saveConsortium', async (t) => {
     activePipelineId: PIPELINE_IDS[0],
   };
 
-  const createdConsortium = await Mutation.saveConsortium(auth, { consortium: consortium1 });
+  const createdConsortium = await Mutation.saveConsortium('', { consortium: consortium1 }, auth);
   t.is(createdConsortium.name, consortium1.name);
 
-  let error = await Mutation.saveConsortium(auth, { consortium: consortium1 });
+  let error = await Mutation.saveConsortium('', { consortium: consortium1 }, auth);
   t.is(getMessageFromError(error), DUPLICATE_CONSORTIUM_ERROR);
 
   const consortium2 = {
@@ -545,20 +642,18 @@ test('saveConsortium', async (t) => {
   };
 
   auth = {
-    auth: {
-      credentials: {
-        id: USER_IDS[0],
-        username: 'test1',
-        permissions: {
-          consortia: {
-            [createdConsortium.id]: ['owner'],
-          },
+    credentials: {
+      id: USER_IDS[0],
+      username: 'test1',
+      permissions: {
+        consortia: {
+          [createdConsortium.id]: ['owner'],
         },
       },
     },
   };
 
-  const updatedConsortium = await Mutation.saveConsortium(auth, { consortium: consortium2 });
+  const updatedConsortium = await Mutation.saveConsortium('', { consortium: consortium2 }, auth);
   t.is(updatedConsortium.name, consortium2.name);
 
   const consortium3 = {
@@ -573,8 +668,9 @@ test('saveConsortium', async (t) => {
   };
 
   error = await Mutation.saveConsortium(
-    { auth: { credentials: { permissions } } },
-    { consortium: consortium3 }
+    '',
+    { consortium: consortium3 },
+    { credentials: { permissions } }
   );
 
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
@@ -587,8 +683,9 @@ test('saveConsortium', async (t) => {
   };
 
   error = await Mutation.deleteConsortiumById(
-    { auth: { credentials: { permissions: invalidPermissions } } },
-    { consortiumId }
+    '',
+    { consortiumId },
+    { credentials: { permissions: invalidPermissions } }
   );
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
@@ -599,7 +696,7 @@ test('saveConsortium', async (t) => {
   };
 
   const deletedConsortium = await Mutation.deleteConsortiumById(
-    { auth: { credentials: { permissions } } }, { consortiumId }
+    '', { consortiumId }, { credentials: { permissions } }
   );
 
   t.deepEqual(deletedConsortium.id, consortiumId);
@@ -656,34 +753,9 @@ test('savePipeline', async (t) => {
 
   t.is(res.name, args1.pipeline.name);
 
-  const args2 = {
-    pipeline: {
-      ...args1.pipeline,
-      steps: [{
-        id: 'UIKDl-',
-        controller: {
-          type: 'decentralized',
-        },
-        computations: [COMPUTATION_IDS[0]],
-        inputMap: {
-          start: {
-            value: 1,
-          },
-          covariates: {
-            ownerMappings: [{
-              name: 'mapping-1',
-            }],
-          },
-        },
-      }],
-    },
-  };
-
-  let error = await Mutation.savePipeline({}, args2);
-  t.is(getMessageFromError(error), INVALID_PIPELINE_STEP);
-
   /* deletePipeline */
-  const pipelines = await Query.fetchAllPipelines();
+  const auth = getAuth(USER_IDS[0], 'test-1');
+  const pipelines = await Query.fetchAllPipelines('', {}, auth);
   const pipelineId = pipelines[0].id;
   const consortiumId = pipelines[0].owningConsortium;
 
@@ -693,8 +765,8 @@ test('savePipeline', async (t) => {
     },
   };
 
-  error = await Mutation.deletePipeline(
-    { auth: { credentials: { permissions: invalidPermission } } }, { pipelineId }
+  let error = await Mutation.deletePipeline(
+    '', { pipelineId }, { credentials: { permissions: invalidPermission } }
   );
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
@@ -705,14 +777,9 @@ test('savePipeline', async (t) => {
   };
 
   error = await Mutation.deletePipeline(
-    { auth: { credentials: { permissions } } }, { pipelineId }
+    '', { pipelineId }, { credentials: { permissions } }
   );
   t.is(getMessageFromError(error), RUNS_ON_PIPELINE);
-
-  error = await Mutation.deletePipeline(
-    { auth: { credentials: { permissions } } }, { pipelineId: PIPELINE_IDS[1] }
-  );
-  // t.is(getMessageFromError(error), RUNS_ON_PIPELINE);
 });
 
 test('updateRunState', async (t) => {
@@ -733,33 +800,27 @@ test('updateUserConsortiumStatus', async (t) => {
   const consortiumId = CONSORTIA_IDS[1];
   const status = 'completed';
 
-  const res = await Mutation.updateUserConsortiumStatus(auth, { consortiumId, status });
+  const res = await Mutation.updateUserConsortiumStatus('', { consortiumId, status }, auth);
 
   t.is(res.consortiaStatuses[consortiumId], status);
 });
 
 test('updateConsortiumMappedUsers and updateConsortiaMappedUsers', async (t) => {
   /* updateConsortiumMappedUsers */
-  let args = {
+  const auth = getAuth(USER_IDS[0], 'test1');
+  const args = {
     consortiumId: CONSORTIA_IDS[0],
-    mappedForRun: [USER_IDS[0], USER_IDS[1]],
+    isMapped: true,
   };
 
-  let res = await Mutation.updateConsortiumMappedUsers({}, args);
+  let res = await Mutation.updateConsortiumMappedUsers('', args, auth);
 
-  t.deepEqual(res.mappedForRun, args.mappedForRun);
+  t.is(String(res.mappedForRun), String(USER_IDS[0]));
 
   /* updateConsortiaMappedUsers */
-  const auth = getAuth(USER_IDS[0], 'test1');
-
-  res = await Mutation.updateConsortiaMappedUsers(auth, { consortia: null });
+  args.isMapped = false;
+  res = await Mutation.updateConsortiaMappedUsers('', args, auth);
   t.is(res, undefined);
-
-  args = {
-    consortia: [CONSORTIA_IDS[0]],
-  };
-
-  await Mutation.updateConsortiaMappedUsers(auth, args);
 });
 
 test('updatePassword', async (t) => {
@@ -770,7 +831,7 @@ test('updatePassword', async (t) => {
     newPassword: 'admin123',
   };
 
-  let res = await Mutation.updatePassword(auth, args);
+  let res = await Mutation.updatePassword('', args, auth);
   t.is(getMessageFromError(res), INVALID_PASSWORD);
 
   args = {
@@ -778,7 +839,7 @@ test('updatePassword', async (t) => {
     newPassword: 'admin',
   };
 
-  res = await Mutation.updatePassword(auth, args);
+  res = await Mutation.updatePassword('', args, auth);
 
   const user = await helperFunctions.getUserDetailsByID(USER_IDS[0]);
   const isValid = await helperFunctions.verifyPassword(args.newPassword, user.passwordHash);
@@ -802,23 +863,23 @@ test('saveMessage and setReadMessage', async (t) => {
     },
   };
 
-  const res1 = await Mutation.saveMessage(auth, args1);
+  const res1 = await Mutation.saveMessage('', args1, auth);
 
   t.is(res1.title, args1.title);
 
-  let threads = await Query.fetchAllThreads(auth);
+  let threads = await Query.fetchAllThreads('', {}, auth);
   const args2 = {
     threadId: threads[0].id,
     recipients: ['author', 'test4'],
     content: 'Content 2',
   };
 
-  const res2 = await Mutation.saveMessage(auth, args2);
+  const res2 = await Mutation.saveMessage('', args2, auth);
 
   t.is(res2.messages.length, 2);
 
   /* setReadMessage */
-  threads = await Query.fetchAllThreads(auth);
+  threads = await Query.fetchAllThreads('', {}, auth);
 
   const args = {
     threadId: threads[0].id,
@@ -837,11 +898,11 @@ test('joinConsortium', async (t) => {
   const auth = getAuth(userId, username);
   const consortiumId1 = CONSORTIA_IDS[0];
 
-  const res1 = await Mutation.joinConsortium(auth, { consortiumId: consortiumId1 });
+  const res1 = await Mutation.joinConsortium('', { consortiumId: consortiumId1 }, auth);
   t.deepEqual(res1.id, userId.toHexString());
 
   const consortiumId2 = CONSORTIA_IDS[1];
-  const res2 = await Mutation.joinConsortium(auth, { consortiumId: consortiumId2 });
+  const res2 = await Mutation.joinConsortium('', { consortiumId: consortiumId2 }, auth);
   t.deepEqual(res2._id, consortiumId2);
 });
 
@@ -851,7 +912,7 @@ test('leaveConsortium', async (t) => {
   const auth = getAuth(userId, username);
   const consortiumId = CONSORTIA_IDS[0];
 
-  const res = await Mutation.leaveConsortium(auth, { consortiumId });
+  const res = await Mutation.leaveConsortium('', { consortiumId }, auth);
 
   t.deepEqual(res.id, userId.toHexString());
 });
@@ -860,11 +921,11 @@ test('removeComputation', async (t) => {
   const auth1 = getAuth(USER_IDS[0], 'test1');
   const computationId = COMPUTATION_IDS[0];
 
-  const error = await Mutation.removeComputation(auth1, { computationId });
+  const error = await Mutation.removeComputation('', { computationId }, auth1);
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
   const auth2 = getAuth(USER_IDS[5], 'author');
-  const res = await Mutation.removeComputation(auth2, { computationId });
+  const res = await Mutation.removeComputation('', { computationId }, auth2);
 
   t.deepEqual(res.id, computationId.toHexString());
 });
@@ -880,7 +941,7 @@ test('createIssue', async (t) => {
 
   sinon.stub(Issue.prototype, 'createIssue').rejects();
 
-  const res = await Mutation.createIssue(auth, args);
+  const res = await Mutation.createIssue('', args, auth);
   t.is(getMessageFromError(res), FAILED_CREATE_ISSUE);
 });
 

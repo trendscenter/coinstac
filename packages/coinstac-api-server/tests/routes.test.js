@@ -38,7 +38,6 @@ test('authenticate', (t) => {
   authenticateRoute.config.handler(req, res);
 });
 
-
 test('authenticateByToken', (t) => {
   const authenticateByToken = find(authRoutes, { path: '/authenticateByToken' });
 
@@ -67,6 +66,36 @@ test('authenticateByToken', (t) => {
   };
 
   authenticateByToken.config.handler(req, res);
+});
+
+test('authenticateWithApiKey', (t) => {
+  const authenticateWithApiKey = find(authRoutes, { path: '/authenticateWithApiKey' });
+
+  const req = {
+    pre: {
+      headlessClient: {
+        email: 'test1@mrn.org',
+        id: 'test1',
+        institution: '',
+        permissions: {},
+        username: 'test1',
+        photo: null,
+        photoID: null,
+        name: 'test1',
+      },
+    },
+  };
+
+  const res = {
+    response: (payload) => {
+      t.true('authToken' in payload);
+      t.deepEqual(payload.client, req.pre.headlessClient);
+
+      return resMock;
+    },
+  };
+
+  authenticateWithApiKey.config.handler(req, res);
 });
 
 test('createAccount', async (t) => {
@@ -135,6 +164,26 @@ test('updateAccount', async (t) => {
   await updateAccount.config.handler(req, res);
 
   helperFunctions.updateUser.restore();
+});
+
+test('logout', async (t) => {
+  const logout = find(authRoutes, { path: '/logout' });
+
+  const req = {
+    payload: {
+      username: 'test1',
+    },
+  };
+
+  const res = {
+    response: (payload) => {
+      t.is(payload.username, req.payload.username);
+
+      return resMock;
+    },
+  };
+
+  logout.config.handler(req, res);
 });
 
 test('sendPasswordResetEmail', async (t) => {
