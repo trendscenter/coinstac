@@ -382,10 +382,7 @@ function RunItem(props) {
           component={Link}
           className={classes.button}
           onClick={() => {
-            console.log({ id });
             deleteRun({ variables: { runId: id } });
-            console.log(deleteRunState)
-            console.log(runObject)
           }}
         >
           Delete Run
