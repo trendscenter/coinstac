@@ -18,7 +18,7 @@ async function setupCentral({
   mqttRemoteProtocol,
   mqttRemoteURL,
   mqttRemotePort,
-  clientId,
+  nodeId,
   store,
   remotePort,
   debugProfileClient,
@@ -44,7 +44,7 @@ async function setupCentral({
     Object.keys(activePipelines[runId].clients).forEach((clientId) => {
       const clientRun = remoteClients[clientId][runId];
       if ((clientRun
-        && !store.has(runId, clientId))
+        && !store[nodeId].has(runId, clientId))
         // test if we have all files, if there are any
         || (clientRun
           && (clientRun.files.expected.length !== 0
@@ -80,7 +80,7 @@ async function setupCentral({
   }
 
   async function communicate(pipeline, success, messageIteration) {
-    const message = store.getAndRemove(pipeline.id, clientId);
+    const message = store[nodeId].getAndRemove(pipeline.id, nodeId);
     if (message instanceof Error) {
       const runError = Object.assign(
         message,
@@ -187,7 +187,7 @@ async function setupCentral({
         }).catch((e) => {
           logger.error(e);
           clientPublish('run', {
-            id: clientId,
+            id: nodeId,
             runId: pipeline.id,
             error: `Error from central node ${e}`,
             debug: { sent: Date.now() },
@@ -201,13 +201,13 @@ async function setupCentral({
     const mqttServer = mqtt.connect(
       `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
       {
-        clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+        clientId: `${nodeId}_${Math.random().toString(16).substr(2, 8)}`,
         reconnectPeriod: 5000,
       }
     );
     await new Promise((resolve) => {
       mqttServer.on('connect', () => {
-        logger.silly(`mqtt connection up ${clientId}`);
+        logger.silly(`mqtt connection up ${nodeId}`);
         mqttServer.subscribe('register', { qos: 0 }, (err) => {
           resolve();
           if (err) logger.error(`Mqtt error: ${err}`);
@@ -240,14 +240,14 @@ async function setupCentral({
               // has this pipeline error'd out?
               if (!activePipelines[runId].error) {
                 // check if the msg is a dup, either for a current or past iteration
-                if (store.has(runId, id)
+                if (store[nodeId].has(runId, id)
                   || activePipelines[runId].pipeline.currentState.currentIteration + 1
                   !== data.iteration
                 ) {
                   logger.silly(`Duplicate message client ${id}`);
                   return;
                 }
-                store.put(runId, id, output);
+                store[nodeId].put(runId, id, output);
 
                 if (files) {
                   remoteClients[id][runId].files.expected.push(...files);
@@ -337,7 +337,7 @@ async function setupCentral({
                   && id === activePipelines[runId].owner
                 )
               ) {
-                cleanupPipeline(runId)
+                cleanupPipeline(activePipelines, remoteClients, runId)
                   .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
               }
             }

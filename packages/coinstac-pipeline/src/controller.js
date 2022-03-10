@@ -151,11 +151,11 @@ module.exports = {
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
               if (mode === 'remote' && !compInput) {
-                compInput = store.getAndRemoveGroup(runId);
+                compInput = store[clientId].getAndRemoveGroup(runId);
               } else {
-                compInput = store.getAndRemove(runId, clientId);
+                compInput = store[clientId].getAndRemove(runId, clientId);
               }
-              // if there is no store input use the arg input (first iteration)
+              // if there is no store[clientId] input use the arg input (first iteration)
               compInput = compInput || overideInput;
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'Running computation');
@@ -196,7 +196,7 @@ module.exports = {
                   computationCache = Object.assign(computationCache, cache);
                   controllerState.success = !!success;
                   setStateProp('state', 'Finished iteration');
-                  store.put(runId, clientId, output);
+                  store[clientId].put(runId, clientId, output);
                   cb();
                 }).catch(({
                   statusCode, message, name, stack,
@@ -216,7 +216,7 @@ module.exports = {
                     err(iterationError);
                   } else {
                     setStateProp('state', 'Iteration finished with an error');
-                    store.put(runId, clientId, iterationError);
+                    store[clientId].put(runId, clientId, iterationError);
                     cb();
                   }
                 });
@@ -261,7 +261,7 @@ module.exports = {
             case 'doneRemote':
               setStateProp('state', 'Waiting on nodes');
               // grab now as it gets removed on send to clients
-              const finalOutput = store.get(runId, clientId); // eslint-disable-line no-case-declarations, max-len
+              const finalOutput = store[clientId].get(runId, clientId); // eslint-disable-line no-case-declarations, max-len
               return remoteHandler({
                 success: controllerState.success,
                 transmitOnly: true,
@@ -274,8 +274,8 @@ module.exports = {
                 },
               });
             case 'done':
-              // grab final output from store
-              compInput = store.getAndRemove(runId, clientId);
+              // grab final output from store[clientId]
+              compInput = store[clientId].getAndRemove(runId, clientId);
               cb(compInput);
               break;
             default:
@@ -321,7 +321,7 @@ module.exports = {
               ? function _cb(...args) {
                 if (controllerState.stopSignal) {
                   const iterationError = new Error(controllerState.stopSignal.type);
-                  controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
+                  controllerState.stopSignal.resolve(store[clientId].getAndRemove(runId, clientId));
                   err(iterationError);
                 } else {
                   const fn = queue.shift();

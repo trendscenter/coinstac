@@ -19,7 +19,7 @@ async function setupOuter({
   mqttRemoteProtocol,
   mqttRemoteURL,
   mqttRemotePort,
-  clientId,
+  nodeId,
   mqttRemoteWSProtocol,
   mqttRemoteWSPort,
   mqttRemoteWSPathname,
@@ -178,13 +178,13 @@ async function setupOuter({
   };
 
   async function communicate(pipeline, success, messageIteration) {
-    const message = store.getAndRemove(pipeline.id, clientId);
+    const message = store[nodeId].getAndRemove(pipeline.id, nodeId);
     if (message instanceof Error) { // eslint-disable-line no-lonely-if
       if (!activePipelines[pipeline.id].registered) {
         activePipelines[pipeline.id].stashedOutput = message;
       } else {
         publishData('run', {
-          id: clientId,
+          id: nodeId,
           runId: pipeline.id,
           error: { message: message.message, error: message.error, stack: message.stack },
           debug: { sent: Date.now() },
@@ -222,7 +222,7 @@ async function setupOuter({
                 },
               });
 
-              const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
+              const archiveFilename = `${pipeline.id}-${nodeId}-tempOutput.tar.gz`;
               const splitProm = splitFilesFromStream(
                 archive,
                 path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
@@ -246,7 +246,7 @@ async function setupOuter({
               return splitProm.then((files) => {
                 logger.debug('############# Local client sending out data with files');
                 publishData('run', {
-                  id: clientId,
+                  id: nodeId,
                   runId: pipeline.id,
                   output: message,
                   files: [...files],
@@ -258,14 +258,14 @@ async function setupOuter({
                   'post',
                   100,
                   [...files],
-                  clientId,
+                  nodeId,
                   pipeline.id,
                   activePipelines[pipeline.id].systemDirectory
                 ).catch((e) => {
                   // files failed to send, bail
                   logger.error(`Client file send error: ${e}`);
                   publishData('run', {
-                    id: clientId,
+                    id: nodeId,
                     runId: pipeline.id,
                     error: { message: message.message, error: message.error, stack: message.stack },
                     debug: { sent: Date.now() },
@@ -273,7 +273,7 @@ async function setupOuter({
                 });
               }).catch((e) => {
                 publishData('run', {
-                  id: clientId,
+                  id: nodeId,
                   runId: pipeline.id,
                   error: { message: e.message, error: e.error, stack: e.stack },
                   debug: { sent: Date.now() },
@@ -287,7 +287,7 @@ async function setupOuter({
             } else {
               logger.debug('############# Local client sending out data');
               publishData('run', {
-                id: clientId,
+                id: nodeId,
                 runId: pipeline.id,
                 output: message,
                 iteration: messageIteration,
@@ -299,7 +299,7 @@ async function setupOuter({
         })
         .catch((e) => {
           publishData('run', {
-            id: clientId,
+            id: nodeId,
             runId: pipeline.id,
             error: e,
             debug: { sent: Date.now() },
@@ -318,7 +318,7 @@ async function setupOuter({
         const client = mqtt.connect(
           `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
           {
-            clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+            clientId: `${nodeId}_${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
             connectTimeout: 15 * 1000,
           }
@@ -332,11 +332,11 @@ async function setupOuter({
         });
         client.on('connect', () => {
           clientInit = true;
-          logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+          logger.silly(`mqtt connection up ${nodeId}`);
+          client.subscribe(`${nodeId}-register`, { qos: 0 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+          client.subscribe(`${nodeId}-run`, { qos: 0 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -348,17 +348,17 @@ async function setupOuter({
             const client = mqtt.connect(
               `${mqttRemoteWSProtocol}//${mqttRemoteURL}:${mqttRemoteWSPort}${mqttRemoteWSPathname}`,
               {
-                clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+                clientId: `${nodeId}_${Math.random().toString(16).substr(2, 8)}`,
                 reconnectPeriod: 5000,
               }
             );
             client.on('connect', () => {
               clientInit = true;
-              logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              logger.silly(`mqtt connection up ${nodeId}`);
+              client.subscribe(`${nodeId}-register`, { qos: 0 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              client.subscribe(`${nodeId}-run`, { qos: 0 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);
@@ -377,7 +377,7 @@ async function setupOuter({
       const data = JSON.parse(dataBuffer);
       // TODO: step check?
       switch (topic) {
-        case `${clientId}-run`:
+        case `${nodeId}-run`:
           if (!data.error && activePipelines[data.runId]) {
             if (activePipelines[data.runId].pipeline.currentState.currentIteration
               !== data.iteration
@@ -387,7 +387,7 @@ async function setupOuter({
             }
             activePipelines[data.runId].stateStatus = 'received central node data';
             logger.silly('received central node data');
-            debugProfileClient(`Transmission to ${clientId} took the remote: ${Date.now() - data.debug.sent}ms`);
+            debugProfileClient(`Transmission to ${nodeId} took the remote: ${Date.now() - data.debug.sent}ms`);
 
             let error;
             if (data.files) {
@@ -395,7 +395,7 @@ async function setupOuter({
                 const workDir = data.success
                   ? activePipelines[data.runId].outputDirectory
                   : activePipelines[data.runId].baseDirectory;
-                const paths = await transferFiles('get', 300, data.files, clientId, data.runId, workDir);
+                const paths = await transferFiles('get', 300, data.files, nodeId, data.runId, workDir);
                 const fullPathFiles = paths
                   .map(p => path.join(workDir, p));
                 await extractTar(fullPathFiles, workDir);
@@ -407,7 +407,7 @@ async function setupOuter({
             if (data.success && data.files) {
               // let the remote know we have the files
               publishData('finished', {
-                id: clientId,
+                id: nodeId,
                 runId: data.runId,
               });
             }
@@ -415,13 +415,13 @@ async function setupOuter({
             if (error) {
               if (data.success) throw error;
               publishData('run', {
-                id: clientId,
+                id: nodeId,
                 runId: data.runId,
                 error: { stack: error.stack, message: error.message },
               });
               activePipelines[data.runId].remote.reject(error);
             } else {
-              store.put(data.runId, clientId, data.output);
+              store[nodeId].put(data.runId, nodeId, data.output);
               // why is this resolve in a promise? It's a terrible hack to
               // keep docker happy mounting the transfer dir. If there are comp
               // issues writing to it, this is the place to look
@@ -439,7 +439,7 @@ async function setupOuter({
           }
 
           break;
-        case `${clientId}-register`:
+        case `${nodeId}-register`:
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;
