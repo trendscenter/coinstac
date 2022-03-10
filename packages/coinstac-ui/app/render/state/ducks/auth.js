@@ -1,6 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import { app, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';

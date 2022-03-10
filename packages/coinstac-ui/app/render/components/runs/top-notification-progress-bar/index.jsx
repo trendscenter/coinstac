@@ -36,7 +36,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
   useEffect(() => {
     if (run || !runs) return;
 
-    const incompleteRun = runs.find(run => !runIsComplete(run));
+    const incompleteRun = runs.find(run => !runIsComplete(run) && run.status !== 'suspended');
 
     if (incompleteRun) {
       const consortium = consortia.find(c => c.id === incompleteRun.consortiumId);

@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 
-import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
+import { notifyError, notifySuccess, notifyInfo } from '../../../state/ducks/notifyAndLog';
 import { saveLocalRun, updateLocalRun } from '../../../state/ducks/runs';
 
 function LocalRunStatusListeners({
@@ -31,8 +31,13 @@ function LocalRunStatusListeners({
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
-      notifyError(`${arg.consName} Pipeline Error.`);
+      if (arg.run && arg.run.error && arg.run.error.message === 'Pipeline operation suspended by user') {
+        notifyInfo(`${arg.consName} Pipeline suspended.`);
+        updateLocalRun(arg.run.id, { status: 'suspended', type: arg.run.type });
+        return;
+      }
 
+      notifyError(`${arg.consName} Pipeline Error.`);
       updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
     });
 
@@ -56,6 +61,7 @@ LocalRunStatusListeners.propTypes = {
 
 export default connect(null,
   {
+    notifyInfo,
     notifyError,
     notifySuccess,
     saveLocalRun,

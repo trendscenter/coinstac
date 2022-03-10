@@ -4,18 +4,24 @@ import {
 import axios from 'axios';
 import React, { useState } from 'react';
 import { ipcRenderer, clipboard } from 'electron';
+import PropTypes from 'prop-types';
 import { API_TOKEN_KEY } from '../state/ducks/auth';
 
 
 class ErrorBoundary extends React.Component {
+  static propTypes = {
+    children: PropTypes.node, // eslint-disable-line
+  };
+
   constructor(props) {
     super(props);
     this.state = { error: null, errorInfo: null };
   }
 
   copyErrorDetails = () => {
+    const { error, errorInfo } = this.state;
     clipboard.writeText(
-      `${this.state.error.toString()} \n ${this.state.errorInfo.componentStack}`
+      `${error.toString()} \n ${errorInfo.componentStack}`
     );
   };
 
@@ -44,7 +50,10 @@ class ErrorBoundary extends React.Component {
   }
 
   render() {
-    if (this.state.errorInfo) {
+    const { children } = this.props;
+    const { error, errorInfo } = this.state;
+
+    if (errorInfo) {
       return (
         <Box
           style={{
@@ -57,9 +66,9 @@ class ErrorBoundary extends React.Component {
 
           <Paper elevation={1} style={{ padding: '10px' }}>
             <details style={{ whiteSpace: 'pre-wrap' }}>
-              {this.state.error && this.state.error.toString()}
+              {error && error.toString()}
               <br />
-              {this.state.errorInfo.componentStack}
+              {errorInfo.componentStack}
             </details>
             <Button variant="contained" onClick={this.copyErrorDetails}>
               Copy Error Details
@@ -80,7 +89,7 @@ class ErrorBoundary extends React.Component {
       );
     }
     // Normally, just render children
-    return this.props.children;
+    return children;
   }
 }
 
@@ -108,7 +117,7 @@ A clear and concise description of what you expected to happen.
 Add any other context about the problem here.
 `;
 
-function BugReport(props) {
+export function BugReport(props) {
   const [bugText, setBugtext] = useState(BugReportDefaultText);
   const { error, errorInfo } = props;
 
@@ -144,9 +153,6 @@ function BugReport(props) {
           'mutation createIssue($issue: IssueInput!) {createIssue(issue: $issue)}',
       },
       headers: { Authorization: `Bearer ${authToken.token}` },
-    }).then((result) => {
-      console.log(result);
-      alert(JSON.stringify(result.data));
     });
   };
 
@@ -175,3 +181,8 @@ function BugReport(props) {
     </Box>
   );
 }
+
+BugReport.propTypes = {
+  error: PropTypes.any.isRequired,
+  errorInfo: PropTypes.any.isRequired,
+};

@@ -16,7 +16,7 @@ const INITIAL_STATE = {
 };
 
 const getAllFiles = ((dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath)
+  const files = fs.readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
 

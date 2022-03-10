@@ -116,7 +116,7 @@ test('pullImages and pullImagesFromList', async (t) => {
 });
 
 test('setLogger', async (t) => {
-  const logger = winston.loggers.add('coinstac-main', {
+  const logger = winston.createLogger({
     level: 'silly',
     transports: [new Console()],
   });
@@ -128,13 +128,13 @@ test('setLogger', async (t) => {
 test('startService, stopService, stopAllServices', async (t) => {
   /* startService1 */
   const container = {
-    inspect: () => {},
+    inspect: () => { },
   };
 
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
 
@@ -151,7 +151,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields('error', null),
   });
 
@@ -170,7 +170,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
 
@@ -186,7 +186,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields(null, { State: { Running: false } }),
   });
 
@@ -200,7 +200,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   sinon.stub(portscanner, 'findAPortNotInUse').returns(WS_SERVER_PORT);
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
 
@@ -256,7 +256,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').resolves({
     start: sinon.stub().resolves(container),
-    stop: () => {},
+    stop: () => { },
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
 
