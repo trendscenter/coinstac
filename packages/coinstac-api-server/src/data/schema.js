@@ -106,6 +106,7 @@ const typeDefs = `
     type: String
     sharedUsers: [ID]
     status: String!
+    delete: Boolean
   }
 
   type User {

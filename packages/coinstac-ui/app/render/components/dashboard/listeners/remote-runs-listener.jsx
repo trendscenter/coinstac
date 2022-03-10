@@ -58,6 +58,11 @@ function RemoteRunsListener({
   useEffect(() => {
     if (!remoteRunChanged) return;
 
+    if (remoteRunChanged.delete) {
+      // TODO: call redux action to delete run
+      return;
+    }
+
     const localRun = localRuns.find(r => r.id === remoteRunChanged.id);
 
     if (!runIsFinished(remoteRunChanged)) {

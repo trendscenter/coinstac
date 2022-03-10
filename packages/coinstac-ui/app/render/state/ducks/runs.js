@@ -5,6 +5,8 @@ import { saveLocalRunResult } from './localRunResults';
 import { notifyInfo, notifyError } from './notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../utils/helpers';
 
+// TODO: Create actions for deleting runs in redux state
+
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
 const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
@@ -94,6 +96,7 @@ function runSort(a, b) {
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    // TODO: Handle runs delete in reducer
     case CLEAR_RUNS:
       return INITIAL_STATE;
     case SAVE_LOCAL_RUN: {

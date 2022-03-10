@@ -1601,7 +1601,6 @@ const resolvers = {
           } catch (e) { }
         });
       }
-      eventEmitter.emit(RUN_DELETED, runs);
     }
   },
   Subscription: {
