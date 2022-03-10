@@ -142,6 +142,11 @@ const mutations = {
     stopRun(runId: $runId)
   }
 `,
+  deleteRun: `
+  {
+    deleteRun(runId: $runId)
+  }
+`,
 };
 
 module.exports = mutations;

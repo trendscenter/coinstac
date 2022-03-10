@@ -218,6 +218,7 @@ const typeDefs = `
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
     stopRun(runId: ID): JSON
+    deleteRun(runId: ID): JSON
   }
 
   # This is a description of the queries

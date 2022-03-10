@@ -313,3 +313,8 @@ export const STOP_RUN_MUTATION = gql`
   mutation stopRun($runId: ID!)
   ${mutations.stopRun}
 `;
+
+export const DELETE_RUN_MUTATION = gql`
+  mutation deleteRun($runId: ID!)
+  ${mutations.deleteRun}
+`;
