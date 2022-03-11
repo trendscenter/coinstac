@@ -319,16 +319,18 @@ test('validateUniqueUser', async (t) => {
  * Query tests
  */
 test('fetchAllResults and fetchResult', async (t) => {
-  /* fetchAlLResults returns all results */
+  /* fetchAllResults */
   const results = await Query.fetchAllResults();
   t.is(results.length, 4);
 
-  /* fetchResult returns null if resultId is not provided */
-  const result1 = await Query.fetchResult({}, {});
-  t.is(result1, null);
+  /* fetchResult */
+  // should return null if resultId is not provided
+  let result = await Query.fetchResult({}, {});
+  t.is(result, null);
 
-  const result2 = await Query.fetchResult({}, { resultId: results[0].id });
-  t.deepEqual(result2.id, results[0].id);
+  // should return result if resultId is provided
+  result = await Query.fetchResult({}, { resultId: results[0].id });
+  t.deepEqual(result.id, results[0].id);
 });
 
 test('fetchAllConsortia and fetchConsortium', async (t) => {
@@ -338,33 +340,41 @@ test('fetchAllConsortia and fetchConsortium', async (t) => {
   t.is(consortia.length, 2);
 
   /* fetchConsortium */
+  // should return null if consortiumId is not provided
   const consortium1 = await Query.fetchConsortium({}, {});
   t.is(consortium1, null);
 
+  // should return consortium
   const consortium2 = await Query.fetchConsortium({}, { consortiumId: consortia[0].id });
   t.deepEqual(consortium2.id, consortia[0].id);
 });
 
 test('fetchAllComputations and fetchComputation', async (t) => {
   /* fetchAllComputations */
+  // should return all computations if preprocess is not provided
   const computations = await Query.fetchAllComputations({}, { preprocess: null });
   t.is(computations.length, 20);
 
+  // should return computations filtered by preprocess if it is provided
   const computations2 = await Query.fetchAllComputations({}, { preprocess: 'process' });
   t.is(computations2.length, 0);
 
   /* fetchComputation */
   const ids = [computations[0].id, computations[1].id];
+
+  // should return null if provided computationIds is not array
   const computation1 = await Query.fetchComputation(
     {}, { computationIds: computations[0].id }
   );
   t.is(computation1, null);
 
+  // should return null if provided computationIds is empty array
   const computation2 = await Query.fetchComputation(
     {}, { computationIds: [] }
   );
   t.is(computation2, null);
 
+  // should return computations
   const computation3 = await Query.fetchComputation(
     {}, { computationIds: ids }
   );
@@ -378,9 +388,11 @@ test('fetchAllPipelines and fetchPipeline', async (t) => {
   t.is(pipelines.length, 3);
 
   /* fetchPipeline */
+  // should return null if pipelineId is not provided
   const pipeline1 = await Query.fetchPipeline({}, {});
   t.is(pipeline1, null);
 
+  // should return pipeline
   const pipeline2 = await Query.fetchPipeline(
     {}, { pipelineId: pipelines[0].id }
   );
@@ -399,11 +411,13 @@ test('fetchAllUsers and fetchUser', async (t) => {
 });
 
 test('fetchAllUserRuns', async (t) => {
-  let auth = getAuth(USER_IDS[0], 'test1');
+  // should return all runs
+  let auth = getAuth(USER_IDS[0], 'test1', 'admin');
   let runs = await Query.fetchAllUserRuns('', {}, auth);
   t.is(runs.length, 4);
 
-  auth = getAuth(USER_IDS[0], 'test1', 'admin');
+  // should return runs filtered by user
+  auth = getAuth(USER_IDS[0], 'test2');
   runs = await Query.fetchAllUserRuns('', {}, auth);
   t.is(runs.length, 4);
 });
@@ -411,14 +425,12 @@ test('fetchAllUserRuns', async (t) => {
 test('fetchAllThreads', async (t) => {
   const auth = getAuth(USER_IDS[0], 'test1');
   const threads = await Query.fetchAllThreads('', {}, auth);
-
   t.is(threads.length, 0);
 });
 
 test('fetchUsersOnlineStatus', async (t) => {
   const auth = getAuth(USER_IDS[0], 'test1', 'admin');
   const onlineUsers = await Query.fetchUsersOnlineStatus('', {}, auth);
-
   t.deepEqual(onlineUsers, {});
 });
 
@@ -428,10 +440,12 @@ test('fetchAllHeadlessClients', async (t) => {
 });
 
 test('fetchAccessibleHeadlessClients', async (t) => {
+  // should return all headless clients if user is admin
   let auth = getAuth(USER_IDS[0], 'test1', 'admin');
   let headlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
   t.is(headlessClients.length, 1);
 
+  // should return filtered headless clients by user role
   auth = getAuth(USER_IDS[0], 'test1');
   headlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
   t.is(headlessClients.length, 0);
@@ -440,13 +454,13 @@ test('fetchAccessibleHeadlessClients', async (t) => {
 test('fetchHeadlessClient', async (t) => {
   const auth = getAuth(USER_IDS[0], 'test1', 'admin');
   const allHeadlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
+  const args = { id: allHeadlessClients[0].id };
 
-  const args = {
-    id: allHeadlessClients[0].id,
-  };
+  // should return headless client if provided id exists
   let res = await Query.fetchHeadlessClient('', args, auth);
   t.is(res.id, args.id);
 
+  // should return error if provided id does not exist
   args.id = 'headlessClient-1';
   res = await Query.fetchHeadlessClient('', args, auth);
   t.is(res.output.payload.statusCode, 500);
@@ -462,15 +476,19 @@ test('fetchAllDatasetsSubjectGroups', async (t) => {
 });
 
 test('searchDatasets', async (t) => {
-  let datasets = await Query.searchDatasets('', { });
+  // should return all datasets if filter is not provide
+  let datasets = await Query.searchDatasets('', {});
   t.is(datasets.length, 3);
 
+  // should return datasets filtered by string
   datasets = await Query.searchDatasets('', { searchString: 'experiments' });
   t.is(datasets.length, 1);
 
+  // should return datasets filtered by subject groups
   datasets = await Query.searchDatasets('', { subjectGroups: ['schizophrenia'] });
   t.is(datasets.length, 2);
 
+  // should return datasets filtered by modality
   datasets = await Query.searchDatasets('', { modality: 'sMRI' });
   t.is(datasets.length, 1);
 });
@@ -483,14 +501,17 @@ test('fetchDataset', async (t) => {
 });
 
 test('fetchRun', async (t) => {
+  // should return run if user is admin
   let auth = getAuth(USER_IDS[0], 'test-1', 'admin');
   let run = await Query.fetchRun('', { runId: RUN_IDS[0] }, auth);
   t.is(run.id, String(RUN_IDS[0]));
 
+  // should return run
   auth = getAuth(USER_IDS[0], 'test-1');
   run = await Query.fetchRun('', { runId: RUN_IDS[0] }, auth);
   t.is(run.id, String(RUN_IDS[0]));
 
+  // should return error if run does not exist
   const error = await Query.fetchRun('', { runId: RUN_IDS[3] }, auth);
   t.is(error.message, RUN_NOT_FOUND);
 });
