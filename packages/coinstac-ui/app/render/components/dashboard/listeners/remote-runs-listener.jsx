@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 
 import { FETCH_ALL_USER_RUNS_QUERY, USER_RUN_CHANGED_SUBSCRIPTION } from '../../../state/graphql/functions';
-import { saveLocalRun, updateLocalRun } from '../../../state/ducks/runs';
+import { deleteRun, saveLocalRun, updateLocalRun } from '../../../state/ducks/runs';
 import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 function runIsFinished(run) {
@@ -18,6 +18,7 @@ function RemoteRunsListener({
   consortia,
   saveLocalRun,
   updateLocalRun,
+  deleteRun,
   suspendedRuns,
   notifyError,
   notifySuccess,
@@ -59,7 +60,7 @@ function RemoteRunsListener({
     if (!remoteRunChanged) return;
 
     if (remoteRunChanged.delete) {
-      // TODO: call redux action to delete run
+      deleteRun(remoteRunChanged.id);
       return;
     }
 
@@ -105,6 +106,7 @@ const mapStateToProps = ({ runs, suspendedRuns }) => ({
 
 export default connect(mapStateToProps,
   {
+    deleteRun,
     saveLocalRun,
     updateLocalRun,
     notifyError,

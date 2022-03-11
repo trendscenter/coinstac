@@ -537,7 +537,6 @@ const resolvers = {
         `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
       );
 
-      console.log(result)
       return { info: JSON.stringify(result.data) };
     }
   },
