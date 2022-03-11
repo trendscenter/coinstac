@@ -36,6 +36,12 @@ const INVALID_PASSWORD = 'Current password is not correct';
 const RUNS_ON_PIPELINE = 'Runs on this pipeline exist';
 const INVALID_ROLE_TYPE = 'Invalid role type';
 const NO_HEADLESS_CLIENT = 'No headless client is registered with this api key';
+const INCORRECT_CREDENTIAL = 'Incorrect username or password';
+const RUN_NOT_FOUND = 'Run not found';
+const CONSORTIUM_INCORRECT_PERMISSION = 'Incorrect permissions to update computation';
+const INVALID_API_KEY = 'Invalid API key';
+const USERNAME_TAKEN = 'Username taken';
+const EMAIL_TAKEN = 'Email taken';
 
 /**
  * Variables
@@ -73,7 +79,6 @@ test.before(async () => {
 
 test('createToken', (t) => {
   const token = helperFunctions.createToken('test-1');
-
   t.not(token.length, null);
 });
 
@@ -81,7 +86,6 @@ test('decodeToken', (t) => {
   const username = 'test-1';
   const token = helperFunctions.createToken(username);
   const decoded = helperFunctions.decodeToken(token);
-
   t.is(decoded.id, username);
 });
 
@@ -89,49 +93,43 @@ test('createPasswordResetToken, savePasswordResetToken, validateResetToken and r
   /* createPasswordResetToken */
   const email = 'test@mrn.org';
   const token = helperFunctions.createPasswordResetToken(email);
-
   t.not(token.length, null);
 
   /* savePasswordResetToken */
   sinon.stub(sgMail, 'send').resolves();
-
   const user = await helperFunctions.savePasswordResetToken(email);
   t.not(user.passwordResetToken, null);
-
   sgMail.send.restore();
 
   /* validateResetToken */
-  const req = {
-    payload: { token },
-  };
-
-  await helperFunctions.validateResetToken(req, (res) => {
-    t.is(res.email, email);
+  // should return email
+  const req = { payload: { token } };
+  await helperFunctions.validateResetToken(req, {
+    response: (res) => {
+      t.is(res.email, email);
+    },
   });
 
-  const invalidTokenReq = {
-    payload: { token: 'token' },
-  };
-  await helperFunctions.validateResetToken(invalidTokenReq, (error) => {
-    t.is(getMessageFromError(error), INVALID_TOKEN);
-  });
+  // should return error if cannot find user with token
+  const invalidTokenReq = { payload: { token: 'token' } };
+  let error = await helperFunctions.validateResetToken(invalidTokenReq, { response: () => {} });
+  t.is(error.message, INVALID_TOKEN);
 
+  // should return error if token cannot be verified
   sinon.stub(jwt, 'verify').throws(new Error('error'));
-  await helperFunctions.validateResetToken(req, (error) => {
-    t.is(getMessageFromError(error), 'error');
-  });
+  error = await helperFunctions.validateResetToken(req, { response: () => {} });
+  t.is(error.message, 'error');
   jwt.verify.restore();
 
+  // should return error due to invalid email
   sinon.stub(jwt, 'verify').resolves({ email: 'email@mrn.org' });
-  await helperFunctions.validateResetToken(req, (error) => {
-    t.is(getMessageFromError(error), INVALID_EMAIL);
-  });
+  error = await helperFunctions.validateResetToken(req, { response: () => {} });
+  t.is(error.message, INVALID_EMAIL);
   jwt.verify.restore();
 
   /* resetPassword */
   const newPassword = 'newPassword';
   await helperFunctions.resetPassword(token, newPassword);
-
   const res = await helperFunctions.getUserDetailsByID(USER_IDS[0]);
   const isValid = await helperFunctions.verifyPassword(newPassword, res.passwordHash);
   t.true(isValid);
@@ -139,215 +137,178 @@ test('createPasswordResetToken, savePasswordResetToken, validateResetToken and r
 
 test('createUser', async (t) => {
   const passwordHash = await helperFunctions.hashPassword('password');
-
   const user = {
     username: 'test-user',
     email: 'testuser@email.com',
   };
-
   const createdUser = await helperFunctions.createUser(user, passwordHash);
-
   t.is(createdUser.username, user.username);
 });
 
 test('updateUser', async (t) => {
   const user = await helperFunctions.getUserDetailsByID(USER_IDS[4]);
   const newUsername = 'test6';
-
   const newUser = {
     ...user,
     username: newUsername,
   };
-
   const updatedUser = await helperFunctions.updateUser(newUser);
-
   t.is(updatedUser.username, newUsername);
 });
 
 test('getUserDetailsByID', async (t) => {
   const userId = USER_IDS[0];
 
-  const user = await helperFunctions.getUserDetailsByID(userId);
-
+  // should return user if exists
+  let user = await helperFunctions.getUserDetailsByID(userId);
   t.is(user.id, userId.toHexString());
 
-  const invalidUser = await helperFunctions.getUserDetailsByID('test1');
-  t.falsy(invalidUser);
+  // should return null if does not exist
+  user = await helperFunctions.getUserDetailsByID('test1');
+  t.is(user, null);
 });
 
 test('getUserDetails', async (t) => {
   const username = 'test1';
   const user = await helperFunctions.getUserDetails(username);
-
   t.is(user.username, username);
 });
 
 test('hashPassword and verifyPassword', async (t) => {
   /* hashPassword */
+  // should return hashed password
   const passwordHash = await helperFunctions.hashPassword('password');
-
   t.is(passwordHash.length, 120);
 
+  // should return error
   sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
-
   let error = await t.throwsAsync(helperFunctions.hashPassword('password'));
   t.is(error.message, 'error');
-
   crypto.pbkdf2.restore();
 
   /* verifyPassword */
   const isValid1 = await helperFunctions.verifyPassword('password', passwordHash);
   t.true(isValid1);
 
+  /* should return false if hashed password is not provided */
   const isValid2 = await helperFunctions.verifyPassword('password');
   t.false(isValid2);
 
   sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
-
   error = await t.throwsAsync(helperFunctions.verifyPassword('password', passwordHash));
   t.is(error.message, 'error');
-
   crypto.pbkdf2.restore();
 });
 
 test('validateToken and validateUser', async (t) => {
+  /* validateToken */
+  // should return valid user information
   const users = await Query.fetchAllUsers();
   const decoded1 = { decoded: { payload: { id: users[0].id } } };
+  let res = await helperFunctions.validateToken(decoded1);
+  t.is(res.isValid, true);
+  t.is(String(res.credentials._id), decoded1.decoded.payload.id);
 
-  helperFunctions.validateToken(decoded1, null, (_, valid, user) => {
-    t.true(valid);
-    t.is(user.id, decoded1.id);
-  });
-
+  // should return invalid status
   const decoded2 = { decoded: { payload: { id: 'invalid-user' } } };
+  res = await helperFunctions.validateToken(decoded2);
+  t.is(res.isValid, false);
+  t.is(res.credentials, null);
 
-  helperFunctions.validateToken(decoded2, null, (_, valid, user) => {
-    t.false(valid);
-    t.falsy(user);
-  });
-
+  /* validateUser */
+  // should return validated user information
   const req1 = { payload: { username: 'test1', password: 'password' } };
-
   await helperFunctions.validateUser(req1, {
     response: (user) => {
       t.is(user.username, req1.payload.username);
     },
   });
 
+  // should return error due to invalid username
   const req2 = { payload: { username: 'invalid-user', password: 'password' } };
+  let error = await helperFunctions.validateUser(req2, { response: () => {} });
+  t.is(error.message, INCORRECT_CREDENTIAL);
 
-  try {
-    await helperFunctions.validateUser(req2, {
-      response: () => {},
-    });
-  } catch (error) {
-    t.is(error.statusCode, 401);
-  }
-
+  // should return error due to invalid password
   const req3 = { payload: { username: 'test1', password: 'password1' } };
-
-  try {
-    await helperFunctions.validateUser(req3, {
-      response: () => {},
-    });
-  } catch (error) {
-    t.is(error.statusCode, 401);
-  }
+  error = await helperFunctions.validateUser(req3, { response: () => {} });
+  t.is(error.message, INCORRECT_CREDENTIAL);
 });
 
 test('validateHeadlessClientApiKey', async (t) => {
-  const apiKey = await helperFunctions.hashPassword('testApiKey');
-
+  // should return headless client
   let req = {
     payload: {
       name: 'Headless 1',
-      apiKey,
+      apiKey: 'testApiKey',
     },
   };
-
   await helperFunctions.validateHeadlessClientApiKey(req, {
     response: (headlessClient) => {
       t.is(headlessClient.name, req.payload.name);
     },
   });
 
+  // should return error if headless client not found
+  req.payload.name = 'Headless 2';
+  let error = await helperFunctions.validateHeadlessClientApiKey(req, { response: () => { } });
+  t.is(error.message, NO_HEADLESS_CLIENT);
+
+  // should return error if api key does not match
   req = {
     payload: {
-      name: 'Headless 2',
-      apiKey,
+      name: 'Headless 1',
+      apiKey: 'apikey',
     },
   };
+  error = await helperFunctions.validateHeadlessClientApiKey(req, { response: () => { } });
+  t.is(error.message, INVALID_API_KEY);
+});
 
-  try {
-    await helperFunctions.validateHeadlessClientApiKey(req, { response: () => { } });
-  } catch (error) {
-    t.is(error.message, NO_HEADLESS_CLIENT);
-  }
+test('validateUniqueEmail', async (t) => {
+  const req = { payload: { email: 'test@mrn.org' } };
+  const isValid = await helperFunctions.validateUniqueEmail(req);
 
-  t.pass();
+  t.false(isValid);
 });
 
 test('validateEmail', async (t) => {
-  let req = {
+  // should return true if provided email is valid
+  const req = {
     payload: { email: 'test@mrn.org' },
   };
-
   await helperFunctions.validateEmail(req, {
     response: (exists) => {
       t.true(exists);
     },
   });
 
-  req = {
-    payload: { email: 'email@mrn.org' },
-  };
-
-  try {
-    await helperFunctions.validateEmail(req, {
-      response: () => {},
-    });
-  } catch (error) {
-    t.is(getMessageFromError(error), INVALID_EMAIL);
-  }
-});
-
-test('validateUniqueEmail', async (t) => {
-  const req = { payload: { email: 'test@mrn.org' } };
-
-  const isValid = await helperFunctions.validateUniqueEmail(req);
-
-  t.false(isValid);
+  // should return error if provided email is not valid
+  req.payload.email = 'email@mrn.org';
+  const error = await helperFunctions.validateEmail(req, { response: () => {} });
+  t.is(error.message, INVALID_EMAIL);
 });
 
 test('validateUniqueUsername', async (t) => {
   const req = { payload: { username: 'valid-user' } };
-
   const isUnique = await helperFunctions.validateUniqueUsername(req);
-
   t.true(isUnique);
 });
 
 test('validateUniqueUser', async (t) => {
-  const req1 = { payload: { username: 'test1', email: 'test@mrn.org' } };
-  try {
-    await helperFunctions.validateUniqueUser(req1, {
-      response: () => {},
-    });
-  } catch (error) {
-    t.is(error.output.payload.message, 'Username taken');
-  }
+  // should return error if username is already taken
+  let req = { payload: { username: 'test1', email: 'test@mrn.org' } };
+  let error = await helperFunctions.validateUniqueUser(req, { response: () => {} });
+  t.is(error.message, USERNAME_TAKEN);
 
-  const req2 = { payload: { username: 'newuser', email: 'test@mrn.org' } };
-  try {
-    await helperFunctions.validateUniqueUser(req2, {
-      response: () => {},
-    });
-  } catch (error) {
-    t.is(error.output.payload.message, 'Email taken');
-  }
+  // should return error if email is already taken
+  req = { payload: { username: 'newuser', email: 'test@mrn.org' } };
+  error = await helperFunctions.validateUniqueUser(req, { response: () => {} });
+  t.is(error.message, EMAIL_TAKEN);
 
-  const req3 = { payload: { username: 'newuser', email: 'newuser@mrn.org' } };
-  await helperFunctions.validateUniqueUser(req3, {
+  // should return true if provided username and email are unique
+  req = { payload: { username: 'newuser', email: 'newuser@mrn.org' } };
+  await helperFunctions.validateUniqueUser(req, {
     response: (isUnique) => {
       t.true(isUnique);
     },
@@ -357,96 +318,93 @@ test('validateUniqueUser', async (t) => {
 /**
  * Query tests
  */
-test('fetchAll Results and fetchResult', async (t) => {
+test('fetchAllResults and fetchResult', async (t) => {
+  /* fetchAlLResults returns all results */
   const results = await Query.fetchAllResults();
-
   t.is(results.length, 4);
 
+  /* fetchResult returns null if resultId is not provided */
   const result1 = await Query.fetchResult({}, {});
-
   t.is(result1, null);
 
   const result2 = await Query.fetchResult({}, { resultId: results[0].id });
-
   t.deepEqual(result2.id, results[0].id);
 });
 
-test('fetchAllConsortia', async (t) => {
+test('fetchAllConsortia and fetchConsortium', async (t) => {
+  /* fetchAllConsortia */
   const auth = getAuth('test1');
   const consortia = await Query.fetchAllConsortia('', {}, auth);
-
   t.is(consortia.length, 2);
 
+  /* fetchConsortium */
   const consortium1 = await Query.fetchConsortium({}, {});
-
   t.is(consortium1, null);
 
   const consortium2 = await Query.fetchConsortium({}, { consortiumId: consortia[0].id });
-
   t.deepEqual(consortium2.id, consortia[0].id);
 });
 
 test('fetchAllComputations and fetchComputation', async (t) => {
+  /* fetchAllComputations */
   const computations = await Query.fetchAllComputations({}, { preprocess: null });
-
   t.is(computations.length, 20);
 
   const computations2 = await Query.fetchAllComputations({}, { preprocess: 'process' });
-
   t.is(computations2.length, 0);
 
+  /* fetchComputation */
   const ids = [computations[0].id, computations[1].id];
-
   const computation1 = await Query.fetchComputation(
     {}, { computationIds: computations[0].id }
   );
-
   t.is(computation1, null);
 
   const computation2 = await Query.fetchComputation(
     {}, { computationIds: [] }
   );
-
   t.is(computation2, null);
 
   const computation3 = await Query.fetchComputation(
     {}, { computationIds: ids }
   );
-
   t.is(computation3.length, ids.length);
 });
 
 test('fetchAllPipelines and fetchPipeline', async (t) => {
-  const auth = getAuth('test1');
+  /* fetchAllPipelines */
+  const auth = getAuth(USER_IDS[0]);
   const pipelines = await Query.fetchAllPipelines('', {}, auth);
+  t.is(pipelines.length, 3);
 
-  t.is(pipelines.length, 2);
-
+  /* fetchPipeline */
   const pipeline1 = await Query.fetchPipeline({}, {});
-
   t.is(pipeline1, null);
 
   const pipeline2 = await Query.fetchPipeline(
     {}, { pipelineId: pipelines[0].id }
   );
-
   t.deepEqual(pipeline2.id, pipelines[0].id);
 });
 
 test('fetchAllUsers and fetchUser', async (t) => {
+  /* fetchAllUsers */
   const users = await Query.fetchAllUsers();
   t.is(users.length, 7);
 
+  /* fetchUser */
   const userId = USER_IDS[0];
-
   const user = await Query.fetchUser({}, { userId });
   t.is(user.id, userId.toHexString());
 });
 
 test('fetchAllUserRuns', async (t) => {
-  const auth = getAuth(USER_IDS[0].toHexString());
-  const runs = await Query.fetchAllUserRuns('', {}, auth);
+  let auth = getAuth(USER_IDS[0], 'test1');
+  let runs = await Query.fetchAllUserRuns('', {}, auth);
+  t.is(runs.length, 4);
 
+  auth = getAuth(USER_IDS[0], 'test1', 'admin');
+  runs = await Query.fetchAllUserRuns('', {}, auth);
   t.is(runs.length, 4);
 });
 
@@ -457,16 +415,107 @@ test('fetchAllThreads', async (t) => {
   t.is(threads.length, 0);
 });
 
+test('fetchUsersOnlineStatus', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1', 'admin');
+  const onlineUsers = await Query.fetchUsersOnlineStatus('', {}, auth);
+
+  t.deepEqual(onlineUsers, {});
+});
+
+test('fetchAllHeadlessClients', async (t) => {
+  const headlessClients = await Query.fetchAllHeadlessClients();
+  t.is(headlessClients.length, 1);
+});
+
+test('fetchAccessibleHeadlessClients', async (t) => {
+  let auth = getAuth(USER_IDS[0], 'test1', 'admin');
+  let headlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
+  t.is(headlessClients.length, 1);
+
+  auth = getAuth(USER_IDS[0], 'test1');
+  headlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
+  t.is(headlessClients.length, 0);
+});
+
+test('fetchHeadlessClient', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1', 'admin');
+  const allHeadlessClients = await Query.fetchAccessibleHeadlessClients('', {}, auth);
+
+  const args = {
+    id: allHeadlessClients[0].id,
+  };
+  let res = await Query.fetchHeadlessClient('', args, auth);
+  t.is(res.id, args.id);
+
+  args.id = 'headlessClient-1';
+  res = await Query.fetchHeadlessClient('', args, auth);
+  t.is(res.output.payload.statusCode, 500);
+});
+
+test('fetchAllDatasetsSubjectGroups', async (t) => {
+  const subjectGroups = await Query.fetchAllDatasetsSubjectGroups();
+  t.deepEqual(subjectGroups, [
+    'alcoholism',
+    'controls',
+    'schizophrenia',
+  ]);
+});
+
+test('searchDatasets', async (t) => {
+  let datasets = await Query.searchDatasets('', { });
+  t.is(datasets.length, 3);
+
+  datasets = await Query.searchDatasets('', { searchString: 'experiments' });
+  t.is(datasets.length, 1);
+
+  datasets = await Query.searchDatasets('', { subjectGroups: ['schizophrenia'] });
+  t.is(datasets.length, 2);
+
+  datasets = await Query.searchDatasets('', { modality: 'sMRI' });
+  t.is(datasets.length, 1);
+});
+
+test('fetchDataset', async (t) => {
+  const datasets = await Query.searchDatasets('', { });
+  const datasetId = datasets[0].id;
+  const dataset = await Query.fetchDataset('', { id: datasetId });
+  t.is(dataset.id, datasetId);
+});
+
+test('fetchRun', async (t) => {
+  let auth = getAuth(USER_IDS[0], 'test-1', 'admin');
+  let run = await Query.fetchRun('', { runId: RUN_IDS[0] }, auth);
+  t.is(run.id, String(RUN_IDS[0]));
+
+  auth = getAuth(USER_IDS[0], 'test-1');
+  run = await Query.fetchRun('', { runId: RUN_IDS[0] }, auth);
+  t.is(run.id, String(RUN_IDS[0]));
+
+  const error = await Query.fetchRun('', { runId: RUN_IDS[3] }, auth);
+  t.is(error.message, RUN_NOT_FOUND);
+});
+
 /**
  * Mutation tests
  */
 test('addComputation', async (t) => {
-  const auth = getAuth(USER_IDS[0], null, 'admin');
-  const args = { computationSchema: { meta: {}, id: database.createUniqueId() } };
-
-  const res = await Mutation.addComputation('', args, auth);
-
+  const adminAuth = getAuth(USER_IDS[0], null, 'admin');
+  let args = { computationSchema: { meta: {}, id: database.createUniqueId() } };
+  let res = await Mutation.addComputation('', args, adminAuth);
   t.is(res.id, args.computationSchema.id);
+
+  const auth = getAuth(USER_IDS[0], null);
+  let error = await Mutation.addComputation('', args, auth);
+  t.is(error.message, ACTION_PERMIT_ERROR);
+
+  const authorAuth = getAuth(USER_IDS[0], null, 'author');
+  args = { computationSchema: { meta: { id: 'coinstac-local-test' }, id: database.createUniqueId() } };
+  error = await Mutation.addComputation('', args, authorAuth);
+  t.is(error.message, CONSORTIUM_INCORRECT_PERMISSION);
+
+  args = { computationSchema: { meta: { id: 'coinstac-local-test' }, id: database.createUniqueId() } };
+  res = await Mutation.addComputation('', args, adminAuth);
+  t.deepEqual(res.id, args.computationSchema.id);
 });
 
 test('addUserRole', async (t) => {
@@ -474,18 +523,14 @@ test('addUserRole', async (t) => {
   const userId = USER_IDS[0];
 
   const invalidPermissions = {
-    consortia: {
-      [consortiumId]: null,
-    },
+    consortia: { [consortiumId]: null },
   };
-
   let args = {
     table: 'consortia',
     doc: consortiumId,
     role: 'admin',
     userId,
   };
-
   let error = await Mutation.addUserRole(
     '', args, { credentials: { permissions: invalidPermissions } }
   );
@@ -503,16 +548,12 @@ test('addUserRole', async (t) => {
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
   const permissions = {
-    consortia: {
-      [consortiumId]: ['owner'],
-    },
+    consortia: { [consortiumId]: ['owner'] },
   };
-
   const res = await Mutation.addUserRole(
     '', args, { credentials: { permissions } }
   );
-
-  t.is(res.id, userId.toHexString());
+  t.is(res.id, String(userId));
 });
 
 test('removeUserRole', async (t) => {
