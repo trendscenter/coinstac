@@ -109,7 +109,7 @@ async function populateComputations() {
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
-    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
+    const cc = currentComps.find(cc => cc.meta.id === comp.meta.id);
     if (cc) {
       ops.update.push(Object.assign({}, comp, { _id: cc._id }));
       return ops;
