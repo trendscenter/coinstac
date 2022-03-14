@@ -37,7 +37,6 @@ function RemoteRunsListener({
   const remoteRunChanged = get(subscriptionData, 'userRunChanged');
 
   useEffect(() => {
-
     if (!remoteRunsFirstFetch) return;
 
     ranFirstQuery.current = true;
@@ -58,15 +57,11 @@ function RemoteRunsListener({
   }, [remoteRunsFirstFetch]);
 
   useEffect(() => {
-    console.log('remoteRunChanged has been triggered');
 
     if (!remoteRunChanged) return;
-    console.log({ "remoteRunChanged.delete": remoteRunChanged.delete });
-
 
     if (remoteRunChanged.delete) {
-
-      // deleteRun(remoteRunChanged.id);
+      deleteRun(remoteRunChanged.id);
       return;
     }
 
