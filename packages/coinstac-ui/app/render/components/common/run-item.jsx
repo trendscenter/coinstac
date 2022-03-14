@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { compose } from 'redux';
@@ -17,6 +17,7 @@ import moment from 'moment';
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
 import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
+import ListDeleteModal from './list-delete-modal';
 
 const styles = theme => ({
   rootPaper: {
@@ -140,6 +141,7 @@ function getStateWell(runObject, classes) {
 
 function RunItem(props) {
   const [deleteRun, deleteRunState] = useMutation(DELETE_RUN_MUTATION);
+  const [showModal, setShowModal] = useState(false);
 
   const handleStopPipeline = () => {
     const { stopPipeline } = props;
@@ -381,13 +383,18 @@ function RunItem(props) {
           variant="contained"
           component={Link}
           className={classes.button}
-          onClick={() => {
-            deleteRun({ variables: { runId: id } });
-          }}
+          onClick={() => { setShowModal(true); }}
         >
           Delete Run
         </Button>
-
+        <ListDeleteModal
+          close={() => { setShowModal(false) }}
+          deleteItem={() => {
+            deleteRun({ variables: { runId: id } });
+          }}
+          itemName="run"
+          show={showModal}
+        />
       </div>
     </Paper>
   );
