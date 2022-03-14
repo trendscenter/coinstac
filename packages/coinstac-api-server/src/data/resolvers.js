@@ -26,6 +26,7 @@ const {
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
+  USER_DELETED,
 } = require('./events');
 const { getOnlineUsers } = require('./user-online-status-tracker');
 const { NotAuthorizedError } = require('./errors');
@@ -352,7 +353,7 @@ const resolvers = {
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {
           return consortiaIds.includes(String(pipeline.owningConsortium))
-          || pipeline.shared;
+            || pipeline.shared;
         });
       }
 
@@ -1563,6 +1564,17 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    deleteUser: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to delete this user');
+      }
+      const db = database.getDbInstance();
+
+      console.log(args);
+      await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
+
+      eventEmitter.emit(USER_DELETED, args.userId);
+    }
   },
   Subscription: {
     /**

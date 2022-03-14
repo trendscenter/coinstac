@@ -137,6 +137,11 @@ const mutations = {
       }
     }
   `,
+  deleteUser: `
+  {
+    deleteUser(userId: $userId)
+  }
+  `,
 };
 
 module.exports = mutations;
