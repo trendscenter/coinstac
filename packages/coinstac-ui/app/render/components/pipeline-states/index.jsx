@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { ipcRenderer } from 'electron';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { get } from 'lodash';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
-import { Button, Card, Container, TextField } from '@material-ui/core';
+import { Button, Card } from '@material-ui/core';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import ReactJson from 'react-json-view';
 import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../state/graphql/functions';
@@ -26,13 +25,9 @@ const styles = theme => ({
   },
 });
 
-const stopPipeline = (pipelineId, runId) => () => {
-  ipcRenderer.send('stop-pipeline', { pipelineId, runId });
-};
-
 const PipelineStates = (
   {
-    classes, user, consortia, runs,
+    classes, user,
   },
   { router }
 ) => {
@@ -43,8 +38,8 @@ const PipelineStates = (
   }, []);
 
 
-  const [getPipelines, { data, loading, error }] = useLazyQuery(GET_PIPELINES_QUERY, { fetchPolicy: 'network-only' });
-  const [stopRun, stopRunData] = useMutation(STOP_RUN_MUTATION);
+  const [getPipelines, { data, loading }] = useLazyQuery(GET_PIPELINES_QUERY, { fetchPolicy: 'network-only' });
+  const [stopRun] = useMutation(STOP_RUN_MUTATION);
 
   const pipelinesData = data
     && data.getPipelines
@@ -99,13 +94,6 @@ const PipelineStates = (
           );
         })
       }
-      {/* <ReactJson
-        src={pipelinesData}
-        theme="monokai"
-        displayDataTypes={false}
-        displayObjectSize={false}
-        enableClipboard={false}
-      /> */}
     </div>
   );
 };
@@ -114,15 +102,9 @@ PipelineStates.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-PipelineStates.defaultProps = {
-  consortia: [],
-  runs: [],
-};
 
 PipelineStates.propTypes = {
   classes: PropTypes.object.isRequired,
-  consortia: PropTypes.array,
-  runs: PropTypes.array,
   user: PropTypes.object.isRequired,
 };
 

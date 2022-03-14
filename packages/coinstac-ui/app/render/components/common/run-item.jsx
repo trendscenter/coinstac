@@ -1,4 +1,4 @@
-import React, { Component, useState } from 'react';
+import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { compose } from 'redux';
@@ -140,7 +140,7 @@ function getStateWell(runObject, classes) {
 }
 
 function RunItem(props) {
-  const [deleteRun, deleteRunState] = useMutation(DELETE_RUN_MUTATION);
+  const [deleteRun] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
 
   const handleStopPipeline = () => {
@@ -388,7 +388,7 @@ function RunItem(props) {
           Delete Run
         </Button>
         <ListDeleteModal
-          close={() => { setShowModal(false) }}
+          close={() => { setShowModal(false); }}
           deleteItem={() => {
             deleteRun({ variables: { runId: id } });
           }}

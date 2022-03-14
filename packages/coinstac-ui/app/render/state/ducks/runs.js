@@ -141,7 +141,8 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         runs: state.runs.filter(run => run.id !== action.payload.runId),
-        runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id !== action.payload.runId),
+        runsAwaitingDataMap:
+          state.runsAwaitingDataMap.filter((run) => { return run.id !== action.payload.runId; }),
         localRuns: state.localRuns.filter(run => run.id !== action.payload.runId),
         remoteRuns: state.remoteRuns.filter(run => run.id !== action.payload.runId),
       };

@@ -57,7 +57,6 @@ function RemoteRunsListener({
   }, [remoteRunsFirstFetch]);
 
   useEffect(() => {
-
     if (!remoteRunChanged) return;
 
     if (remoteRunChanged.delete) {
