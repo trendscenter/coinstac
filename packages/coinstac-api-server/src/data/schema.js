@@ -57,22 +57,14 @@ const typeDefs = `
     ${sharedFields.consortiumFields}
   }
 
-  type PipelineController {
-    ${sharedFields.pipelineControllerFields}
-  }
-
-  input PipelineControllerInput {
-    ${sharedFields.pipelineControllerFields}
-  }
-
   type PipelineStep {
-    controller: PipelineController
+    controller: JSON
     computations: [Computation]
     ${sharedFields.pipelineStepFields}
   }
 
   input PipelineStepInput {
-    controller: PipelineControllerInput
+    controller: JSON
     computations: [ID]
     ${sharedFields.pipelineStepFields}
   }

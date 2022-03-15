@@ -21,11 +21,11 @@ const electronStore = new ElectronStore();
 const persistConfig = {
   key: 'root',
   storage: createElectronStorage({ electronStore }),
-  whitelist: ['maps', 'localRunResults', 'suspendedRuns'],
+  whitelist: ['maps', 'localRunResults', 'suspendedRuns', 'runs'],
 };
 
-export default function () {
-  const persistedReducer = persistReducer(persistConfig, rootReducer());
+export default function configureStore() {
+  const persistedReducer = persistReducer(persistConfig, rootReducer(persistConfig.storage));
   const middleware = [
     thunkMiddleware,
     promiseMiddleware,

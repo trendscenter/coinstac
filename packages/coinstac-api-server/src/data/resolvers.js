@@ -655,8 +655,6 @@ const resolvers = {
       }
 
       try {
-        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
         let runClients = { ...consortium.members };
 
         if (pipeline.headlessMembers) {
@@ -671,7 +669,7 @@ const resolvers = {
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
-          type: isPipelineDecentralized ? 'decentralized' : 'local',
+          type: 'decentralized',
           status: 'started'
         });
 

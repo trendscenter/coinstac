@@ -17,6 +17,8 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
+import { v4 as uuid } from 'uuid';
+
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -39,8 +41,9 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
+import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
 
 const MAX_LENGTH_CONSORTIA = 50;
@@ -245,7 +248,7 @@ class ConsortiaList extends Component {
             key={`${consortium.id}-start-pipeline-button`}
             variant="contained"
             className={classes.button}
-            onClick={this.startPipeline(consortium.id)}
+            onClick={this.startPipeline(consortium)}
           >
             Start Pipeline
           </Button>
@@ -447,15 +450,39 @@ class ConsortiaList extends Component {
     }
   }
 
-  startPipeline(consortiumId) {
+  startPipeline(consortium) {
     return async () => {
       const {
-        createRun, startLoading, finishLoading, notifyError,
+        pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
+        notifyWarning, notifyError,
       } = this.props;
 
-      startLoading('start-pipeline');
+      const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+      if (!pipeline.steps) {
+        return notifyWarning('The selected pipeline has no steps');
+      }
+
+      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
       try {
-        await createRun(consortiumId);
+        startLoading('start-pipeline');
+
+        if (isPipelineDecentralized) {
+          return await saveRemoteDecentralizedRun(consortium.id);
+        }
+
+        const localRun = {
+          id: uuid(),
+          clients: { ...consortium.members },
+          consortiumId: consortium.id,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: 'local',
+          status: 'started',
+        };
+
+        startRun(localRun, consortium);
       } catch ({ graphQLErrors }) {
         notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
       } finally {
@@ -491,7 +518,7 @@ class ConsortiaList extends Component {
 
     if (activePipelineId) {
       const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-      const pipeline = pipelines.find(cons => cons.id === activePipelineId);
+      const pipeline = pipelines.find(pipe => pipe.id === activePipelineId);
 
       const computations = [];
       pipeline.steps.forEach((step) => {
@@ -622,7 +649,7 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
-  createRun: PropTypes.func.isRequired,
+  saveRemoteDecentralizedRun: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -648,7 +675,7 @@ const mapStateToProps = ({ auth, maps }) => ({
 });
 
 const ConsortiaListWithData = compose(
-  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'consortiumId')),
+  graphql(CREATE_RUN_MUTATION, saveDocumentProp('saveRemoteDecentralizedRun', 'consortiumId')),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
@@ -679,9 +706,11 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyWarning,
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      startRun,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)

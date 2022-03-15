@@ -5,7 +5,7 @@ import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 
 import { FETCH_ALL_USER_RUNS_QUERY, USER_RUN_CHANGED_SUBSCRIPTION } from '../../../state/graphql/functions';
-import { saveLocalRun, updateLocalRun } from '../../../state/ducks/runs';
+import { loadLocalRuns, saveRunLocally, updateRunLocally } from '../../../state/ducks/runs';
 import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 function runIsFinished(run) {
@@ -16,8 +16,9 @@ function RemoteRunsListener({
   userId,
   localRuns,
   consortia,
-  saveLocalRun,
-  updateLocalRun,
+  loadLocalRuns,
+  saveRunLocally,
+  updateRunLocally,
   suspendedRuns,
   notifyError,
   notifySuccess,
@@ -38,6 +39,8 @@ function RemoteRunsListener({
   useEffect(() => {
     if (!remoteRunsFirstFetch) return;
 
+    loadLocalRuns();
+
     ranFirstQuery.current = true;
 
     remoteRunsFirstFetch.forEach((remoteRun) => {
@@ -51,7 +54,7 @@ function RemoteRunsListener({
         runData.status = 'suspended';
       }
 
-      saveLocalRun(runData);
+      saveRunLocally(runData);
     });
   }, [remoteRunsFirstFetch]);
 
@@ -61,7 +64,7 @@ function RemoteRunsListener({
     const localRun = localRuns.find(r => r.id === remoteRunChanged.id);
 
     if (!runIsFinished(remoteRunChanged)) {
-      updateLocalRun(remoteRunChanged.id, {
+      updateRunLocally(remoteRunChanged.id, {
         remotePipelineState: remoteRunChanged.remotePipelineState,
       });
 
@@ -87,7 +90,7 @@ function RemoteRunsListener({
     }
 
     ipcRenderer.send('clean-remote-pipeline', remoteRunChanged.id);
-    saveLocalRun(runData);
+    saveRunLocally(runData);
   }, [remoteRunChanged]);
 
   return null;
@@ -100,8 +103,9 @@ const mapStateToProps = ({ runs, suspendedRuns }) => ({
 
 export default connect(mapStateToProps,
   {
-    saveLocalRun,
-    updateLocalRun,
+    loadLocalRuns,
+    saveRunLocally,
+    updateRunLocally,
     notifyError,
     notifySuccess,
   })(RemoteRunsListener);
