@@ -42,6 +42,7 @@ const styles = () => ({
 });
 
 function Permission(props, context) {
+  const { currentUser, users, classes } = props;
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
@@ -103,8 +104,6 @@ function Permission(props, context) {
       });
   };
 
-
-  const { currentUser, users, classes } = props;
 
   return (
     <div>
@@ -190,6 +189,7 @@ function Permission(props, context) {
           show={showModal}
         />
       </div>
+      <Button onClick={()=>{console.log(users)}}>log users</Button>
     </div>
   );
 }

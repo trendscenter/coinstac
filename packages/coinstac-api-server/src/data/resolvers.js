@@ -117,6 +117,7 @@ async function addUserPermissions(args) {
 
   const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, updateObj, { returnOriginal: false });
 
+  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
@@ -155,6 +156,7 @@ async function removeUserPermissions(args) {
     });
   }
 
+  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 
   if (args.table === 'consortia') {
@@ -183,7 +185,7 @@ async function changeUserAppRole(args, addOrRemove) {
   }, {
     returnOriginal: false,
   });
-
+  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
@@ -1571,9 +1573,11 @@ const resolvers = {
       const db = database.getDbInstance();
 
       console.log(args);
-      await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
+      const userDeleteResult = await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
 
-      eventEmitter.emit(USER_DELETED, args.userId);
+
+      console.log({ userDeleteResult })
+      eventEmitter.emit(USER_CHANGED, userDeleteResult);
     }
   },
   Subscription: {
