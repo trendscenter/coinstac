@@ -116,6 +116,7 @@ const sharedFields = {
     username
     photo
     photoID
+    delete
   `,
   resultFields: `
     id

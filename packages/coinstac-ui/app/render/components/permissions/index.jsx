@@ -173,7 +173,8 @@ function Permission(props, context) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="outlined" color="secondary" onClick={() => { setShowModal(true); setUserToDelete(user); }}>Delete</Button>
+                    {/* use IconButton */}
+                    <Button variant="contained" color="secondary" onClick={() => { setShowModal(true); setUserToDelete(user); }}>Delete</Button>
                   </TableCell>
                 </TableRow>
               );
@@ -189,7 +190,6 @@ function Permission(props, context) {
           show={showModal}
         />
       </div>
-      <Button onClick={()=>{console.log(users)}}>log users</Button>
     </div>
   );
 }

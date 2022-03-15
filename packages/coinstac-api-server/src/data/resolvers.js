@@ -1572,12 +1572,11 @@ const resolvers = {
       }
       const db = database.getDbInstance();
 
-      console.log(args);
-      const userDeleteResult = await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
+      const user = await db.collection('users').findOne({ _id: ObjectID(args.userId) })
+      user.delete = true;
+      await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
 
-
-      console.log({ userDeleteResult })
-      eventEmitter.emit(USER_CHANGED, userDeleteResult);
+      eventEmitter.emit(USER_CHANGED, user);
     }
   },
   Subscription: {
