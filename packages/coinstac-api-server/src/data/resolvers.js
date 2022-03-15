@@ -26,7 +26,6 @@ const {
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
-  USER_DELETED,
 } = require('./events');
 const { getOnlineUsers } = require('./user-online-status-tracker');
 const { NotAuthorizedError } = require('./errors');
@@ -117,7 +116,6 @@ async function addUserPermissions(args) {
 
   const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, updateObj, { returnOriginal: false });
 
-  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
@@ -156,7 +154,6 @@ async function removeUserPermissions(args) {
     });
   }
 
-  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 
   if (args.table === 'consortia') {
@@ -185,7 +182,6 @@ async function changeUserAppRole(args, addOrRemove) {
   }, {
     returnOriginal: false,
   });
-  console.log({ userUpdateResult });
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
