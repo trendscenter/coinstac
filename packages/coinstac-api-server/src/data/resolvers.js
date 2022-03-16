@@ -1593,7 +1593,7 @@ const resolvers = {
       // remove the user as a member of any consortium
       const consortiaMembersKey = `members.${args.userId}`;
       const consortiaUpdateResult = await db.collection('consortia').updateMany({}, { $unset: { [consortiaMembersKey]: true } })
-      console.log(consortiaUpdateResult)
+      
       if (consortiaUpdateResult.modifiedCount > 0) {
         // emit a consortium changed event
         const consortia = await db.collection('consortia').find().toArray();
