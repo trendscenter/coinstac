@@ -12,7 +12,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { Button } from 'react-bootstrap/lib/InputGroup';
+import { IconButton } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { useMutation } from '@apollo/client';
 import MemberAvatar from '../common/member-avatar';
 import { logout } from '../../state/ducks/auth';
@@ -31,6 +32,7 @@ import {
 import { getGraphQLErrorMessage } from '../../utils/helpers';
 import ListDeleteModal from '../common/list-delete-modal';
 
+
 const styles = () => ({
   avatarWrapper: {
     display: 'flex',
@@ -42,7 +44,12 @@ const styles = () => ({
 });
 
 function Permission(props, context) {
-  const { currentUser, users, classes, notifyError } = props;
+  const {
+    currentUser,
+    users,
+    classes,
+    notifyError,
+  } = props;
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
@@ -173,8 +180,9 @@ function Permission(props, context) {
                     )}
                   </TableCell>
                   <TableCell>
-                    {/* use IconButton */}
-                    <Button variant="contained" color="secondary" onClick={() => { setShowModal(true); setUserToDelete(user); }}>Delete</Button>
+                    <IconButton onClick={() => { setShowModal(true); setUserToDelete(user); }}>
+                      <DeleteIcon />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               );
