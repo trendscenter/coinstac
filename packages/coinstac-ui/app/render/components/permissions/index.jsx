@@ -49,6 +49,7 @@ function Permission(props, context) {
     users,
     classes,
     notifyError,
+    subscribeToUsers,
   } = props;
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
@@ -59,7 +60,6 @@ function Permission(props, context) {
   const [deleteUser] = useMutation(DELETE_USER_MUTATION);
 
   useEffect(() => {
-    const { currentUser, subscribeToUsers } = props;
     const { router } = context;
     let unsubscribeUsers;
 
