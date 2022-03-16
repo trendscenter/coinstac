@@ -13,6 +13,7 @@ import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { Button } from 'react-bootstrap/lib/InputGroup';
+import { useMutation } from '@apollo/client';
 import MemberAvatar from '../common/member-avatar';
 import { logout } from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
@@ -29,7 +30,6 @@ import {
 } from '../../state/graphql/functions';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
 import ListDeleteModal from '../common/list-delete-modal';
-import { useMutation } from '@apollo/client';
 
 const styles = () => ({
   avatarWrapper: {
@@ -42,7 +42,7 @@ const styles = () => ({
 });
 
 function Permission(props, context) {
-  const { currentUser, users, classes } = props;
+  const { currentUser, users, classes, notifyError } = props;
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
@@ -184,7 +184,13 @@ function Permission(props, context) {
         <ListDeleteModal
           close={() => { setShowModal(false); }}
           deleteItem={() => {
-            deleteUser({ variables: { userId: userToDelete.id } });
+            deleteUser({
+              variables: { userId: userToDelete.id },
+            }).then(() => {
+              setShowModal(false);
+            }).catch((e) => {
+              notifyError(e.message);
+            });
           }}
           itemName={`user: "${(userToDelete && userToDelete.username)}"`}
           show={showModal}
