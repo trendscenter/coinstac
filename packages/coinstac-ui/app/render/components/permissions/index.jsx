@@ -111,6 +111,15 @@ function Permission(props, context) {
       });
   };
 
+  const handleDeleteUser = () => {
+    deleteUser({
+      variables: { userId: userToDelete.id },
+    }).then(() => {
+      setShowModal(false);
+    }).catch((e) => {
+      notifyError(e.message);
+    });
+  };
 
   return (
     <div>
@@ -191,15 +200,7 @@ function Permission(props, context) {
         </Table>
         <ListDeleteModal
           close={() => { setShowModal(false); }}
-          deleteItem={() => {
-            deleteUser({
-              variables: { userId: userToDelete.id },
-            }).then(() => {
-              setShowModal(false);
-            }).catch((e) => {
-              notifyError(e.message);
-            });
-          }}
+          deleteItem={handleDeleteUser}
           itemName={`user: "${(userToDelete && userToDelete.username)}"`}
           show={showModal}
         />
