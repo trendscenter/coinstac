@@ -42,6 +42,7 @@ const CONSORTIUM_INCORRECT_PERMISSION = 'Incorrect permissions to update computa
 const INVALID_API_KEY = 'Invalid API key';
 const USERNAME_TAKEN = 'Username taken';
 const EMAIL_TAKEN = 'Email taken';
+const CANNOT_CHANGE_OWN_PERMISSION = 'You cannot change your own permissions';
 
 /**
  * Variables
@@ -59,7 +60,12 @@ function getAuth(id, username, role) {
   }
 
   return {
-    credentials: { id, username: username || id, permissions },
+    credentials: {
+      id,
+      _id: id,
+      username: username || id,
+      permissions,
+    },
   };
 }
 
@@ -475,9 +481,10 @@ test('fetchAllDatasetsSubjectGroups', async (t) => {
   ]);
 });
 
-test('searchDatasets', async (t) => {
+test('searchDatasets and deleteDataset', async (t) => {
   // should return all datasets if filter is not provide
   let datasets = await Query.searchDatasets('', {});
+  // const datasetId = datasets[0].id;
   t.is(datasets.length, 3);
 
   // should return datasets filtered by string
@@ -543,20 +550,22 @@ test('addUserRole', async (t) => {
   const consortiumId = CONSORTIA_IDS[0];
   const userId = USER_IDS[0];
 
-  const invalidPermissions = {
+  // should return error if user is going to change own poermission
+  let auth = { credentials: { id: USER_IDS[0] } };
+  let args = { userId };
+  let error = await Mutation.addUserRole('', args, auth);
+  t.is(error.message, CANNOT_CHANGE_OWN_PERMISSION);
+
+  // should return error if role type is not valid
+  auth = getAuth(userId, 'test-2', 'admin');
+  args = { roleType: 'any', userId: USER_IDS[1] };
+  error = await Mutation.addUserRole('', args, auth);
+  t.is(error.message, INVALID_ROLE_TYPE);
+
+  // should return error if role type is data and user does not have permission
+  let permissions = {
     consortia: { [consortiumId]: null },
   };
-  let args = {
-    table: 'consortia',
-    doc: consortiumId,
-    role: 'admin',
-    userId,
-  };
-  let error = await Mutation.addUserRole(
-    '', args, { credentials: { permissions: invalidPermissions } }
-  );
-  t.is(getMessageFromError(error), INVALID_ROLE_TYPE);
-
   args = {
     table: 'consortia',
     doc: consortiumId,
@@ -564,17 +573,76 @@ test('addUserRole', async (t) => {
     userId,
   };
   error = await Mutation.addUserRole(
-    '', args, { credentials: { permissions: invalidPermissions } }
-  );
-  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-
-  const permissions = {
-    consortia: { [consortiumId]: ['owner'] },
-  };
-  const res = await Mutation.addUserRole(
     '', args, { credentials: { permissions } }
   );
-  t.is(res.id, String(userId));
+  t.is(error.message, ACTION_PERMIT_ERROR);
+
+  // should return error if role type is data and user is not owner
+  permissions = {
+    consortia: { [consortiumId]: ['author'] },
+  };
+  error = await Mutation.addUserRole(
+    '', args, { credentials: { permissions } }
+  );
+  t.is(error.message, ACTION_PERMIT_ERROR);
+
+  // should return error if role type is app and user is not admin
+  permissions = {
+    consortia: { [consortiumId]: ['owner'] },
+    roles: { author: true },
+  };
+  args = {
+    roleType: 'app',
+    role: 'author',
+    userId,
+  };
+  error = await Mutation.addUserRole(
+    '', args, { credentials: { permissions } }
+  );
+  t.is(error.message, ACTION_PERMIT_ERROR);
+
+  // should add user permission
+  permissions = {
+    consortia: { [consortiumId]: ['owner'] },
+    roles: { author: true },
+  };
+  args = {
+    roleType: 'data',
+    role: 'author',
+    userId,
+    table: 'consortia',
+    doc: consortiumId,
+  };
+  let res = await Mutation.addUserRole(
+    '', args, { credentials: { permissions } }
+  );
+  t.is(res.permissions.roles[args.role], true);
+
+  // should return error if role type is app and role is not valid
+  permissions = {
+    consortia: { [consortiumId]: ['owner'] },
+    roles: { admin: true },
+  };
+  args = {
+    roleType: 'app',
+    role: 'user',
+    userId: USER_IDS[1],
+  };
+  error = await Mutation.addUserRole(
+    '', args, { credentials: { permissions } }
+  );
+  t.is(error.message, ACTION_PERMIT_ERROR);
+
+  // should change user app role
+  args = {
+    roleType: 'app',
+    role: 'author',
+    userId: USER_IDS[2],
+  };
+  res = await Mutation.addUserRole(
+    '', args, { credentials: { permissions } }
+  );
+  t.is(res.id, String(USER_IDS[2]));
 });
 
 test('removeUserRole', async (t) => {
@@ -869,20 +937,45 @@ test('updateUserConsortiumStatus', async (t) => {
 
 test('updateConsortiumMappedUsers and updateConsortiaMappedUsers', async (t) => {
   /* updateConsortiumMappedUsers */
+  // should set mapped state
   const auth = getAuth(USER_IDS[0], 'test1');
-  const args = {
+  let args = {
     consortiumId: CONSORTIA_IDS[0],
     isMapped: true,
   };
-
   let res = await Mutation.updateConsortiumMappedUsers('', args, auth);
-
   t.is(String(res.mappedForRun), String(USER_IDS[0]));
 
+  // should remove mapped state
+  args = {
+    consortiumId: CONSORTIA_IDS[0],
+    isMapped: true,
+  };
+  res = await Mutation.updateConsortiumMappedUsers('', args, auth);
+  t.not(res, null);
+
   /* updateConsortiaMappedUsers */
-  args.isMapped = false;
+  // should return undefined if provided consortia is not array
+  args = {
+    consortia: null,
+  };
   res = await Mutation.updateConsortiaMappedUsers('', args, auth);
   t.is(res, undefined);
+
+  // should return undefined if provided consortia is empty array
+  args = {
+    consortia: [],
+  };
+  res = await Mutation.updateConsortiaMappedUsers('', args, auth);
+  t.is(res, undefined);
+
+  // should set mapped state
+  args = {
+    consortia: [CONSORTIA_IDS[0], CONSORTIA_IDS[1]],
+    isMapped: true,
+  };
+  res = await Mutation.updateConsortiaMappedUsers('', args, auth);
+  t.is(res.length, 2);
 });
 
 test('updatePassword', async (t) => {
@@ -942,14 +1035,11 @@ test('saveMessage and setReadMessage', async (t) => {
 
   /* setReadMessage */
   threads = await Query.fetchAllThreads('', {}, auth);
-
   const args = {
     threadId: threads[0].id,
     userId: 'test2',
   };
-
   const res = await Mutation.setReadMessage({}, args);
-
   t.true(res.users[args.userId].isRead);
 });
 

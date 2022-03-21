@@ -726,7 +726,7 @@ const resolvers = {
         owningConsortium: ObjectID(args.consortiumId)
       }).toArray();
 
-      if (pipelines.length) {
+      if (pipelines.length > 0) {
         await db.collection('pipelines').deleteMany({
           owningConsortium: ObjectID(args.consortiumId)
         });
@@ -1237,6 +1237,8 @@ const resolvers = {
       }).toArray();
 
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+
+      return transformToClient(consortia);
     },
     /**
      * Updated user password
