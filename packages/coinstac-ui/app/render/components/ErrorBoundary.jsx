@@ -10,7 +10,7 @@ import { API_TOKEN_KEY } from '../state/ducks/auth';
 
 class ErrorBoundary extends React.Component {
   static propTypes = {
-    children: PropTypes.node.isRequired,
+    children: PropTypes.node, // eslint-disable-line
   };
 
   constructor(props) {
@@ -117,7 +117,7 @@ A clear and concise description of what you expected to happen.
 Add any other context about the problem here.
 `;
 
-export const BugReport = (props) => {
+export function BugReport(props) {
   const [bugText, setBugtext] = useState(BugReportDefaultText);
   const { error, errorInfo } = props;
 
@@ -181,7 +181,7 @@ export const BugReport = (props) => {
       </Button>
     </Box>
   );
-};
+}
 
 BugReport.propTypes = {
   error: PropTypes.any.isRequired,

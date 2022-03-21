@@ -1,6 +1,6 @@
 import axios from 'axios';
 import crypto from 'crypto';
-import { app, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
@@ -157,7 +157,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
         if (statusCode === 401) {
           dispatch(setError(message || 'Please Login Again'));
         } else {
-          dispatch(setError('An unexpected error has occurred'));
+          dispatch(setError(`Unexpected error occured: ${err.message}`));
         }
       } else {
         dispatch(setError('Coinstac services not available'));
@@ -167,11 +167,11 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
 
 export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
   .then(({ data }) => {
-    const versionsMatch = window.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === app.getVersion().slice(0, 3);
+    const versionsMatch = window.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === window.config.version.slice(0, 3);
     dispatch(setApiVersionCheck(versionsMatch));
   })
-  .catch(() => {
-    dispatch(setError('An unexpected error has occurred'));
+  .catch((e) => {
+    dispatch(setError(`Error checking app version: ${e.message}`));
   }));
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })

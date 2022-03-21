@@ -14,12 +14,12 @@
             "protocol": "inspector",
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": "${workspaceRoot}/packages/coinstac-ui/node_modules/.bin/electron",
-            "program": "${workspaceRoot}/packages/coinstac-ui/app/main/index.js",
+            "program": "${workspaceRoot}/packages/coinstac-ui/",
             "env": {
                 "COINS_ENV": "development",
                 "NODE_ENV": "development"
             },
-           "runtimeArgs": [] 
+            "runtimeArgs": []
         },
         {
             "name": "Attach",
@@ -27,6 +27,21 @@
             "address": "localhost",
             "port": 5858,
             "sourceMaps": false
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "preprocess from test",
+            "program": "${workspaceRoot}/packages/coinstac-simulator/bin/coinstac-simulator",
+            "cwd": "${workspaceRoot}/algorithm-development/test-data/freesurfer-test-data/site1",
+            "args": [
+                "--preprocess",
+                "--username",
+                "test1",
+                "--password",
+                "password"
+            ],
+            "console": "integratedTerminal"
         }
     ]
- }
+}

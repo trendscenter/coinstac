@@ -139,8 +139,8 @@ class ConsortiumPipeline extends Component {
           Active Pipeline
         </Typography>
         <Paper className={classes.paper}>
-          {
-            activePipeline.id
+          {activePipeline
+            && activePipeline.id
             && (
               <div>
                 <Typography
@@ -157,7 +157,7 @@ class ConsortiumPipeline extends Component {
             )
           }
           {
-            !activePipeline.id && <Typography variant="body2"><em>No active pipeline</em></Typography>
+            !(activePipeline && activePipeline.id) && <Typography variant="body2"><em>No active pipeline</em></Typography>
           }
         </Paper>
         {

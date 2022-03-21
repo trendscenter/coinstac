@@ -11,7 +11,7 @@ let headlessClientConfig = null;
 const appDirectory = path.resolve('/tmp/.coinstac') || process.env.COINSTAC_HEADLESS_WORKDIR;
 
 async function initialize(config, authToken) {
-  const logger = winston.loggers.add('coinstac-main', {
+  const logger = winston.createLogger({
     level: 'silly',
     format: winston.format.combine(
       winston.format.timestamp(),

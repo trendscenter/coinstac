@@ -21,7 +21,7 @@ const electronStore = new ElectronStore();
 const persistConfig = {
   key: 'root',
   storage: createElectronStorage({ electronStore }),
-  whitelist: ['maps', 'localRunResults'],
+  whitelist: ['maps', 'localRunResults', 'suspendedRuns'],
 };
 
 export default function () {

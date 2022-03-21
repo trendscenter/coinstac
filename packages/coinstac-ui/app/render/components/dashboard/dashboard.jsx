@@ -45,9 +45,17 @@ import TreeviewListener from './listeners/treeview-listener';
 import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
+import { notifyError } from '../../state/ducks/notifyAndLog';
+
 
 function Dashboard({
-  auth, children, runs, maps, router, hideTutorial, toggleTutorial, tutorialChange,
+  auth,
+  children,
+  runs,
+  maps,
+  router,
+  notifyError,
+  hideTutorial,
 }) {
   const [showTutorialModal, setShowTutorialModal] = useState(false);
 
@@ -73,12 +81,9 @@ function Dashboard({
 
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
-
-    if (!hideTutorial) {
-      setTimeout(() => {
-        setShowTutorialModal(true);
-      }, 1000);
-    }
+    ipcRenderer.on('main-error', (event, arg) => {
+      notifyError(`Unexpected error: ${arg.message || arg.error || arg}`);
+    });
   }, []);
 
   useEffect(() => {
@@ -202,9 +207,8 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
-  toggleTutorial: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  hideTutorial: PropTypes.func.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -245,6 +249,7 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
 const mapDispatchToProps = {
   toggleTutorial,
   tutorialChange,
+  notifyError,
 };
 
 const connectedComponent = connect(

@@ -3,6 +3,7 @@ function parsePipelineInput(pipeline, dataMappings) {
 
   const filesArray = {
     files: [],
+    directories: [],
     baseDirectory: null,
   };
 
@@ -16,6 +17,15 @@ function parsePipelineInput(pipeline, dataMappings) {
 
     if (consortiumMappedStepData.filesArray && consortiumMappedStepData.filesArray.length > 0) {
       filesArray.files = filesArray.files.concat(consortiumMappedStepData.filesArray);
+      filesArray.baseDirectory = consortiumMappedStepData.baseDirectory;
+    }
+
+    if (
+      consortiumMappedStepData.directoryArray
+      && consortiumMappedStepData.directoryArray.length > 0
+    ) {
+      filesArray.directories = filesArray.directories
+        .concat(consortiumMappedStepData.directoryArray);
       filesArray.baseDirectory = consortiumMappedStepData.baseDirectory;
     }
 

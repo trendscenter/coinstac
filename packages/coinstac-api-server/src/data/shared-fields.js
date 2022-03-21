@@ -28,6 +28,7 @@ const schemaFields = {
     version: String
     compspecVersion: String
     controller: String
+    preprocess: Boolean
   `,
   computationRemoteFields: `
     type: String

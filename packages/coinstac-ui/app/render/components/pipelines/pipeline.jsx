@@ -475,8 +475,7 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === prevState.stepToDelete), 1]],
         }),
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
     this.closeModal();
   }
 

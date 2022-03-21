@@ -27,6 +27,7 @@ import { pullComputations } from '../../state/ducks/docker';
 import {
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
+  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   JOIN_CONSORTIUM_MUTATION,
@@ -436,6 +437,20 @@ class ConsortiaList extends Component {
     };
   }
 
+  suspendPipeline = consortiumId => () => {
+    const { runs } = this.props;
+
+    const presentRun = runs
+      .filter(run => run.consortiumId === consortiumId)
+      .reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
+      });
+
+    if (presentRun) {
+      ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
+    }
+  }
+
   startPipeline(consortiumId) {
     return async () => {
       const {
@@ -467,37 +482,51 @@ class ConsortiaList extends Component {
   }
 
   async leaveConsortium(consortiumId) {
-    const { deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+    const { client, deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
 
     await deleteAllDataMappingsFromConsortium(consortiumId);
+
     leaveConsortium(consortiumId);
+
+    return client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
   }
 
-  joinConsortium(consortiumId, activePipelineId) {
+  async joinConsortium(consortiumId, activePipelineId) {
     const {
-      client, pipelines, pullComputations, notifyInfo, joinConsortium,
+      client, pullComputations, notifyInfo, notifyError, joinConsortium,
     } = this.props;
 
-    if (activePipelineId) {
-      const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-      const pipeline = pipelines.find(cons => cons.id === activePipelineId);
+    joinConsortium(consortiumId);
 
-      const computations = [];
-      pipeline.steps.forEach((step) => {
-        const compObject = computationData.fetchAllComputations
-          .find(comp => comp.id === step.computations[0].id);
-        computations.push({
-          img: compObject.computation.dockerImage,
-          compId: compObject.id,
-          compName: compObject.meta.name,
-        });
-      });
+    const [{ data }] = await client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
 
-      pullComputations({ consortiumId, computations });
-      notifyInfo('Pipeline computations downloading via Docker.');
+    const pipelines = get(data, 'fetchAllPipelines', []);
+
+    const activePipeline = pipelines.find(pipe => pipe.id === activePipelineId);
+
+    if (!activePipeline) {
+      return notifyError('Couldn\'t find the active pipeline for this consortium');
     }
 
-    joinConsortium(consortiumId);
+    const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+
+    const computations = [];
+    activePipeline.steps.forEach((step) => {
+      const compObject = computationData.fetchAllComputations
+        .find(comp => comp.id === step.computations[0].id);
+      computations.push({
+        img: compObject.computation.dockerImage,
+        compId: compObject.id,
+        compName: compObject.meta.name,
+      });
+    });
+
+    pullComputations({ consortiumId, computations });
+    notifyInfo('Pipeline computations downloading via Docker.');
   }
 
   async deleteConsortium() {

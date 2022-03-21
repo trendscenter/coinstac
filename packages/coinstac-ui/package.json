@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "5.4.1",
+  "version": "6.3.0",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -14,11 +14,11 @@
     "axios": "^0.21.1",
     "bitap": "^1.0.1",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^5.4.0",
-    "coinstac-common": "^5.4.0",
-    "coinstac-graphql-schema": "^5.4.0",
-    "coinstac-manager": "^5.4.0",
-    "coinstac-pipeline": "^5.4.0",
+    "coinstac-client-core": "^6.3.0",
+    "coinstac-common": "^6.2.0",
+    "coinstac-graphql-schema": "^6.2.0",
+    "coinstac-manager": "^6.2.0",
+    "coinstac-pipeline": "^6.3.0",
     "commander": "^2.15.1",
     "convict": "^6.2.1",
     "core-js": "^3.19.1",
@@ -27,6 +27,7 @@
     "deep-parse-json": "^1.0.1",
     "electron-default-menu": "^1.0.1",
     "electron-store": "^8.0.1",
+    "electron-updater": "^4.6.1",
     "graphql": "^15.5.0",
     "immutability-helper": "^2.7.0",
     "ipc-promise": "^0.1.4",
@@ -75,7 +76,7 @@
     "subscriptions-transport-ws": "^0.8.3",
     "tail": "^1.2.3",
     "uuid": "^8.3.2",
-    "winston": "^3.2.1"
+    "winston": "^3.4.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
@@ -118,7 +119,7 @@
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack --mode=production",
-    "dist": "npm i && npm run build:webpack && NODE_ENV=production DIST=true node ./scripts/build.js",
+    "deploy": "npm i && npm run build:webpack && NODE_ENV=production DEPLOY=true node ./scripts/build.js",
     "build-prod": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/build.js && node ./scripts/mac-zip.js",
     "build-dev": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=development node ./scripts/build.js && node ./scripts/mac-zip.js",
     "build-local": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=local node ./scripts/build.js && node ./scripts/mac-zip.js",
@@ -131,7 +132,7 @@
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e-single": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run.test.js",
     "test:e2e": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/*.test.js",
-    "watch": "webpack-dev-server --mode=development"
+    "watch": "cross-env NODE_ENV=development webpack-dev-server --mode=development"
   },
   "repository": {
     "type": "git",

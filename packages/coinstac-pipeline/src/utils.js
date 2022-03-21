@@ -1,18 +1,23 @@
 const winston = require('winston');
 
-winston.loggers.add('pipeline', {
-  level: 'info',
-  transports: [
-    new winston.transports.Console({ format: winston.format.cli() }),
-  ],
+
+const logger = winston.createLogger({
+  level: 'silly',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.printf(({
+      level, message, timestamp,
+    }) => `${timestamp} { message: ${message}, level: ${level} }`)
+  ),
+  transports: [new winston.transports.Console()],
 });
-const defaultLogger = winston.loggers.get('pipeline');
-defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
-const logger = defaultLogger;
+
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+
 
 module.exports = {
   logger,
   init(opts) {
-    this.logger = opts.logger || defaultLogger;
+    this.logger = opts.logger || logger;
   },
 };
