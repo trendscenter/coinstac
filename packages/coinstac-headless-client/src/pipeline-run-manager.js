@@ -83,12 +83,7 @@ async function create(config, authToken) {
     pipeline.stateEmitter.on('update', (data) => {
       console.log('Pipeline update', data);
     });
-    try {
-      await result;
-    } catch (e) {
-      console.error(e);
-    }
-
+    await result;
     console.log('Pipeline finished');
 
     core.unlinkFiles(run.id);

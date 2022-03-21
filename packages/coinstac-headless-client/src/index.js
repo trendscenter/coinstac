@@ -7,6 +7,12 @@ const createApolloClient = require('./apollo-client');
 const subscribeToNewRuns = require('./subscription');
 const { create } = require('./pipeline-run-manager');
 
+Error.stackTraceLimit = 100;
+
+process.on('uncaughtException', (error) => {
+  console.error(`Uncaught server error: ${error}`); // eslint-disable-line no-console
+});
+
 const apiConf = JSON.parse(readFileSync(process.env.HEADLESS_CLIENT_CONFIG));
 
 async function start() {
