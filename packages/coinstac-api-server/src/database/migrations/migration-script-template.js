@@ -4,7 +4,7 @@ const database = require('../index');
 const description = '';
 
 async function up() {
-  // const db = database.getDbInstance();
+  const db = database.getDbInstance();
 
   // Upgrade code goes here
 }
