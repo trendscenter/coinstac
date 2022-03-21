@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const { dialog } = require('electron');
 const { autoUpdater } = require('electron-updater');
 

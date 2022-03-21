@@ -3,10 +3,6 @@ import { ipcRenderer } from 'electron';
 
 function AutoUpdateListener() {
   useEffect(() => {
-    ipcRenderer.on('auto-update-log', (event, message) => {
-      console.log(message);
-    });
-
     return () => {
       ipcRenderer.removeAllListeners('auto-update-log');
     };
