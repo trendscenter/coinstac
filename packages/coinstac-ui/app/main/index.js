@@ -653,7 +653,7 @@ loadConfig()
      * @return {String[]} List of file paths being retrieved
     */
       ipcMain.handle('open-dialog', (event, { org, filters, properties }) => {
-        let dialogFilters;
+        let dialogFilters = [];
         let dialogProperties;
         let postDialogFunc;
 
@@ -668,10 +668,11 @@ loadConfig()
           dialogProperties = ['openDirectory'];
           postDialogFunc = ipcFunctions.manualDirectorySelection;
         } else {
-          dialogFilters = filters;
+          dialogFilters = filters || [];
           dialogProperties = properties;
           postDialogFunc = ipcFunctions.manualDirectorySelection;
         }
+        dialogFilters.push({ name: 'All Files', extensions: ['*'] });
 
         return fileFunctions.showDialog(
           mainWindow,
