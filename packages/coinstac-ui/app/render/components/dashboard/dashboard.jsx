@@ -208,7 +208,7 @@ Dashboard.propTypes = {
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
   notifyError: PropTypes.func.isRequired,
-  hideTutorial: PropTypes.func.isRequired,
+  hideTutorial: PropTypes.bool.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
