@@ -14,13 +14,19 @@ import useStyles from './computation-whitelist-edit.styles';
 import { FETCH_ALL_COMPUTATIONS_QUERY } from '../../../../../state/graphql/functions';
 
 function ComputationWhitelistEdit({
-  computationWhitelist, addEmptyComputation, changeWhitelist, disabled, removeComputation,
+  computationWhitelist,
+  addEmptyComputation,
+  changeWhitelist,
+  disabled,
+  removeComputation,
 }) {
   const [computationSelectValue, setComputationSelectValue] = useState(null);
 
   const classes = useStyles();
 
-  const { data: computationsData } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY);
+  const { data: computationsData } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
 
   const computations = get(computationsData, 'fetchAllComputations');
 
