@@ -291,42 +291,45 @@ class CoinstacClient {
           // TODO: validate runPipeline against clientPipeline
           const linkPromises = [];
           if (filePaths) {
+            let sym = false;
             let stageFiles = process.env.CI ? fs.copyFile : fs.link;
             if (
               networkVolume
               || (filePaths.directories
               && filePaths.directories.length > 0)
             ) {
+              sym = true;
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {
                 in: filePaths.baseDirectory,
-                out: '/c/user/data/input/',
+                out: '/coinstac/user/data/input/',
               };
             }
 
-            for (let i = 0; i < filePaths.files.length; i += 1) {
-              const mkdir = path.normalize(filePaths.files[i])
-                === path.basename(filePaths.files[i])
+            const linkData = (data) => {
+              const mkdir = path.normalize(data)
+                === path.basename(data)
                 ? Promise.resolve()
-                : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+                : mkdirp(path.resolve(fp, path.dirname(data)));
 
-              linkPromises.push( // eslint-disable-next-line no-loop-func
-                mkdir.then(async () => {
-                  await stageFiles(
-                    (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
-                      : path.resolve(filePaths.baseDirectory, filePaths.files[i])
-                    ),
-                    path.resolve(fp, path.basename(filePaths.files[i]))
-                  );
-                })
-                  .catch((e) => {
-                    // permit dupes
-                    if (e.code && e.code !== 'EEXIST') {
-                      throw e;
-                    }
-                  })
-              );
-            }
+              // eslint-disable-next-line no-loop-func
+              return mkdir.then(async () => {
+                await stageFiles(
+                  (sym ? `../../../${runObj.alternateInputDirectory.out}${data}`
+                    : path.resolve(filePaths.baseDirectory, data)
+                  ),
+                  path.resolve(fp, path.basename(data))
+                );
+              })
+                .catch((e) => {
+                  // permit dupes
+                  if (e.code && e.code !== 'EEXIST') {
+                    throw e;
+                  }
+                });
+            };
+            linkPromises.push(...filePaths.files.map(linkData));
+            linkPromises.push(...filePaths.directories.map(linkData));
           }
 
           return Promise.all(linkPromises)

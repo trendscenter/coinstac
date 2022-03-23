@@ -3,9 +3,6 @@ import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
 
-const fs = require('fs');
-const path = require('path');
-
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
@@ -15,30 +12,13 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
-const getAllFiles = ((dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath);
-
-  arrayOfFiles = arrayOfFiles || [];
-
-  files.forEach((file) => {
-    if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
-      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
-    } else {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
-    }
-  });
-
-  return arrayOfFiles;
-});
-
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
-      let filesArray = [];
-      let directoryArray = [];
+      const filesArray = [];
+      const directoryArray = [];
       const inputMap = {};
       let baseDirectory = null;
 
@@ -83,8 +63,9 @@ export const saveDataMapping = applyAsyncLoading(
 
             inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
           } else if (mappedData.fieldType === 'directory') {
-            directoryArray.push(mapData.directory);
-            inputMap[inputMapKey].value = mappedData.directory;
+            baseDirectory = dirname(mappedData.directory);
+            directoryArray.push(basename(mappedData.directory));
+            inputMap[inputMapKey].value = basename(mappedData.directory);
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
             inputMap[inputMapKey].value = mappedData.value;
