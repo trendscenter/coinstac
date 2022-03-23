@@ -58,7 +58,7 @@ const queries = {
   `,
   fetchAllComputations: `
     {
-      fetchAllComputations {
+      fetchAllComputations(preprocess: $preprocess) {
         ${sharedFields.computationMetadata}
       }
     }
@@ -211,21 +211,6 @@ const queries = {
   fetchAllDatasetsSubjectGroups: `
     {
       fetchAllDatasetsSubjectGroups
-    }
-  `,
-  fetchRunStatus: `
-    {
-      fetchRun(runId: $runId) {
-        id
-        status
-      }
-    }
-  `,
-  runStarted: `
-    {
-      runStarted(userId: $userId) {
-        ${sharedFields.runFields}
-      }
     }
   `,
   fetchRunStatus: `

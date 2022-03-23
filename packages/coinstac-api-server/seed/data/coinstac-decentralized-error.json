@@ -25,12 +25,14 @@
       "mode": {
         "label": "Mode",
         "type": "string",
-        "description": "local or remote site to error at"
+        "description": "local or remote site to error at",
+        "source": "owner"
       },
       "user": {
         "label": "User",
         "type": "string",
-        "description": "which local user to error at"
+        "description": "which local user to error at",
+        "source": "owner"
       }
     },
     "output": {

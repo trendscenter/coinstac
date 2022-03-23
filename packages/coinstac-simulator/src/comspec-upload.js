@@ -7,7 +7,7 @@ const { services } = require('coinstac-common');
 
 const config = require('./config');
 
-axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
+axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}${config.path}`;
 
 const compspecUpload = (username, password, logger) => {
   return new Promise(async (resolve, reject) => {

@@ -22,26 +22,27 @@ function runIsComplete(run) {
 function TopNotificationProgressBar({ runs, consortia, router }) {
   const classes = useStyles();
 
-  const [runId, setRunId] = useState(null);
+  const [run, setRun] = useState(null);
   const [consortiumName, setConsortiumName] = useState(null);
   const [pipelineName, setPipelineName] = useState(null);
 
   const [getRunStatus, { data }] = useLazyQuery(FETCH_RUN_STATUS, {
-    pollInterval: runId ? 1000 : 0,
+    pollInterval: run && run.type === 'decentralized' ? 1000 : 0,
   });
 
   const runStatus = get(data, 'fetchRun.status', null);
 
+  // Search for a new incomplete run to show
   useEffect(() => {
-    if (runId || !runs) return;
+    if (run || !runs) return;
 
-    const incompleteRun = runs.find(run => !runIsComplete(run));
+    const incompleteRun = runs.find(run => !runIsComplete(run) && run.status !== 'suspended');
 
     if (incompleteRun) {
       const consortium = consortia.find(c => c.id === incompleteRun.consortiumId);
 
       if (consortium) {
-        setRunId(incompleteRun.id);
+        setRun(incompleteRun);
         setConsortiumName(consortium.name);
         setPipelineName(incompleteRun.pipelineSnapshot.name);
 
@@ -52,19 +53,33 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
     }
   }, [runs, consortia]);
 
+  // Check status of decentralized run
   useEffect(() => {
     if (!runStatus) return;
 
     if (runStatus === 'complete' || runStatus === 'error') {
-      setRunId(null);
+      setRun(null);
       setConsortiumName(null);
       setPipelineName(null);
     }
   }, [runStatus]);
 
+  // Check status of local run
+  useEffect(() => {
+    if (!run || run.type !== 'local') return;
+
+    const localRun = runs.find(r => r.id === run.id);
+
+    if (runIsComplete(localRun)) {
+      setRun(null);
+      setConsortiumName(null);
+      setPipelineName(null);
+    }
+  }, [runs, run]);
+
   return (
     <div
-      className={runId && router.location.pathname !== '/dashboard'
+      className={run && router.location.pathname !== '/dashboard'
         ? classnames(classes.root, classes.show)
         : classnames(classes.root, classes.hide)
       }

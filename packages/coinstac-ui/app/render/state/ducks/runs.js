@@ -3,6 +3,7 @@ import { ipcRenderer } from 'electron';
 
 import { saveLocalRunResult } from './localRunResults';
 import { notifyInfo, notifyError } from './notifyAndLog';
+import { pipelineNeedsDataMapping } from '../../utils/helpers';
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
@@ -28,7 +29,7 @@ export const startRun = (run, consortium) => (dispatch, getState) => {
   const dataMap = maps.consortiumDataMappings.find(m => m.consortiumId === consortium.id
     && m.pipelineId === consortium.activePipelineId);
 
-  if (!dataMap) {
+  if (pipelineNeedsDataMapping(run.pipelineSnapshot) && !dataMap) {
     dispatch(notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`));
     dispatch({
       type: SAVE_RUN_AWAITING_MAP,

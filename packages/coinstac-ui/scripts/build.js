@@ -2,15 +2,16 @@
 const fs = require('fs').promises;
 const electronBuilder = require('electron-builder');
 
-const { NODE_ENV, DIST } = process.env;
+const { NODE_ENV, DEPLOY } = process.env;
 
 const buildConfig = {};
 
-if (NODE_ENV === 'production' && DIST) {
-  console.log('Preparing Distribution...');
+if (NODE_ENV === 'production' && DEPLOY) {
+  console.log('Preparing to deploy...');
   buildConfig.win = ['nsis'];
-  buildConfig.mac = ['dmg'];
+  buildConfig.mac = ['default'];
   buildConfig.linux = ['AppImage'];
+  buildConfig.publish = { provider: 'github' };
 } else {
   buildConfig.dir = true;
   buildConfig.win = ['zip'];
@@ -40,7 +41,7 @@ fs.rename('./config/local.json', './config/local-build-copy.json')
       return fs.copyFile('./config/local-production.json', './config/local.json');
     }
   })
-  .then(() => electronBuilder.build(buildConfig))
+  .then(() => electronBuilder.build(Object.assign({}, buildConfig, { publish: DEPLOY ? 'always' : 'never' })))
   .then(() => fs.rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
     if (err.code !== 'ENOENT') console.error('Build failed with:', err);

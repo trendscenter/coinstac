@@ -142,6 +142,16 @@ class RunItem extends Component {
     stopPipeline();
   }
 
+  handleSuspendPipeline = () => {
+    const { suspendPipeline } = this.props;
+    suspendPipeline();
+  }
+
+  handleResumePipeline = () => {
+    const { resumePipeline } = this.props;
+    resumePipeline();
+  }
+
   handleOpenResult = () => {
     const { runObject, appDirectory, user } = this.props;
     const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
@@ -150,7 +160,9 @@ class RunItem extends Component {
   }
 
   render() {
-    const { consortiumName, runObject, classes } = this.props;
+    const {
+      consortiumName, runObject, classes,
+    } = this.props;
     const {
       id, startDate, endDate, status, localPipelineState, remotePipelineState,
       clients, pipelineSnapshot, results, error,
@@ -212,6 +224,7 @@ class RunItem extends Component {
             <Typography className={classes.value}>
               {status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
               {status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
+              {status === 'suspended' && <span style={{ color: 'cornflowerblue' }}>Suspended</span>}
               {status === 'error' && <span style={{ color: 'red' }}>Error</span>}
             </Typography>
             {
@@ -328,18 +341,38 @@ class RunItem extends Component {
           {
             status === 'started' && (localPipelineState || remotePipelineState)
             && (
-              <StatusButtonWrapper>
+              <React.Fragment>
+                <StatusButtonWrapper>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    className={classes.button}
+                    onClick={this.handleStopPipeline}
+                  >
+                    Stop Pipeline
+                  </Button>
+                </StatusButtonWrapper>
                 <Button
                   variant="contained"
                   component={Link}
                   className={classes.button}
-                  onClick={this.handleStopPipeline}
+                  onClick={this.handleSuspendPipeline}
                 >
-                  Stop Pipeline
+                  Suspend Pipeline
                 </Button>
-              </StatusButtonWrapper>
+              </React.Fragment>
             )
           }
+          {status === 'suspended' && (
+            <Button
+              variant="contained"
+              component={Link}
+              className={classes.button}
+              onClick={this.handleResumePipeline}
+            >
+              Resume Pipeline
+            </Button>
+          )}
         </div>
       </Paper>
     );
@@ -348,6 +381,9 @@ class RunItem extends Component {
 
 RunItem.defaultProps = {
   stopPipeline: () => { },
+  suspendPipeline: () => { },
+  resumePipeline: () => { },
+  isSuspended: false,
 };
 
 RunItem.propTypes = {
@@ -357,6 +393,8 @@ RunItem.propTypes = {
   runObject: PropTypes.object.isRequired,
   user: PropTypes.object.isRequired,
   stopPipeline: PropTypes.func,
+  suspendPipeline: PropTypes.func,
+  resumePipeline: PropTypes.func,
 };
 
 const mapStateToProps = ({ auth }) => ({

@@ -1,17 +1,14 @@
 #!/usr/bin/env node
-
-'use strict';
-
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
 const inquirer = require('inquirer');
-const glob = util.promisify(require('glob'));
 const path = require('path');
-const blessed = require('blessed');
-const bc = require('blessed-contrib');
 const winston = require('winston');
+const fs = require('fs');
+const parseJson = require('json-parse-even-better-errors');
+
 const pkg = require('../package.json');
 
 const logger = winston.createLogger({
@@ -30,7 +27,7 @@ process.on('unhandledRejection', (error) => {
 
 program
   .version(pkg.version)
-  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
+  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
@@ -40,7 +37,8 @@ program
   .option('-u, --upload', ' upload computation spec')
   .option('--username [username]', ' username for uploads')
   .option('--password [password]', ' password for uploads')
-  .option('--loglevel [level]', ' enter info, debug, and silly log levels');
+  .option('--loglevel [level]', ' enter info, debug, and silly log levels')
+  .option('--preprocess', 'preprocess');
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -74,6 +72,229 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
+const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
+const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
+
+async function runPipeline(pipelineSpec, operatingDirectory) {
+  /* eslint-disable no-console */
+  const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
+    : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
+  logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
+
+  const started = sim.startRun({
+    spec: pipelineSpec,
+    runMode: globalMode,
+    clientCount: count,
+    operatingDirectory: operatingDirectory || program.directory,
+
+  });
+  try {
+    const simRun = await started;
+    const results = await simRun.allResults;
+
+    logger.info('Simulator run finished');
+    if (globalMode === 'decentralized') {
+      logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
+    } else {
+      logger.info('Local run(s) finished');
+      results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+    }
+  } catch (err) {
+    logger.error('Simulator run failed!');
+    logger.error('Fun error details:\n');
+    logger.error(err.message);
+    logger.error(err.stack || '');
+  }
+  return started;
+}
+
+function pipelineSpecFactory(inputSpec, mode, comp) {
+  let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
+  const comps = Array.isArray(comp) ? comp : [comp];
+  specMap = specMap.map((spec, index) => ({
+    inputMap: spec,
+    controller: { type: mode[index] },
+    computations: [comps[index]],
+  }));
+  return {
+    steps: specMap,
+  };
+}
+
+const startPreprocessRun = async (pipelineSpec, baseDir) => {
+  await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+  await prepareDirectory(pipelineSpec, baseDir);
+  const run = await runPipeline(pipelineSpec, baseDir);
+
+  // cleanup input dir
+  await fs.promises.rm(path.join(baseDir, 'input'), { recursive: true, force: true });
+
+  //  move dir to better store results
+  const originalDir = path.join(baseDir, 'output', 'local0', 'simulatorRun');
+  const destinationDir = path.join(baseDir, 'output', `preprocessedData-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}`);
+
+  await fs.promises.rename(
+    originalDir,
+    destinationDir
+  );
+
+  return run;
+};
+
+const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
+  let rawSpec;
+  let pipelineSpec;
+  let specError;
+  try {
+    rawSpec = fs.readFileSync(pipelineSpecPath);
+  } catch (e) {
+    logger.info('Pipeline spec not found, proceeding to generate one...');
+    logger.info('If this is in error, make sure your spec is named \'pipelineSpec.json\'');
+    rawSpec = null;
+  }
+
+  // authenticate and fetch computations
+  const genSpecAndProcess = async (pipelineSpec, baseDir) => {
+    if (program.username === undefined || program.password === undefined) {
+      logger.error('Username and password required');
+      process.exit(1);
+    }
+    const computations = await fetchPreprocessComputations(program.username, program.password);
+    // list options of computations
+    await inquirer.prompt([{
+      type: 'number',
+      name: 'select preprocess',
+      message: `Select a preprocessing computation:\n${computations.map((computation, index) => {
+        return `${index} ) ${computation.meta.name}`;
+      }).join('\n\n')}${pipelineSpec ? '\n\n*** Note: this will rename your current pipelineSpec and create a new one ***' : ''}`,
+    }]).then(async (answers) => {
+      const answer = answers['select preprocess'];
+      if (!Object.keys(computations).includes(answer)) {
+        logger.info('The answer provided is not a valid choice.');
+      } else {
+        // download the selected computation
+        const selectedComputation = computations[answer];
+        const pullStreams = await pullImages([{
+          img: selectedComputation.computation.dockerImage,
+          compId: selectedComputation.id,
+          compName: selectedComputation.meta.name,
+        }]);
+
+        logger.info('Downloading docker image...');
+        await Promise.all(
+          pullStreams.map((obj) => {
+            return new Promise((resolve, reject) => {
+              if (typeof obj.stream.pipe === 'function') {
+                obj.stream.pipe(process.stdout);
+                obj.stream
+                  .on('end', () => { resolve(); })
+                  .on('error', (error) => { reject(error); });
+              } else {
+                resolve();
+                process.stdout.write('.');
+              }
+            });
+          })
+        );
+        // find the .csv file
+        const files = await new Promise((resolve, reject) => {
+          fs.readdir('./', (err, data) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(data);
+          });
+        });
+        const csvs = files.filter((file) => {
+          if (file.includes('.csv')) {
+            return file;
+          }
+          return false;
+        });
+        if (csvs.length < 1) {
+          logger.info('no .csv files found');
+          process.exit(0);
+        }
+        await inquirer.prompt([{
+          type: 'number',
+          name: 'select covariates file',
+          message: `Select Covariates File to use for pipeline:\n${csvs.map((csv, index) => {
+            return `${index} ) ${csv}`;
+          }).join('\n\n')}\n`,
+        }]).then(async (answers) => {
+          const answer = answers['select covariates file'];
+
+          if (!Object.keys(csvs).includes(answer)) {
+            logger.info('The answer provided is not a valid choice.');
+            process.exit();
+          } else {
+            //  create an inputspec from the csv and the api results
+            const baseInputSpec = JSON.parse(
+              JSON.stringify(selectedComputation.computation.input)
+            );
+            const fulfilledInputMap = createInputMap(baseInputSpec, csvs[answer]);
+            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
+            if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
+            fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
+
+            return inquirer.prompt([{
+              type: 'confirm',
+              name: 'noexit',
+              message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
+            }]).then((resp) => {
+              if (resp.noexit) {
+                return startPreprocessRun(generatedPipeSpec, baseDir);
+              }
+              process.exit();
+            });
+          }
+        });
+      }
+    });
+  };
+
+  if (rawSpec) {
+    try {
+      pipelineSpec = parseJson(rawSpec);
+    } catch (e) {
+      specError = `Your pipelineSpec's JSON formatted incorrectly
+      please edit it to fix any errors:
+      ${e}
+      Do you want to generate a new one?`;
+    }
+  }
+
+  if (!pipelineSpec && !specError) {
+    await genSpecAndProcess(pipelineSpec, baseDir);
+  } else if (specError) {
+    await inquirer.prompt([{
+      type: 'confirm',
+      name: 'newSpec',
+      message: specError,
+    }]).then(async (resp) => {
+      if (resp.newSpec) {
+        await genSpecAndProcess(pipelineSpec, baseDir);
+      }
+    });
+  } else {
+    await inquirer.prompt([{
+      type: 'confirm',
+      name: 'run',
+      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
+    }]).then(async (resp) => {
+      if (resp.run) {
+        return startPreprocessRun(pipelineSpec, baseDir);
+      }
+      await genSpecAndProcess(pipelineSpec, baseDir);
+    });
+  }
+};
+
+
+if (program.preprocess) {
+  return promptGenerateAndPreprocess('./pipelineSpec.json', 'coinstac/')
+    .then(() => process.exit(0));
+}
 
 if (program.upload) {
   if (!program.username && !program.password) {
@@ -91,45 +312,6 @@ if (program.upload) {
       process.exit(1);
     });
 } else {
-  let table;
-  let screen;
-  let tableData;
-
-  if (!DEBUG_MODE) {
-    screen = blessed.screen({
-      smartCSR: true,
-    });
-
-    tableData = [];
-
-    table = bc.table({
-      keys: true,
-      fg: 'white',
-      selectedFg: 'white',
-      selectedBg: 'blue',
-      interactive: true,
-      label: 'Active Run',
-      width: '100%',
-      height: '100%',
-      border: { type: 'line', fg: 'cyan' },
-      columnSpacing: 5,
-      columnWidth: [12, 12, 30, 6],
-    });
-  }
-
-  const pipelineSpecFactory = (inputSpec, mode, comp) => {
-    let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
-    const comps = Array.isArray(comp) ? comp : [comp];
-    specMap = specMap.map((spec, index) => ({
-      controller: { type: mode[index] },
-      computations: [comps[index]],
-      inputMap: spec,
-    }));
-    return {
-      steps: specMap,
-    };
-  };
-
   let fulfilledPipelineSpec;
 
   if (program.pipeline) {
@@ -205,31 +387,32 @@ if (program.upload) {
          * @param  {[type]} key      [description]
          * @return {[type]}          [description]
          */
-        const createInputSpec = (variable, key) => {
-          return inquirer.prompt({
-            type: 'input',
-            name: `${key}`,
-            message: `Please give a ${variable.type} input for variable: ${key}
-          Files can use glob paterns to resolve to multiple file paths from the input dir
-          ie: **/*.txt`,
-          }).then((value) => {
-            return Promise.all([
-              variable.type === 'files' ? glob(value[key]) : value[key],
-            ]).then((resolvedVal) => {
-              const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-              return {
-                [key]: { value: coerce },
-              };
-            });
-          });
-        };
+        // const createInputSpec = (variable, key) => {
+        //   return inquirer.prompt({
+        //     type: 'input',
+        //     name: `${key}`,
+        //     message: `Please give a ${variable.type} input for variable: ${key}
+        //   Files can use glob paterns to resolve to multiple file paths from the input dir
+        //   ie: **/*.txt`,
+        //   }).then((value) => {
+        //     return Promise.all([
+        //       variable.type === 'files' ? glob(value[key]) : value[key],
+        //     ]).then((resolvedVal) => {
+        //       const coerce = variable.type === 'number'
+        //         ? parseFloat(resolvedVal[0]) : resolvedVal[0];
+        //       return {
+        //         [key]: { value: coerce },
+        //       };
+        //     });
+        //   });
+        // };
 
         let specProm;
         if (specs[1].code === 'ENOENT') {
           const memo = {};
           specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
             return prom.then(() => {
-              return createInputSpec(comp.computation.input[variable], variable);
+              return createInputMap(comp.computation.input[variable], variable);
             }).then(res => Object.assign(memo, res));
           }, Promise.resolve())
             .then((res) => {
@@ -267,99 +450,6 @@ if (program.upload) {
 
   fulfilledPipelineSpec
     .then((pipelineSpec) => {
-    /* eslint-disable no-console */
-      const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
-        : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-      logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
-      const started = sim.startRun({
-        spec: pipelineSpec,
-        runMode: globalMode,
-        clientCount: count,
-        operatingDirectory: program.directory,
-      });
-
-      return started.then((simRun) => {
-        const updateTable = (node, data) => {
-          let foundNode = false;
-          let state = data.controllerState ? data.controllerState : 'initializing';
-          state = state === 'stopped' ? 'shutting down docker...' : state;
-
-          if (!DEBUG_MODE) {
-            tableData.forEach((row, index) => {
-              if (row[0] === node) {
-                tableData[index] = [
-                  node,
-                  data.currentIteration ? data.currentIteration : 'initializing',
-                  state,
-                  data.mode,
-                ];
-                foundNode = true;
-              }
-            });
-            if (!foundNode) {
-              tableData.push([
-                node,
-                data.currentIteration ? data.currentIteration : 'initializing',
-                state,
-                data.mode,
-              ]);
-            }
-
-            table.setData({
-              headers: ['node', 'iteration', 'state', 'mode'],
-              data: tableData,
-            });
-            screen.render();
-          } else {
-            logger.debug(`${node} ---- ${JSON.stringify(data)}`);
-          }
-        };
-
-        if (simRun.pipelines.remote) {
-          simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
-            .on('update', (data) => {
-              updateTable('remote', data);
-            });
-        }
-        simRun.pipelines.locals.forEach((local, index) => {
-          local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
-            updateTable(`local-${index}`, data);
-          });
-        });
-
-        if (!DEBUG_MODE) {
-          screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-          table.focus();
-
-          screen.append(table);
-          screen.render();
-        }
-
-        return simRun.allResults;
-      });
-    })
-    .then((results) => {
-      if (!DEBUG_MODE) {
-        screen.destroy();
-      }
-      logger.info('Simulator run finished');
-      if (globalMode === 'decentralized') {
-        logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
-      } else {
-        logger.info('Local run(s) finished');
-        results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
-      }
-      // TODO: should not be necessary, something is holding the loop up
-      process.exit();
-    })
-    .catch((err) => {
-      if (!DEBUG_MODE) {
-        screen.destroy();
-      }
-      logger.error('Simulator run failed!');
-      logger.error('Fun error details:\n');
-      logger.error(err.message);
-      logger.error(err.stack || '');
-      process.exit(0);
+      runPipeline(pipelineSpec);
     });
 }
