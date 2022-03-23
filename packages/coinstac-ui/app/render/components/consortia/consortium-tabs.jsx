@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 import PropTypes from 'prop-types';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -10,7 +11,7 @@ import { flowRight as compose } from 'lodash';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumRuns from './consortium-runs';
-import { updateUserPerms } from '../../state/ducks/auth';
+import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
 import {
   getAllAndSubProp,
   saveDocumentProp,
@@ -25,6 +26,7 @@ import {
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
   title: {
@@ -190,7 +192,7 @@ class ConsortiumTabs extends Component {
           savingStatus: 'fail',
         });
 
-        notifyError(getGraphQLErrorMessage(error, 'Failed to save consoritum'));
+        notifyError(getGraphQLErrorMessage(error, 'Failed to save consortium'));
       });
   }
 
@@ -209,9 +211,10 @@ class ConsortiumTabs extends Component {
       pipelines,
       consortia,
       classes,
+      tutorialChange,
     } = this.props;
 
-    const { user } = auth;
+    const { user, hideTutorial } = auth;
     const {
       selectedTabIndex,
       consortium,
@@ -234,14 +237,17 @@ class ConsortiumTabs extends Component {
             {title}
           </Typography>
         </div>
+        {!hideTutorial && isEditingConsortium && (
+          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
+        )}
         <Tabs
           value={this.getTabIndex()}
           onChange={this.handleSelect}
           id="consortium-tabs"
         >
           <Tab label="About" />
-          { isEditingConsortium && <Tab label="Pipelines" /> }
-          { isEditingConsortium && isOwner && <Tab label="Runs" /> }
+          {isEditingConsortium && <Tab id="pipeline-tab" label="Pipelines" />}
+          {isEditingConsortium && isOwner && <Tab label="Runs" />}
         </Tabs>
         {
           selectedTabIndex === 0
@@ -257,6 +263,8 @@ class ConsortiumTabs extends Component {
               user={user}
               users={users}
               savingStatus={savingStatus}
+              hideTutorial={hideTutorial || isEditingConsortium}
+              tutorialChange={tutorialChange}
             />
           )
         }
@@ -267,6 +275,8 @@ class ConsortiumTabs extends Component {
               consortium={consortium}
               owner={isOwner}
               pipelines={pipelines}
+              hideTutorial={hideTutorial}
+              tutorialChange={tutorialChange}
             />
           )
         }
@@ -306,6 +316,7 @@ ConsortiumTabs.propTypes = {
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -331,6 +342,7 @@ const connectedComponent = connect(
     notifySuccess,
     notifyError,
     updateUserPerms,
+    tutorialChange,
   }
 )(ConsortiumTabsWithData);
 

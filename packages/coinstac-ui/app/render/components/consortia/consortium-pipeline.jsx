@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { graphql } from '@apollo/react-hoc';
 import { Link } from 'react-router';
+import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
@@ -17,6 +18,7 @@ import {
 import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
+import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
   tabTitle: {
@@ -118,6 +120,8 @@ class ConsortiumPipeline extends Component {
       owner,
       classes,
       pipelines,
+      hideTutorial,
+      tutorialChange,
     } = this.props;
 
     const {
@@ -125,7 +129,6 @@ class ConsortiumPipeline extends Component {
       openOwnedPipelinesMenu,
       openSharedPipelinesMenu,
     } = this.state;
-
 
     const ownedPipelines = this.filterOwnedPipelines(pipelines, consortium.id);
     const sharedPipelines = this.filterSharedPipelines(pipelines, consortium.id);
@@ -222,6 +225,7 @@ class ConsortiumPipeline extends Component {
               <div className={classes.newPipelineContainer}>
                 <Typography variant="body2" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
                 <Button
+                  id="new-pipeline"
                   variant="contained"
                   color="secondary"
                   component={Link}
@@ -234,6 +238,13 @@ class ConsortiumPipeline extends Component {
             </div>
           )
         }
+        {!hideTutorial && (
+          <Joyride
+            steps={STEPS.consortiumPipeline}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -244,7 +255,9 @@ ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
+  hideTutorial: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 // TODO: Move this to shared props?

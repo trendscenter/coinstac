@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-empty */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
@@ -70,6 +70,10 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.fill('#login-password', PASS);
 
     await appWindow.click('button:has-text("Log In")');
+
+    try {
+      await appWindow.click('button:has-text("Never Show Again")');
+    } catch {}
 
     // Assert
     return appWindow.innerText('.user-account-name', { timeout: EXIST_TIMEOUT }).should.eventually.equal(USER_ID);

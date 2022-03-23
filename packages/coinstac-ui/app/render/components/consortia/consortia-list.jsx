@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
@@ -20,6 +21,7 @@ import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -43,6 +45,7 @@ import {
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -245,7 +248,7 @@ class ConsortiaList extends Component {
           <Button
             key={`${consortium.id}-start-pipeline-button`}
             variant="contained"
-            className={classes.button}
+            className={`${classes.button} start-pipeline`}
             onClick={this.startPipeline(consortium.id)}
           >
             Start Pipeline
@@ -561,7 +564,12 @@ class ConsortiaList extends Component {
   }
 
   render() {
-    const { consortia, classes } = this.props;
+    const {
+      consortia,
+      classes,
+      auth,
+      tutorialChange,
+    } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
@@ -572,6 +580,7 @@ class ConsortiaList extends Component {
             Consortia
           </Typography>
           <Fab
+            id="consortium-add"
             color="primary"
             component={Link}
             to="/dashboard/consortia/new"
@@ -622,6 +631,13 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
+        {!auth.hideTutorial && (
+          <Joyride
+            steps={STEPS.consortiaList}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -638,6 +654,7 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
+  usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -649,7 +666,7 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  usersOnlineStatus: PropTypes.object,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -697,6 +714,8 @@ export default withStyles(styles)(
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      toggleTutorial,
+      tutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)
