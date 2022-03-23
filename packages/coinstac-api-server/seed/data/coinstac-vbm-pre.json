@@ -30,6 +30,7 @@
         "label": "Covariates",
         "type": "csv",
         "items": ["boolean", "number", "string"],
+        "extensions": ["csv", "txt"],
         "order": 1,
         "source": "member"
       },
@@ -79,7 +80,7 @@
       "options_reorient_params_x_mm": {
         "type": "range",
         "label": "x translation in mm",
-        "default": 5,
+        "default": 0,
         "min": -50,
         "max": 50,
         "step": 5,
@@ -91,7 +92,7 @@
         "options_reorient_params_y_mm": {
         "type": "range",
         "label": "y translation in mm",
-        "default": 5,
+        "default": 0,
         "min": -50,
         "max": 50,
         "step": 5,
@@ -103,7 +104,7 @@
         "options_reorient_params_z_mm": {
         "type": "range",
         "label": "z translation in mm",
-        "default": 5,
+        "default": 0,
         "min": -50,
         "max": 50,
         "step": 5,
@@ -115,7 +116,7 @@
 	      "options_reorient_params_pitch": {
         "type": "range",
         "label": "x rotation about pitch in degrees[-360,360]",
-        "default": 5,
+        "default": 0,
         "min": -360,
         "max": 360,
         "step": 5,
@@ -127,7 +128,7 @@
         "options_reorient_params_roll": {
         "type": "range",
         "label": "y rotation about roll in degrees[-360,360]",
-        "default": 5,
+        "default": 0,
         "min": -360,
         "max": 360,
         "step": 5,
@@ -139,7 +140,7 @@
         "options_reorient_params_yaw": {
         "type": "range",
         "label": "z rotation about yaw in degrees[-360,360]",
-        "default": 5,
+        "default": 0,
         "min": -360,
         "max": 360,
         "step": 5,

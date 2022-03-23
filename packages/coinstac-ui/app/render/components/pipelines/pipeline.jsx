@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
@@ -54,6 +55,7 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
+import { tutorialChange } from '../../state/ducks/auth';
 import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import {
@@ -62,6 +64,7 @@ import {
   isUserInGroup,
   reducePipelineInputs,
 } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
   the available pipelines list will be filtered by the ones that the cloud users can run.`;
@@ -473,8 +476,7 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === prevState.stepToDelete), 1]],
         }),
       },
-    }),
-      () => this.updateStorePipeline());
+    }));
     this.closeModal();
   }
 
@@ -699,7 +701,13 @@ class Pipeline extends Component {
 
   render() {
     const {
-      connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
+      connectDropTarget,
+      consortia,
+      users,
+      classes,
+      auth,
+      availableHeadlessClients,
+      tutorialChange,
     } = this.props;
     const {
       consortium,
@@ -769,6 +777,7 @@ class Pipeline extends Component {
           />
           {!isEditing && (
             <FormControlLabel
+              id="set-active"
               control={(
                 <Checkbox
                   checked={pipeline.isActive || false}
@@ -849,6 +858,7 @@ class Pipeline extends Component {
             )}
             <StatusButtonWrapper status={savingStatus}>
               <Button
+                id="save-pipeline"
                 key="save-pipeline-button"
                 variant="contained"
                 color="primary"
@@ -995,6 +1005,14 @@ class Pipeline extends Component {
             </Typography>
           )}
         </ValidatorForm>
+        {!auth.hideTutorial && (
+          <Joyride
+            steps={STEPS.pipeline}
+            continuous
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -1024,12 +1042,13 @@ Pipeline.propTypes = {
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   users: PropTypes.array,
+  availableHeadlessClients: PropTypes.array,
   connectDropTarget: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
-  availableHeadlessClients: PropTypes.array,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -1069,6 +1088,7 @@ const connectedComponent = connect(mapStateToProps, {
   notifySuccess,
   notifyError,
   updateMapStatus,
+  tutorialChange,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

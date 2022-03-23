@@ -328,6 +328,10 @@ module.exports = {
       },
       suspendPipeline(runId) {
         const run = activePipelines[runId];
+        if (!run) {
+          throw new Error('Invalid pipeline ID');
+        }
+
         const packagedState = {
           activePipelineState: {
             currentState: run.currentState,
@@ -337,8 +341,15 @@ module.exports = {
           },
           controllerState: run.pipeline.pipelineSteps[run.pipeline.currentStep].controllerState,
         };
+
+
         return this.stopPipeline(runId, 'suspend')
-          .then(output => Object.assign({ output }, packagedState));
+          .then((output) => {
+            packagedState.controllerState.stopSignal = undefined;
+            packagedState.controllerState.currentComputations = undefined;
+            packagedState.controllerState.activeComputations = undefined;
+            return Object.assign({ output }, packagedState);
+          });
       },
       async stopPipeline(runId, type = 'user') {
         const run = activePipelines[runId];

@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "name": "Decentralized Combat",
+    "id": "coinstac-combatdc",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/combat-dc",
+    "description": "Decentralized Combat Test"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-combatdc",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-combatdc",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+   "input": {
+     "data": {
+       "label": "File Path",
+       "type": "directory",
+       "items": ["File Path"],
+       "default": "",
+       "source": "member",
+       "order": 0
+     }
+    },
+    "output": {
+      "hyperparameters": {
+        "type": "array",
+        "label": "Decentralized hypermeters"
+      }
+    },
+    "display": {
+      "type": "table"
+    }
+  }
+}

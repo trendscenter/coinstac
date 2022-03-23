@@ -4,8 +4,8 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const path = require('path');
 const winston = require('winston');
-const config = require('./config');
 const { freesurferRegions } = require('coinstac-common');
+const config = require('./config');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -14,7 +14,7 @@ const logger = winston.createLogger({
   ],
 });
 
-axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}`;
+axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}${config.path}`;
 
 const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess }}}';
 
@@ -24,6 +24,9 @@ async function getIdToken(username, password) {
     return data.id_token;
   } catch (error) {
     logger.error('Error connecting to API');
+    if (error.response && error.response.status && error.response.status === 401) {
+      logger.error('Unauthorized: Check username and password.');
+    }
     throw error;
   }
 }
@@ -56,19 +59,19 @@ async function fetchPreprocessComputations(username, password) {
   return computations;
 }
 
-function createInputSpec(baseInputSpec, csvPath) {
-  const inputSpec = baseInputSpec;
-  Object.keys(inputSpec).forEach((key) => {
-    if (inputSpec[key].source === 'owner') {
-      inputSpec[key] = { value: inputSpec[key].default };
+function createInputMap(baseInputSpec, csvPath) {
+  const inputMap = JSON.parse(JSON.stringify(baseInputSpec));
+  Object.keys(inputMap).forEach((key) => {
+    if (inputMap[key].source === 'owner') {
+      inputMap[key] = { value: inputMap[key].default };
     }
   });
-  inputSpec.data = {
+  inputMap.data = {
     value: [{
       type: 'NiFTI', value: freesurferRegions,
     }],
   };
-  inputSpec.covariates = { value: {} };
+  inputMap.covariates = { value: {} };
   const records = parse(fs.readFileSync(csvPath));
   const headers = records[0];
   for (let i = 1; i < records.length; i += 1) {
@@ -77,16 +80,17 @@ function createInputSpec(baseInputSpec, csvPath) {
     for (let j = 1; j < headers.length; j += 1) {
       covariate[headers[j]] = record[j];
     }
-    inputSpec.covariates.value[records[i][0]] = covariate;
+    inputMap.covariates.value[records[i][0]] = covariate;
   }
-  return inputSpec;
+  return inputMap;
 }
 
 async function prepareDirectory(pipelineSpec, baseDir) {
   await fs.promises.mkdir(path.resolve(baseDir, 'input/local0/simulatorRun'), { recursive: true });
-  Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value).map((filename) => {
-    return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
-  }));
+  return Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value)
+    .map((filename) => {
+      return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
+    }));
 }
 
-module.exports = { fetchPreprocessComputations, createInputSpec, prepareDirectory };
+module.exports = { fetchPreprocessComputations, createInputMap, prepareDirectory };

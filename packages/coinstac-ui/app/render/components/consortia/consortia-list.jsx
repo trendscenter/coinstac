@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
@@ -20,11 +21,13 @@ import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
+  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   JOIN_CONSORTIUM_MUTATION,
@@ -42,6 +45,7 @@ import {
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -244,7 +248,7 @@ class ConsortiaList extends Component {
           <Button
             key={`${consortium.id}-start-pipeline-button`}
             variant="contained"
-            className={classes.button}
+            className={`${classes.button} start-pipeline`}
             onClick={this.startPipeline(consortium.id)}
           >
             Start Pipeline
@@ -433,6 +437,20 @@ class ConsortiaList extends Component {
     };
   }
 
+  suspendPipeline = consortiumId => () => {
+    const { runs } = this.props;
+
+    const presentRun = runs
+      .filter(run => run.consortiumId === consortiumId)
+      .reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
+      });
+
+    if (presentRun) {
+      ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
+    }
+  }
+
   startPipeline(consortiumId) {
     return async () => {
       const {
@@ -464,37 +482,51 @@ class ConsortiaList extends Component {
   }
 
   async leaveConsortium(consortiumId) {
-    const { deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+    const { client, deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
 
     await deleteAllDataMappingsFromConsortium(consortiumId);
+
     leaveConsortium(consortiumId);
+
+    return client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
   }
 
-  joinConsortium(consortiumId, activePipelineId) {
+  async joinConsortium(consortiumId, activePipelineId) {
     const {
-      client, pipelines, pullComputations, notifyInfo, joinConsortium,
+      client, pullComputations, notifyInfo, notifyError, joinConsortium,
     } = this.props;
 
-    if (activePipelineId) {
-      const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-      const pipeline = pipelines.find(cons => cons.id === activePipelineId);
+    joinConsortium(consortiumId);
 
-      const computations = [];
-      pipeline.steps.forEach((step) => {
-        const compObject = computationData.fetchAllComputations
-          .find(comp => comp.id === step.computations[0].id);
-        computations.push({
-          img: compObject.computation.dockerImage,
-          compId: compObject.id,
-          compName: compObject.meta.name,
-        });
-      });
+    const [{ data }] = await client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
 
-      pullComputations({ consortiumId, computations });
-      notifyInfo('Pipeline computations downloading via Docker.');
+    const pipelines = get(data, 'fetchAllPipelines', []);
+
+    const activePipeline = pipelines.find(pipe => pipe.id === activePipelineId);
+
+    if (!activePipeline) {
+      return notifyError('Couldn\'t find the active pipeline for this consortium');
     }
 
-    joinConsortium(consortiumId);
+    const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+
+    const computations = [];
+    activePipeline.steps.forEach((step) => {
+      const compObject = computationData.fetchAllComputations
+        .find(comp => comp.id === step.computations[0].id);
+      computations.push({
+        img: compObject.computation.dockerImage,
+        compId: compObject.id,
+        compName: compObject.meta.name,
+      });
+    });
+
+    pullComputations({ consortiumId, computations });
+    notifyInfo('Pipeline computations downloading via Docker.');
   }
 
   async deleteConsortium() {
@@ -532,7 +564,12 @@ class ConsortiaList extends Component {
   }
 
   render() {
-    const { consortia, classes } = this.props;
+    const {
+      consortia,
+      classes,
+      auth,
+      tutorialChange,
+    } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
@@ -543,6 +580,7 @@ class ConsortiaList extends Component {
             Consortia
           </Typography>
           <Fab
+            id="consortium-add"
             color="primary"
             component={Link}
             to="/dashboard/consortia/new"
@@ -593,6 +631,13 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
+        {!auth.hideTutorial && (
+          <Joyride
+            steps={STEPS.consortiaList}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -609,6 +654,7 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
+  usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -620,7 +666,7 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  usersOnlineStatus: PropTypes.object,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -668,6 +714,8 @@ export default withStyles(styles)(
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      toggleTutorial,
+      tutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)
