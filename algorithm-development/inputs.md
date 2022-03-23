@@ -4,8 +4,8 @@ For the purposes of this document we will assume that you’ve reviewed the COIN
 The Compspec document is in JSON format, and as such, our inputs will be described within the "input": {} parameter. A basic input looks something like this: 
 ```json
 "input": {
- 	"input_id": {  
-		"label": "Input ID",
+ 	"input_id": {
+            "label": "Input ID",
             "type": "string", 
             "source": "member"
             "default": "foobar"
