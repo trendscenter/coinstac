@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Joyride from 'react-joyride';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -20,6 +21,7 @@ import { omit } from 'lodash';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
+import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
   textField: {
@@ -134,8 +136,10 @@ class ConsortiumAbout extends Component {
       users,
       classes,
       savingStatus,
+      hideTutorial,
       saveConsortium,
       consortiumUsers,
+      tutorialChange,
     } = this.props;
 
     const { newMember, isAddingMember } = this.state;
@@ -153,6 +157,7 @@ class ConsortiumAbout extends Component {
             owner && (
               <StatusButtonWrapper status={savingStatus}>
                 <Button
+                  id="save-consortium"
                   variant="contained"
                   color="primary"
                   type="submit"
@@ -279,6 +284,14 @@ class ConsortiumAbout extends Component {
             </Box>
           )
         }
+        {!hideTutorial && (
+          <Joyride
+            steps={STEPS.consortiumAbout}
+            continuous
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </ValidatorForm>
     );
   }
@@ -291,11 +304,13 @@ ConsortiumAbout.propTypes = {
   savingStatus: PropTypes.string,
   user: PropTypes.object.isRequired,
   users: PropTypes.array,
+  consortiumUsers: PropTypes.array,
+  hideTutorial: PropTypes.bool.isRequired,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
-  consortiumUsers: PropTypes.array,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiumAbout.defaultProps = {

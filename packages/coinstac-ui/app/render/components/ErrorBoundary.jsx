@@ -5,6 +5,7 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer, clipboard } from 'electron';
+import PropTypes from 'prop-types';
 import { API_TOKEN_KEY } from '../state/ducks/auth';
 
 
@@ -138,6 +139,7 @@ export function BugReport(props) {
       apiServer.port ? `:${apiServer.port}` : ''
     }${apiServer.pathname ? `${apiServer.pathname}` : '/graphql'}`;
     const authToken = getAuthToken();
+
     axios({
       url: API_URL,
       method: 'post',

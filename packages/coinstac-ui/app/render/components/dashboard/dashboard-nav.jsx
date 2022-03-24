@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router';
+import Joyride from 'react-joyride';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -16,9 +17,10 @@ import CloudIcon from '@material-ui/icons/Cloud';
 import SecurityIcon from '@material-ui/icons/Security';
 import LanguageIcon from '@material-ui/icons/Language';
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
-const DashboardNav = ({ user }) => {
-  return (
+const DashboardNav = ({ user, hideTutorial, tutorialChange }, { router }) => (
+  <Fragment>
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
@@ -26,7 +28,7 @@ const DashboardNav = ({ user }) => {
       </ListItem>
       <ListItem button component="a" href="#/dashboard/maps">
         <ListItemIcon><ListAltIcon /></ListItemIcon>
-        <ListItemText primary="Maps" />
+        <ListItemText primary="Maps" id="maps-menu" />
       </ListItem>
       <ListItem button component="a" href="#/dashboard/computations">
         <ListItemIcon><StorageIcon /></ListItemIcon>
@@ -34,7 +36,7 @@ const DashboardNav = ({ user }) => {
       </ListItem>
       <ListItem button component="a" href="#/dashboard/consortia">
         <ListItemIcon><ViewListIcon /></ListItemIcon>
-        <ListItemText primary="Consortia" />
+        <ListItemText primary="Consortia" id="consortia-menu" />
       </ListItem>
       <ListItem button component="a" href="#/dashboard/pipelines">
         <ListItemIcon><AssignmentIcon /></ListItemIcon>
@@ -71,11 +73,24 @@ const DashboardNav = ({ user }) => {
         </ListItem>
       )}
     </List>
-  );
-};
+    {!hideTutorial && router.location.pathname === '/dashboard' && (
+      <Joyride
+        steps={STEPS.dashboardNav}
+        disableScrollParentFix
+        callback={tutorialChange}
+      />
+    )}
+  </Fragment>
+);
 
 DashboardNav.propTypes = {
   user: PropTypes.object.isRequired,
+  hideTutorial: PropTypes.bool.isRequired,
+  tutorialChange: PropTypes.func.isRequired,
+};
+
+DashboardNav.contextTypes = {
+  router: PropTypes.object.isRequired,
 };
 
 export default DashboardNav;

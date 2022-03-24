@@ -37,10 +37,10 @@ export const saveDataMapping = applyAsyncLoading(
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
-      let filesArray = [];
+      const filesArray = [];
+      const directoryArray = [];
       const inputMap = {};
       let baseDirectory = null;
-      const dataType = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
         inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
@@ -83,21 +83,8 @@ export const saveDataMapping = applyAsyncLoading(
 
             inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
           } else if (mappedData.fieldType === 'directory') {
-            baseDirectory = mappedData.directory;
-            const files = getAllFiles(mappedData.directory, null);
-            files.unshift(baseDirectory);
-            const newFiles = files.map((file) => {
-              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
-              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
-              return `${baseDirectory}${newfile}`;
-            });
-            filesArray = newFiles;
-            files.shift();
-            inputMap[inputMapKey].value = files.map((file) => {
-              const normPath = baseDirectory.replace(/[/\\]/g, '\\/');
-              const newfile = file.replace(new RegExp(`.*${normPath}`), '');
-              return newfile;
-            });
+            directoryArray.push(mapData.directory);
+            inputMap[inputMapKey].value = mappedData.directory;
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
             inputMap[inputMapKey].value = mappedData.value;
@@ -105,18 +92,13 @@ export const saveDataMapping = applyAsyncLoading(
         }
 
         inputMap[inputMapKey].fulfilled = true;
-
-        // carry dataType to the pipeline for processing files
-        if (mappedData && ['csv', 'files', 'directory'].includes(mappedData.fieldType)) {
-          inputMap[inputMapKey].type = mappedData.fieldType;
-        }
       });
 
       mapData.push({
         filesArray,
+        directoryArray,
         baseDirectory,
         inputMap,
-        dataType,
       });
     });
 

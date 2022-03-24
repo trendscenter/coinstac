@@ -8,6 +8,7 @@ import localRunResults from './ducks/localRunResults';
 import maps from './ducks/maps';
 import runs from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
+import suspendedRuns from './ducks/suspendedRuns';
 import { CLEAR_STATE, REHYDRATE } from './ducks/statePersist';
 
 function rootReducer() {
@@ -20,6 +21,7 @@ function rootReducer() {
     runs,
     maps,
     localRunResults,
+    suspendedRuns,
     routing: routerReducer,
   });
 
