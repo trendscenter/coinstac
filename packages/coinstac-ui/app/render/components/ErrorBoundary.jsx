@@ -5,7 +5,6 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer, clipboard } from 'electron';
-import PropTypes from 'prop-types';
 import { API_TOKEN_KEY } from '../state/ducks/auth';
 
 
