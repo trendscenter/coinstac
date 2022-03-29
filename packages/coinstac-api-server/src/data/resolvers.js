@@ -105,11 +105,21 @@ async function addUserPermissions(args) {
       [`consortiaStatuses.${doc}`]: 'none',
     };
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: doc }, {
+    const consortiaUpdateObj = {
       $set: {
         [`${role}s.${args.userId}`]: userName,
       },
-    }, { returnOriginal: false });
+    };
+
+    if (role === 'member') {
+      consortiaUpdateObj.$set[`activeMembers.${args.userId}`] = userName;
+    }
+
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+      { _id: doc },
+      consortiaUpdateObj,
+      { returnOriginal: false }
+    );
 
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
@@ -657,14 +667,7 @@ const resolvers = {
       try {
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
-        let runClients = { ...consortium.members };
-
-        if (pipeline.headlessMembers) {
-          runClients = {
-            ...consortium.members,
-            ...pipeline.headlessMembers
-          }
-        }
+        const runClients = { ...consortium.activeMembers };
 
         const result = await db.collection('runs').insertOne({
           clients: runClients,
@@ -933,16 +936,26 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const result = await db.collection('consortia').findOneAndUpdate({
-        _id: ObjectID(args.consortiumId)
-      }, {
+      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
+
+      const updateObj = {
         $set: {
           activePipelineId: ObjectID(args.activePipelineId),
           mappedForRun: []
         }
-      }, {
-        returnOriginal: false
-      });
+      };
+
+      if (pipeline.headlessMembers) {
+        Object.keys(pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$set[`activeMembers.${headlessMemberId}`] = pipeline.headlessMembers[headlessMemberId];
+        });
+      }
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(args.consortiumId) },
+        updateObj,
+        { returnOriginal: false }
+      );
 
       eventEmitter.emit(CONSORTIUM_PIPELINE_CHANGED, result.value);
 
@@ -968,7 +981,10 @@ const resolvers = {
 
       const consortiumData = Object.assign(
         { ...args.consortium },
-        !isUpdate && { createDate: Date.now() },
+        !isUpdate && {
+          createDate: Date.now(),
+          activeMembers: args.consortium.members,
+        },
       );
 
       if (!isUpdate) {
@@ -1005,6 +1021,39 @@ const resolvers = {
       }
 
       return transformToClient(consortium);
+    },
+    /**
+     * Saves the active members list for a consortium
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {object} args.consortiumId consortium id
+     * @param {object} args.members JSON with member list
+     * @return {object} New/updated consortium object
+     */
+    saveConsortiumActiveMembers: async (parent, args, { credentials }) => {
+      const { permissions } = credentials;
+
+      if (!permissions.consortia[args.consortiumId].includes('owner')) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const consortiumId = ObjectID(args.consortiumId);
+
+      const db = database.getDbInstance();
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: consortiumId },
+        {
+          $set: {
+            activeMembers: args.members,
+          }
+        },
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves run error

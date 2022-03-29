@@ -8,8 +8,10 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { graphql } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
+
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
+import ConsortiumMembers from './consortium-members';
 import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
 import {
@@ -247,6 +249,7 @@ class ConsortiumTabs extends Component {
         >
           <Tab label="About" />
           {isEditingConsortium && <Tab id="pipeline-tab" label="Pipelines" />}
+          {isEditingConsortium && isOwner && <Tab label="Active Members" />}
           {isEditingConsortium && isOwner && <Tab label="Runs" />}
         </Tabs>
         {
@@ -280,8 +283,14 @@ class ConsortiumTabs extends Component {
             />
           )
         }
+        {selectedTabIndex === 2 && (
+          <ConsortiumMembers
+            consortium={consortium}
+            pipelines={pipelines}
+          />
+        )}
         {
-          selectedTabIndex === 2
+          selectedTabIndex === 3
           && (
             <ConsortiumRuns
               runs={this.getConsortiumRuns()}

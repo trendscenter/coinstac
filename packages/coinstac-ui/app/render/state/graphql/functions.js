@@ -169,6 +169,26 @@ export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`
   }
 `;
 
+export const SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION = gql`
+  mutation saveConsortiumActiveMembers($consortiumId: ID!, $members: JSON!) {
+    saveConsortiumActiveMembers(consortiumId: $consortiumId, members: $members) {
+      id
+      activePipelineId
+      activeComputationInputs
+      delete
+      description
+      name
+      tags
+      members
+      owners
+      activeMembers
+      isPrivate
+      mappedForRun
+      createDate
+    }
+  }
+`;
+
 export const SAVE_CONSORTIUM_MUTATION = gql`
   mutation saveConsortium($consortium: ConsortiumInput!)
     ${mutations.saveConsortium}

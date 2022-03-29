@@ -147,6 +147,9 @@ async function populateConsortia() {
       members: {
         [USER_IDS[5]]: 'author',
       },
+      activeMembers: {
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551333489519,
     },
@@ -159,6 +162,10 @@ async function populateConsortia() {
         [USER_IDS[0]]: 'test1',
       },
       members: {
+        [USER_IDS[0]]: 'test1',
+        [USER_IDS[5]]: 'author',
+      },
+      activeMembers: {
         [USER_IDS[0]]: 'test1',
         [USER_IDS[5]]: 'author',
       },

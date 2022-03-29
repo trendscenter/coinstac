@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { graphql } from '@apollo/react-hoc';
 import { Link } from 'react-router';
 import Joyride from 'react-joyride';
@@ -11,7 +11,6 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
-import memoize from 'memoize-one';
 import {
   SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
@@ -49,205 +48,159 @@ const styles = theme => ({
   },
 });
 
-class ConsortiumPipeline extends Component {
-  filterOwnedPipelines = memoize(
-    (pipelines, consortiumId) => pipelines.filter(pipe => pipe.owningConsortium === consortiumId)
-  );
+function ConsortiumPipeline({
+  consortium, owner, classes, pipelines, hideTutorial, tutorialChange,
+  saveActivePipeline,
+}) {
+  const [activePipeline, setActivePipeline] = useState(null);
 
-  filterSharedPipelines = memoize(
-    (pipelines, consortiumId) => pipelines.filter(pipe => pipe.owningConsortium !== consortiumId)
-  );
+  useEffect(() => {
+    if (!consortium || !consortium.activePipelineId) return;
 
-  constructor(props) {
-    super(props);
+    const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+    setActivePipeline(activePipeline);
+  }, []);
 
-    this.state = {
-      activePipeline: {},
-      openOwnedPipelinesMenu: false,
-      openSharedPipelinesMenu: false,
-    };
+  const [ownedPipelines, sharedPipelines] = useMemo(() => {
+    const owned = pipelines.filter(p => p.owningConsortium === consortium.id);
+    const shared = pipelines.filter(p => p.owningConsortium !== consortium.id);
 
-    this.openOwnedPipelinesMenu = this.openOwnedPipelinesMenu.bind(this);
-    this.closeOwnedPipelinesMenu = this.closeOwnedPipelinesMenu.bind(this);
-    this.openSharedPipelinesMenu = this.openSharedPipelinesMenu.bind(this);
-    this.closeSharedPipelinesMenu = this.closeSharedPipelinesMenu.bind(this);
+    return [owned, shared];
+  }, [pipelines]);
+
+  const [ownedPipelinesAnchorEl, setOwnedPipelinesAnchorEl] = useState(null);
+
+  function openOwnedPipelinesMenu(event) {
+    setOwnedPipelinesAnchorEl(event.currentTarget);
   }
 
-  componentDidMount() {
-    const { consortium, pipelines } = this.props;
-
-    if (consortium && consortium.activePipelineId) {
-      const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-
-      this.setState({ activePipeline });
-    }
+  function closeOwnedPipelinesMenu() {
+    setOwnedPipelinesAnchorEl(null);
   }
 
-  selectPipeline = pipelineId => async () => {
-    const { consortium, saveActivePipeline, pipelines } = this.props;
+  const [sharedPipelinesAnchorEl, setSharedPipelinesAnchorEl] = useState(null);
 
-    this.closeOwnedPipelinesMenu();
-    this.closeSharedPipelinesMenu();
+  function openSharedPipelinesMenu(event) {
+    setSharedPipelinesAnchorEl(event.currentTarget);
+  }
+
+  function closeSharedPipelinesMenu() {
+    setSharedPipelinesAnchorEl(null);
+  }
+
+  const selectPipeline = pipelineId => async () => {
+    closeOwnedPipelinesMenu();
 
     await saveActivePipeline(consortium.id, pipelineId);
 
     const activePipeline = pipelines.find(p => p.id === pipelineId);
 
-    this.setState({ activePipeline });
-  }
+    setActivePipeline(activePipeline);
+  };
 
-  openOwnedPipelinesMenu(event) {
-    this.ownedPipelinesButtonElement = event.currentTarget;
-    this.setState({ openOwnedPipelinesMenu: true });
-  }
-
-  closeOwnedPipelinesMenu() {
-    this.setState({ openOwnedPipelinesMenu: false });
-  }
-
-  openSharedPipelinesMenu(event) {
-    this.sharedPipelinesButtonElement = event.currentTarget;
-    this.setState({ openSharedPipelinesMenu: true });
-  }
-
-  closeSharedPipelinesMenu() {
-    this.setState({ openSharedPipelinesMenu: false });
-  }
-
-  render() {
-    const {
-      consortium,
-      owner,
-      classes,
-      pipelines,
-      hideTutorial,
-      tutorialChange,
-    } = this.props;
-
-    const {
-      activePipeline,
-      openOwnedPipelinesMenu,
-      openSharedPipelinesMenu,
-    } = this.state;
-
-    const ownedPipelines = this.filterOwnedPipelines(pipelines, consortium.id);
-    const sharedPipelines = this.filterSharedPipelines(pipelines, consortium.id);
-
-    return (
-      <div>
-        <Typography variant="h5" className={classes.tabTitle}>
-          Active Pipeline
-        </Typography>
-        <Paper className={classes.paper}>
-          {activePipeline
-            && activePipeline.id
-            && (
-              <div>
-                <Typography
-                  variant="h6"
-                  component={Link}
-                  to={`/dashboard/pipelines/${consortium.activePipelineId}`}
-                >
-                  {activePipeline.name}
-                </Typography>
-                <Typography variant="body2">
-                  {activePipeline.description}
-                </Typography>
-              </div>
-            )
-          }
-          {
-            !(activePipeline && activePipeline.id) && <Typography variant="body2"><em>No active pipeline</em></Typography>
-          }
-        </Paper>
-        {
-          owner
-          && (
-            <div className={classes.pipelinesActions}>
-              <Typography variant="h5">Activate a pipeline from...</Typography>
-              <Divider />
-              <div className={classes.pipelineDropdownsContainer}>
-                <div className={classes.pipelineButton}>
-                  <Button
-                    id="owned-pipelines-dropdown"
-                    variant="contained"
-                    color="primary"
-                    onClick={this.openOwnedPipelinesMenu}
-                  >
-                    Owned Pipelines
-                  </Button>
-                  <Menu
-                    id="owned-pipelines-dropdown-menu"
-                    anchorEl={this.ownedPipelinesButtonElement}
-                    open={openOwnedPipelinesMenu}
-                    onClose={this.closeOwnedPipelinesMenu}
-                  >
-                    {
-                      ownedPipelines && ownedPipelines.map(pipe => (
-                        <MenuItem
-                          key={`owned-${pipe.id}`}
-                          onClick={this.selectPipeline(pipe.id)}
-                        >
-                          {pipe.name}
-                        </MenuItem>
-                      ))
-                    }
-                  </Menu>
-                </div>
-                <div className={classes.pipelineButton}>
-                  <Button
-                    id="shared-pipelines-dropdown"
-                    variant="contained"
-                    color="primary"
-                    onClick={this.openSharedPipelinesMenu}
-                  >
-                    Pipelines Shared With Me
-                  </Button>
-                  <Menu
-                    id="shared-pipelines-dropdown-menu"
-                    anchorEl={this.sharedPipelinesButtonElement}
-                    open={openSharedPipelinesMenu}
-                    onClose={this.closeSharedPipelinesMenu}
-                  >
-                    {
-                      sharedPipelines && sharedPipelines.map(pipe => (
-                        <MenuItem
-                          key={`owned-${pipe.id}`}
-                          onClick={this.selectPipeline(pipe.id)}
-                        >
-                          {pipe.name}
-                        </MenuItem>
-                      ))
-                    }
-                  </Menu>
-                </div>
-              </div>
-              <div className={classes.newPipelineContainer}>
-                <Typography variant="body2" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
-                <Button
-                  id="new-pipeline"
-                  variant="contained"
-                  color="secondary"
-                  component={Link}
-                  to={`/dashboard/pipelines/new/${consortium.id}`}
-                >
-                  New Pipeline
-                  <AddIcon />
-                </Button>
-              </div>
-            </div>
-          )
-        }
-        {!hideTutorial && (
-          <Joyride
-            steps={STEPS.consortiumPipeline}
-            disableScrollParentFix
-            callback={tutorialChange}
-          />
+  return (
+    <div>
+      <Typography variant="h5" className={classes.tabTitle}>
+        Active Pipeline
+      </Typography>
+      <Paper className={classes.paper}>
+        {activePipeline && activePipeline.id ? (
+          <div>
+            <Typography
+              variant="h6"
+              component={Link}
+              to={`/dashboard/pipelines/${consortium.activePipelineId}`}
+            >
+              {activePipeline.name}
+            </Typography>
+            <Typography variant="body2">
+              {activePipeline.description}
+            </Typography>
+          </div>
+        ) : (
+          <Typography variant="body2"><em>No active pipeline</em></Typography>
         )}
-      </div>
-    );
-  }
+      </Paper>
+      {owner && (
+        <div className={classes.pipelinesActions}>
+          <Typography variant="h5">Activate a pipeline from...</Typography>
+          <Divider />
+          <div className={classes.pipelineDropdownsContainer}>
+            <div className={classes.pipelineButton}>
+              <Button
+                id="owned-pipelines-dropdown"
+                variant="contained"
+                color="primary"
+                onClick={openOwnedPipelinesMenu}
+              >
+                Owned Pipelines
+              </Button>
+              <Menu
+                id="owned-pipelines-dropdown-menu"
+                anchorEl={ownedPipelinesAnchorEl}
+                open={Boolean(ownedPipelinesAnchorEl)}
+                onClose={closeOwnedPipelinesMenu}
+              >
+                {ownedPipelines && ownedPipelines.map(pipe => (
+                  <MenuItem
+                    key={`owned-${pipe.id}`}
+                    onClick={selectPipeline(pipe.id)}
+                  >
+                    {pipe.name}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </div>
+            <div className={classes.pipelineButton}>
+              <Button
+                id="shared-pipelines-dropdown"
+                variant="contained"
+                color="primary"
+                onClick={openSharedPipelinesMenu}
+              >
+                Pipelines Shared With Me
+              </Button>
+              <Menu
+                id="shared-pipelines-dropdown-menu"
+                anchorEl={sharedPipelinesAnchorEl}
+                open={Boolean(sharedPipelinesAnchorEl)}
+                onClose={closeSharedPipelinesMenu}
+              >
+                {sharedPipelines && sharedPipelines.map(pipe => (
+                  <MenuItem
+                    key={`shared-${pipe.id}`}
+                    onClick={selectPipeline(pipe.id)}
+                  >
+                    {pipe.name}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </div>
+          </div>
+          <div className={classes.newPipelineContainer}>
+            <Typography variant="body2" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
+            <Button
+              id="new-pipeline"
+              variant="contained"
+              color="secondary"
+              component={Link}
+              to={`/dashboard/pipelines/new/${consortium.id}`}
+            >
+              New Pipeline
+              <AddIcon />
+            </Button>
+          </div>
+        </div>
+      )}
+      {!hideTutorial && (
+        <Joyride
+          steps={STEPS.consortiumPipeline}
+          disableScrollParentFix
+          callback={tutorialChange}
+        />
+      )}
+    </div>
+  );
 }
 
 ConsortiumPipeline.propTypes = {
