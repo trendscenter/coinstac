@@ -41,7 +41,7 @@ function createApolloClient(authToken) {
 
   return new ApolloClient({
     link: concat(authMiddleware, splitLink),
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
   });
 }
 
