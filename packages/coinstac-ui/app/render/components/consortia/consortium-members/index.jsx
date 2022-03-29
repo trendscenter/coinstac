@@ -31,7 +31,7 @@ function ConsortiumMembers({ consortium, pipelines }) {
       const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
       setActivePipeline(activePipeline);
     }
-  }, []);
+  }, [consortium]);
 
   const toggleActiveMember = (userId, username) => (event) => {
     const active = event.target.checked;
@@ -51,8 +51,6 @@ function ConsortiumMembers({ consortium, pipelines }) {
 
   function submit(e) {
     e.preventDefault();
-
-    console.log('ACTIVE MEMBERS', currentActiveMembers);
 
     saveActiveMembers({
       variables: {

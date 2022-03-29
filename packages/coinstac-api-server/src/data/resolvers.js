@@ -118,7 +118,7 @@ async function addUserPermissions(args) {
     const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
       { _id: doc },
       consortiaUpdateObj,
-      { returnOriginal: false }
+      { returnDocument: 'after' }
     );
 
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
@@ -180,7 +180,7 @@ async function removeUserPermissions(args) {
       updateObj.$unset[`activeMembers.${args.userId}`] = '';
     }
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnDocument: 'after' });
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
 }
@@ -811,22 +811,19 @@ const resolvers = {
         id: deletePipelineResult.value._id
       });
 
-      if (pipeline.headlessMembers) {
-        const updateObj = {};
+      const updateObj = {
+        $unset: { activePipelineId: '' }
+      };
 
+      if (pipeline.headlessMembers) {
         Object.keys(pipeline.headlessMembers).forEach((headlessMemberId) => {
           updateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
         });
-
-        await db.collection('consortia').updateOne(
-          { _id: pipeline.owningConsortium },
-          updateObj
-        );
       }
 
       const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate(
         { activePipelineId: args.pipelineId },
-        { $unset: { activePipelineId: '' } },
+        updateObj,
         { returnDocument: 'after' }
       );
 
@@ -957,7 +954,9 @@ const resolvers = {
         const oldPipeline = await db.collection('pipelines').findOne({ _id: consortium.activePipelineId });
 
         if (oldPipeline && oldPipeline.headlessMembers) {
-          const oldPipelineUpdateObj = {};
+          const oldPipelineUpdateObj = {
+            $unset: {},
+          };
 
           Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
             oldPipelineUpdateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
@@ -1159,6 +1158,48 @@ const resolvers = {
             step.computations = step.computations.map(compId => ObjectID(compId));
           }
         });
+      }
+
+      let consortiumChanged = false;
+      const oldPipeline = await db.collection('pipelines').findOne({ _id: args.pipeline.id });
+
+      if (oldPipeline.headlessMembers) {
+        const updateObjOld = {
+          $unset: {}
+        };
+
+        Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObjOld.$unset[`activeMembers.${headlessMemberId}`] = '';
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObjOld
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (args.pipeline.headlessMembers) {
+        const updateObj = {
+          $set: {}
+        };
+
+        Object.keys(args.pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$set[`activeMembers.${headlessMemberId}`] = args.pipeline.headlessMembers[headlessMemberId];
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObj
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (consortiumChanged) {
+        const consortium = await db.collection('consortia').findOne({ activePipelineId: args.pipeline.id });
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
       }
 
       await db.collection('pipelines').replaceOne({

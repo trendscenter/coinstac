@@ -106,6 +106,7 @@ class ConsortiumTabs extends Component {
         // eslint-disable-next-line react/no-did-update-set-state
         this.setState({
           consortiumUsers,
+          consortium: remoteConsortium,
         });
       }
     }
