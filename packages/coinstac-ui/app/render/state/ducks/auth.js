@@ -270,7 +270,6 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       localStorage.setItem('networkVolume', payload);
       return { ...state, networkVolume: payload };
     case TOGGLE_TUTORIAL:
-      console.log('== here ==');
       localStorage.setItem('isTutorialHidden', !isTutorialHidden);
       return { ...state, isTutorialHidden: !isTutorialHidden };
     case SET_API_VERSION_CHECK:
