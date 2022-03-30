@@ -352,7 +352,7 @@ const resolvers = {
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {
           return consortiaIds.includes(String(pipeline.owningConsortium))
-          || pipeline.shared;
+            || pipeline.shared;
         });
       }
 
@@ -532,6 +532,13 @@ const resolvers = {
 
       return transformToClient(run);
     },
+    getPipelines: async () => {
+      const result = await axios.get(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
+      );
+
+      return { info: JSON.stringify(result.data) };
+    }
   },
   Mutation: {
     /**
@@ -1563,6 +1570,37 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    stopRun: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to stop this run')
+      }
+
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
+      );
+    },
+    deleteRun: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const runs = await db.collection('runs').find({
+        _id: ObjectID(args.runId)
+      }).toArray();
+
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          _id: ObjectID(args.runId)
+        });
+
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) { }
+        });
+      }
+    }
   },
   Subscription: {
     /**
