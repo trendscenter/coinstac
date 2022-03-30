@@ -120,7 +120,7 @@ class ConsortiumPipeline extends Component {
       owner,
       classes,
       pipelines,
-      hideTutorial,
+      isTutorialHidden,
       tutorialChange,
     } = this.props;
 
@@ -238,7 +238,7 @@ class ConsortiumPipeline extends Component {
             </div>
           )
         }
-        {!hideTutorial && (
+        {!isTutorialHidden && (
           <Joyride
             steps={STEPS.consortiumPipeline}
             disableScrollParentFix
@@ -255,7 +255,7 @@ ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
+  isTutorialHidden: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   tutorialChange: PropTypes.func.isRequired,
 };

@@ -23,7 +23,7 @@ import { v4 as uuid } from 'uuid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
+import { tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -660,7 +660,7 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
-        {!auth.hideTutorial && (
+        {!auth.isTutorialHidden && (
           <Joyride
             steps={STEPS.consortiaList}
             disableScrollParentFix
@@ -745,7 +745,6 @@ export default withStyles(styles)(
       pullComputations,
       deleteAllDataMappingsFromConsortium,
       startRun,
-      toggleTutorial,
       tutorialChange,
       startLoading: start,
       finishLoading: finish,

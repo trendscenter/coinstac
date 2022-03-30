@@ -1,7 +1,7 @@
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
@@ -15,6 +15,7 @@ import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
 import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
+import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -45,19 +46,19 @@ import TreeviewListener from './listeners/treeview-listener';
 import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
-import { notifyError } from '../../state/ducks/notifyAndLog';
 
 
 function Dashboard({
-  auth,
   children,
-  runs,
-  maps,
   router,
-  notifyError,
-  hideTutorial,
 }) {
-  const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const auth = useSelector(state => state.auth);
+  const runs = useSelector(state => state.runs.runs);
+  const maps = useSelector(state => state.maps.consortiumDataMappings);
+
+  const dispatch = useDispatch();
+
+  const [showTutorialModal, setShowTutorialModal] = useState(!auth.isTutorialHidden);
 
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
@@ -92,7 +93,7 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
     ipcRenderer.on('main-error', (event, arg) => {
-      notifyError(`Unexpected error: ${arg.message || arg.error || arg}`);
+      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error || arg}`));
     });
   }, []);
 
@@ -138,7 +139,7 @@ function Dashboard({
     setShowTutorialModal(false);
 
     if (neverShow) {
-      toggleTutorial();
+      dispatch(toggleTutorial());
     }
   };
 
@@ -156,8 +157,8 @@ function Dashboard({
         <CoinstacAbbr />
         <DashboardNav
           user={auth.user}
-          hideTutorial={hideTutorial}
-          tutorialChange={tutorialChange}
+          isTutorialHidden={auth.isTutorialHidden}
+          tutorialChange={data => dispatch(tutorialChange(data))}
         />
         <List>
           <ListItem>
@@ -206,19 +207,9 @@ function Dashboard({
 
 Dashboard.displayName = 'Dashboard';
 
-Dashboard.defaultProps = {
-  runs: [],
-  maps: [],
-};
-
 Dashboard.propTypes = {
-  auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  runs: PropTypes.array,
-  maps: PropTypes.array,
   router: PropTypes.object.isRequired,
-  notifyError: PropTypes.func.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -249,21 +240,6 @@ function ConnectedDashboard(props) {
   );
 }
 
-const mapStateToProps = ({ auth, runs, maps }) => ({
-  auth,
-  runs: runs.runs,
-  maps: maps.consortiumDataMappings,
-  hideTutorial: auth.hideTutorial,
-});
-
-const mapDispatchToProps = {
-  toggleTutorial,
-  tutorialChange,
-  notifyError,
-};
-
-const connectedComponent = connect(
-  mapStateToProps, mapDispatchToProps
-)(withRouter(ConnectedDashboard));
+const connectedComponent = withRouter(ConnectedDashboard);
 
 export default connectedComponent;
