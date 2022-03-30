@@ -244,21 +244,6 @@ const queries = {
       }
     }
   `,
-  fetchRunStatus: `
-    {
-      fetchRun(runId: $runId) {
-        id
-        status
-      }
-    }
-  `,
-  runStarted: `
-    {
-      runStarted(userId: $userId) {
-        ${sharedFields.runFields}
-      }
-    }
-  `,
 };
 
 module.exports = queries;

@@ -11,6 +11,7 @@ import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
 import DisplayNotificationsListener from './display-notifications-listener';
+import AutoUpdateListener from './auto-update-listener';
 import ErrorBoundary from './ErrorBoundary';
 
 class App extends Component {
@@ -74,10 +75,11 @@ class App extends Component {
           <MuiThemeProvider theme={theme}>
             <CssBaseline />
             <ActivityIndicator visible={isLoading} />
-              
-              {checkJWT && children}
 
-              <DisplayNotificationsListener />
+            {checkJWT && children}
+
+            <DisplayNotificationsListener />
+            <AutoUpdateListener />
           </MuiThemeProvider>
         </div>
       </ErrorBoundary>

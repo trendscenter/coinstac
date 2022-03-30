@@ -78,7 +78,7 @@ module.exports = {
     runId,
     spec,
   }) {
-    Manager.setLogger = utils.logger;
+    Manager.setLogger = utils.setLogger;
     const computation = Object.assign(
       {},
       spec.computation,
