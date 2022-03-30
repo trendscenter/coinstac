@@ -67,6 +67,7 @@ const schemaFields = {
     photo: String
     photoID: String
     name: String
+    delete: Boolean
   `,
 };
 

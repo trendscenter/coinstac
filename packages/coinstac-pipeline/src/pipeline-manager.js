@@ -303,11 +303,7 @@ module.exports = {
                   throw err;
                 });
             }
-            // local pipeline user stop error, or other uncaught error
-            publishData('run', {
-              id: clientId, runId, error: { message: err.message, stack: err.stack },
-            }, 1);
-            cleanupPipeline(runId)
+            return cleanupPipeline(runId)
               .then(() => {
                 throw err;
               });
@@ -364,6 +360,12 @@ module.exports = {
         if (currentStep) {
           return currentStep.stop(type);
         }
+      },
+      getPipelines() {
+        return {
+          remoteClients,
+          activePipelines,
+        };
       },
       waitingOnForRun,
     };

@@ -5,7 +5,9 @@ import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 
 import { FETCH_ALL_USER_RUNS_QUERY, USER_RUN_CHANGED_SUBSCRIPTION } from '../../../state/graphql/functions';
-import { loadLocalRuns, saveRunLocally, updateRunLocally } from '../../../state/ducks/runs';
+import {
+  loadLocalRuns, saveRunLocally, updateRunLocally, deleteRun,
+} from '../../../state/ducks/runs';
 import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 function runIsFinished(run) {
@@ -19,6 +21,7 @@ function RemoteRunsListener({
   loadLocalRuns,
   saveRunLocally,
   updateRunLocally,
+  deleteRun,
   suspendedRuns,
   notifyError,
   notifySuccess,
@@ -28,6 +31,7 @@ function RemoteRunsListener({
   const { data } = useQuery(FETCH_ALL_USER_RUNS_QUERY, {
     variables: { userId },
     skip: ranFirstQuery.current,
+    onError: (error) => { console.error({ error }); },
   });
   const { data: subscriptionData } = useSubscription(USER_RUN_CHANGED_SUBSCRIPTION, {
     variables: { userId },
@@ -60,6 +64,11 @@ function RemoteRunsListener({
 
   useEffect(() => {
     if (!remoteRunChanged) return;
+
+    if (remoteRunChanged.delete) {
+      deleteRun(remoteRunChanged.id);
+      return;
+    }
 
     const localRun = localRuns.find(r => r.id === remoteRunChanged.id);
 
@@ -106,6 +115,7 @@ export default connect(mapStateToProps,
     loadLocalRuns,
     saveRunLocally,
     updateRunLocally,
+    deleteRun,
     notifyError,
     notifySuccess,
   })(RemoteRunsListener);

@@ -18,6 +18,7 @@ const SAVE_RUN = 'SAVE_RUN';
 const UPDATE_RUN = 'UPDATE_RUN';
 const SAVE_RUN_AWAITING_MAP = 'SAVE_RUN_AWAITING_MAP';
 const REMOVE_RUN_AWAITING_MAP = 'REMOVE_RUN_AWAITING_MAP';
+const DELETE_RUN = 'DELETE_RUN';
 
 // Action Creators
 export const clearRuns = () => (dispatch) => {
@@ -94,6 +95,13 @@ export const updateRunLocally = (runId, object) => (dispatch) => {
   }
 };
 
+export const deleteRun = runId => (dispatch) => {
+  dispatch({
+    type: DELETE_RUN,
+    payload: { runId },
+  });
+};
+
 const INITIAL_STATE = {
   runs: [],
   localRuns: [],
@@ -107,6 +115,7 @@ function runSort(a, b) {
 // REDUCER
 function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    // TODO: Handle runs delete in reducer
     case CLEAR_RUNS:
       return INITIAL_STATE;
     case LOAD_LOCAL_RUNS:
@@ -172,6 +181,16 @@ function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id !== action.payload),
+      };
+    }
+    case DELETE_RUN: {
+      return {
+        ...state,
+        runs: state.runs.filter(run => run.id !== action.payload.runId),
+        runsAwaitingDataMap:
+          state.runsAwaitingDataMap.filter((run) => { return run.id !== action.payload.runId; }),
+        localRuns: state.localRuns.filter(run => run.id !== action.payload.runId),
+        remoteRuns: state.remoteRuns.filter(run => run.id !== action.payload.runId),
       };
     }
     default:

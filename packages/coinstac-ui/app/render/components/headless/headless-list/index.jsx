@@ -21,7 +21,10 @@ import {
 function HeadlessList({ auth }) {
   const { user } = auth;
 
-  const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, { fetchPolicy: 'cache-and-network' });
+  const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, {
+    fetchPolicy: 'cache-and-network',
+    onError: (error) => { console.error({ error }); },
+  });
   const [submitDelete] = useMutation(DELETE_HEADLESS_CLIENT_MUTATION);
 
   useEntityListSubscription(subscribeToMore, HEADLESS_CLIENT_CHANGED_SUBSCRIPTION, 'fetchAllHeadlessClients', 'headlessClientChanged');

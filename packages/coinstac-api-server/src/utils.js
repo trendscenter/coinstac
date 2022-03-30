@@ -12,7 +12,7 @@ function transformItem(item) {
   }
 
   const copy = { ...item };
-  if (item._id) {
+  if (!copy.id) {
     copy.id = item._id.toString();
   }
 

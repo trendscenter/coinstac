@@ -2,6 +2,7 @@ import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
@@ -22,11 +23,13 @@ import { v4 as uuid } from 'uuid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
+  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   JOIN_CONSORTIUM_MUTATION,
@@ -45,6 +48,7 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -247,7 +251,7 @@ class ConsortiaList extends Component {
           <Button
             key={`${consortium.id}-start-pipeline-button`}
             variant="contained"
-            className={classes.button}
+            className={`${classes.button} start-pipeline`}
             onClick={this.startPipeline(consortium)}
           >
             Start Pipeline
@@ -505,37 +509,53 @@ class ConsortiaList extends Component {
   }
 
   async leaveConsortium(consortiumId) {
-    const { deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+    const { client, deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
 
     await deleteAllDataMappingsFromConsortium(consortiumId);
+
     leaveConsortium(consortiumId);
+
+    return client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
   }
 
-  joinConsortium(consortiumId, activePipelineId) {
+  async joinConsortium(consortiumId, activePipelineId) {
     const {
-      client, pipelines, pullComputations, notifyInfo, joinConsortium,
+      client, pullComputations, notifyInfo, notifyError, joinConsortium,
     } = this.props;
 
-    if (activePipelineId) {
-      const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-      const pipeline = pipelines.find(pipe => pipe.id === activePipelineId);
+    joinConsortium(consortiumId);
 
-      const computations = [];
-      pipeline.steps.forEach((step) => {
-        const compObject = computationData.fetchAllComputations
-          .find(comp => comp.id === step.computations[0].id);
-        computations.push({
-          img: compObject.computation.dockerImage,
-          compId: compObject.id,
-          compName: compObject.meta.name,
-        });
-      });
+    if (!activePipelineId) return;
 
-      pullComputations({ consortiumId, computations });
-      notifyInfo('Pipeline computations downloading via Docker.');
+    const [{ data }] = await client.refetchQueries({
+      include: [FETCH_ALL_PIPELINES_QUERY],
+    });
+
+    const pipelines = get(data, 'fetchAllPipelines', []);
+
+    const activePipeline = pipelines.find(pipe => pipe.id === activePipelineId);
+
+    if (!activePipeline) {
+      return notifyError('Couldn\'t find the active pipeline for this consortium');
     }
 
-    joinConsortium(consortiumId);
+    const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+
+    const computations = [];
+    activePipeline.steps.forEach((step) => {
+      const compObject = computationData.fetchAllComputations
+        .find(comp => comp.id === step.computations[0].id);
+      computations.push({
+        img: compObject.computation.dockerImage,
+        compId: compObject.id,
+        compName: compObject.meta.name,
+      });
+    });
+
+    pullComputations({ consortiumId, computations });
+    notifyInfo('Pipeline computations downloading via Docker.');
   }
 
   async deleteConsortium() {
@@ -573,7 +593,12 @@ class ConsortiaList extends Component {
   }
 
   render() {
-    const { consortia, classes } = this.props;
+    const {
+      consortia,
+      classes,
+      auth,
+      tutorialChange,
+    } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
@@ -584,6 +609,7 @@ class ConsortiaList extends Component {
             Consortia
           </Typography>
           <Fab
+            id="consortium-add"
             color="primary"
             component={Link}
             to="/dashboard/consortia/new"
@@ -634,6 +660,13 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
+        {!auth.hideTutorial && (
+          <Joyride
+            steps={STEPS.consortiaList}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -650,6 +683,7 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
   saveRemoteDecentralizedRun: PropTypes.func.isRequired,
+  usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -661,7 +695,7 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  usersOnlineStatus: PropTypes.object,
+  tutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -711,6 +745,8 @@ export default withStyles(styles)(
       pullComputations,
       deleteAllDataMappingsFromConsortium,
       startRun,
+      toggleTutorial,
+      tutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)
