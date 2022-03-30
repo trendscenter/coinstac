@@ -182,7 +182,6 @@ async function changeUserAppRole(args, addOrRemove) {
   }, {
     returnOriginal: false,
   });
-
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
@@ -1569,6 +1568,55 @@ const resolvers = {
       await db.collection('datasets').deleteOne({ _id: ObjectID(id) });
 
       return transformToClient(dataset);
+    },
+    deleteUser: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to delete this user');
+      }
+      const db = database.getDbInstance();
+
+      // check to see if the user owns anything
+
+      // consortia
+      const consortiaOwnersKey = `owners.${args.userId}`
+      const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
+      
+      const soleOwner = ownedConsortia.reduce((sole, con) => {
+        if(Object.keys(con.owners).length <= 1) sole = true;
+        return sole;
+      }, false)
+
+      if (soleOwner) {
+        return Boom.illegal('Cannot delete a user that is the owner of a consortium');
+      }
+
+      // datasets
+      const ownedDatasets = await db.collection('datasets').find({ 'owner.id': ObjectID(args.userId) }).toArray();
+      if (ownedDatasets.length > 0) {
+        return Boom.illegal('Cannot delete a user that is the owner of a dataset');
+      }
+
+      // pipelines
+      const ownedPipelines = await db.collection('pipelines').find({ 'owner': args.userId }).toArray();
+      if (ownedPipelines.length > 0) {
+        return Boom.illegal('Cannot delete a user that is the owner of a pipeline');
+      }
+
+      // remove the user as a member of any consortium
+      const consortiaMembersKey = `members.${args.userId}`;
+      const consortiaUpdateResult = await db.collection('consortia').updateMany({}, { $unset: { [consortiaMembersKey]: true, [consortiaOwnersKey]: true } })
+
+      if (consortiaUpdateResult.modifiedCount > 0) {
+        // emit a consortium changed event
+        const consortia = await db.collection('consortia').find().toArray();
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+      }
+
+      const user = await db.collection('users').findOne({ _id: ObjectID(args.userId) })
+      user.delete = true;
+      await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
+
+      eventEmitter.emit(USER_CHANGED, user);
     },
     stopRun: async (parent, args, { credentials }) => {
       if (!isAdmin(credentials.permissions)) {

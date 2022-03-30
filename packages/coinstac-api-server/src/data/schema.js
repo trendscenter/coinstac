@@ -218,6 +218,7 @@ const typeDefs = `
     generateHeadlessClientApiKey(headlessClientId: ID!): String
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
+    deleteUser(userId: ID!): String
     stopRun(runId: ID): JSON
     deleteRun(runId: ID): JSON
   }
