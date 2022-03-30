@@ -32,16 +32,12 @@ const ComputationIO = ({
   const prepareJSON = (info) => {
     const compSpecDbObject = JSON.parse(JSON.stringify(info));
 
-    try {
-      delete compSpecDbObject.id;
-      delete compSpecDbObject.__typename;
-      delete compSpecDbObject.computation.__typename;
-      delete compSpecDbObject.computation.remote.__typename;
-      delete compSpecDbObject.meta.__typename;
-      delete compSpecDbObject.submittedBy;
-    } catch (e) {
-      console.error(e);
-    }
+    delete compSpecDbObject.id;
+    delete compSpecDbObject.__typename;
+    delete compSpecDbObject?.computation?.__typename;
+    delete compSpecDbObject?.computation?.remote?.__typename;
+    delete compSpecDbObject?.meta?.__typename;
+    delete compSpecDbObject.submittedBy;
 
 
     return JSON.stringify(compSpecDbObject, null, 4);
