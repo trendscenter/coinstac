@@ -345,8 +345,8 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      const owningConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
-      const consortiaIds = owningConsortia.map(consortium => String(consortium._id));
+      const memberConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
       let res = Object.values(pipelines);
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {

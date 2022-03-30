@@ -158,7 +158,10 @@ async function prepareDirectory(pipelineSpec, baseDir) {
   await fs.promises.mkdir(path.resolve(baseDir, 'input/local0/simulatorRun'), { recursive: true });
   return Promise.all(Object.keys(pipelineSpec.steps[0].inputMap.covariates.value)
     .map((filename) => {
-      return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
+      return fs.promises.mkdir(path.join(baseDir, 'input/local0/simulatorRun/', path.dirname(filename)), { recursive: true })
+        .then(() => {
+          return fs.promises.link(filename, path.join(baseDir, `input/local0/simulatorRun/${filename}`));
+        });
     }));
 }
 

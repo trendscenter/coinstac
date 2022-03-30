@@ -138,6 +138,7 @@ export function BugReport(props) {
       apiServer.port ? `:${apiServer.port}` : ''
     }${apiServer.pathname ? `${apiServer.pathname}` : '/graphql'}`;
     const authToken = getAuthToken();
+
     axios({
       url: API_URL,
       method: 'post',
