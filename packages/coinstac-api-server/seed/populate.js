@@ -4,6 +4,8 @@ const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
 const brainageFNC = require('./data/coinstac-brainage-fnc.json');
+const combatDC = require('./data/coinstac-combat-dc.json');
+const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
@@ -22,6 +24,7 @@ const dinunetGPU = require('./data/coinstac-dinunet-gpu.json');
 const vbm = require('./data/coinstac-vbm-pre.json');
 
 const fmri = require('./data/coinstac-fmri.json');
+const pLink = require('./data/coinstac-plink.json');
 
 const decentralized = require('./data/coinstac-decentralized-test.json');
 // const transfer = require('./data/coinstac-file-transfer-test');
@@ -44,6 +47,10 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -106,10 +113,13 @@ async function populateComputations() {
     { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
     { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
     { ...brainageFNC, submittedBy: 'author', _id: COMPUTATION_IDS[19] },
+    { ...pLink, submittedBy: 'author', _id: COMPUTATION_IDS[20] },
+    { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
+    { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
-    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
+    const cc = currentComps.find(cc => cc.meta.id === comp.meta.id);
     if (cc) {
       ops.update.push(Object.assign({}, comp, { _id: cc._id }));
       return ops;

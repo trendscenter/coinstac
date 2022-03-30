@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
@@ -12,6 +12,9 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import { IconButton } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { useMutation } from '@apollo/client';
 import MemberAvatar from '../common/member-avatar';
 import { logout } from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
@@ -24,8 +27,11 @@ import {
   USER_CHANGED_SUBSCRIPTION,
   ADD_USER_ROLE_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
+  DELETE_USER_MUTATION,
 } from '../../state/graphql/functions';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
+import ListDeleteModal from '../common/list-delete-modal';
+
 
 const styles = () => ({
   avatarWrapper: {
@@ -37,142 +43,170 @@ const styles = () => ({
   },
 });
 
-class Permission extends Component {
-  state = {
-    isUpdating: null,
-  }
+function Permission(props, context) {
+  const {
+    currentUser,
+    users,
+    classes,
+    notifyError,
+    subscribeToUsers,
+  } = props;
+  const [isUpdating, setIsUpdating] = useState();
+  const [userId, setUserId] = useState(null);
+  const [role, setRole] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  componentDidMount() {
-    const { currentUser, subscribeToUsers } = this.props;
-    const { router } = this.context;
+  const [deleteUser] = useMutation(DELETE_USER_MUTATION);
+
+  useEffect(() => {
+    const { router } = context;
+    let unsubscribeUsers;
 
     if (!get(currentUser, 'permissions.roles.admin')) {
       router.push('/');
     } else {
-      this.unsubscribeUsers = subscribeToUsers(null);
+      unsubscribeUsers = subscribeToUsers(null);
     }
-  }
 
-  componentWillUnmount() {
-    if (this.unsubscribeUsers) {
-      this.unsubscribeUsers();
-    }
-  }
+    return () => {
+      if (unsubscribeUsers) {
+        unsubscribeUsers();
+      }
+    };
+  }, []);
 
-  logoutUser = () => {
-    const { logout } = this.props;
-    const { router } = this.context;
+
+  const logoutUser = () => {
+    const { logout } = props;
+    const { router } = context;
 
     logout()
       .then(() => {
         router.push('/login');
       });
-  }
+  };
 
-  toggleUserAppRole = (userId, checked, role) => {
+  const toggleUserAppRole = (userId, checked, role) => {
     const {
       currentUser, addUserRole, removeUserRole, notifyError,
-    } = this.props;
+    } = props;
     const mutation = checked ? addUserRole : removeUserRole;
 
-    this.setState({ isUpdating: { userId, role } });
+    setIsUpdating(true);
+    setUserId(userId);
+    setRole(role);
 
     mutation(userId, 'app', role, role, 'app')
       .then(() => {
         if (currentUser.id === userId && role === 'admin') {
-          this.logoutUser();
+          logoutUser();
         }
       })
       .catch((error) => {
         notifyError(getGraphQLErrorMessage(error));
       })
       .finally(() => {
-        this.setState({ isUpdating: null });
+        setIsUpdating(false);
       });
-  }
+  };
 
-  render() {
-    const { currentUser, users, classes } = this.props;
-    const { isUpdating } = this.state;
+  const handleDeleteUser = () => {
+    deleteUser({
+      variables: { userId: userToDelete.id },
+    }).then(() => {
+      setShowModal(false);
+    }).catch((e) => {
+      notifyError(e.message);
+    });
+  };
 
-    const updatingUserId = get(isUpdating, 'userId');
-    const updatingRole = get(isUpdating, 'role');
-
-    return (
-      <div>
-        <div className="page-header">
-          <Typography variant="h4">
-            App Roles
-          </Typography>
-        </div>
-        <div>
-          <Table id="permission-table">
-            <TableHead>
-              <TableRow>
-                <TableCell>Username</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Admin</TableCell>
-                <TableCell>Author</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {users && users.map((user) => {
-                const isAdmin = get(user, 'permissions.roles.admin', false);
-                const isAuthor = get(user, 'permissions.roles.author', false);
-
-                const isUpdatingAdmin = updatingUserId === user.id && updatingRole === 'admin';
-                const isUpdatingAuthor = updatingUserId === user.id && updatingRole === 'author';
-
-                return (
-                  <TableRow key={`${user.id}-row`}>
-                    <TableCell>
-                      <div className={classes.avatarWrapper}>
-                        <MemberAvatar
-                          id={user.id}
-                          name={user.username}
-                          width={30}
-                        />
-                        <span>{user.username}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {user.email}
-                    </TableCell>
-                    <TableCell>
-                      {isUpdatingAdmin ? (
-                        <CircularProgress size={20} />
-                      ) : (
-                        <Checkbox
-                          className={classes.checkbox}
-                          checked={isAdmin}
-                          disabled={user.id === currentUser.id}
-                          name="Admin"
-                          onChange={() => this.toggleUserAppRole(user.id, !isAdmin, 'admin')}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isUpdatingAuthor ? (
-                        <CircularProgress />
-                      ) : (
-                        <Checkbox
-                          className={classes.checkbox}
-                          checked={isAuthor}
-                          disabled={user.id === currentUser.id}
-                          name="Author"
-                          onChange={() => this.toggleUserAppRole(user.id, !isAuthor, 'author')}
-                        />
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+  return (
+    <div>
+      <div className="page-header">
+        <Typography variant="h4">
+          App Roles
+        </Typography>
       </div>
-    );
-  }
+      <div>
+        <Table id="permission-table">
+          <TableHead>
+            <TableRow>
+              <TableCell>Username</TableCell>
+              <TableCell>Email</TableCell>
+              <TableCell>Admin</TableCell>
+              <TableCell>Author</TableCell>
+              <TableCell>Delete</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users && users.map((user) => {
+              const isAdmin = get(user, 'permissions.roles.admin', false);
+              const isAuthor = get(user, 'permissions.roles.author', false);
+
+              const isUpdatingAdmin = userId === user.id && role === 'admin';
+              const isUpdatingAuthor = userId === user.id && role === 'author';
+
+              return (
+                <TableRow key={`${user.id}-row`}>
+                  <TableCell>
+                    <div className={classes.avatarWrapper}>
+                      <MemberAvatar
+                        id={user.id}
+                        name={user.username}
+                        width={30}
+                      />
+                      <span>{user.username}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {user.email}
+                  </TableCell>
+                  <TableCell>
+                    {(isUpdating && isUpdatingAdmin) ? (
+                      <CircularProgress size={20} />
+                    ) : (
+                      <Checkbox
+                        className={classes.checkbox}
+                        checked={isAdmin}
+                        disabled={user.id === currentUser.id}
+                        name="Admin"
+                        onChange={() => toggleUserAppRole(user.id, !isAdmin, 'admin')}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {(isUpdating && isUpdatingAuthor) ? (
+                      <CircularProgress />
+                    ) : (
+                      <Checkbox
+                        className={classes.checkbox}
+                        checked={isAuthor}
+                        disabled={user.id === currentUser.id}
+                        name="Author"
+                        onChange={() => toggleUserAppRole(user.id, !isAuthor, 'author')}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => { setShowModal(true); setUserToDelete(user); }}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+        <ListDeleteModal
+          close={() => { setShowModal(false); }}
+          deleteItem={handleDeleteUser}
+          itemName={`user: "${(userToDelete && userToDelete.username)}"`}
+          show={showModal}
+        />
+      </div>
+    </div>
+  );
 }
 
 Permission.contextTypes = {

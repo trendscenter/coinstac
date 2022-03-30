@@ -286,67 +286,52 @@ class CoinstacClient {
 
     if (!this.clientServerURL) {
       const fp = path.join(this.appDirectory, 'input', this.clientId, runId);
-      const dataType = clientPipeline.steps[0].inputMap.data.type;
-
-      if (dataType === 'directory') {
-        return mkdirp(fp)
-          .then(() => {
-            return new Promise((resolve) => {
-              ncp(filePaths.baseDirectory, fp, (e) => {
-                if (e) {
-                  throw e;
-                }
-                resolve();
-              });
-            }).then(() => this.pipelineManager.startPipeline(runObj));
-          });
-      }
-
-      if (dataType !== 'directory') {
-        return mkdirp(fp)
-          .then(() => {
-            // TODO: validate runPipeline against clientPipeline
-            const linkPromises = [];
-
-            if (filePaths) {
-              let stageFiles = process.env.CI ? fs.copyFile : fs.link;
-              if (networkVolume) {
-                stageFiles = fs.symlink;
-                runObj.alternateInputDirectory = {
-                  in: filePaths.baseDirectory,
-                  out: '/c/user/data/input/',
-                };
-              }
-
-              for (let i = 0; i < filePaths.files.length; i += 1) {
-                const mkdir = path.normalize(filePaths.files[i])
-                  === path.basename(filePaths.files[i])
-                  ? Promise.resolve()
-                  : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
-
-                linkPromises.push( // eslint-disable-next-line no-loop-func
-                  mkdir.then(async () => {
-                    await stageFiles(
-                      (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
-                        : path.resolve(filePaths.baseDirectory, filePaths.files[i])
-                      ),
-                      path.resolve(fp, path.basename(filePaths.files[i]))
-                    );
-                  })
-                    .catch((e) => {
-                      // permit dupes
-                      if (e.code && e.code !== 'EEXIST') {
-                        throw e;
-                      }
-                    })
-                );
-              }
+      return mkdirp(fp)
+        .then(() => {
+          // TODO: validate runPipeline against clientPipeline
+          const linkPromises = [];
+          if (filePaths) {
+            let stageFiles = process.env.CI ? fs.copyFile : fs.link;
+            if (
+              networkVolume
+              || (filePaths.directories
+              && filePaths.directories.length > 0)
+            ) {
+              stageFiles = fs.symlink;
+              runObj.alternateInputDirectory = {
+                in: filePaths.baseDirectory,
+                out: '/c/user/data/input/',
+              };
             }
 
-            return Promise.all(linkPromises)
-              .then(() => this.pipelineManager.startPipeline(runObj));
-          });
-      }
+            for (let i = 0; i < filePaths.files.length; i += 1) {
+              const mkdir = path.normalize(filePaths.files[i])
+                === path.basename(filePaths.files[i])
+                ? Promise.resolve()
+                : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+
+              linkPromises.push( // eslint-disable-next-line no-loop-func
+                mkdir.then(async () => {
+                  await stageFiles(
+                    (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
+                      : path.resolve(filePaths.baseDirectory, filePaths.files[i])
+                    ),
+                    path.resolve(fp, path.basename(filePaths.files[i]))
+                  );
+                })
+                  .catch((e) => {
+                    // permit dupes
+                    if (e.code && e.code !== 'EEXIST') {
+                      throw e;
+                    }
+                  })
+              );
+            }
+          }
+
+          return Promise.all(linkPromises)
+            .then(() => this.pipelineManager.startPipeline(runObj));
+        });
     }
 
     const run = {
