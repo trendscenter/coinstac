@@ -69,7 +69,6 @@ function getApolloClient({ apiServer, subApiServer }) {
     client: new ApolloClient({
       link: unauthorizedLink.concat(splitLink),
       cache: new InMemoryCache({
-        // addTypename: false,
         typePolicies: {
           Query: {
             fields: {
