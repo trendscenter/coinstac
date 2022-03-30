@@ -321,6 +321,7 @@ async function setupOuter({
             clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
             connectTimeout: 15 * 1000,
+            clean: false,
           }
         );
         client.on('offline', () => {

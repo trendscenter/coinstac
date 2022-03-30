@@ -203,6 +203,7 @@ async function setupCentral({
       {
         clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
         reconnectPeriod: 5000,
+        clean: false,
       }
     );
     await new Promise((resolve) => {
