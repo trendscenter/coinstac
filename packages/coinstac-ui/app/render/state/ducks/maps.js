@@ -1,7 +1,10 @@
 /* eslint-disable no-case-declarations */
 import { dirname, basename } from 'path';
+import isEqual from 'lodash/isEqual';
+
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
+import { getAllUnfulfilledPipelineInputs } from '../../utils/helpers';
 
 const fs = require('fs');
 const path = require('path');
@@ -105,6 +108,7 @@ export const saveDataMapping = applyAsyncLoading(
     const mapping = {
       consortiumId: consortium.id,
       pipelineId: pipeline.id,
+      pipelineSnapshot: pipeline,
       map: mapData,
       dataMap: map,
       isComplete: true,
@@ -127,14 +131,40 @@ export const saveDataMapping = applyAsyncLoading(
   }
 );
 
+// Called when a pipeline is edited to update the map status accordingly
 export const updateMapStatus = applyAsyncLoading(
-  (consortiumId, pipelineId, complete) => async (dispatch) => {
+  (consortiumId, pipeline) => async (dispatch, getState) => {
+    const { maps } = getState();
+
+    const currentMap = maps.consortiumDataMappings.find(
+      m => m.consortiumId === consortiumId && m.pipelineId === pipeline.id
+    );
+
+    if (!currentMap) return;
+
+    if (!currentMap.pipelineSnapshot) {
+      return dispatch({
+        type: UPDATE_MAP_STATUS,
+        payload: {
+          consortiumId,
+          pipelineId: pipeline.id,
+          complete: false,
+        },
+      });
+    }
+
+    const newPipelineInputs = getAllUnfulfilledPipelineInputs(pipeline);
+    const oldPipelineInputs = getAllUnfulfilledPipelineInputs(currentMap.pipelineSnapshot);
+
+    const unfulfilledInputsAreEqual = isEqual(newPipelineInputs, oldPipelineInputs);
+
     dispatch(({
       type: UPDATE_MAP_STATUS,
       payload: {
         consortiumId,
-        pipelineId,
-        complete,
+        pipelineId: pipeline.id,
+        pipelineSnapshot: pipeline,
+        complete: unfulfilledInputsAreEqual,
       },
     }));
   }
@@ -196,6 +226,7 @@ export default function reducer(state = INITIAL_STATE, action) {
               return {
                 ...map,
                 isComplete: action.payload.complete,
+                pipelineSnapshot: action.payload.pipelineSnapshot,
               };
             }
 
