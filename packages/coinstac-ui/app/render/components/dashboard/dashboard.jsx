@@ -61,17 +61,27 @@ function Dashboard({
 
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
-  } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
+  } = useQuery(FETCH_ALL_CONSORTIA_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: computationData, subscribeToMore: subscribeToComputations,
-  } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY);
+  } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: pipelinesData, subscribeToMore: subscribeToPipelines,
-  } = useQuery(FETCH_ALL_PIPELINES_QUERY);
+  } = useQuery(FETCH_ALL_PIPELINES_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: threadsData, subscribeToMore: subscribeToThreads,
-  } = useQuery(FETCH_ALL_THREADS_QUERY);
-  const { subscribeToMore: subscribeToUserRuns } = useQuery(FETCH_ALL_USER_RUNS_QUERY);
+  } = useQuery(FETCH_ALL_THREADS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
+  const { subscribeToMore: subscribeToUserRuns } = useQuery(FETCH_ALL_USER_RUNS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
 
   useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
   useEntityListSubscription(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');

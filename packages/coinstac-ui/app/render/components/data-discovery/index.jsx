@@ -23,6 +23,7 @@ import {
   FETCH_ALL_DATASETS_SUBJECT_GROUPS_QUERY,
 } from '../../state/graphql/functions';
 
+
 const DATASET_MODALITY_OPTIONS = ['sMRI', 'fMRI', 'dMRI', 'pMRI'];
 
 function DataDiscovery() {
@@ -37,7 +38,9 @@ function DataDiscovery() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [datasetToDelete, setDatasetToDelete] = useState(null);
 
-  const { data: subjectGroupsData } = useQuery(FETCH_ALL_DATASETS_SUBJECT_GROUPS_QUERY);
+  const { data: subjectGroupsData } = useQuery(FETCH_ALL_DATASETS_SUBJECT_GROUPS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const [searchDatasets, { data, loading }] = useLazyQuery(SEARCH_DATASETS_QUERY, { fetchPolicy: 'cache-and-network' });
   const [deleteRemoteDataset] = useMutation(DELETE_DATASET_MUTATION);
 

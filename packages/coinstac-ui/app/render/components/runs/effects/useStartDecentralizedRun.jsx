@@ -17,7 +17,8 @@ function useStartDecentralizedRun() {
 
   const auth = useSelector(state => state.auth);
 
-  const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
+  const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY,
+    { onError: (error) => { console.error({ error }); } });
   const { data: runSubData } = useSubscription(RUN_STARTED_SUBSCRIPTION, {
     variables: {
       userId: auth.user.id,
