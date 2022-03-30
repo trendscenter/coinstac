@@ -137,6 +137,21 @@ const mutations = {
       }
     }
   `,
+  deleteUser: `
+    {
+      deleteUser(userId: $userId)
+    }
+  `,
+  stopRun: `
+    {
+      stopRun(runId: $runId)
+    }
+  `,
+  deleteRun: `
+    {
+      deleteRun(runId: $runId)
+    }
+  `,
 };
 
 module.exports = mutations;

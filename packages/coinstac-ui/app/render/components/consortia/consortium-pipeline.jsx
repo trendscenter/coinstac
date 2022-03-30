@@ -49,7 +49,7 @@ const styles = theme => ({
 });
 
 function ConsortiumPipeline({
-  consortium, owner, classes, pipelines, hideTutorial, tutorialChange,
+  consortium, owner, classes, pipelines, isTutorialHidden, tutorialChange,
   saveActivePipeline,
 }) {
   const [activePipeline, setActivePipeline] = useState(null);
@@ -192,7 +192,7 @@ function ConsortiumPipeline({
           </div>
         </div>
       )}
-      {!hideTutorial && (
+      {!isTutorialHidden && (
         <Joyride
           steps={STEPS.consortiumPipeline}
           disableScrollParentFix
@@ -208,7 +208,7 @@ ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
+  isTutorialHidden: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   tutorialChange: PropTypes.func.isRequired,
 };

@@ -29,28 +29,22 @@ export function pipelineNeedsDataMapping(pipeline) {
   return needsDataMapping;
 }
 
-export function reducePipelineInputs(pipeline) {
+export function getAllUnfulfilledPipelineInputs(pipeline) {
   if (!pipeline || !pipeline.steps) {
     return [];
   }
 
-  const reducedInputs = pipeline.steps.reduce((inputs, step) => {
-    const inputsArray = [...inputs];
-
+  const reducedInputs = pipeline.steps.reduce((unfulfilledInputs, step) => {
     Object.keys(step.inputMap).forEach((inputMapKey) => {
       if (step.inputMap[inputMapKey].fulfilled) {
         return;
       }
 
-      if (Array.isArray(step.inputMap[inputMapKey].value)) {
-        inputsArray.push(...step.inputMap[inputMapKey].value);
-      } else {
-        inputsArray.push(step.inputMap[inputMapKey].value);
-      }
+      unfulfilledInputs[inputMapKey] = step.inputMap[inputMapKey];
     });
 
-    return inputsArray;
-  }, []);
+    return unfulfilledInputs;
+  }, {});
 
   return reducedInputs;
 }

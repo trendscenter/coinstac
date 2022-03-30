@@ -106,6 +106,7 @@ const typeDefs = `
     type: String
     sharedUsers: [ID]
     status: String!
+    delete: Boolean
   }
 
   type User {
@@ -170,6 +171,10 @@ const typeDefs = `
     owner: JSON
   }
 
+  type DebugString {
+    info: String
+  }
+
   input IssueInput {
     title: String
     body: String
@@ -214,6 +219,9 @@ const typeDefs = `
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
     saveConsortiumActiveMembers(consortiumId: ID!, members: JSON): Consortium
+    deleteUser(userId: ID!): String
+    stopRun(runId: ID): JSON
+    deleteRun(runId: ID): JSON
   }
 
   # This is a description of the queries
@@ -240,6 +248,7 @@ const typeDefs = `
     fetchAllDatasetsSubjectGroups: [String]
     searchDatasets(searchString: String, subjectGroups: [String], modality: String): [Dataset]
     fetchDataset(id: ID!): Dataset
+    getPipelines: DebugString
   }
 
   type Subscription {

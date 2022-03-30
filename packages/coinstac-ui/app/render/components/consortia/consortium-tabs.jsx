@@ -217,7 +217,7 @@ class ConsortiumTabs extends Component {
       tutorialChange,
     } = this.props;
 
-    const { user, hideTutorial } = auth;
+    const { user, isTutorialHidden } = auth;
     const {
       selectedTabIndex,
       consortium,
@@ -240,7 +240,7 @@ class ConsortiumTabs extends Component {
             {title}
           </Typography>
         </div>
-        {!hideTutorial && isEditingConsortium && (
+        {!isTutorialHidden && isEditingConsortium && (
           <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
         )}
         <Tabs
@@ -267,7 +267,7 @@ class ConsortiumTabs extends Component {
               user={user}
               users={users}
               savingStatus={savingStatus}
-              hideTutorial={hideTutorial || isEditingConsortium}
+              isTutorialHidden={isTutorialHidden || isEditingConsortium}
               tutorialChange={tutorialChange}
             />
           )
@@ -279,7 +279,7 @@ class ConsortiumTabs extends Component {
               consortium={consortium}
               owner={isOwner}
               pipelines={pipelines}
-              hideTutorial={hideTutorial}
+              isTutorialHidden={isTutorialHidden}
               tutorialChange={tutorialChange}
             />
           )

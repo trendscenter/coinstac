@@ -98,6 +98,7 @@ const sharedFields = {
     type
     sharedUsers
     status
+    delete
   `,
   userMetadata: `
     id
@@ -117,6 +118,7 @@ const sharedFields = {
     username
     photo
     photoID
+    delete
   `,
   resultFields: `
     id

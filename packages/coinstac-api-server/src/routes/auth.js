@@ -112,7 +112,7 @@ module.exports = [
       handler: (req, h) => {
         eventEmitter.emit(USER_LOGOUT, req.payload.username);
 
-        return h.response().code(200);
+        return h.response({ username: req.payload.username }).code(200);
       },
     },
   },
