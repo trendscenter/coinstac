@@ -37,8 +37,8 @@ export const saveDataMapping = applyAsyncLoading(
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
-      let filesArray = [];
-      let directoryArray = [];
+      const filesArray = [];
+      const directoryArray = [];
       const inputMap = {};
       let baseDirectory = null;
 

@@ -1,3 +1,4 @@
+/* eslint-disable */
 const database = require('../index');
 
 const description = '';
@@ -17,5 +18,5 @@ async function down() {
 module.exports = {
   description,
   up,
-  down
+  down,
 };

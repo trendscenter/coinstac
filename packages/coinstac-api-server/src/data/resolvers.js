@@ -345,8 +345,8 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      const owningConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
-      const consortiaIds = owningConsortia.map(consortium => String(consortium._id));
+      const memberConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
       let res = Object.values(pipelines);
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {
@@ -531,6 +531,13 @@ const resolvers = {
 
       return transformToClient(run);
     },
+    getPipelines: async () => {
+      const result = await axios.get(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
+      );
+
+      return { info: JSON.stringify(result.data) };
+    }
   },
   Mutation: {
     /**
@@ -1605,6 +1612,37 @@ const resolvers = {
       await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
 
       eventEmitter.emit(USER_CHANGED, user);
+    },
+    stopRun: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to stop this run')
+      }
+
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
+      );
+    },
+    deleteRun: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const runs = await db.collection('runs').find({
+        _id: ObjectID(args.runId)
+      }).toArray();
+
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          _id: ObjectID(args.runId)
+        });
+
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) { }
+        });
+      }
     }
   },
   Subscription: {

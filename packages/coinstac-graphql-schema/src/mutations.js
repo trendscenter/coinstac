@@ -138,9 +138,19 @@ const mutations = {
     }
   `,
   deleteUser: `
-  {
-    deleteUser(userId: $userId)
-  }
+    {
+      deleteUser(userId: $userId)
+    }
+  `,
+  stopRun: `
+    {
+      stopRun(runId: $runId)
+    }
+  `,
+  deleteRun: `
+    {
+      deleteRun(runId: $runId)
+    }
   `,
 };
 

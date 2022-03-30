@@ -94,6 +94,19 @@ const saveResults = (runId, results) => axios({
 module.exports = manager.then((remotePipelineManager) => {
   return [
     {
+      method: 'GET',
+      path: '/getPipelines',
+      config: {
+        handler: async (req, h) => {
+          // get the info
+          const pipelineInfo = await remotePipelineManager.getPipelines();
+          // return the info
+
+          return h.response(pipelineInfo).code(200);
+        },
+      },
+    },
+    {
       method: 'POST',
       path: '/startPipeline',
       config: {

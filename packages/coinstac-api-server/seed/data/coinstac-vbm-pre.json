@@ -30,6 +30,7 @@
         "label": "Covariates",
         "type": "csv",
         "items": ["boolean", "number", "string"],
+        "extensions": ["csv", "txt"],
         "order": 1,
         "source": "member"
       },

@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, {
+  useEffect, useMemo, useRef, useState,
+} from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
@@ -12,6 +14,7 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
+import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -25,6 +28,7 @@ import {
   THREAD_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import DashboardNav from './dashboard-nav';
+import DashboardTutorialModal from './dashboard-tutorial';
 import DockerStatus from './docker-status';
 
 import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
@@ -51,7 +55,10 @@ function Dashboard({
   maps,
   router,
   notifyError,
+  hideTutorial,
 }) {
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
+
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
   } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
@@ -109,13 +116,21 @@ function Dashboard({
 
   const canShowBackButton = auth.locationStacks.length > 1;
 
-  function goBack() {
+  const handleGoBack = () => {
     if (!canShowBackButton) return;
 
     const { locationStacks } = auth;
 
     router.push(locationStacks[locationStacks.length - 2]);
-  }
+  };
+
+  const handleCloseModal = (neverShow) => {
+    setShowTutorialModal(false);
+
+    if (neverShow) {
+      toggleTutorial();
+    }
+  };
 
   const childrenWithProps = React.cloneElement(children, {
     computations, consortia, pipelines, runs, threads, dockerStatus,
@@ -129,7 +144,11 @@ function Dashboard({
     <div className="dashboard">
       <div className="dashboard-nav">
         <CoinstacAbbr />
-        <DashboardNav user={auth.user} />
+        <DashboardNav
+          user={auth.user}
+          hideTutorial={hideTutorial}
+          tutorialChange={tutorialChange}
+        />
         <List>
           <ListItem>
             <UserAccountController
@@ -148,7 +167,7 @@ function Dashboard({
             <button
               type="button"
               className="back-button"
-              onClick={goBack}
+              onClick={handleGoBack}
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
@@ -170,6 +189,7 @@ function Dashboard({
         runs={runs}
         consortia={consortia}
       />
+      <DashboardTutorialModal open={showTutorialModal} onClose={handleCloseModal} />
     </div>
   );
 }
@@ -188,6 +208,7 @@ Dashboard.propTypes = {
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
   notifyError: PropTypes.func.isRequired,
+  hideTutorial: PropTypes.bool.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -222,10 +243,17 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
   auth,
   runs: runs.runs,
   maps: maps.consortiumDataMappings,
+  hideTutorial: auth.hideTutorial,
 });
 
+const mapDispatchToProps = {
+  toggleTutorial,
+  tutorialChange,
+  notifyError,
+};
+
 const connectedComponent = connect(
-  mapStateToProps, { notifyError }
+  mapStateToProps, mapDispatchToProps
 )(withRouter(ConnectedDashboard));
 
 export default connectedComponent;

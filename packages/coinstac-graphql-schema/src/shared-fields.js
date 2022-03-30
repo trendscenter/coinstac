@@ -97,6 +97,7 @@ const sharedFields = {
     type
     sharedUsers
     status
+    delete
   `,
   userMetadata: `
     id
