@@ -130,6 +130,7 @@ module.exports = {
           const serviceFunction = (data, mode, command) => {
             let proxR;
             let proxRj;
+            let wsProm;
             const prox = new Promise((resolve, reject) => {
               proxR = resolve;
               proxRj = reject;
@@ -137,7 +138,7 @@ module.exports = {
             switch (version) {
               case 1: {
                 const commandData = command.concat([`${JSON.stringify(data)}`]);
-                new Promise((resolve) => {
+                wsProm = new Promise((resolve) => {
                   let count = 0;
                   const testConnection = () => {
                     const ws = new WS(`ws://${host}:${port}`);
@@ -177,7 +178,7 @@ module.exports = {
                   ws.on('error', (e) => {
                     proxRj(e);
                   });
-                  new Promise((resolve, reject) => {
+                  return new Promise((resolve, reject) => {
                     let stdout = '';
                     let stderr = '';
                     let outfin = false;
@@ -265,7 +266,7 @@ module.exports = {
                 break;
               }
               case 2:
-                new Promise((resolve) => {
+                wsProm = new Promise((resolve) => {
                   let count = 0;
                   const testConnection = () => {
                     const ws = new WS(`ws://${host}:${port}`);
@@ -302,7 +303,7 @@ module.exports = {
                   ws.on('close', (code, reason) => {
                     if (code !== 1000) proxRj(new Error(`Abnormal Docker websocket close: ${reason}`));
                   });
-                  new Promise((resolve, reject) => {
+                  return new Promise((resolve, reject) => {
                     let stdout = '';
                     let stderr = '';
                     let outfin = false;
@@ -373,7 +374,7 @@ module.exports = {
                 proxRj(new Error('Invalid compspecVersion'));
             }
             // promise fullfilled by container output
-            return prox;
+            return wsProm.then(() => prox);
           };
 
           return { service: serviceFunction, container };

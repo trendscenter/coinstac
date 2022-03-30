@@ -28,10 +28,10 @@ async function setupCentral({
     Object.keys(clients).forEach((clientId) => {
       if (opts && opts.success && opts.limitOutputToOwner) {
         if (clientId === opts.owner) {
-          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         } else {
           const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-          mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         }
       } else {
         mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
@@ -228,7 +228,7 @@ async function setupCentral({
         case 'run':
           logger.silly(`############ Received client data: ${id}`);
           if (!activePipelines[runId] || !remoteClients[id]) {
-            return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: new Error('Remote has no such pipeline run') }));
+            return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: 'Remote has no such pipeline run' }));
           }
 
           // normal pipeline operation
@@ -298,10 +298,6 @@ async function setupCentral({
               }
               activePipelines[runId].stateStatus = 'Received client error';
               activePipelines[runId].error = runError;
-              clientPublish(
-                activePipelines[runId].clients,
-                { runId, error: runError }
-              );
               activePipelines[runId].remote.reject(runError);
             }
           }
