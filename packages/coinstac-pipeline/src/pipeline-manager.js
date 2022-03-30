@@ -365,6 +365,12 @@ module.exports = {
           return currentStep.stop(type);
         }
       },
+      getPipelines() {
+        return {
+          remoteClients,
+          activePipelines,
+        };
+      },
       waitingOnForRun,
     };
   },

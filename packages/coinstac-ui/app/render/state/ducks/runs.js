@@ -5,12 +5,14 @@ import { saveLocalRunResult } from './localRunResults';
 import { notifyInfo, notifyError } from './notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../utils/helpers';
 
+
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
 const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
 const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
 const SAVE_RUN_AWAITING_MAP = 'SAVE_RUN_AWAITING_MAP';
 const REMOVE_RUN_AWAITING_MAP = 'REMOVE_RUN_AWAITING_MAP';
+const DELETE_RUN = 'DELETE_RUN';
 
 // Action Creators
 export const clearRuns = () => ({
@@ -81,6 +83,13 @@ export const updateLocalRun = (runId, object) => (dispatch) => {
   }
 };
 
+export const deleteRun = runId => (dispatch) => {
+  dispatch({
+    type: DELETE_RUN,
+    payload: { runId },
+  });
+};
+
 const INITIAL_STATE = {
   localRuns: [],
   remoteRuns: [],
@@ -94,6 +103,7 @@ function runSort(a, b) {
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    // TODO: Handle runs delete in reducer
     case CLEAR_RUNS:
       return INITIAL_STATE;
     case SAVE_LOCAL_RUN: {
@@ -125,6 +135,16 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id === action.payload),
+      };
+    }
+    case DELETE_RUN: {
+      return {
+        ...state,
+        runs: state.runs.filter(run => run.id !== action.payload.runId),
+        runsAwaitingDataMap:
+          state.runsAwaitingDataMap.filter((run) => { return run.id !== action.payload.runId; }),
+        localRuns: state.localRuns.filter(run => run.id !== action.payload.runId),
+        remoteRuns: state.remoteRuns.filter(run => run.id !== action.payload.runId),
       };
     }
     default:
