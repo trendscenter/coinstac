@@ -984,7 +984,7 @@ class Pipeline extends Component {
             </Typography>
           )}
         </ValidatorForm>
-        {!auth.hideTutorial && (
+        {!auth.isTutorialHidden && (
           <Joyride
             steps={STEPS.pipeline}
             continuous
