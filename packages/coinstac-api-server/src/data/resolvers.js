@@ -1580,8 +1580,13 @@ const resolvers = {
       // consortia
       const consortiaOwnersKey = `owners.${args.userId}`
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
+      
+      const soleOwner = ownedConsortia.reduce((sole, con) => {
+        if(Object.keys(con.owners).length <= 1) sole = true;
+        return sole;
+      }, false)
 
-      if (ownedConsortia.length > 0) {
+      if (soleOwner) {
         return Boom.illegal('Cannot delete a user that is the owner of a consortium');
       }
 
@@ -1599,8 +1604,8 @@ const resolvers = {
 
       // remove the user as a member of any consortium
       const consortiaMembersKey = `members.${args.userId}`;
-      const consortiaUpdateResult = await db.collection('consortia').updateMany({}, { $unset: { [consortiaMembersKey]: true } })
-      
+      const consortiaUpdateResult = await db.collection('consortia').updateMany({}, { $unset: { [consortiaMembersKey]: true, [consortiaOwnersKey]: true } })
+
       if (consortiaUpdateResult.modifiedCount > 0) {
         // emit a consortium changed event
         const consortia = await db.collection('consortia').find().toArray();
