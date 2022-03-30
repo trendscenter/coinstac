@@ -439,22 +439,14 @@ const resolvers = {
       return getOnlineUsers();
     },
     fetchAllHeadlessClients: async () => {
-      try {
-        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+      const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
 
-        return transformToClient(headlessClients);
-      } catch (error) {
-        return Boom.internal('Failed to fetch the headless clients list', error);
-      }
+      return transformToClient(headlessClients);
     },
     fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
-      try {
-        const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
+      const headlessClients = await headlessClientsController.fetchAccessibleHeadlessClients(credentials);
 
-        return transformToClient(headlessClients);
-      } catch (error) {
-        return Boom.internal('Failed to fetch the headless clients list', error);
-      }
+      return transformToClient(headlessClients);
     },
     fetchHeadlessClient: async (parent, { id }, { credentials }) => {
       try {
@@ -589,10 +581,6 @@ const resolvers = {
         eventEmitter.emit(COMPUTATION_CHANGED, updatedComputationResult.value);
 
         return transformToClient(updatedComputationResult.value);
-      }
-
-      if (filteredComputations.length > 1) {
-        return Boom.forbidden('Computation with same meta id already exists.');
       }
     },
     /**
@@ -744,7 +732,7 @@ const resolvers = {
         owningConsortium: ObjectID(args.consortiumId)
       }).toArray();
 
-      if (pipelines.length) {
+      if (pipelines.length > 0) {
         await db.collection('pipelines').deleteMany({
           owningConsortium: ObjectID(args.consortiumId)
         });
@@ -1255,6 +1243,8 @@ const resolvers = {
       }).toArray();
 
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+
+      return transformToClient(consortia);
     },
     /**
      * Updated user password
