@@ -15,6 +15,10 @@ const {
 async function startServer() {
   const server = new ApolloServer({
     schema,
+    formatError: (err) => {
+      console.error(err);
+      return err;
+    },
     context: (contextao) => {
       const { connection, request } = contextao;
       if (connection) {
