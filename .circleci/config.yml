@@ -8,6 +8,12 @@ jobs:
       - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
       - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
       - run: cd coinstac && docker-compose up --exit-code-from ui
+      - run:
+        command: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
+        when: always
+      - run:
+        command: df -h
+        when: always
       - store_artifacts:
           path: /home/circleci/screenshots
 workflows:
