@@ -152,6 +152,8 @@ module.exports = manager.then((remotePipelineManager) => {
                     return h.response({ error }).code(500);
                   }
                 });
+            }).catch((error) => {
+              return h.response({ error }).code(500);
             });
         },
       },
