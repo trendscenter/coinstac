@@ -3,6 +3,7 @@ jobs:
   build-and-test:
     machine:
       image: ubuntu-2004:202201-02
+    resource_class: large
     steps:
       - run: mkdir screenshots/
       - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
