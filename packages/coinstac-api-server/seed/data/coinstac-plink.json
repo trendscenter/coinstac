@@ -4,7 +4,8 @@
     "id": "coinstac-plink",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-plink.git",
-    "description": "A way to use plink genetic analysis in COINSTAC."
+    "description": "A way to use plink genetic analysis in COINSTAC.",
+    "compspecVersion": 2
   },
   "computation": {
     "type": "docker",
