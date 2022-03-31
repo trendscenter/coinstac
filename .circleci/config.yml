@@ -3,17 +3,12 @@ jobs:
   build-and-test:
     machine:
       image: ubuntu-2004:202201-02
-      resource_class: large
+    resource_class: large
     steps:
       - run: mkdir screenshots/
       - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
       - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
       - run: cd coinstac && docker-compose up --exit-code-from ui
-<<<<<<< HEAD
-=======
-      - run: cat /sys/fs/cgroup/memory/memory.max_usage_in_bytes
-      - run: df -h
->>>>>>> 758f40ca5c2155403cdc160b26178292cfc706a8
       - store_artifacts:
           path: /home/circleci/screenshots
 workflows:
