@@ -16,7 +16,7 @@ async function startServer() {
   const server = new ApolloServer({
     schema,
     formatError: (err) => {
-      console.error(err);
+      console.error(err?.extensions?.exception?.stacktrace);
       return err;
     },
     context: (contextao) => {

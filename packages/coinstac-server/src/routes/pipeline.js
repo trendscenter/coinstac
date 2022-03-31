@@ -1,4 +1,4 @@
-// const helperFunctions = require('../auth-helpers');
+/* eslint-disable no-console */
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
@@ -149,10 +149,12 @@ module.exports = manager.then((remotePipelineManager) => {
                       });
                     return h.response({}).code(201);
                   } catch (error) {
+                    console.error(error);
                     return h.response({ error }).code(500);
                   }
                 });
             }).catch((error) => {
+              console.error(error);
               return h.response({ error }).code(500);
             });
         },
