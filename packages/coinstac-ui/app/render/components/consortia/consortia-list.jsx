@@ -458,7 +458,7 @@ class ConsortiaList extends Component {
     return async () => {
       const {
         pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-        notifyWarning, notifyError,
+        notifyWarning, notifyError, auth,
       } = this.props;
 
       const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
@@ -478,7 +478,9 @@ class ConsortiaList extends Component {
 
         const localRun = {
           id: uuid(),
-          clients: { ...consortium.members },
+          clients: {
+            [auth.user.id]: auth.user.username,
+          },
           consortiumId: consortium.id,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
