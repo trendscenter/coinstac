@@ -42,7 +42,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
         setConsortiumName(consortium.name);
         setPipelineName(incompleteRun.pipelineSnapshot.name);
 
-        if (run.type === 'decentralized') {
+        if (incompleteRun.type === 'decentralized') {
           getRunStatus({
             variables: { runId: incompleteRun.id },
           });
@@ -68,7 +68,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
 
     const localRun = runs.find(r => r.id === run.id);
 
-    if (localRun.status === 'complete' || localRun.status === 'error' || localRun.status === 'suspended') {
+    if (!localRun || localRun.status === 'complete' || localRun.status === 'error' || localRun.status === 'suspended') {
       setRun(null);
       setConsortiumName(null);
       setPipelineName(null);

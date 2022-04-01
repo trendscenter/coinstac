@@ -14,9 +14,11 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import path from 'path';
 import moment from 'moment';
+
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
 import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
+import { deleteRun } from '../../state/ducks/runs';
 import ListDeleteModal from './list-delete-modal';
 
 const styles = theme => ({
@@ -140,7 +142,7 @@ function getStateWell(runObject, classes) {
 }
 
 function RunItem(props) {
-  const [deleteRun] = useMutation(DELETE_RUN_MUTATION);
+  const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
 
   const handleStopPipeline = () => {
@@ -165,10 +167,20 @@ function RunItem(props) {
     shell.openPath(resultDir);
   };
 
+  const deleteRun = () => {
+    const { runObject, deleteRunLocally } = props;
+
+    if (runObject.type === 'decentralized') {
+      return deleteRunMutation({ variables: { runId: runObject.id } });
+    }
+
+    deleteRunLocally(runObject.id);
+  };
 
   const {
     consortiumName, runObject, classes,
   } = props;
+
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
     clients, pipelineSnapshot, results, error,
@@ -389,9 +401,7 @@ function RunItem(props) {
         </Button>
         <ListDeleteModal
           close={() => { setShowModal(false); }}
-          deleteItem={() => {
-            deleteRun({ variables: { runId: id } });
-          }}
+          deleteItem={deleteRun}
           itemName="run"
           show={showModal}
         />
@@ -405,6 +415,7 @@ RunItem.defaultProps = {
   stopPipeline: () => { },
   suspendPipeline: () => { },
   resumePipeline: () => { },
+  deleteRunLocally: () => {},
   isSuspended: false,
 };
 
@@ -417,6 +428,7 @@ RunItem.propTypes = {
   stopPipeline: PropTypes.func,
   suspendPipeline: PropTypes.func,
   resumePipeline: PropTypes.func,
+  deleteRunLocally: PropTypes.func,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -426,5 +438,7 @@ const mapStateToProps = ({ auth }) => ({
 
 export default compose(
   withStyles(styles),
-  connect(mapStateToProps)
+  connect(mapStateToProps, {
+    deleteRunLocally: deleteRun,
+  })
 )(RunItem);
