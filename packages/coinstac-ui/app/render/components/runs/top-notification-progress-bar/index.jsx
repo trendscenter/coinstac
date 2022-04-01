@@ -42,9 +42,11 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
         setConsortiumName(consortium.name);
         setPipelineName(incompleteRun.pipelineSnapshot.name);
 
-        getRunStatus({
-          variables: { runId: incompleteRun.id },
-        });
+        if (run.type === 'decentralized') {
+          getRunStatus({
+            variables: { runId: incompleteRun.id },
+          });
+        }
       }
     }
   }, [runs, consortia]);
