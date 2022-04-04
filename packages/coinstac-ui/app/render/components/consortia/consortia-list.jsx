@@ -168,6 +168,8 @@ class ConsortiaList extends Component {
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
+    const isPipelineDecentralized = pipeline ? pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1 : false;
+
     const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
@@ -226,7 +228,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && !needsDataMapping) {
+    if ((owner || member) && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -246,7 +248,7 @@ class ConsortiaList extends Component {
             </Button>
           </Tooltip>
         );
-      } else {
+      } else if (owner || !isPipelineDecentralized) {
         actions.push(
           <Button
             key={`${consortium.id}-start-pipeline-button`}
@@ -259,7 +261,7 @@ class ConsortiaList extends Component {
         );
       }
 
-      if (isPipelineRunning) {
+      if (isPipelineRunning && owner) {
         actions.push(
           <Button
             key={`${consortium.id}-stop-pipeline-button`}
