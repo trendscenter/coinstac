@@ -115,7 +115,7 @@ describe('e2e run computation with 2 members', () => {
     await appWindow1.click('button:has-text("Log In")');
 
     try {
-      await appWindow1.click('button:has-text("Never Show Again")');
+      await appWindow1.click('button:has-text("Never Show Again")', { timeout: 5000 });
     } catch {}
 
     // Assert
@@ -130,7 +130,7 @@ describe('e2e run computation with 2 members', () => {
     await appWindow2.click('button:has-text("Log In")');
 
     try {
-      await appWindow2.click('button:has-text("Never Show Again")');
+      await appWindow2.click('button:has-text("Never Show Again")', { timeout: 5000 });
     } catch {}
 
     // Assert

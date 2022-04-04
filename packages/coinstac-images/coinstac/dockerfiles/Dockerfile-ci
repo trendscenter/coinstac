@@ -1,4 +1,4 @@
-FROM node:lts-buster
+FROM node:lts-bullseye
 ARG BRANCH=master
 
 RUN apt-get update && \

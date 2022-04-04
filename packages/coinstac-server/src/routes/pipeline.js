@@ -1,4 +1,4 @@
-// const helperFunctions = require('../auth-helpers');
+/* eslint-disable no-console */
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
@@ -94,6 +94,19 @@ const saveResults = (runId, results) => axios({
 module.exports = manager.then((remotePipelineManager) => {
   return [
     {
+      method: 'GET',
+      path: '/getPipelines',
+      config: {
+        handler: async (req, h) => {
+          // get the info
+          const pipelineInfo = await remotePipelineManager.getPipelines();
+          // return the info
+
+          return h.response(pipelineInfo).code(200);
+        },
+      },
+    },
+    {
       method: 'POST',
       path: '/startPipeline',
       config: {
@@ -136,9 +149,13 @@ module.exports = manager.then((remotePipelineManager) => {
                       });
                     return h.response({}).code(201);
                   } catch (error) {
+                    console.error(error);
                     return h.response({ error }).code(500);
                   }
                 });
+            }).catch((error) => {
+              console.error(error);
+              return h.response({ error }).code(500);
             });
         },
       },

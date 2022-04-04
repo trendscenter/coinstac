@@ -29,7 +29,7 @@ const INITIAL_STATE = {
   appDirectory: localStorage.getItem('appDirectory') || window.config.coinstacHome,
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
-  hideTutorial: localStorage.getItem('hideTutorial') === 'true',
+  isTutorialHidden: localStorage.getItem('isTutorialHidden') === 'true',
   tutorialSteps: [],
   isApiVersionCompatible: true,
   locationStacks: [],
@@ -246,7 +246,7 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
-  const { locationStacks, hideTutorial, tutorialSteps } = state;
+  const { locationStacks, isTutorialHidden, tutorialSteps } = state;
   const { pathname } = payload || {};
 
   switch (type) {
@@ -270,8 +270,8 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       localStorage.setItem('networkVolume', payload);
       return { ...state, networkVolume: payload };
     case TOGGLE_TUTORIAL:
-      localStorage.setItem('hideTutorial', !hideTutorial);
-      return { ...state, hideTutorial: !hideTutorial };
+      localStorage.setItem('isTutorialHidden', !isTutorialHidden);
+      return { ...state, isTutorialHidden: !isTutorialHidden };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
@@ -307,13 +307,13 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         ? tutorialSteps : [...tutorialSteps, payload.step.id];
 
       if (newTutorialSteps.length >= 15) {
-        localStorage.setItem('hideTutorial', true);
+        localStorage.setItem('isTutorialHidden', true);
       }
 
       return {
         ...state,
         tutorialSteps: newTutorialSteps,
-        hideTutorial: newTutorialSteps.length > 15,
+        isTutorialHidden: newTutorialSteps.length > 15,
       };
     }
     default:
