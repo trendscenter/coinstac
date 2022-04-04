@@ -10,9 +10,17 @@
   "computation": {
     "type": "docker",
     "dockerImage": "coinstacteam/coinstac-plink",
+    "command": [
+      "python",
+      "\/computation\/scripts\/entry.py"
+    ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/coinstac-plink"
+      "dockerImage": "coinstacteam/coinstac-plink",
+      "command": [
+        "python",
+        "\/computation\/scripts\/entry.py"
+      ]
     },
     "input": {
       "command": {
