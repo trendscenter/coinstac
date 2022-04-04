@@ -43,7 +43,7 @@ async function _removeOwnerPermissionFromUsers(headlessClientId, userIds) {
   eventEmitter.emit(USER_CHANGED, users);
 }
 
-async function _removeActiveConsortiaMembers(headlessClientId) {
+async function _removeActiveMemberFromConsortia(headlessClientId) {
   const db = database.getDbInstance();
 
   await db.collection('consortia').updateMany(
@@ -176,7 +176,7 @@ async function deleteHeadlessClient(headlessClientId, credentials) {
     const userIds = Object.keys(oldHeadlessClient.owners);
 
     await _removeOwnerPermissionFromUsers(headlessClientId, userIds);
-    await _removeActiveConsortiaMembers(headlessClientId);
+    await _removeActiveMemberFromConsortia(headlessClientId);
   }
 
   return oldHeadlessClient;
