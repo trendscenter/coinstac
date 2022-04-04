@@ -46,11 +46,6 @@ const schemaFields = {
     limitOutputToOwner: Boolean
     headlessMembers: JSON
   `,
-  pipelineControllerFields: `
-    id: ID
-    options: JSON
-    type: String
-  `,
   pipelineStepFields: `
     id: ID!
     inputMap: JSON
