@@ -188,7 +188,7 @@ async function setupOuter({
           runId: pipeline.id,
           error: { message: message.message, error: message.error, stack: message.stack },
           debug: { sent: Date.now() },
-        });
+        }, 1);
         activePipelines[pipeline.id].stashedOutput = undefined;
       }
     } else {
@@ -252,7 +252,7 @@ async function setupOuter({
                   files: [...files],
                   iteration: messageIteration,
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 activePipelines[pipeline.id].stashedOutput = undefined;
                 transferFiles(
                   'post',
@@ -277,7 +277,7 @@ async function setupOuter({
                   runId: pipeline.id,
                   error: { message: e.message, error: e.error, stack: e.stack },
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 throw e;
               });
             }
@@ -303,7 +303,7 @@ async function setupOuter({
             runId: pipeline.id,
             error: e,
             debug: { sent: Date.now() },
-          });
+          }, 1);
           throw e;
         });
     }
@@ -321,6 +321,7 @@ async function setupOuter({
             clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
             connectTimeout: 15 * 1000,
+            clean: false,
           }
         );
         client.on('offline', () => {
@@ -333,10 +334,10 @@ async function setupOuter({
         client.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+          client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+          client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -355,10 +356,10 @@ async function setupOuter({
             client.on('connect', () => {
               clientInit = true;
               logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);
@@ -409,7 +410,7 @@ async function setupOuter({
               publishData('finished', {
                 id: clientId,
                 runId: data.runId,
-              });
+              }, 1);
             }
 
             if (error) {
@@ -418,7 +419,7 @@ async function setupOuter({
                 id: clientId,
                 runId: data.runId,
                 error: { stack: error.stack, message: error.message },
-              });
+              }, 1);
               activePipelines[data.runId].remote.reject(error);
             } else {
               store.put(data.runId, clientId, data.output);

@@ -75,11 +75,7 @@ const sharedFields = {
           display
         }
       }
-      controller {
-        id
-        options
-        type
-      }
+      controller
       inputMap
       dataMeta
     }

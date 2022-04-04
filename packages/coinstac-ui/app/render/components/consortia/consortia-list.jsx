@@ -18,6 +18,8 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
+import { v4 as uuid } from 'uuid';
+
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -42,8 +44,9 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
+import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
@@ -165,6 +168,8 @@ class ConsortiaList extends Component {
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
+    const isPipelineDecentralized = pipeline ? pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1 : false;
+
     const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
@@ -223,7 +228,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && !needsDataMapping) {
+    if ((owner || member) && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -243,20 +248,20 @@ class ConsortiaList extends Component {
             </Button>
           </Tooltip>
         );
-      } else {
+      } else if (owner || !isPipelineDecentralized) {
         actions.push(
           <Button
             key={`${consortium.id}-start-pipeline-button`}
             variant="contained"
             className={`${classes.button} start-pipeline`}
-            onClick={this.startPipeline(consortium.id)}
+            onClick={this.startPipeline(consortium)}
           >
             Start Pipeline
           </Button>
         );
       }
 
-      if (isPipelineRunning) {
+      if (isPipelineRunning && owner) {
         actions.push(
           <Button
             key={`${consortium.id}-stop-pipeline-button`}
@@ -451,15 +456,41 @@ class ConsortiaList extends Component {
     }
   }
 
-  startPipeline(consortiumId) {
+  startPipeline(consortium) {
     return async () => {
       const {
-        createRun, startLoading, finishLoading, notifyError,
+        pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
+        notifyWarning, notifyError, auth,
       } = this.props;
 
-      startLoading('start-pipeline');
+      const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+      if (!pipeline.steps) {
+        return notifyWarning('The selected pipeline has no steps');
+      }
+
+      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
       try {
-        await createRun(consortiumId);
+        startLoading('start-pipeline');
+
+        if (isPipelineDecentralized) {
+          return await saveRemoteDecentralizedRun(consortium.id);
+        }
+
+        const localRun = {
+          id: uuid(),
+          clients: {
+            [auth.user.id]: auth.user.username,
+          },
+          consortiumId: consortium.id,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: 'local',
+          status: 'started',
+        };
+
+        startRun(localRun, consortium);
       } catch ({ graphQLErrors }) {
         notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
       } finally {
@@ -499,6 +530,8 @@ class ConsortiaList extends Component {
     } = this.props;
 
     joinConsortium(consortiumId);
+
+    if (!activePipelineId) return;
 
     const [{ data }] = await client.refetchQueries({
       include: [FETCH_ALL_PIPELINES_QUERY],
@@ -653,7 +686,7 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
-  createRun: PropTypes.func.isRequired,
+  saveRemoteDecentralizedRun: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
@@ -680,7 +713,7 @@ const mapStateToProps = ({ auth, maps }) => ({
 });
 
 const ConsortiaListWithData = compose(
-  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'consortiumId')),
+  graphql(CREATE_RUN_MUTATION, saveDocumentProp('saveRemoteDecentralizedRun', 'consortiumId')),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
@@ -711,9 +744,11 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyWarning,
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      startRun,
       tutorialChange,
       startLoading: start,
       finishLoading: finish,

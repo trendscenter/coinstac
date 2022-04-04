@@ -672,7 +672,7 @@ const resolvers = {
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
-          type: isPipelineDecentralized ? 'decentralized' : 'local',
+          type: 'decentralized',
           status: 'started'
         });
 
@@ -1694,7 +1694,7 @@ const resolvers = {
       // consortia
       const consortiaOwnersKey = `owners.${args.userId}`
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
-      
+
       const soleOwner = ownedConsortia.reduce((sole, con) => {
         if(Object.keys(con.owners).length <= 1) sole = true;
         return sole;
