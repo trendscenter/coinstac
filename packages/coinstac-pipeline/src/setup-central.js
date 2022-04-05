@@ -22,6 +22,7 @@ async function setupCentral({
   store,
   remotePort,
   debugProfileClient,
+  mqttSubChannel,
 }) {
   let mqttServer;
   const clientPublish = (clients, data, opts) => {
@@ -209,11 +210,11 @@ async function setupCentral({
     await new Promise((resolve) => {
       mqttServer.on('connect', () => {
         logger.silly(`mqtt connection up ${clientId}`);
-        mqttServer.subscribe('register', { qos: 1 }, (err) => {
+        mqttServer.subscribe(`${mqttSubChannel}register`, { qos: 1 }, (err) => {
           resolve();
           if (err) logger.error(`Mqtt error: ${err}`);
         });
-        mqttServer.subscribe('run', { qos: 1 }, (err) => {
+        mqttServer.subscribe(`${mqttSubChannel}run`, { qos: 1 }, (err) => {
           if (err) logger.error(`Mqtt error: ${err}`);
         });
       });

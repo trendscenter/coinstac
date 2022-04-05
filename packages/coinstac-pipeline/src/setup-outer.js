@@ -30,6 +30,7 @@ async function setupOuter({
   remoteURL,
   remotePort,
   remotePathname,
+  mqttSubChannel,
 }) {
   const request = remoteProtocol.trim() === 'https:' ? https : http;
   let mqttClient;
@@ -334,10 +335,10 @@ async function setupOuter({
         client.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -356,10 +357,10 @@ async function setupOuter({
             client.on('connect', () => {
               clientInit = true;
               logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);

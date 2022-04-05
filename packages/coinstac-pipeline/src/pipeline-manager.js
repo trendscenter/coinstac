@@ -42,6 +42,7 @@ module.exports = {
     mqttRemoteProtocol = 'mqtt:',
     mqttRemoteWSProtocol = 'ws:',
     mqttRemoteWSPathname = '',
+    mqttSubChannel = '',
     remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
@@ -99,6 +100,7 @@ module.exports = {
         store,
         remotePort,
         debugProfileClient,
+        mqttSubChannel,
       }));
     } else {
       ({
@@ -113,6 +115,7 @@ module.exports = {
         mqttRemoteWSProtocol,
         mqttRemoteWSPort,
         mqttRemoteWSPathname,
+        mqttSubChannel,
         activePipelines,
         debugProfileClient,
         store,
