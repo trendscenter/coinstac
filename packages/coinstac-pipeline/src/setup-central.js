@@ -22,6 +22,7 @@ async function setupCentral({
   store,
   remotePort,
   debugProfileClient,
+  mqttSubChannel,
 }) {
   let mqttServer;
   const clientPublish = (clients, data, opts) => {

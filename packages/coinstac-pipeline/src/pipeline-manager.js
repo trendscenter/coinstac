@@ -100,6 +100,7 @@ module.exports = {
         store,
         remotePort,
         debugProfileClient,
+        mqttSubChannel,
       }));
     } else {
       ({
