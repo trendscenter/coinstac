@@ -81,7 +81,7 @@ class CoinstacClient {
       mqttRemoteWSProtocol: this.options.mqttWSServer.protocol,
       mqttRemoteWSPathname: this.options.mqttWSServer.pathname,
       mqttRemoteURL: this.options.mqttServer.hostname,
-      remoteSubChannel: this.options.mqttServer.subChannel,
+      mqttSubChannel: this.options.mqttServer.subChannel,
     }).then((manager) => {
       this.pipelineManager = manager;
       return manager;
