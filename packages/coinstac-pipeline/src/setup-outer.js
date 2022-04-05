@@ -379,7 +379,7 @@ async function setupOuter({
       const data = JSON.parse(dataBuffer);
       // TODO: step check?
       switch (topic) {
-        case `${clientId}-run`:
+        case `${mqttSubChannel}${clientId}-run`:
           if (!data.error && activePipelines[data.runId]) {
             if (activePipelines[data.runId].pipeline.currentState.currentIteration
               !== data.iteration
@@ -441,7 +441,7 @@ async function setupOuter({
           }
 
           break;
-        case `${clientId}-register`:
+        case `${mqttSubChannel}${clientId}-register`:
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;

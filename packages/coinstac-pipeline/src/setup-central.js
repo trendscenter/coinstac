@@ -227,7 +227,7 @@ async function setupCentral({
         id, runId, output, error, files,
       } = data;
       switch (topic) {
-        case 'run':
+        case `${mqttSubChannel}run`:
           logger.silly(`############ Received client data: ${id}`);
           if (!activePipelines[runId] || !remoteClients[id]) {
             return mqttServer.publish(`${mqttSubChannel}${id}-run`, JSON.stringify({ runId, error: 'Remote has no such pipeline run' }));
@@ -304,7 +304,7 @@ async function setupCentral({
             }
           }
           break;
-        case 'register':
+        case `${mqttSubChannel}register`:
           if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
             remoteClients[id] = Object.assign(
               {
@@ -325,7 +325,7 @@ async function setupCentral({
             logger.silly(`MQTT registered: ${id}`);
           }
           break;
-        case 'finished':
+        case `${mqttSubChannel}finished`:
           if (activePipelines[runId] && activePipelines[runId].clients[id]) {
             if (activePipelines[runId].finalTransferList) {
               activePipelines[runId].finalTransferList.add(id);
