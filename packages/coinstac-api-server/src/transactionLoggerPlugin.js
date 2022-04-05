@@ -1,33 +1,23 @@
-const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 
 const transactionLoggerPlugin = {
   // Fires whenever a GraphQL request is received from a client.
-  async requestDidStart(requestContext) {
-    console.log('request did start');
+  requestDidStart(requestContext) {
+    const { request, context } = requestContext;
+
+    if (context?.credentials?.passwordHash) {
+      context.credentials.passwordHash = undefined;
+    }
+
     const db = database.getDbInstance();
-    // save this log to a transactions collection.
-    // const message = JSON.stringify(requestContext);
 
-    const result = await db.collection('transactions').insertOne({
-      request: requestContext.request,
-      context: requestContext.context,
-      executionStarted: false,
-      errors: [],
+    db.collection('transactions').insertOne({
+      timestamp: Date.now(),
+      request,
+      context,
     });
-    const { insertedId } = result;
-    await db.collection('transactions').findOneAndUpdate({ _id: ObjectID(insertedId) }, { $set: { mymessage: 'just started here' } });
 
-    return {
-      async parsingDidStart(requestContext) {
-        console.log('Parsing started!');
-        await db.collection('transactions').findOneAndUpdate({ _id: ObjectID(insertedId) }, { $set: { mymessage: 'parsing started' } });
-      },
-
-      async validationDidStart(requestContext) {
-        await db.collection('transactions').findOneAndUpdate({ _id: ObjectID(insertedId) }, { $set: { mymessage: 'validation started' } });
-      }
-    };
+    return {};
   },
 };
 
