@@ -171,7 +171,7 @@ async function setupOuter({
 
   const publishData = (key, data, qos = 0) => {
     mqttClient.publish(
-      key,
+      `${mqttSubChannel}${key}`,
       JSON.stringify(data),
       { qos },
       (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
