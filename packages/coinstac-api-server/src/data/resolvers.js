@@ -1193,7 +1193,10 @@ const resolvers = {
 
       if (consortiumChanged) {
         const consortium = await db.collection('consortia').findOne({ activePipelineId: args.pipeline.id });
-        eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+
+        if (consortium) {
+          eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+        }
       }
 
       await db.collection('pipelines').replaceOne({
