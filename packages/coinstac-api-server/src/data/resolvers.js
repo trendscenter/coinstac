@@ -973,9 +973,10 @@ const resolvers = {
       };
 
       if (pipeline.headlessMembers) {
-        Object.keys(pipeline.headlessMembers).forEach((headlessMemberId) => {
-          updateObj.$set[`activeMembers.${headlessMemberId}`] = pipeline.headlessMembers[headlessMemberId];
-        });
+        // Sets only the cloud users as the default active members
+        updateObj.$set.activeMembers = {
+          ...pipeline.headlessMembers
+        };
       }
 
       const result = await db.collection('consortia').findOneAndUpdate(
