@@ -1157,7 +1157,7 @@ const resolvers = {
       let consortiumChanged = false;
       const oldPipeline = await db.collection('pipelines').findOne({ _id: args.pipeline.id });
 
-      if (oldPipeline.headlessMembers) {
+      if (oldPipeline && oldPipeline.headlessMembers) {
         const updateObjOld = {
           $unset: {}
         };
