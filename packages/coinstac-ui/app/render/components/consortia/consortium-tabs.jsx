@@ -45,6 +45,7 @@ class ConsortiumTabs extends Component {
       description: '',
       members: {},
       owners: {},
+      activeMembers: {},
       activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
@@ -61,6 +62,7 @@ class ConsortiumTabs extends Component {
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
+    this.toggleCurrentActiveMember = this.toggleCurrentActiveMember.bind(this);
   }
 
   componentDidMount() {
@@ -205,6 +207,27 @@ class ConsortiumTabs extends Component {
     }));
   }
 
+  toggleCurrentActiveMember(userId, username, active) {
+    this.setState((prevState) => {
+      const newActiveMembers = { ...prevState.consortium.activeMembers };
+
+      if (active) {
+        newActiveMembers[userId] = username;
+      } else {
+        delete newActiveMembers[userId];
+      }
+
+      return {
+        ...prevState,
+        consortium: {
+          ...prevState.consortium,
+          activeMembers: newActiveMembers,
+        },
+      };
+    });
+  }
+
+
   render() {
     const {
       auth,
@@ -288,6 +311,8 @@ class ConsortiumTabs extends Component {
           <ConsortiumMembers
             consortium={consortium}
             pipelines={pipelines}
+            currentActiveMembers={consortium.activeMembers}
+            toggleCurrentActiveMember={this.toggleCurrentActiveMember}
           />
         )}
         {

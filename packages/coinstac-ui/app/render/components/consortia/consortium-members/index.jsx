@@ -19,39 +19,28 @@ import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 import useStyles from './consortium-members.styles';
 
-function ConsortiumMembers({ consortium, pipelines }) {
+function ConsortiumMembers({
+  consortium, pipelines, currentActiveMembers, toggleCurrentActiveMember,
+}) {
   const classes = useStyles();
 
   const [saveActiveMembers, { loading }] = useMutation(SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION);
 
-  const [currentActiveMembers, setCurrentActiveMembers] = useState({});
   const [activePipeline, setActivePipeline] = useState(null);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setCurrentActiveMembers({ ...consortium.activeMembers });
+    if (!consortium.activePipelineId) return;
 
-    if (consortium.activePipelineId) {
-      const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-      setActivePipeline(activePipeline);
-    }
+    const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+    setActivePipeline(activePipeline);
   }, [consortium]);
 
   const toggleActiveMember = (userId, username) => (event) => {
     const active = event.target.checked;
 
-    setCurrentActiveMembers((prev) => {
-      const newActiveMembers = { ...prev };
-
-      if (active) {
-        newActiveMembers[userId] = username;
-      } else {
-        delete newActiveMembers[userId];
-      }
-
-      return newActiveMembers;
-    });
+    toggleCurrentActiveMember(userId, username, active);
   };
 
   function submit(e) {
@@ -153,6 +142,8 @@ function ConsortiumMembers({ consortium, pipelines }) {
 ConsortiumMembers.propTypes = {
   consortium: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
+  currentActiveMembers: PropTypes.object.isRequired,
+  toggleCurrentActiveMember: PropTypes.func.isRequired,
 };
 
 export default ConsortiumMembers;
