@@ -14,6 +14,7 @@ const manager = PipelineManager.create({
   mqttRemoteProtocol: process.env.MQTT_SERVER_PROTOCOL,
   mqttRemoteWSProtocol: process.env.MQTT_SERVER_WS_PROTOCOL,
   mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
+  mqttSubChannel: process.env.MQTT_SUB_CHANNEL,
 });
 const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 

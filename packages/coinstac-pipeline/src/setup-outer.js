@@ -30,6 +30,7 @@ async function setupOuter({
   remoteURL,
   remotePort,
   remotePathname,
+  mqttSubChannel,
 }) {
   const request = remoteProtocol.trim() === 'https:' ? https : http;
   let mqttClient;
@@ -170,7 +171,7 @@ async function setupOuter({
 
   const publishData = (key, data, qos = 0) => {
     mqttClient.publish(
-      key,
+      `${mqttSubChannel}${key}`,
       JSON.stringify(data),
       { qos },
       (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
@@ -334,10 +335,10 @@ async function setupOuter({
         client.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -356,10 +357,10 @@ async function setupOuter({
             client.on('connect', () => {
               clientInit = true;
               logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);
@@ -378,7 +379,7 @@ async function setupOuter({
       const data = JSON.parse(dataBuffer);
       // TODO: step check?
       switch (topic) {
-        case `${clientId}-run`:
+        case `${mqttSubChannel}${clientId}-run`:
           if (!data.error && activePipelines[data.runId]) {
             if (activePipelines[data.runId].pipeline.currentState.currentIteration
               !== data.iteration
@@ -440,7 +441,7 @@ async function setupOuter({
           }
 
           break;
-        case `${clientId}-register`:
+        case `${mqttSubChannel}${clientId}-register`:
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;
