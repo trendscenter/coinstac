@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
+import { useDispatch } from 'react-redux';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -13,6 +14,8 @@ import Typography from '@material-ui/core/Typography';
 import {
   SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION,
 } from '../../../state/graphql/functions';
+import { applyAsyncLoading } from '../../../state/ducks/loading';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 import useStyles from './consortium-members.styles';
 
@@ -23,6 +26,8 @@ function ConsortiumMembers({ consortium, pipelines }) {
 
   const [currentActiveMembers, setCurrentActiveMembers] = useState({});
   const [activePipeline, setActivePipeline] = useState(null);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     setCurrentActiveMembers({ ...consortium.activeMembers });
@@ -52,12 +57,23 @@ function ConsortiumMembers({ consortium, pipelines }) {
   function submit(e) {
     e.preventDefault();
 
-    saveActiveMembers({
-      variables: {
-        consortiumId: consortium.id,
-        members: currentActiveMembers,
-      },
-    });
+    const commit = () => async () => {
+      const { errors } = await saveActiveMembers({
+        variables: {
+          consortiumId: consortium.id,
+          members: currentActiveMembers,
+        },
+      });
+
+      if (errors) {
+        dispatch(notifyError(errors[0].message));
+        return;
+      }
+
+      dispatch(notifySuccess('The active members were updated successfully'));
+    };
+
+    dispatch(applyAsyncLoading(commit)());
   }
 
   return (
