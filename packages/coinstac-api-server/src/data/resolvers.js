@@ -410,7 +410,7 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`clients.${credentials.id}`]: { $exists: true } },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
         }).toArray();
@@ -663,12 +663,13 @@ const resolvers = {
       }
 
       try {
-        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
         const runClients = { ...consortium.activeMembers };
 
         const result = await db.collection('runs').insertOne({
           clients: runClients,
+          observers: {
+            ...consortium.members,
+          },
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
@@ -1854,7 +1855,7 @@ const resolvers = {
     userRunChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
-        (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
+        (payload, variables) => (variables.userId && variables.userId in payload.userRunChanged.observers)
       )
     },
     runStarted: {

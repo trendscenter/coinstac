@@ -288,6 +288,9 @@ async function populateRuns() {
       clients: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
+      observers: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: PIPELINE_IDS[0].toHexString(),
@@ -404,6 +407,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[1],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -700,6 +706,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[2],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],

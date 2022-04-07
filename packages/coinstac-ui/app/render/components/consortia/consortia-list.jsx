@@ -267,7 +267,8 @@ class ConsortiaList extends Component {
             </Button>
           </Tooltip>
         );
-      } else if (owner || !isPipelineDecentralized) {
+      } else if ((owner && Object.keys(consortium.activeMembers).length > 0)
+        || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
         actions.push(
           <Button
             key={`${consortium.id}-start-pipeline-button`}
