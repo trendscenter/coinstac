@@ -816,7 +816,7 @@ const resolvers = {
       }
 
       const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate(
-        { activePipelineId: args.pipelineId },
+        { activePipelineId: pipelineId },
         updateObj,
         { returnDocument: 'after' }
       );

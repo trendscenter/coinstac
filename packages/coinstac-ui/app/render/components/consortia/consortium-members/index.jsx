@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
+import { useDispatch } from 'react-redux';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -13,51 +14,55 @@ import Typography from '@material-ui/core/Typography';
 import {
   SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION,
 } from '../../../state/graphql/functions';
+import { applyAsyncLoading } from '../../../state/ducks/loading';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 import useStyles from './consortium-members.styles';
 
-function ConsortiumMembers({ consortium, pipelines }) {
+function ConsortiumMembers({
+  consortium, pipelines, currentActiveMembers, toggleCurrentActiveMember,
+}) {
   const classes = useStyles();
 
   const [saveActiveMembers, { loading }] = useMutation(SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION);
 
-  const [currentActiveMembers, setCurrentActiveMembers] = useState({});
   const [activePipeline, setActivePipeline] = useState(null);
 
-  useEffect(() => {
-    setCurrentActiveMembers({ ...consortium.activeMembers });
+  const dispatch = useDispatch();
 
-    if (consortium.activePipelineId) {
-      const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-      setActivePipeline(activePipeline);
-    }
+  useEffect(() => {
+    if (!consortium.activePipelineId) return;
+
+    const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+    setActivePipeline(activePipeline);
   }, [consortium]);
 
   const toggleActiveMember = (userId, username) => (event) => {
     const active = event.target.checked;
 
-    setCurrentActiveMembers((prev) => {
-      const newActiveMembers = { ...prev };
-
-      if (active) {
-        newActiveMembers[userId] = username;
-      } else {
-        delete newActiveMembers[userId];
-      }
-
-      return newActiveMembers;
-    });
+    toggleCurrentActiveMember(userId, username, active);
   };
 
   function submit(e) {
     e.preventDefault();
 
-    saveActiveMembers({
-      variables: {
-        consortiumId: consortium.id,
-        members: currentActiveMembers,
-      },
-    });
+    const commit = () => async () => {
+      const { errors } = await saveActiveMembers({
+        variables: {
+          consortiumId: consortium.id,
+          members: currentActiveMembers,
+        },
+      });
+
+      if (errors) {
+        dispatch(notifyError(errors[0].message));
+        return;
+      }
+
+      dispatch(notifySuccess('The active members were updated successfully'));
+    };
+
+    dispatch(applyAsyncLoading(commit)());
   }
 
   return (
@@ -137,6 +142,8 @@ function ConsortiumMembers({ consortium, pipelines }) {
 ConsortiumMembers.propTypes = {
   consortium: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
+  currentActiveMembers: PropTypes.object.isRequired,
+  toggleCurrentActiveMember: PropTypes.func.isRequired,
 };
 
 export default ConsortiumMembers;
