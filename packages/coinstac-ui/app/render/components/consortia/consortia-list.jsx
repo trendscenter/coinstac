@@ -255,30 +255,32 @@ class ConsortiaList extends Component {
       const computations = get(pipeline, 'steps.0.computations', []);
       const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
 
-      if (hasDockerComputation && !dockerStatus) {
-        actions.push(
-          <Tooltip title="Docker is not running" placement="top">
+      if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
+        || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
+        if (hasDockerComputation && !dockerStatus) {
+          actions.push(
+            <Tooltip title="Docker is not running" placement="top">
+              <Button
+                key={`${consortium.id}-start-pipeline-button`}
+                variant="contained"
+                className={classes.buttonDisabled}
+              >
+                Start Pipeline
+              </Button>
+            </Tooltip>
+          );
+        } else {
+          actions.push(
             <Button
               key={`${consortium.id}-start-pipeline-button`}
               variant="contained"
-              className={classes.buttonDisabled}
+              className={`${classes.button} start-pipeline`}
+              onClick={this.startPipeline(consortium)}
             >
               Start Pipeline
             </Button>
-          </Tooltip>
-        );
-      } else if ((owner && Object.keys(consortium.activeMembers).length > 0)
-        || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
-        actions.push(
-          <Button
-            key={`${consortium.id}-start-pipeline-button`}
-            variant="contained"
-            className={`${classes.button} start-pipeline`}
-            onClick={this.startPipeline(consortium)}
-          >
-            Start Pipeline
-          </Button>
-        );
+          );
+        }
       }
 
       if (isPipelineRunning && owner) {
