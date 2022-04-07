@@ -158,6 +158,7 @@ class ConsortiaList extends Component {
 
   getOptions(member, owner, consortium) {
     const {
+      auth,
       maps,
       classes,
       pipelines,
@@ -177,7 +178,9 @@ class ConsortiaList extends Component {
     const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const needsDataMapping = !dataMapIsComplete && pipelineNeedsDataMapping(pipeline);
+    const needsDataMapping = !dataMapIsComplete
+      && pipelineNeedsDataMapping(pipeline)
+      && auth.user.id in consortium.activeMembers;
 
     // Add pipeline text
     text.push(
