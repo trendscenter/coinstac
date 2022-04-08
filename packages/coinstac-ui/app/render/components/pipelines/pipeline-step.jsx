@@ -84,7 +84,27 @@ class PipelineStep extends Component {
   };
 
   componentDidMount() {
-    this.prefillDataFromHeadlessClients();
+    const {
+      compIO, isEdit, updateStep, step,
+    } = this.props;
+
+    if (compIO) {
+      this.groupInputs(compIO);
+
+      if (!isEdit) {
+        const inputMapDefaultValues = this.fillDefaultValues(compIO);
+        const inputMapPrefill = this.prefillDataFromHeadlessClients();
+
+        updateStep({
+          ...step,
+          inputMap: {
+            ...step.inputMap,
+            ...inputMapDefaultValues,
+            ...inputMapPrefill,
+          },
+        });
+      }
+    }
   }
 
   componentDidUpdate() {
