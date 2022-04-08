@@ -1877,7 +1877,7 @@ const resolvers = {
     runWithHeadlessClientStarted: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('runWithHeadlessClientStarted'),
-        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.pipelineSnapshot.headlessMembers)
+        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.clients)
       )
     },
     /**
