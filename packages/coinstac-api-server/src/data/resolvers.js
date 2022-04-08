@@ -105,11 +105,21 @@ async function addUserPermissions(args) {
       [`consortiaStatuses.${doc}`]: 'none',
     };
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: doc }, {
+    const consortiaUpdateObj = {
       $set: {
         [`${role}s.${args.userId}`]: userName,
       },
-    }, { returnOriginal: false });
+    };
+
+    if (role === 'member') {
+      consortiaUpdateObj.$set[`activeMembers.${args.userId}`] = userName;
+    }
+
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+      { _id: doc },
+      consortiaUpdateObj,
+      { returnDocument: 'after' }
+    );
 
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
@@ -166,7 +176,11 @@ async function removeUserPermissions(args) {
       updateObj.$pull = Object.assign(updateObj.$pull || {}, { mappedForRun: args.userId });
     }
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
+    if (args.role === 'member') {
+      updateObj.$unset[`activeMembers.${args.userId}`] = '';
+    }
+
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnDocument: 'after' });
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
 }
@@ -396,7 +410,7 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`clients.${credentials.id}`]: { $exists: true } },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
         }).toArray();
@@ -649,17 +663,13 @@ const resolvers = {
       }
 
       try {
-        let runClients = { ...consortium.members };
-
-        if (pipeline.headlessMembers) {
-          runClients = {
-            ...consortium.members,
-            ...pipeline.headlessMembers
-          }
-        }
+        const runClients = { ...consortium.activeMembers };
 
         const result = await db.collection('runs').insertOne({
           clients: runClients,
+          observers: {
+            ...consortium.members,
+          },
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
@@ -796,13 +806,21 @@ const resolvers = {
         id: deletePipelineResult.value._id
       });
 
-      const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate({
-        activePipelineId: args.pipelineId
-      }, {
+      const updateObj = {
         $unset: { activePipelineId: '' }
-      }, {
-        returnOriginal: false
-      });
+      };
+
+      if (pipeline.headlessMembers) {
+        Object.keys(pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
+        });
+      }
+
+      const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate(
+        { activePipelineId: pipelineId },
+        updateObj,
+        { returnDocument: 'after' }
+      );
 
       if (updateConsortiumResult.value) {
         eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
@@ -925,16 +943,48 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const result = await db.collection('consortia').findOneAndUpdate({
-        _id: ObjectID(args.consortiumId)
-      }, {
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+
+      if (consortium.activePipelineId) {
+        const oldPipeline = await db.collection('pipelines').findOne({ _id: consortium.activePipelineId });
+
+        if (oldPipeline && oldPipeline.headlessMembers) {
+          const oldPipelineUpdateObj = {
+            $unset: {},
+          };
+
+          Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
+            oldPipelineUpdateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
+          });
+
+          await db.collection('consortia').updateOne(
+            { _id: ObjectID(args.consortiumId) },
+            oldPipelineUpdateObj
+          );
+        }
+      }
+
+      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
+
+      const updateObj = {
         $set: {
           activePipelineId: ObjectID(args.activePipelineId),
           mappedForRun: []
         }
-      }, {
-        returnOriginal: false
-      });
+      };
+
+      if (pipeline.headlessMembers) {
+        // Sets only the cloud users as the default active members
+        updateObj.$set.activeMembers = {
+          ...pipeline.headlessMembers
+        };
+      }
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(args.consortiumId) },
+        updateObj,
+        { returnOriginal: false }
+      );
 
       eventEmitter.emit(CONSORTIUM_PIPELINE_CHANGED, result.value);
 
@@ -960,7 +1010,10 @@ const resolvers = {
 
       const consortiumData = Object.assign(
         { ...args.consortium },
-        !isUpdate && { createDate: Date.now() },
+        !isUpdate && {
+          createDate: Date.now(),
+          activeMembers: args.consortium.members,
+        },
       );
 
       if (!isUpdate) {
@@ -997,6 +1050,39 @@ const resolvers = {
       }
 
       return transformToClient(consortium);
+    },
+    /**
+     * Saves the active members list for a consortium
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {object} args.consortiumId consortium id
+     * @param {object} args.members JSON with member list
+     * @return {object} New/updated consortium object
+     */
+    saveConsortiumActiveMembers: async (parent, args, { credentials }) => {
+      const { permissions } = credentials;
+
+      if (!permissions.consortia[args.consortiumId].includes('owner')) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const consortiumId = ObjectID(args.consortiumId);
+
+      const db = database.getDbInstance();
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: consortiumId },
+        {
+          $set: {
+            activeMembers: args.members,
+          }
+        },
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves run error
@@ -1068,6 +1154,51 @@ const resolvers = {
             step.computations = step.computations.map(compId => ObjectID(compId));
           }
         });
+      }
+
+      let consortiumChanged = false;
+      const oldPipeline = await db.collection('pipelines').findOne({ _id: args.pipeline.id });
+
+      if (oldPipeline && oldPipeline.headlessMembers) {
+        const updateObjOld = {
+          $unset: {}
+        };
+
+        Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObjOld.$unset[`activeMembers.${headlessMemberId}`] = '';
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObjOld
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (args.pipeline.headlessMembers) {
+        const updateObj = {
+          $set: {}
+        };
+
+        Object.keys(args.pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$set[`activeMembers.${headlessMemberId}`] = args.pipeline.headlessMembers[headlessMemberId];
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObj
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (consortiumChanged) {
+        const consortium = await db.collection('consortia').findOne({ activePipelineId: args.pipeline.id });
+
+        if (consortium) {
+          eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+        }
       }
 
       await db.collection('pipelines').replaceOne({
@@ -1724,7 +1855,7 @@ const resolvers = {
     userRunChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
-        (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
+        (payload, variables) => (variables.userId && variables.userId in payload.userRunChanged.observers)
       )
     },
     runStarted: {

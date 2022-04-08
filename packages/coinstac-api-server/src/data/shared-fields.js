@@ -8,6 +8,7 @@ const schemaFields = {
     tags: [String]
     owners: JSON
     members: JSON
+    activeMembers: JSON
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean

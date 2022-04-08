@@ -88,31 +88,32 @@ function getStateWell(runObject, classes) {
   const OuterNodeRunObject = runObject.localPipelineState;
   const CentralNodeRunObject = runObject.remotePipelineState;
 
-
   return (
     <div className={classes.runStateInnerContainer}>
+      {OuterNodeRunObject && (
+        <React.Fragment>
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Pipeline Step:</Typography>
+            <Typography className={classes.value}>
+              {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
+            </Typography>
+          </div>
 
-      <div className={classes.runStateKeyValueContainer}>
-        <Typography className={classes.label}>Pipeline Step:</Typography>
-        <Typography className={classes.value}>
-          {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
-        </Typography>
-      </div>
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Iteration:</Typography>
+            <Typography className={classes.value}>
+              {OuterNodeRunObject.currentIteration}
+            </Typography>
+          </div>
 
-      <div className={classes.runStateKeyValueContainer}>
-        <Typography className={classes.label}>Iteration:</Typography>
-        <Typography className={classes.value}>
-          {OuterNodeRunObject.currentIteration}
-        </Typography>
-      </div>
-
-      <div className={classes.runStateKeyValueContainer}>
-        <Typography className={classes.label}>Local Node Status:</Typography>
-        <Typography className={classes.value}>
-          {OuterNodeRunObject.controllerState}
-        </Typography>
-      </div>
-
+          <div className={classes.runStateKeyValueContainer}>
+            <Typography className={classes.label}>Your Pipeline Status:</Typography>
+            <Typography className={classes.value}>
+              {OuterNodeRunObject.controllerState}
+            </Typography>
+          </div>
+        </React.Fragment>
+      )}
       {CentralNodeRunObject
         && (
           <div className={classes.runStateKeyValueContainer}>
@@ -299,7 +300,7 @@ function RunItem(props) {
         }
         <div className={classes.runStateContainer}>
           {
-            localPipelineState && status === 'started'
+            (localPipelineState || remotePipelineState) && status === 'started'
             && getStateWell(runObject, classes)
           }
         </div>

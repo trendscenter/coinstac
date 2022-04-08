@@ -6,6 +6,7 @@
   "bin": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "start-test": "HEADLESS_CLIENT_CONFIG=./test-conf.json && node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

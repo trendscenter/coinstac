@@ -124,7 +124,7 @@ class ConsortiumAbout extends Component {
     });
 
     removeUserRole(user.id, 'consortia', consortium.id, 'member', 'data').then(({ data }) => {
-      updateConsortium({ param: 'members', value: omit(consortium.owners, [data.removeUserRole.id]) });
+      updateConsortium({ param: 'members', value: omit(consortium.members, [data.removeUserRole.id]) });
     });
   }
 
