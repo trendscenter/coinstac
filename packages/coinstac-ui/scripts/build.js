@@ -26,20 +26,8 @@ fs.rename('./config/local.json', './config/local-build-copy.json')
     }
   })
   .then(() => {
-    if (NODE_ENV === 'local') {
-      console.log('Creating development build');
-      return fs.copyFile('./config/local-example.json', './config/local.json');
-    }
-
-    if (NODE_ENV === 'development') {
-      console.log('Creating development build');
-      return fs.copyFile('./config/local-development.json', './config/local.json');
-    }
-
-    if (NODE_ENV === 'production') {
-      console.log('Creating production build');
-      return fs.copyFile('./config/local-production.json', './config/local.json');
-    }
+    console.log(`Creating ${process.env.LOCAL_CONFIG || NODE_ENV} build`);
+    return fs.copyFile(`./config/local-${process.env.LOCAL_CONFIG || NODE_ENV}.json`, './config/local.json');
   })
   .then(() => electronBuilder.build(Object.assign({}, buildConfig, { publish: DEPLOY ? 'always' : 'never' })))
   .then(() => fs.rename('./config/local-build-copy.json', './config/local.json'))
