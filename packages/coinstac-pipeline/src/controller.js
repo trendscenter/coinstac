@@ -27,17 +27,19 @@ module.exports = {
     computations,
     inputMap,
   },
-  runId,
-  {
-    clientId,
-    imageDirectory,
-    alternateInputDirectory,
-    operatingDirectory,
-    owner,
-    mode,
-    saveState,
-  }) {
+    runId,
+    {
+      clientId,
+      imageDirectory,
+      alternateInputDirectory,
+      operatingDirectory,
+      owner,
+      mode,
+      saveState,
+    }) {
     const store = Store.init(clientId);
+    let waterfallQueue;
+    let remoteHandler1;
     let computationCache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
@@ -112,8 +114,26 @@ module.exports = {
       stop: (type) => {
         return new Promise((resolve, reject) => {
           if (stopTypes[type]) {
-            // decorate stop type for interaction with the waterfall
-            return setStateProp('stopSignal', Object.assign({ resolve, reject }, { type: stopTypes[type] }));
+            const lastInput = store.getAndRemove(runId, clientId);
+            waterfallQueue = [];
+            if (type === 'user') {
+              const iterationError = new Error(stopTypes.user);
+              store.put(runId, clientId, iterationError);
+              return remoteHandler1({
+                success: false,
+                iteration: controllerState.iteration,
+                callback: (error, output) => {
+                  if (error) {
+                    pipelineErrorCallback(error);
+                    return resolve(lastInput);
+                  }
+                  return reject(output);
+                },
+              });
+            } else if (type === 'suspend') {
+              pipelineErrorCallback(stopTypes.suspend);
+              return resolve(lastInput);
+            }
           }
           throw new Error('Invalid stop type');
         });
@@ -126,6 +146,7 @@ module.exports = {
        * @return {Promise}                resolves to the final computation output
        */
       start: (input, remoteHandler) => {
+        remoteHandler1 = remoteHandler;
         setStateProp('state', 'Started');
         controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
         if (!controllerState.initialized) {
@@ -310,26 +331,26 @@ module.exports = {
          * @return {Object}                computation's result
          */
         const waterfall = (initialInput, done, err) => {
-          const queue = [];
+          waterfallQueue = [];
 
           setStateProp('state', 'running');
-          queue.push(iterateComp);
-          queue.push(done);
+          waterfallQueue.push(iterateComp);
+          waterfallQueue.push(done);
 
           trampoline(() => {
-            return queue.length
+            return waterfallQueue.length
               ? function _cb(...args) {
                 if (controllerState.stopSignal) {
-                  const iterationError = new Error(controllerState.stopSignal.type);
-                  controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
-                  err(iterationError);
+                  // const iterationError = new Error(controllerState.stopSignal.type);
+                  // controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
+                  // err(iterationError);
                 } else {
-                  const fn = queue.shift();
+                  const fn = waterfallQueue.shift();
                   controllerState.currentBoxCommand = activeControlBox
                     .preIteration(controllerState);
                   if ((controllerState.mode === 'local' && controllerState.iteration === 0)
-                  || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
-                  // add initial input to first iteration
+                    || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
+                    // add initial input to first iteration
                     args.unshift(initialInput);
                   } else if (args.length === 0) {
                     // no passed back input
@@ -338,10 +359,10 @@ module.exports = {
                   }
 
                   if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
-                    const lastCallback = queue.pop();
-                    queue.push(iterateComp);
+                    const lastCallback = waterfallQueue.pop();
+                    waterfallQueue.push(iterateComp);
                     // done cb
-                    queue.push(lastCallback);
+                    waterfallQueue.push(lastCallback);
                   }
 
                   // necessary if this function call turns out synchronous
@@ -376,9 +397,9 @@ module.exports = {
 
         return p;
       },
-      halt() {},
-      pause() {},
-      resume() {},
+      halt() { },
+      pause() { },
+      resume() { },
       // TODO: save() {}?,
     };
   },
