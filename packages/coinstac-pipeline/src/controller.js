@@ -27,16 +27,16 @@ module.exports = {
     computations,
     inputMap,
   },
-    runId,
-    {
-      clientId,
-      imageDirectory,
-      alternateInputDirectory,
-      operatingDirectory,
-      owner,
-      mode,
-      saveState,
-    }) {
+  runId,
+  {
+    clientId,
+    imageDirectory,
+    alternateInputDirectory,
+    operatingDirectory,
+    owner,
+    mode,
+    saveState,
+  }) {
     const store = Store.init(clientId);
     let waterfallQueue;
     let remoteHandler1;
@@ -130,7 +130,7 @@ module.exports = {
                   return reject(output);
                 },
               });
-            } else if (type === 'suspend') {
+            } if (type === 'suspend') {
               pipelineErrorCallback(stopTypes.suspend);
               return resolve(lastInput);
             }
