@@ -210,6 +210,7 @@ const typeDefs = `
     generateHeadlessClientApiKey(headlessClientId: ID!): String
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
+    saveConsortiumActiveMembers(consortiumId: ID!, members: JSON): Consortium
     deleteUser(userId: ID!): String
     stopRun(runId: ID): JSON
     deleteRun(runId: ID): JSON

@@ -72,6 +72,11 @@ function RemoteRunsListener({
 
     const localRun = localRuns.find(r => r.id === remoteRunChanged.id);
 
+    // Current user is not part of the run, but is part of the consortium
+    if (!localRun) {
+      saveRunLocally(remoteRunChanged);
+    }
+
     if (!runIsFinished(remoteRunChanged)) {
       updateRunLocally(remoteRunChanged.id, {
         remotePipelineState: remoteRunChanged.remotePipelineState,

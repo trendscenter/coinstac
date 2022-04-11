@@ -35,6 +35,7 @@ const sharedFields = {
     tags
     members
     owners
+    activeMembers
     isPrivate
     mappedForRun
     createDate

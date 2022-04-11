@@ -10,6 +10,7 @@ import {
   get, orderBy, some, flowRight as compose,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
+import Grid from '@material-ui/core/Grid';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
@@ -72,6 +73,9 @@ const styles = theme => ({
   contentContainer: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
+  },
+  usersContainer: {
+    overflowX: 'auto',
   },
   subtitle: {
     marginTop: theme.spacing(2),
@@ -154,6 +158,7 @@ class ConsortiaList extends Component {
 
   getOptions(member, owner, consortium) {
     const {
+      auth,
       maps,
       classes,
       pipelines,
@@ -173,7 +178,9 @@ class ConsortiaList extends Component {
     const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const needsDataMapping = !dataMapIsComplete && pipelineNeedsDataMapping(pipeline);
+    const needsDataMapping = !dataMapIsComplete
+      && pipelineNeedsDataMapping(pipeline)
+      && auth.user.id in consortium.activeMembers;
 
     // Add pipeline text
     text.push(
@@ -220,12 +227,24 @@ class ConsortiaList extends Component {
       ));
 
     text.push(
-      <div key="avatar-wrapper" className={classes.contentContainer}>
-        <Typography className={classes.label}>
-          Owner(s)/Members:
-        </Typography>
-        {avatars}
-      </div>
+      <Grid key="avatar-wrapper" container spacing={2}>
+        <Grid item xs={6} className={classes.usersContainer}>
+          <Typography className={classes.label}>
+            Owner(s)/Members:
+          </Typography>
+          {avatars}
+        </Grid>
+        <Grid item xs={6} className={classes.usersContainer}>
+          <Typography className={classes.label}>
+            Active Members:
+          </Typography>
+          <Typography variant="body1">
+            {Object.keys(consortium.activeMembers)
+              .map(memberId => consortium.activeMembers[memberId])
+              .join(', ')}
+          </Typography>
+        </Grid>
+      </Grid>
     );
 
     if ((owner || member) && consortium.activePipelineId && !needsDataMapping) {
@@ -236,29 +255,32 @@ class ConsortiaList extends Component {
       const computations = get(pipeline, 'steps.0.computations', []);
       const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
 
-      if (hasDockerComputation && !dockerStatus) {
-        actions.push(
-          <Tooltip title="Docker is not running" placement="top">
+      if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
+        || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
+        if (hasDockerComputation && !dockerStatus) {
+          actions.push(
+            <Tooltip title="Docker is not running" placement="top">
+              <Button
+                key={`${consortium.id}-start-pipeline-button`}
+                variant="contained"
+                className={classes.buttonDisabled}
+              >
+                Start Pipeline
+              </Button>
+            </Tooltip>
+          );
+        } else {
+          actions.push(
             <Button
               key={`${consortium.id}-start-pipeline-button`}
               variant="contained"
-              className={classes.buttonDisabled}
+              className={`${classes.button} start-pipeline`}
+              onClick={this.startPipeline(consortium)}
             >
               Start Pipeline
             </Button>
-          </Tooltip>
-        );
-      } else if (owner || !isPipelineDecentralized) {
-        actions.push(
-          <Button
-            key={`${consortium.id}-start-pipeline-button`}
-            variant="contained"
-            className={`${classes.button} start-pipeline`}
-            onClick={this.startPipeline(consortium)}
-          >
-            Start Pipeline
-          </Button>
-        );
+          );
+        }
       }
 
       if (isPipelineRunning && owner) {
@@ -320,6 +342,21 @@ class ConsortiaList extends Component {
           className={classes.button}
         >
           Map Local Data
+        </Button>
+      );
+    }
+
+    if (owner) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-set-active-members-button`}
+          variant="contained"
+          color="default"
+          className={classes.button}
+          component={Link}
+          to={`dashboard/consortia/${consortium.id}/2`}
+        >
+          Set Active Members
         </Button>
       );
     }

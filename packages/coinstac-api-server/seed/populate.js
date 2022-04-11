@@ -150,6 +150,9 @@ async function populateConsortia() {
       members: {
         [USER_IDS[5]]: 'author',
       },
+      activeMembers: {
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551333489519,
     },
@@ -162,6 +165,10 @@ async function populateConsortia() {
         [USER_IDS[0]]: 'test1',
       },
       members: {
+        [USER_IDS[0]]: 'test1',
+        [USER_IDS[5]]: 'author',
+      },
+      activeMembers: {
         [USER_IDS[0]]: 'test1',
         [USER_IDS[5]]: 'author',
       },
@@ -281,6 +288,9 @@ async function populateRuns() {
       clients: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
+      observers: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: PIPELINE_IDS[0].toHexString(),
@@ -397,6 +407,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[1],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -693,6 +706,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[2],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
