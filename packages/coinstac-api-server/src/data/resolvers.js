@@ -532,7 +532,8 @@ const resolvers = {
       }
 
       if (!run) {
-        return Boom.notFound('Run not found');
+        // return Boom.notFound('Run not found');
+        return null
       }
 
       return transformToClient(run);
@@ -1877,7 +1878,7 @@ const resolvers = {
     runWithHeadlessClientStarted: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('runWithHeadlessClientStarted'),
-        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.clients)
+        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.pipelineSnapshot.headlessMembers)
       )
     },
     /**
