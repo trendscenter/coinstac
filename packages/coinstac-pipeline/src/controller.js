@@ -115,7 +115,7 @@ module.exports = {
         return new Promise((resolve, reject) => {
           if (stopTypes[type]) {
             const lastInput = store.getAndRemove(runId, clientId);
-            waterfallQueue = [];
+            // waterfallQueue = [];
             if (type === 'user') {
               const iterationError = new Error(stopTypes.user);
               store.put(runId, clientId, iterationError);

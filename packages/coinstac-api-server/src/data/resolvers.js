@@ -532,7 +532,8 @@ const resolvers = {
       }
 
       if (!run) {
-        return Boom.notFound('Run not found');
+        // return Boom.notFound('Run not found');
+        return null
       }
 
       return transformToClient(run);
