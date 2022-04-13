@@ -84,6 +84,7 @@ const sharedFields = {
   runFields: `
     id
     clients
+    observers
     consortiumId
     startDate
     endDate
