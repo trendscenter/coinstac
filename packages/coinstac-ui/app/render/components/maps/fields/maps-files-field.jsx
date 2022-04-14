@@ -72,7 +72,7 @@ function MapsFilesField({
         filterName="csv,txt,gz,nii files"
         extensions={fieldDescription.extensions}
         onChange={files => appendSelectedFiles(files)}
-        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+        selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
         deleteItem={fileIndex => deleteFile(fileIndex)}
       />
     </div>

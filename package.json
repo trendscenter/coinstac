@@ -41,7 +41,7 @@
     "start": "concurrently \"npm run api-server\" \"sleep 6 && npm run server\" \"npm run watch\" ",
     "switch:prod": "cp packages/coinstac-ui/config/local-production.json packages/coinstac-ui/config/local.json",
     "switch:dev": "cp packages/coinstac-ui/config/local-development.json packages/coinstac-ui/config/local.json",
-    "switch:local": "cp packages/coinstac-ui/config/local-example.json packages/coinstac-ui/config/local.json",
+    "switch:local": "cp packages/coinstac-ui/config/local-local.json packages/coinstac-ui/config/local.json",
     "switch:ci": "cp packages/coinstac-ui/config/local-ci.json packages/coinstac-ui/config/local.json",
     "test": "lerna run test --concurrency=1",
     "watch": "cd packages/coinstac-ui/ && npm run watch"

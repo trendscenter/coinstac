@@ -35,6 +35,7 @@ const sharedFields = {
     tags
     members
     owners
+    activeMembers
     isPrivate
     mappedForRun
     createDate
@@ -74,11 +75,7 @@ const sharedFields = {
           display
         }
       }
-      controller {
-        id
-        options
-        type
-      }
+      controller
       inputMap
       dataMeta
     }

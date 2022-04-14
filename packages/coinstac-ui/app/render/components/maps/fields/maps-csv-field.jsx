@@ -262,7 +262,7 @@ class MapsCsvField extends React.Component {
           multiple
           filterName="csv"
           extensions={fieldDescription.extensions}
-          selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+          selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
           onChange={files => this.appendSelectedFiles(files)}
           deleteItem={fileIndex => this.deleteFile(fileIndex)}
           tooltip={filePickerTooltip}

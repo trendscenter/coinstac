@@ -1,24 +1,32 @@
-import { uniqBy } from 'lodash';
 import { ipcRenderer } from 'electron';
+import { persistReducer } from 'redux-persist';
 
 import { saveLocalRunResult } from './localRunResults';
 import { notifyInfo, notifyError } from './notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../utils/helpers';
 
+/**
+ * We currently merge local runs and remote runs in a redux store. The local runs are persisted
+ * locally through redux-persist while the remote runs are fed into the store when the app starts
+ * and whenever the user starts new runs.
+ */
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
-const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
-const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
+const LOAD_LOCAL_RUNS = 'LOAD_LOCAL_RUNS';
+const SAVE_RUN = 'SAVE_RUN';
+const UPDATE_RUN = 'UPDATE_RUN';
 const SAVE_RUN_AWAITING_MAP = 'SAVE_RUN_AWAITING_MAP';
 const REMOVE_RUN_AWAITING_MAP = 'REMOVE_RUN_AWAITING_MAP';
 const DELETE_RUN = 'DELETE_RUN';
 
 // Action Creators
-export const clearRuns = () => ({
-  type: CLEAR_RUNS,
-  payload: null,
-});
+export const clearRuns = () => (dispatch) => {
+  dispatch({
+    type: CLEAR_RUNS,
+    payload: null,
+  });
+};
 
 export const startRun = (run, consortium) => (dispatch, getState) => {
   const { maps, auth } = getState();
@@ -54,27 +62,31 @@ export const startRun = (run, consortium) => (dispatch, getState) => {
   });
 };
 
-export const saveLocalRun = run => (dispatch, getState) => {
+export const loadLocalRuns = () => ({
+  type: LOAD_LOCAL_RUNS,
+});
+
+export const saveRunLocally = (run, isNew = false) => (dispatch, getState) => {
   if (run.type === 'local') {
     const { localRunResults } = getState();
 
-    if (run.id in localRunResults) {
-      run = {
-        ...run,
-        ...localRunResults[run.id],
-      };
-    }
+    if (!isNew && !(run.id in localRunResults)) return;
+
+    run = {
+      ...run,
+      ...localRunResults[run.id],
+    };
   }
 
   dispatch({
-    type: SAVE_LOCAL_RUN,
+    type: SAVE_RUN,
     payload: run,
   });
 };
 
-export const updateLocalRun = (runId, object) => (dispatch) => {
+export const updateRunLocally = (runId, object) => (dispatch) => {
   dispatch({
-    type: UPDATE_LOCAL_RUN,
+    type: UPDATE_RUN,
     payload: { runId, object },
   });
 
@@ -91,9 +103,8 @@ export const deleteRun = runId => (dispatch) => {
 };
 
 const INITIAL_STATE = {
-  localRuns: [],
-  remoteRuns: [],
   runs: [],
+  localRuns: [],
   runsAwaitingDataMap: [],
 };
 
@@ -101,29 +112,64 @@ function runSort(a, b) {
   return b.startDate - a.startDate;
 }
 
-export default function reducer(state = INITIAL_STATE, action) {
+// REDUCER
+function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     // TODO: Handle runs delete in reducer
     case CLEAR_RUNS:
       return INITIAL_STATE;
-    case SAVE_LOCAL_RUN: {
-      const localRuns = [...state.localRuns];
-      const index = localRuns.findIndex(run => run.id === action.payload.id);
+    case LOAD_LOCAL_RUNS:
+      return {
+        ...state,
+        runs: state.localRuns ? [...state.localRuns] : [],
+      };
+    case SAVE_RUN: {
+      const runs = [...state.runs];
+      const index = runs.findIndex(run => run.id === action.payload.id);
 
       if (index === -1) {
-        localRuns.push(action.payload);
+        runs.push(action.payload);
       } else {
-        localRuns.splice(index, 1, action.payload);
+        runs.splice(index, 1, action.payload);
       }
 
-      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
-    }
-    case UPDATE_LOCAL_RUN: {
-      const localRuns = [...state.localRuns];
-      const index = localRuns.findIndex(run => run.id === action.payload.runId);
-      localRuns[index] = { ...localRuns[index], ...action.payload.object };
+      let localRunsCopy = state.localRuns;
+      if (action.payload.type === 'local') {
+        localRunsCopy = [...state.localRuns];
 
-      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
+        const index = localRunsCopy.findIndex(run => run.id === action.payload.id);
+
+        if (index === -1) {
+          localRunsCopy.push(action.payload);
+        } else {
+          localRunsCopy.splice(index, 1, action.payload);
+        }
+      }
+
+      return { ...state, runs: runs.sort(runSort), localRuns: localRunsCopy };
+    }
+    case UPDATE_RUN: {
+      const runs = [...state.runs];
+      const index = runs.findIndex(run => run.id === action.payload.runId);
+
+      if (index >= 0) {
+        runs[index] = { ...runs[index], ...action.payload.object };
+
+        let localRunsCopy = state.localRuns;
+        if (action.payload.object.type === 'local') {
+          localRunsCopy = [...state.localRuns];
+
+          const localIndex = runs.findIndex(run => run.id === action.payload.runId);
+
+          if (localIndex >= 0) {
+            localRunsCopy[index] = { ...localRunsCopy[index], ...action.payload.object };
+          }
+        }
+
+        return { ...state, runs, localRuns: localRunsCopy };
+      }
+
+      return state;
     }
     case SAVE_RUN_AWAITING_MAP: {
       return {
@@ -134,7 +180,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case REMOVE_RUN_AWAITING_MAP: {
       return {
         ...state,
-        runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id === action.payload),
+        runsAwaitingDataMap: state.runsAwaitingDataMap.filter(run => run.id !== action.payload),
       };
     }
     case DELETE_RUN: {
@@ -144,10 +190,19 @@ export default function reducer(state = INITIAL_STATE, action) {
         runsAwaitingDataMap:
           state.runsAwaitingDataMap.filter((run) => { return run.id !== action.payload.runId; }),
         localRuns: state.localRuns.filter(run => run.id !== action.payload.runId),
-        remoteRuns: state.remoteRuns.filter(run => run.id !== action.payload.runId),
       };
     }
     default:
       return state;
   }
+}
+
+export default function createReducer(persistStorage) {
+  const runsPersistConfig = {
+    key: 'runs',
+    storage: persistStorage,
+    whitelist: ['localRuns'],
+  };
+
+  return persistReducer(runsPersistConfig, reducer);
 }

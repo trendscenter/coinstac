@@ -512,12 +512,9 @@ class Pipeline extends Component {
 
   savePipeline = async () => {
     const {
-      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
-      pipelines, updateMapStatus,
+      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline, updateMapStatus,
     } = this.props;
     const { pipeline } = this.state;
-
-    const oldPipeline = pipelines.find(p => p.id === pipeline.id);
 
     const { isActive } = pipeline;
 
