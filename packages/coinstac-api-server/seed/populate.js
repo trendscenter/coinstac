@@ -6,6 +6,7 @@ const helperFunctions = require('../src/auth-helpers');
 const brainageFNC = require('./data/coinstac-brainage-fnc.json');
 const combatDC = require('./data/coinstac-combat-dc.json');
 const dlmeFS = require('./data/coinstac-dlme-fs.json');
+const dlmeVBM = require('./data/coinstac-dlme-vbm.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
@@ -48,6 +49,7 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -119,6 +121,7 @@ async function populateComputations() {
     { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
     { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
     { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
+    { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
