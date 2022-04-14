@@ -55,6 +55,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
   useEffect(() => {
     if (runStatus === null) {
       setRun(null);
+      return;
     }
 
     if (!runStatus) return;
