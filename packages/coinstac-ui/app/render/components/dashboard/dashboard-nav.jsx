@@ -29,7 +29,7 @@ const DashboardNav = ({
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
         <ListItemText primary="Home" />
-        {hasRunOfInterestInProgress && <CircularProgress size={20} />}
+        {hasRunOfInterestInProgress && <CircularProgress disableShrink size={20} />}
       </ListItem>
       <ListItem button component="a" href="#/dashboard/maps">
         <ListItemIcon><ListAltIcon /></ListItemIcon>
