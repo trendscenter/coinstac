@@ -53,12 +53,10 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
 
   // Check status of decentralized run
   useEffect(() => {
-    if (runStatus === null) {
+    if (!runStatus) {
       setRun(null);
       return;
     }
-
-    if (!runStatus) return;
 
     if (runStatus === 'complete' || runStatus === 'error') {
       setRun(null);
