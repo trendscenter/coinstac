@@ -449,7 +449,8 @@ if (program.upload) {
   }
 
   fulfilledPipelineSpec
-    .then((pipelineSpec) => {
-      runPipeline(pipelineSpec);
+    .then(async (pipelineSpec) => {
+      await runPipeline(pipelineSpec);
+      process.exit(0);
     });
 }
