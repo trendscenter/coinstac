@@ -12,7 +12,7 @@ const parseJson = require('json-parse-even-better-errors');
 const pkg = require('../package.json');
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'debug',
   transports: [
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
