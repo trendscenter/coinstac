@@ -240,7 +240,7 @@ loadConfig()
 
 
                 if (await !exists(symlinkPath)) {
-                  fs.promises.symlink(file, symlinkPath);
+                  await fs.promises.symlink(file, symlinkPath);
                 }
 
                 const createdSymlinkPath = path
