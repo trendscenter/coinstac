@@ -66,8 +66,8 @@ const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
 
-const getAllFilesInDirectory = (directory) => {
-  const dirents = fs.readdirSync(directory, { withFileTypes: true });
+const getAllFilesInDirectory = async (directory) => {
+  const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
   const files = dirents.map((dirent) => {
     const res = path.resolve(directory, dirent.name);
     return dirent.isDirectory() ? getAllFilesInDirectory(res) : res;
@@ -201,46 +201,64 @@ loadConfig()
       ipcMain.on('prepare-consortia-files', async (event, { userId, fileTree, appDirectory }) => {
         const userRunDirectory = path.join(appDirectory, 'runs', userId);
 
-        if (!fs.existsSync(userRunDirectory)) {
-          fs.mkdirSync(userRunDirectory, { recursive: true });
+        try {
+          await fs.promises.access(userRunDirectory);
+        } catch (e) {
+          await fs.promises.mkdir(userRunDirectory, { recursive: true });
         }
 
         const res = [];
 
-        fileTree.forEach((consortium) => {
-          const consortiumDirectory = path.join(userRunDirectory, consortium.name);
+        fileTree.forEach(async (consortium) => {
+          const sanitizedName = consortium.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          const consortiumDirectory = path.join(userRunDirectory, sanitizedName);
 
-          if (!fs.existsSync(consortiumDirectory)) {
-            fs.mkdirSync(consortiumDirectory);
+          try {
+            await fs.promises.access(consortiumDirectory);
+          } catch (e) {
+            await fs.promises.mkdir(consortiumDirectory, { recursive: true });
           }
 
-          consortium.runs.forEach((run) => {
+          consortium.runs.forEach(async (run) => {
             const runDirectory = path.join(
               consortiumDirectory,
               `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`
             );
 
-            if (!fs.existsSync(runDirectory)) {
-              fs.mkdirSync(runDirectory, { recursive: true });
+            try {
+              await fs.promises.access(runDirectory);
+            } catch (e) {
+              await fs.promises.mkdir(runDirectory, { recursive: true });
             }
 
             const outputDirectory = path.join(appDirectory, 'output', userId, run.id);
 
-            if (fs.existsSync(outputDirectory)) {
-              const allFiles = getAllFilesInDirectory(outputDirectory);
+            let outputDirectoryExists;
 
-              allFiles.forEach((file) => {
+            try {
+              outputDirectoryExists = await fs.promises.access(outputDirectory);
+            } catch (e) {
+              outputDirectoryExists = false;
+            }
+
+            if (outputDirectoryExists) {
+              const allFiles = await getAllFilesInDirectory(outputDirectory);
+
+              allFiles.forEach(async (file) => {
                 const relativePath = path.relative(outputDirectory, file);
                 const symlinkPath = path.join(runDirectory, relativePath);
-
                 const symlinkDirectory = path.dirname(symlinkPath);
 
-                if (!fs.existsSync(symlinkDirectory)) {
-                  fs.mkdirSync(symlinkDirectory, { recursive: true });
+                try {
+                  await fs.promises.access(symlinkDirectory);
+                } catch (e) {
+                  await fs.promises.mkdir(symlinkDirectory, { recursive: true });
                 }
 
-                if (!fs.existsSync(symlinkPath)) {
-                  fs.symlinkSync(file, symlinkPath);
+                try {
+                  await fs.promises.accesss(symlinkPath);
+                } catch (e) {
+                  fs.promises.symlink(file, symlinkPath);
                 }
 
                 const createdSymlinkPath = path
