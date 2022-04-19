@@ -234,15 +234,12 @@ loadConfig()
                 const symlinkPath = path.join(runDirectory, relativePath);
                 const symlinkDirectory = path.dirname(symlinkPath);
 
-                try {
-                  await fs.promises.access(symlinkDirectory);
-                } catch (e) {
+                if (await !exists(symlinkDirectory)) {
                   await fs.promises.mkdir(symlinkDirectory, { recursive: true });
                 }
 
-                try {
-                  await fs.promises.accesss(symlinkPath);
-                } catch (e) {
+
+                if (await !exists(symlinkPath)) {
                   fs.promises.symlink(file, symlinkPath);
                 }
 
