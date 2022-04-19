@@ -201,21 +201,16 @@ loadConfig()
       ipcMain.on('prepare-consortia-files', async (event, { userId, fileTree, appDirectory }) => {
         const userRunDirectory = path.join(appDirectory, 'runs', userId);
 
-        try {
-          await fs.promises.access(userRunDirectory);
-        } catch (e) {
+        if (await !exists(userRunDirectory)) {
           await fs.promises.mkdir(userRunDirectory, { recursive: true });
         }
-
         const res = [];
 
         fileTree.forEach(async (consortium) => {
           const sanitizedName = consortium.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
           const consortiumDirectory = path.join(userRunDirectory, sanitizedName);
 
-          try {
-            await fs.promises.access(consortiumDirectory);
-          } catch (e) {
+          if (await !exists(consortiumDirectory)) {
             await fs.promises.mkdir(consortiumDirectory, { recursive: true });
           }
 
@@ -225,23 +220,13 @@ loadConfig()
               `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`
             );
 
-            try {
-              await fs.promises.access(runDirectory);
-            } catch (e) {
+            if (await !exists(runDirectory)) {
               await fs.promises.mkdir(runDirectory, { recursive: true });
             }
 
             const outputDirectory = path.join(appDirectory, 'output', userId, run.id);
 
-            let outputDirectoryExists;
-
-            try {
-              outputDirectoryExists = await fs.promises.access(outputDirectory);
-            } catch (e) {
-              outputDirectoryExists = false;
-            }
-
-            if (outputDirectoryExists) {
+            if (await exists(outputDirectory)) {
               const allFiles = await getAllFilesInDirectory(outputDirectory);
 
               allFiles.forEach(async (file) => {
