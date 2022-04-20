@@ -19,7 +19,7 @@ const helperFunctions = {
    * @param {string} user id of authenticating user passed in from route handler
    * @return {string} A JWT for the requested user
    */
-  createToken(id) {
+  createToken(id) { // Done
     return jwt.sign({ id }, process.env.API_JWT_SECRET, {
       audience,
       issuer,
@@ -33,7 +33,7 @@ const helperFunctions = {
    * @param {string} token
    * @returns object that was inside token
    */
-  decodeToken(token) {
+  decodeToken(token) { // Done
     return jwt.verify(token, process.env.API_JWT_SECRET);
   },
   /**
@@ -195,7 +195,7 @@ const helperFunctions = {
     const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
     return {
-      isValid: user && user.id,
+      isValid: Boolean(user && user.id),
       credentials: user || null,
     };
   },
@@ -270,7 +270,7 @@ const helperFunctions = {
     const user = await db.collection('users').findOne({ username: req.payload.username });
 
     if (!user) {
-      return Boom.unauthorized('Incorrect username or password.');
+      return Boom.unauthorized('Incorrect username or password');
     }
 
     const passwordMatch = await helperFunctions.verifyPassword(
@@ -281,7 +281,7 @@ const helperFunctions = {
       return h.response(transformToClient(user));
     }
 
-    return Boom.unauthorized('Incorrect username or password.');
+    return Boom.unauthorized('Incorrect username or password');
   },
   /**
    * Validate api key used by headless client
@@ -303,7 +303,7 @@ const helperFunctions = {
     );
 
     if (!apiKeyMatch) {
-      return Boom.unauthorized('Invalid API key.');
+      return Boom.unauthorized('Invalid API key');
     }
 
     return h.response(transformToClient(headlessClient));
@@ -332,7 +332,7 @@ const helperFunctions = {
 
       return h.response({ email });
     } catch (err) {
-      Boom.badRequest(err);
+      return Boom.badRequest(err);
     }
   },
   /**

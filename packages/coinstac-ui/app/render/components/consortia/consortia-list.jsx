@@ -10,6 +10,7 @@ import {
   get, orderBy, some, flowRight as compose,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
+import Grid from '@material-ui/core/Grid';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
@@ -18,10 +19,12 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
+import { v4 as uuid } from 'uuid';
+
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
+import { tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -42,8 +45,9 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
+import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
@@ -69,6 +73,9 @@ const styles = theme => ({
   contentContainer: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
+  },
+  usersContainer: {
+    overflowX: 'auto',
   },
   subtitle: {
     marginTop: theme.spacing(2),
@@ -151,6 +158,7 @@ class ConsortiaList extends Component {
 
   getOptions(member, owner, consortium) {
     const {
+      auth,
       maps,
       classes,
       pipelines,
@@ -165,10 +173,14 @@ class ConsortiaList extends Component {
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
+    const isPipelineDecentralized = pipeline ? pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1 : false;
+
     const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const needsDataMapping = !dataMapIsComplete && pipelineNeedsDataMapping(pipeline);
+    const needsDataMapping = !dataMapIsComplete
+      && pipelineNeedsDataMapping(pipeline)
+      && auth.user.id in consortium.activeMembers;
 
     // Add pipeline text
     text.push(
@@ -215,15 +227,27 @@ class ConsortiaList extends Component {
       ));
 
     text.push(
-      <div key="avatar-wrapper" className={classes.contentContainer}>
-        <Typography className={classes.label}>
-          Owner(s)/Members:
-        </Typography>
-        {avatars}
-      </div>
+      <Grid key="avatar-wrapper" container spacing={2}>
+        <Grid item xs={6} className={classes.usersContainer}>
+          <Typography className={classes.label}>
+            Owner(s)/Members:
+          </Typography>
+          {avatars}
+        </Grid>
+        <Grid item xs={6} className={classes.usersContainer}>
+          <Typography className={classes.label}>
+            Active Members:
+          </Typography>
+          <Typography variant="body1">
+            {Object.keys(consortium.activeMembers)
+              .map(memberId => consortium.activeMembers[memberId])
+              .join(', ')}
+          </Typography>
+        </Grid>
+      </Grid>
     );
 
-    if (owner && consortium.activePipelineId && !needsDataMapping) {
+    if ((owner || member) && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -231,32 +255,35 @@ class ConsortiaList extends Component {
       const computations = get(pipeline, 'steps.0.computations', []);
       const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
 
-      if (hasDockerComputation && !dockerStatus) {
-        actions.push(
-          <Tooltip title="Docker is not running" placement="top">
+      if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
+        || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
+        if (hasDockerComputation && !dockerStatus) {
+          actions.push(
+            <Tooltip title="Docker is not running" placement="top">
+              <Button
+                key={`${consortium.id}-start-pipeline-button`}
+                variant="contained"
+                className={classes.buttonDisabled}
+              >
+                Start Pipeline
+              </Button>
+            </Tooltip>
+          );
+        } else {
+          actions.push(
             <Button
               key={`${consortium.id}-start-pipeline-button`}
               variant="contained"
-              className={classes.buttonDisabled}
+              className={`${classes.button} start-pipeline`}
+              onClick={this.startPipeline(consortium)}
             >
               Start Pipeline
             </Button>
-          </Tooltip>
-        );
-      } else {
-        actions.push(
-          <Button
-            key={`${consortium.id}-start-pipeline-button`}
-            variant="contained"
-            className={`${classes.button} start-pipeline`}
-            onClick={this.startPipeline(consortium.id)}
-          >
-            Start Pipeline
-          </Button>
-        );
+          );
+        }
       }
 
-      if (isPipelineRunning) {
+      if (isPipelineRunning && owner) {
         actions.push(
           <Button
             key={`${consortium.id}-stop-pipeline-button`}
@@ -315,6 +342,21 @@ class ConsortiaList extends Component {
           className={classes.button}
         >
           Map Local Data
+        </Button>
+      );
+    }
+
+    if (owner) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-set-active-members-button`}
+          variant="contained"
+          color="default"
+          className={classes.button}
+          component={Link}
+          to={`dashboard/consortia/${consortium.id}/2`}
+        >
+          Set Active Members
         </Button>
       );
     }
@@ -451,15 +493,41 @@ class ConsortiaList extends Component {
     }
   }
 
-  startPipeline(consortiumId) {
+  startPipeline(consortium) {
     return async () => {
       const {
-        createRun, startLoading, finishLoading, notifyError,
+        pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
+        notifyWarning, notifyError, auth,
       } = this.props;
 
-      startLoading('start-pipeline');
+      const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+      if (!pipeline.steps) {
+        return notifyWarning('The selected pipeline has no steps');
+      }
+
+      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
       try {
-        await createRun(consortiumId);
+        startLoading('start-pipeline');
+
+        if (isPipelineDecentralized) {
+          return await saveRemoteDecentralizedRun(consortium.id);
+        }
+
+        const localRun = {
+          id: uuid(),
+          clients: {
+            [auth.user.id]: auth.user.username,
+          },
+          consortiumId: consortium.id,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: 'local',
+          status: 'started',
+        };
+
+        startRun(localRun, consortium);
       } catch ({ graphQLErrors }) {
         notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
       } finally {
@@ -499,6 +567,8 @@ class ConsortiaList extends Component {
     } = this.props;
 
     joinConsortium(consortiumId);
+
+    if (!activePipelineId) return;
 
     const [{ data }] = await client.refetchQueries({
       include: [FETCH_ALL_PIPELINES_QUERY],
@@ -631,7 +701,7 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
-        {!auth.hideTutorial && (
+        {!auth.isTutorialHidden && (
           <Joyride
             steps={STEPS.consortiaList}
             disableScrollParentFix
@@ -653,7 +723,7 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
-  createRun: PropTypes.func.isRequired,
+  saveRemoteDecentralizedRun: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
@@ -680,7 +750,7 @@ const mapStateToProps = ({ auth, maps }) => ({
 });
 
 const ConsortiaListWithData = compose(
-  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'consortiumId')),
+  graphql(CREATE_RUN_MUTATION, saveDocumentProp('saveRemoteDecentralizedRun', 'consortiumId')),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
@@ -711,10 +781,11 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyWarning,
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
-      toggleTutorial,
+      startRun,
       tutorialChange,
       startLoading: start,
       finishLoading: finish,

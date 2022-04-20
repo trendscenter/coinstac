@@ -105,11 +105,21 @@ async function addUserPermissions(args) {
       [`consortiaStatuses.${doc}`]: 'none',
     };
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: doc }, {
+    const consortiaUpdateObj = {
       $set: {
         [`${role}s.${args.userId}`]: userName,
       },
-    }, { returnOriginal: false });
+    };
+
+    if (role === 'member') {
+      consortiaUpdateObj.$set[`activeMembers.${args.userId}`] = userName;
+    }
+
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+      { _id: doc },
+      consortiaUpdateObj,
+      { returnDocument: 'after' }
+    );
 
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
@@ -166,7 +176,11 @@ async function removeUserPermissions(args) {
       updateObj.$pull = Object.assign(updateObj.$pull || {}, { mappedForRun: args.userId });
     }
 
-    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
+    if (args.role === 'member') {
+      updateObj.$unset[`activeMembers.${args.userId}`] = '';
+    }
+
+    const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnDocument: 'after' });
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
 }
@@ -182,7 +196,6 @@ async function changeUserAppRole(args, addOrRemove) {
   }, {
     returnOriginal: false,
   });
-
   eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
@@ -352,7 +365,7 @@ const resolvers = {
       if (!isAdmin(credentials.permissions)) {
         res = res.filter(pipeline => {
           return consortiaIds.includes(String(pipeline.owningConsortium))
-          || pipeline.shared;
+            || pipeline.shared;
         });
       }
 
@@ -397,7 +410,7 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`clients.${credentials.id}`]: { $exists: true } },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
         }).toArray();
@@ -440,22 +453,14 @@ const resolvers = {
       return getOnlineUsers();
     },
     fetchAllHeadlessClients: async () => {
-      try {
-        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+      const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
 
-        return transformToClient(headlessClients);
-      } catch (error) {
-        return Boom.internal('Failed to fetch the headless clients list', error);
-      }
+      return transformToClient(headlessClients);
     },
     fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
-      try {
-        const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
+      const headlessClients = await headlessClientsController.fetchAccessibleHeadlessClients(credentials);
 
-        return transformToClient(headlessClients);
-      } catch (error) {
-        return Boom.internal('Failed to fetch the headless clients list', error);
-      }
+      return transformToClient(headlessClients);
     },
     fetchHeadlessClient: async (parent, { id }, { credentials }) => {
       try {
@@ -527,11 +532,18 @@ const resolvers = {
       }
 
       if (!run) {
-        return Boom.notFound('Run not found');
+        return null
       }
 
       return transformToClient(run);
     },
+    getPipelines: async () => {
+      const result = await axios.get(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
+      );
+
+      return { info: JSON.stringify(result.data) };
+    }
   },
   Mutation: {
     /**
@@ -583,10 +595,6 @@ const resolvers = {
         eventEmitter.emit(COMPUTATION_CHANGED, updatedComputationResult.value);
 
         return transformToClient(updatedComputationResult.value);
-      }
-
-      if (filteredComputations.length > 1) {
-        return Boom.forbidden('Computation with same meta id already exists.');
       }
     },
     /**
@@ -655,23 +663,17 @@ const resolvers = {
       }
 
       try {
-        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
-        let runClients = { ...consortium.members };
-
-        if (pipeline.headlessMembers) {
-          runClients = {
-            ...consortium.members,
-            ...pipeline.headlessMembers
-          }
-        }
+        const runClients = { ...consortium.activeMembers };
 
         const result = await db.collection('runs').insertOne({
           clients: runClients,
+          observers: {
+            ...consortium.members,
+          },
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
-          type: isPipelineDecentralized ? 'decentralized' : 'local',
+          type: 'decentralized',
           status: 'started'
         });
 
@@ -738,7 +740,7 @@ const resolvers = {
         owningConsortium: ObjectID(args.consortiumId)
       }).toArray();
 
-      if (pipelines.length) {
+      if (pipelines.length > 0) {
         await db.collection('pipelines').deleteMany({
           owningConsortium: ObjectID(args.consortiumId)
         });
@@ -804,13 +806,21 @@ const resolvers = {
         id: deletePipelineResult.value._id
       });
 
-      const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate({
-        activePipelineId: args.pipelineId
-      }, {
+      const updateObj = {
         $unset: { activePipelineId: '' }
-      }, {
-        returnOriginal: false
-      });
+      };
+
+      if (pipeline.headlessMembers) {
+        Object.keys(pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
+        });
+      }
+
+      const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate(
+        { activePipelineId: pipelineId },
+        updateObj,
+        { returnDocument: 'after' }
+      );
 
       if (updateConsortiumResult.value) {
         eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
@@ -933,16 +943,48 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const result = await db.collection('consortia').findOneAndUpdate({
-        _id: ObjectID(args.consortiumId)
-      }, {
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+
+      if (consortium.activePipelineId) {
+        const oldPipeline = await db.collection('pipelines').findOne({ _id: consortium.activePipelineId });
+
+        if (oldPipeline && oldPipeline.headlessMembers) {
+          const oldPipelineUpdateObj = {
+            $unset: {},
+          };
+
+          Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
+            oldPipelineUpdateObj.$unset[`activeMembers.${headlessMemberId}`] = '';
+          });
+
+          await db.collection('consortia').updateOne(
+            { _id: ObjectID(args.consortiumId) },
+            oldPipelineUpdateObj
+          );
+        }
+      }
+
+      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
+
+      const updateObj = {
         $set: {
           activePipelineId: ObjectID(args.activePipelineId),
           mappedForRun: []
         }
-      }, {
-        returnOriginal: false
-      });
+      };
+
+      if (pipeline.headlessMembers) {
+        // Sets only the cloud users as the default active members
+        updateObj.$set.activeMembers = {
+          ...pipeline.headlessMembers
+        };
+      }
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(args.consortiumId) },
+        updateObj,
+        { returnOriginal: false }
+      );
 
       eventEmitter.emit(CONSORTIUM_PIPELINE_CHANGED, result.value);
 
@@ -968,7 +1010,10 @@ const resolvers = {
 
       const consortiumData = Object.assign(
         { ...args.consortium },
-        !isUpdate && { createDate: Date.now() },
+        !isUpdate && {
+          createDate: Date.now(),
+          activeMembers: args.consortium.members,
+        },
       );
 
       if (!isUpdate) {
@@ -1005,6 +1050,39 @@ const resolvers = {
       }
 
       return transformToClient(consortium);
+    },
+    /**
+     * Saves the active members list for a consortium
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {object} args.consortiumId consortium id
+     * @param {object} args.members JSON with member list
+     * @return {object} New/updated consortium object
+     */
+    saveConsortiumActiveMembers: async (parent, args, { credentials }) => {
+      const { permissions } = credentials;
+
+      if (!permissions.consortia[args.consortiumId].includes('owner')) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const consortiumId = ObjectID(args.consortiumId);
+
+      const db = database.getDbInstance();
+
+      const result = await db.collection('consortia').findOneAndUpdate(
+        { _id: consortiumId },
+        {
+          $set: {
+            activeMembers: args.members,
+          }
+        },
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves run error
@@ -1076,6 +1154,51 @@ const resolvers = {
             step.computations = step.computations.map(compId => ObjectID(compId));
           }
         });
+      }
+
+      let consortiumChanged = false;
+      const oldPipeline = await db.collection('pipelines').findOne({ _id: args.pipeline.id });
+
+      if (oldPipeline && oldPipeline.headlessMembers) {
+        const updateObjOld = {
+          $unset: {}
+        };
+
+        Object.keys(oldPipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObjOld.$unset[`activeMembers.${headlessMemberId}`] = '';
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObjOld
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (args.pipeline.headlessMembers) {
+        const updateObj = {
+          $set: {}
+        };
+
+        Object.keys(args.pipeline.headlessMembers).forEach((headlessMemberId) => {
+          updateObj.$set[`activeMembers.${headlessMemberId}`] = args.pipeline.headlessMembers[headlessMemberId];
+        });
+
+        await db.collection('consortia').updateOne(
+          { activePipelineId: args.pipeline.id },
+          updateObj
+        );
+
+        consortiumChanged = true;
+      }
+
+      if (consortiumChanged) {
+        const consortium = await db.collection('consortia').findOne({ activePipelineId: args.pipeline.id });
+
+        if (consortium) {
+          eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+        }
       }
 
       await db.collection('pipelines').replaceOne({
@@ -1249,6 +1372,8 @@ const resolvers = {
       }).toArray();
 
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+
+      return transformToClient(consortia);
     },
     /**
      * Updated user password
@@ -1563,6 +1688,86 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    deleteUser: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to delete this user');
+      }
+      const db = database.getDbInstance();
+
+      // check to see if the user owns anything
+
+      // consortia
+      const consortiaOwnersKey = `owners.${args.userId}`
+      const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
+
+      const soleOwner = ownedConsortia.reduce((sole, con) => {
+        if(Object.keys(con.owners).length <= 1) sole = true;
+        return sole;
+      }, false)
+
+      if (soleOwner) {
+        return Boom.illegal('Cannot delete a user that is the owner of a consortium');
+      }
+
+      // datasets
+      const ownedDatasets = await db.collection('datasets').find({ 'owner.id': ObjectID(args.userId) }).toArray();
+      if (ownedDatasets.length > 0) {
+        return Boom.illegal('Cannot delete a user that is the owner of a dataset');
+      }
+
+      // pipelines
+      const ownedPipelines = await db.collection('pipelines').find({ 'owner': args.userId }).toArray();
+      if (ownedPipelines.length > 0) {
+        return Boom.illegal('Cannot delete a user that is the owner of a pipeline');
+      }
+
+      // remove the user as a member of any consortium
+      const consortiaMembersKey = `members.${args.userId}`;
+      const consortiaUpdateResult = await db.collection('consortia').updateMany({}, { $unset: { [consortiaMembersKey]: true, [consortiaOwnersKey]: true } })
+
+      if (consortiaUpdateResult.modifiedCount > 0) {
+        // emit a consortium changed event
+        const consortia = await db.collection('consortia').find().toArray();
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+      }
+
+      const user = await db.collection('users').findOne({ _id: ObjectID(args.userId) })
+      user.delete = true;
+      await db.collection('users').deleteOne({ _id: ObjectID(args.userId) })
+
+      eventEmitter.emit(USER_CHANGED, user);
+    },
+    stopRun: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to stop this run')
+      }
+
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
+      );
+    },
+    deleteRun: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const runs = await db.collection('runs').find({
+        _id: ObjectID(args.runId)
+      }).toArray();
+
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          _id: ObjectID(args.runId)
+        });
+
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) { }
+        });
+      }
+    }
   },
   Subscription: {
     /**
@@ -1650,7 +1855,7 @@ const resolvers = {
     userRunChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
-        (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
+        (payload, variables) => (variables.userId && variables.userId in payload.userRunChanged.observers)
       )
     },
     runStarted: {
@@ -1672,7 +1877,7 @@ const resolvers = {
     runWithHeadlessClientStarted: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('runWithHeadlessClientStarted'),
-        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.pipelineSnapshot.headlessMembers)
+        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.clients)
       )
     },
     /**

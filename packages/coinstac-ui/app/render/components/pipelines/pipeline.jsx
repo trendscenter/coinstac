@@ -62,7 +62,6 @@ import {
   isPipelineOwner,
   getGraphQLErrorMessage,
   isUserInGroup,
-  reducePipelineInputs,
 } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
@@ -514,12 +513,9 @@ class Pipeline extends Component {
 
   savePipeline = async () => {
     const {
-      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
-      pipelines, updateMapStatus,
+      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline, updateMapStatus,
     } = this.props;
     const { pipeline } = this.state;
-
-    const oldPipeline = pipelines.find(p => p.id === pipeline.id);
 
     const { isActive } = pipeline;
 
@@ -565,14 +561,7 @@ class Pipeline extends Component {
         savingStatus: 'success',
       });
 
-      if (oldPipeline) {
-        const oldPipelineInputs = reducePipelineInputs(oldPipeline);
-        const newPipelineInputs = reducePipelineInputs(newPipeline);
-
-        if (oldPipelineInputs.length !== newPipelineInputs) {
-          updateMapStatus(newPipeline.owningConsortium, newPipeline.id, false);
-        }
-      }
+      updateMapStatus(newPipeline.owningConsortium, newPipeline);
 
       notifySuccess('Pipeline Saved');
 
@@ -1005,7 +994,7 @@ class Pipeline extends Component {
             </Typography>
           )}
         </ValidatorForm>
-        {!auth.hideTutorial && (
+        {!auth.isTutorialHidden && (
           <Joyride
             steps={STEPS.pipeline}
             continuous

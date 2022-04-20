@@ -57,22 +57,14 @@ const typeDefs = `
     ${sharedFields.consortiumFields}
   }
 
-  type PipelineController {
-    ${sharedFields.pipelineControllerFields}
-  }
-
-  input PipelineControllerInput {
-    ${sharedFields.pipelineControllerFields}
-  }
-
   type PipelineStep {
-    controller: PipelineController
+    controller: JSON
     computations: [Computation]
     ${sharedFields.pipelineStepFields}
   }
 
   input PipelineStepInput {
-    controller: PipelineControllerInput
+    controller: JSON
     computations: [ID]
     ${sharedFields.pipelineStepFields}
   }
@@ -106,6 +98,7 @@ const typeDefs = `
     type: String
     sharedUsers: [ID]
     status: String!
+    delete: Boolean
   }
 
   type User {
@@ -170,6 +163,10 @@ const typeDefs = `
     owner: JSON
   }
 
+  type DebugString {
+    info: String
+  }
+
   input IssueInput {
     title: String
     body: String
@@ -213,6 +210,10 @@ const typeDefs = `
     generateHeadlessClientApiKey(headlessClientId: ID!): String
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
+    saveConsortiumActiveMembers(consortiumId: ID!, members: JSON): Consortium
+    deleteUser(userId: ID!): String
+    stopRun(runId: ID): JSON
+    deleteRun(runId: ID): JSON
   }
 
   # This is a description of the queries
@@ -239,6 +240,7 @@ const typeDefs = `
     fetchAllDatasetsSubjectGroups: [String]
     searchDatasets(searchString: String, subjectGroups: [String], modality: String): [Dataset]
     fetchDataset(id: ID!): Dataset
+    getPipelines: DebugString
   }
 
   type Subscription {

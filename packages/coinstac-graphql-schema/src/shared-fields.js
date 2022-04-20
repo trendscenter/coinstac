@@ -35,6 +35,7 @@ const sharedFields = {
     tags
     members
     owners
+    activeMembers
     isPrivate
     mappedForRun
     createDate
@@ -74,11 +75,7 @@ const sharedFields = {
           display
         }
       }
-      controller {
-        id
-        options
-        type
-      }
+      controller
       inputMap
       dataMeta
     }
@@ -97,6 +94,7 @@ const sharedFields = {
     type
     sharedUsers
     status
+    delete
   `,
   userMetadata: `
     id
@@ -116,6 +114,7 @@ const sharedFields = {
     username
     photo
     photoID
+    delete
   `,
   resultFields: `
     id

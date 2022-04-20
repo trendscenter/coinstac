@@ -15,10 +15,6 @@ import { FETCH_RUN_STATUS } from '../../../state/graphql/functions';
 
 import useStyles from './top-notification-progress-bar.styles';
 
-function runIsComplete(run) {
-  return run.results || run.error;
-}
-
 function TopNotificationProgressBar({ runs, consortia, router }) {
   const classes = useStyles();
 
@@ -36,7 +32,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
   useEffect(() => {
     if (run || !runs) return;
 
-    const incompleteRun = runs.find(run => !runIsComplete(run) && run.status !== 'suspended');
+    const incompleteRun = runs.find(run => run.status === 'started');
 
     if (incompleteRun) {
       const consortium = consortia.find(c => c.id === incompleteRun.consortiumId);
@@ -46,16 +42,21 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
         setConsortiumName(consortium.name);
         setPipelineName(incompleteRun.pipelineSnapshot.name);
 
-        getRunStatus({
-          variables: { runId: incompleteRun.id },
-        });
+        if (incompleteRun.type === 'decentralized') {
+          getRunStatus({
+            variables: { runId: incompleteRun.id },
+          });
+        }
       }
     }
   }, [runs, consortia]);
 
   // Check status of decentralized run
   useEffect(() => {
-    if (!runStatus) return;
+    if (!runStatus) {
+      setRun(null);
+      return;
+    }
 
     if (runStatus === 'complete' || runStatus === 'error') {
       setRun(null);
@@ -70,7 +71,7 @@ function TopNotificationProgressBar({ runs, consortia, router }) {
 
     const localRun = runs.find(r => r.id === run.id);
 
-    if (runIsComplete(localRun)) {
+    if (!localRun || localRun.status === 'complete' || localRun.status === 'error' || localRun.status === 'suspended') {
       setRun(null);
       setConsortiumName(null);
       setPipelineName(null);

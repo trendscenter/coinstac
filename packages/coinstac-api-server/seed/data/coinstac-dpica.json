@@ -4,8 +4,7 @@
     "id": "coinstac-dpica",
     "version": "v1.0.0",
     "repository": "https://github.com/MartOfTheNorth/dpica/tree/simulator",
-    "description": "Decentralized Parallel Independent Component Analysis on FIT Data",
-    "compspecVersion": 1
+    "description": "Decentralized Parallel Independent Component Analysis on FIT Data"
   },
   "computation": {
     "type": "docker",

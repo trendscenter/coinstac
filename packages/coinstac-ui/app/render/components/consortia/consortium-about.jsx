@@ -124,7 +124,7 @@ class ConsortiumAbout extends Component {
     });
 
     removeUserRole(user.id, 'consortia', consortium.id, 'member', 'data').then(({ data }) => {
-      updateConsortium({ param: 'members', value: omit(consortium.owners, [data.removeUserRole.id]) });
+      updateConsortium({ param: 'members', value: omit(consortium.members, [data.removeUserRole.id]) });
     });
   }
 
@@ -136,7 +136,7 @@ class ConsortiumAbout extends Component {
       users,
       classes,
       savingStatus,
-      hideTutorial,
+      isTutorialHidden,
       saveConsortium,
       consortiumUsers,
       tutorialChange,
@@ -284,7 +284,7 @@ class ConsortiumAbout extends Component {
             </Box>
           )
         }
-        {!hideTutorial && (
+        {!isTutorialHidden && (
           <Joyride
             steps={STEPS.consortiumAbout}
             continuous
@@ -305,7 +305,7 @@ ConsortiumAbout.propTypes = {
   user: PropTypes.object.isRequired,
   users: PropTypes.array,
   consortiumUsers: PropTypes.array,
-  hideTutorial: PropTypes.bool.isRequired,
+  isTutorialHidden: PropTypes.bool.isRequired,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,

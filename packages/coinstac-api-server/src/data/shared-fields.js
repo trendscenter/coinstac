@@ -8,6 +8,7 @@ const schemaFields = {
     tags: [String]
     owners: JSON
     members: JSON
+    activeMembers: JSON
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean
@@ -46,11 +47,6 @@ const schemaFields = {
     limitOutputToOwner: Boolean
     headlessMembers: JSON
   `,
-  pipelineControllerFields: `
-    id: ID
-    options: JSON
-    type: String
-  `,
   pipelineStepFields: `
     id: ID!
     inputMap: JSON
@@ -72,6 +68,7 @@ const schemaFields = {
     photo: String
     photoID: String
     name: String
+    delete: Boolean
   `,
 };
 

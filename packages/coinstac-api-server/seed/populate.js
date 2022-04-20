@@ -5,6 +5,7 @@ const helperFunctions = require('../src/auth-helpers');
 
 const brainageFNC = require('./data/coinstac-brainage-fnc.json');
 const combatDC = require('./data/coinstac-combat-dc.json');
+const dlmeFS = require('./data/coinstac-dlme-fs.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
@@ -47,6 +48,7 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -116,6 +118,7 @@ async function populateComputations() {
     { ...pLink, submittedBy: 'author', _id: COMPUTATION_IDS[20] },
     { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
     { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
+    { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
@@ -147,6 +150,9 @@ async function populateConsortia() {
       members: {
         [USER_IDS[5]]: 'author',
       },
+      activeMembers: {
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551333489519,
     },
@@ -159,6 +165,10 @@ async function populateConsortia() {
         [USER_IDS[0]]: 'test1',
       },
       members: {
+        [USER_IDS[0]]: 'test1',
+        [USER_IDS[5]]: 'author',
+      },
+      activeMembers: {
         [USER_IDS[0]]: 'test1',
         [USER_IDS[5]]: 'author',
       },
@@ -278,6 +288,9 @@ async function populateRuns() {
       clients: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
+      observers: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: PIPELINE_IDS[0].toHexString(),
@@ -394,6 +407,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[1],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -690,6 +706,9 @@ async function populateRuns() {
     {
       _id: RUN_IDS[2],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],

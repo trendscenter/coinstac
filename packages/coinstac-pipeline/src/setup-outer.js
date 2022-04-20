@@ -30,6 +30,7 @@ async function setupOuter({
   remoteURL,
   remotePort,
   remotePathname,
+  mqttSubChannel,
 }) {
   const request = remoteProtocol.trim() === 'https:' ? https : http;
   let mqttClient;
@@ -170,7 +171,7 @@ async function setupOuter({
 
   const publishData = (key, data, qos = 0) => {
     mqttClient.publish(
-      key,
+      `${mqttSubChannel}${key}`,
       JSON.stringify(data),
       { qos },
       (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
@@ -188,7 +189,7 @@ async function setupOuter({
           runId: pipeline.id,
           error: { message: message.message, error: message.error, stack: message.stack },
           debug: { sent: Date.now() },
-        });
+        }, 1);
         activePipelines[pipeline.id].stashedOutput = undefined;
       }
     } else {
@@ -252,7 +253,7 @@ async function setupOuter({
                   files: [...files],
                   iteration: messageIteration,
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 activePipelines[pipeline.id].stashedOutput = undefined;
                 transferFiles(
                   'post',
@@ -277,7 +278,7 @@ async function setupOuter({
                   runId: pipeline.id,
                   error: { message: e.message, error: e.error, stack: e.stack },
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 throw e;
               });
             }
@@ -303,7 +304,7 @@ async function setupOuter({
             runId: pipeline.id,
             error: e,
             debug: { sent: Date.now() },
-          });
+          }, 1);
           throw e;
         });
     }
@@ -321,6 +322,7 @@ async function setupOuter({
             clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
             connectTimeout: 15 * 1000,
+            clean: false,
           }
         );
         client.on('offline', () => {
@@ -333,10 +335,10 @@ async function setupOuter({
         client.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -355,10 +357,10 @@ async function setupOuter({
             client.on('connect', () => {
               clientInit = true;
               logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);
@@ -377,7 +379,7 @@ async function setupOuter({
       const data = JSON.parse(dataBuffer);
       // TODO: step check?
       switch (topic) {
-        case `${clientId}-run`:
+        case `${mqttSubChannel}${clientId}-run`:
           if (!data.error && activePipelines[data.runId]) {
             if (activePipelines[data.runId].pipeline.currentState.currentIteration
               !== data.iteration
@@ -409,7 +411,7 @@ async function setupOuter({
               publishData('finished', {
                 id: clientId,
                 runId: data.runId,
-              });
+              }, 1);
             }
 
             if (error) {
@@ -418,7 +420,7 @@ async function setupOuter({
                 id: clientId,
                 runId: data.runId,
                 error: { stack: error.stack, message: error.message },
-              });
+              }, 1);
               activePipelines[data.runId].remote.reject(error);
             } else {
               store.put(data.runId, clientId, data.output);
@@ -439,7 +441,7 @@ async function setupOuter({
           }
 
           break;
-        case `${clientId}-register`:
+        case `${mqttSubChannel}${clientId}-register`:
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;

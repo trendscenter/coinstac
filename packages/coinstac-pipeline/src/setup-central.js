@@ -22,19 +22,20 @@ async function setupCentral({
   store,
   remotePort,
   debugProfileClient,
+  mqttSubChannel,
 }) {
   let mqttServer;
   const clientPublish = (clients, data, opts) => {
     Object.keys(clients).forEach((clientId) => {
       if (opts && opts.success && opts.limitOutputToOwner) {
         if (clientId === opts.owner) {
-          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${mqttSubChannel}${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         } else {
           const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-          mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${mqttSubChannel}${clientId}-run`, JSON.stringify(limitedData), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         }
       } else {
-        mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+        mqttServer.publish(`${mqttSubChannel}${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
       }
     });
   };
@@ -203,16 +204,17 @@ async function setupCentral({
       {
         clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
         reconnectPeriod: 5000,
+        clean: false,
       }
     );
     await new Promise((resolve) => {
       mqttServer.on('connect', () => {
         logger.silly(`mqtt connection up ${clientId}`);
-        mqttServer.subscribe('register', { qos: 0 }, (err) => {
+        mqttServer.subscribe(`${mqttSubChannel}register`, { qos: 1 }, (err) => {
           resolve();
           if (err) logger.error(`Mqtt error: ${err}`);
         });
-        mqttServer.subscribe('run', { qos: 0 }, (err) => {
+        mqttServer.subscribe(`${mqttSubChannel}run`, { qos: 1 }, (err) => {
           if (err) logger.error(`Mqtt error: ${err}`);
         });
       });
@@ -225,10 +227,10 @@ async function setupCentral({
         id, runId, output, error, files,
       } = data;
       switch (topic) {
-        case 'run':
+        case `${mqttSubChannel}run`:
           logger.silly(`############ Received client data: ${id}`);
           if (!activePipelines[runId] || !remoteClients[id]) {
-            return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: new Error('Remote has no such pipeline run') }));
+            return mqttServer.publish(`${mqttSubChannel}${id}-run`, JSON.stringify({ runId, error: 'Remote has no such pipeline run' }));
           }
 
           // normal pipeline operation
@@ -298,15 +300,11 @@ async function setupCentral({
               }
               activePipelines[runId].stateStatus = 'Received client error';
               activePipelines[runId].error = runError;
-              clientPublish(
-                activePipelines[runId].clients,
-                { runId, error: runError }
-              );
               activePipelines[runId].remote.reject(runError);
             }
           }
           break;
-        case 'register':
+        case `${mqttSubChannel}register`:
           if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
             remoteClients[id] = Object.assign(
               {
@@ -322,12 +320,12 @@ async function setupCentral({
               remoteClients[id]
             );
           } else {
-            mqttServer.publish(`${id}-register`, JSON.stringify({ runId }));
+            mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ runId }));
             remoteClients[id].state = 'registered';
             logger.silly(`MQTT registered: ${id}`);
           }
           break;
-        case 'finished':
+        case `${mqttSubChannel}finished`:
           if (activePipelines[runId] && activePipelines[runId].clients[id]) {
             if (activePipelines[runId].finalTransferList) {
               activePipelines[runId].finalTransferList.add(id);

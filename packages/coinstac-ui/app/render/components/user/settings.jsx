@@ -187,7 +187,7 @@ class Settings extends Component {
       classes,
       clientServerURL,
       networkVolume,
-      hideTutorial,
+      isTutorialHidden,
       toggleTutorial,
     } = this.props;
     const {
@@ -272,8 +272,8 @@ class Settings extends Component {
         </Typography>
         <div className={classes.directory}>
           <Switch
-            checked={hideTutorial}
-            value={hideTutorial}
+            checked={isTutorialHidden}
+            value={isTutorialHidden}
             onChange={toggleTutorial}
           />
         </div>
@@ -346,7 +346,7 @@ class Settings extends Component {
 Settings.propTypes = {
   clientServerURL: PropTypes.string.isRequired,
   networkVolume: PropTypes.bool.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
+  isTutorialHidden: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
@@ -373,7 +373,7 @@ const ComponentWithData = compose(
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
   networkVolume: auth.networkVolume,
-  hideTutorial: auth.hideTutorial,
+  isTutorialHidden: auth.isTutorialHidden,
 });
 
 const connectedComponent = connect(mapStateToProps, {

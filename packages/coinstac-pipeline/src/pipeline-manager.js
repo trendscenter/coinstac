@@ -42,6 +42,7 @@ module.exports = {
     mqttRemoteProtocol = 'mqtt:',
     mqttRemoteWSProtocol = 'ws:',
     mqttRemoteWSPathname = '',
+    mqttSubChannel = '',
     remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
@@ -99,6 +100,7 @@ module.exports = {
         store,
         remotePort,
         debugProfileClient,
+        mqttSubChannel,
       }));
     } else {
       ({
@@ -113,6 +115,7 @@ module.exports = {
         mqttRemoteWSProtocol,
         mqttRemoteWSPort,
         mqttRemoteWSPathname,
+        mqttSubChannel,
         activePipelines,
         debugProfileClient,
         store,
@@ -205,7 +208,7 @@ module.exports = {
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
-          publishData('register', { id: clientId, runId });
+          publishData('register', { id: clientId, runId }, 1);
         }
 
         /**
@@ -239,7 +242,7 @@ module.exports = {
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
             Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-              mqttServer.publish(`${clientId}-register`, JSON.stringify({ runId }));
+              mqttServer.publish(`${mqttSubChannel}${clientId}-register`, JSON.stringify({ runId }), { qos: 1 });
             });
           }
         };
@@ -303,11 +306,7 @@ module.exports = {
                   throw err;
                 });
             }
-            // local pipeline user stop error, or other uncaught error
-            publishData('run', {
-              id: clientId, runId, error: { message: err.message, stack: err.stack },
-            }, 1);
-            cleanupPipeline(runId)
+            return cleanupPipeline(runId)
               .then(() => {
                 throw err;
               });
@@ -364,6 +363,12 @@ module.exports = {
         if (currentStep) {
           return currentStep.stop(type);
         }
+      },
+      getPipelines() {
+        return {
+          remoteClients,
+          activePipelines,
+        };
       },
       waitingOnForRun,
     };
