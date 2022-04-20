@@ -45,12 +45,12 @@ function parseCsvFile(file) {
   });
 }
 
-async function parseFiles(headlessClientConfig) {
-  const parsedConfig = { ...headlessClientConfig };
+async function parseHeadlessClientConfig(headlessClientConfig) {
+  let parsedConfig = { ...headlessClientConfig };
 
-  const fileParsePromises = Object.keys(headlessClientConfig.computationWhitelist).map(
+  const fileParsePromises = Object.keys(headlessClientConfig).map(
     (computationId) => {
-      const { inputMap } = headlessClientConfig.computationWhitelist[computationId];
+      const { inputMap } = headlessClientConfig[computationId];
 
       const inputMapFieldPromises = Object.keys(inputMap).map(async (inputMapFieldKey) => {
         const inputMapField = inputMap[inputMapFieldKey];
@@ -58,14 +58,14 @@ async function parseFiles(headlessClientConfig) {
         if (inputMapField.type === 'csv') {
           const parsedData = await parseCsvFile(inputMapField.dataFilePath);
 
-          parsedConfig.computationWhitelist = {
-            ...parsedConfig.computationWhitelist,
+          parsedConfig = {
+            ...parsedConfig,
             [computationId]: {
-              ...parsedConfig.computationWhitelist[computationId],
+              ...parsedConfig[computationId],
               inputMap: {
-                ...parsedConfig.computationWhitelist[computationId].inputMap,
+                ...parsedConfig[computationId].inputMap,
                 [inputMapFieldKey]: {
-                  ...parsedConfig.computationWhitelist[computationId].inputMap[inputMapFieldKey],
+                  ...parsedConfig[computationId].inputMap[inputMapFieldKey],
                   parsedDataFile: parsedData,
                 },
               },
@@ -80,7 +80,9 @@ async function parseFiles(headlessClientConfig) {
 
   await Promise.all(fileParsePromises);
 
+  console.log('ASPOMDPO', parsedConfig);
+
   return parsedConfig;
 }
 
-module.exports = parseFiles;
+module.exports = parseHeadlessClientConfig;

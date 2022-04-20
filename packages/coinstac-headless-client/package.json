@@ -20,6 +20,7 @@
     "cross-fetch": "^3.0.6",
     "csv-reader": "^1.0.7",
     "graphql": "^15.5.0",
+    "lodash": "^4.17.21",
     "mkdirp": "^1.0.4",
     "subscriptions-transport-ws": "^0.10.0",
     "winston": "^3.3.3",

@@ -5,7 +5,7 @@ const { readFileSync } = require('fs');
 const authenticate = require('./auth');
 const createApolloClient = require('./apollo-client');
 const subscribeToNewRuns = require('./subscription');
-const { create } = require('./pipeline-run-manager');
+const { create: createCoinstacClientCore } = require('./initialize-coinstac-client-core');
 
 Error.stackTraceLimit = 100;
 
@@ -22,9 +22,9 @@ async function start() {
 
       const apolloClient = createApolloClient(authToken);
 
-      const runManager = await create(client, authToken);
+      const coinstacClientCore = await createCoinstacClientCore(client, authToken);
 
-      subscribeToNewRuns(client.id, apolloClient, runManager);
+      subscribeToNewRuns(client.id, apolloClient, coinstacClientCore);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('An unexpected error has occurred', error);
