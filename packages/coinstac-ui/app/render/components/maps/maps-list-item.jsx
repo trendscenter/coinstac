@@ -25,7 +25,6 @@ const styles = theme => ({
   },
   contentContainer: {
     marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
   },
   labelInline: {
     display: 'inline-block',
@@ -35,15 +34,15 @@ const styles = theme => ({
   value: {
     display: 'inline-block',
   },
-  mapButton: {
-    marginBottom: theme.spacing(2),
+  row: {
+    marginTop: theme.spacing(1),
   },
 });
 
 const MapsListItem = ({
   consortium,
   pipeline,
-  canDelete,
+  hasDataMapping,
   onDelete,
   needsDataMapping,
   dataMapIsComplete,
@@ -63,39 +62,39 @@ const MapsListItem = ({
       </Typography>
       <Typography className={classes.value}>{ pipeline.name }</Typography>
     </div>
-    <div className="list-item__actions">
-      <div className="list-item__actions-primary">
-        {needsDataMapping && (
-          <Button
-            variant="contained"
-            color="secondary"
-            component={Link}
-            to={`/dashboard/maps/${consortium.id}`}
-            name={consortium.name}
-            className={classes.mapButton}
-          >
-            Map Data to Consortium
-          </Button>
-        )}
+
+    {needsDataMapping && (
+      <div className={classes.row}>
+        <Button
+          variant="contained"
+          color={hasDataMapping ? 'secondary' : 'primary'}
+          component={Link}
+          to={`/dashboard/maps/${consortium.id}`}
+          name={consortium.name}
+        >
+          { hasDataMapping ? 'Edit Mapped Data' : 'Map Data to Consortium' }
+        </Button>
       </div>
-      {
-        canDelete && (
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={onDelete(consortium.id)}
-            name={`${consortium.name}-delete`}
-          >
-            Clear Mapping
-            <DeleteIcon />
-          </Button>
-        )
-      }
-      {
-        (!needsDataMapping || dataMapIsComplete)
-          ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
-          : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
-      }
+    )}
+
+    {needsDataMapping && hasDataMapping && (
+      <div className={classes.row}>
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={onDelete(consortium.id)}
+          name={`${consortium.name}-delete`}
+        >
+          Clear Mapping
+          <DeleteIcon />
+        </Button>
+      </div>
+    )}
+
+    <div className={classes.row}>
+      {(!needsDataMapping || dataMapIsComplete)
+        ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
+        : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />}
     </div>
   </Paper>
 );
@@ -105,7 +104,7 @@ MapsListItem.propTypes = {
   consortium: PropTypes.object.isRequired,
   pipeline: PropTypes.object.isRequired,
   onDelete: PropTypes.func.isRequired,
-  canDelete: PropTypes.bool.isRequired,
+  hasDataMapping: PropTypes.bool.isRequired,
   needsDataMapping: PropTypes.bool.isRequired,
   dataMapIsComplete: PropTypes.bool.isRequired,
 };

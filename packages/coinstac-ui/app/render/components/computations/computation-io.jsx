@@ -53,7 +53,7 @@ const ComputationIO = ({
       const val = JSON.parse(textAreaValue);
       addComputation({
         variables: { computationSchema: val },
-      }).then((e) => {
+      }).then(() => {
         notifySuccess('Compspec updated');
         setIsEditing(false);
       }).catch((e) => {
@@ -137,6 +137,8 @@ const mapStateToProps = ({ auth }) => ({
 });
 
 const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
-const ComputationIOWithAlert = connect(mapStateToProps, { notifySuccess, notifyError })(ComputationIOWithData);
+const ComputationIOWithAlert = connect(
+  mapStateToProps, { notifySuccess, notifyError }
+)(ComputationIOWithData);
 
 export default withStyles(styles)(ComputationIOWithAlert);
