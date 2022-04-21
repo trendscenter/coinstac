@@ -4,6 +4,7 @@ const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const path = require('path');
 const winston = require('winston');
+const { freesurferRegions } = require('coinstac-common');
 const config = require('./config');
 
 const logger = winston.createLogger({
@@ -58,76 +59,6 @@ async function fetchPreprocessComputations(username, password) {
   return computations;
 }
 
-const brainRegionKeys = [
-  '3rd-Ventricle',
-  '4th-Ventricle',
-  '5th-Ventricle',
-  'Brain-Stem',
-  'BrainSegVol',
-  'BrainSegVol-to-eTIV',
-  'BrainSegVolNotVent',
-  'BrainSegVolNotVentSurf',
-  'CC_Anterior',
-  'CC_Central',
-  'CC_Mid_Anterior',
-  'CC_Mid_Posterior',
-  'CC_Posterior',
-  'CortexVol',
-  'CorticalWhiteMatterVol',
-  'CSF',
-  'EstimatedTotalIntraCranialVol',
-  'Left-Accumbens-area',
-  'Left-Amygdala',
-  'Left-Caudate',
-  'Left-Cerebellum-Cortex',
-  'Left-Cerebellum-White-Matter',
-  'Left-choroid-plexus',
-  'Left-Hippocampus',
-  'Left-Inf-Lat-Vent',
-  'Left-Lateral-Ventricle',
-  'Left-non-WM-hypointensities',
-  'Left-Pallidum',
-  'Left-Putamen',
-  'Left-Thalamus-Proper',
-  'Left-VentralDC',
-  'Left-vessel',
-  'Left-WM-hypointensities',
-  'lhCortexVol',
-  'lhCorticalWhiteMatterVol',
-  'lhSurfaceHoles',
-  'MaskVol',
-  'MaskVol-to-eTIV',
-  'non-WM-hypointensities',
-  'Optic-Chiasm',
-  'rhCortexVol',
-  'rhCorticalWhiteMatterVol',
-  'rhSurfaceHoles',
-  'Right-Accumbens-area',
-  'Right-Amygdala',
-  'Right-Caudate',
-  'Right-Cerebellum-Cortex',
-  'Right-Cerebellum-White-Matter',
-  'Right-choroid-plexus',
-  'Right-Hippocampus',
-  'Right-Inf-Lat-Vent',
-  'Right-Lateral-Ventricle',
-  'Right-non-WM-hypointensities',
-  'Right-Pallidum',
-  'Right-Putamen',
-  'Right-Thalamus-Proper',
-  'Right-VentralDC',
-  'Right-vessel',
-  'Right-WM-hypointensities',
-  'SubCortGrayVol',
-  'SupraTentorialVol',
-  'SupraTentorialVolNotVent',
-  'SupraTentorialVolNotVentVox',
-  'SurfaceHoles',
-  'TotalGrayVol',
-  'WM-hypointensities',
-];
-
-
 function createInputMap(baseInputSpec, csvPath) {
   const inputMap = JSON.parse(JSON.stringify(baseInputSpec));
   Object.keys(inputMap).forEach((key) => {
@@ -137,7 +68,7 @@ function createInputMap(baseInputSpec, csvPath) {
   });
   inputMap.data = {
     value: [{
-      type: 'NiFTI', value: brainRegionKeys,
+      type: 'NiFTI', value: freesurferRegions,
     }],
   };
   inputMap.covariates = { value: {} };

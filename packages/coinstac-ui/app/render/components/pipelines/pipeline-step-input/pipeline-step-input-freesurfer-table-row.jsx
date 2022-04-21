@@ -6,8 +6,8 @@ import MenuItem from '@material-ui/core/MenuItem';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import update from 'immutability-helper';
+import { freesurferRegions } from 'coinstac-common';
 import Select from '../../common/react-select';
-import freesurferDataOptions from '../freesurfer-data-options.json';
 
 class PipelineStepInputFreesurferTableRow extends React.Component {
   constructor(props) {
@@ -23,7 +23,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
   }
 
   componentDidMount() {
-    const freeSurferOptions = freesurferDataOptions.freesurferROIs.map((val) => {
+    const freeSurferOptions = freesurferRegions.map((val) => {
       return { label: val, value: val };
     });
 
@@ -48,7 +48,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
   selectInterest = (value, index) => {
     const { updateStep, getNewObj, step } = this.props;
     if (value[0] && value[0].label === 'All Interests') {
-      const options = freesurferDataOptions.freesurferROIs.slice(1);
+      const options = freesurferRegions.slice(1);
       updateStep({
         ...step,
         inputMap: getNewObj('value', options, index, false),
