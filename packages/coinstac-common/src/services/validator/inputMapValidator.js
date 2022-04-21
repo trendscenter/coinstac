@@ -78,10 +78,10 @@ const inputMapSchema = () => {
   const schema = Joi.object({
     data: Joi.object({
       value: Joi.array().min(1).required(),
-    }).required(),
+    }).unknown(true).required(),
     covariates: Joi.object({
       value: Joi.array().min(1).required(),
-    }).required(),
+    }).unknown(true).required(),
   }).unknown(true);
   return schema;
 };
