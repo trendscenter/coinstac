@@ -80,8 +80,6 @@ async function parseHeadlessClientConfig(headlessClientConfig) {
 
   await Promise.all(fileParsePromises);
 
-  console.log('ASPOMDPO', parsedConfig);
-
   return parsedConfig;
 }
 
