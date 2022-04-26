@@ -6,6 +6,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import HomeIcon from '@material-ui/icons/Home';
 import StorageIcon from '@material-ui/icons/Storage';
 import ViewListIcon from '@material-ui/icons/ViewList';
@@ -16,15 +17,19 @@ import DescriptionIcon from '@material-ui/icons/Description';
 import CloudIcon from '@material-ui/icons/Cloud';
 import SecurityIcon from '@material-ui/icons/Security';
 import LanguageIcon from '@material-ui/icons/Language';
+
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
-const DashboardNav = ({ user, isTutorialHidden, tutorialChange }, { router }) => (
+const DashboardNav = ({
+  user, hasRunOfInterestInProgress, isTutorialHidden, tutorialChange,
+}, { router }) => (
   <Fragment>
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
         <ListItemText primary="Home" />
+        {hasRunOfInterestInProgress && <CircularProgress disableShrink size={20} />}
       </ListItem>
       <ListItem button component="a" href="#/dashboard/maps">
         <ListItemIcon><ListAltIcon /></ListItemIcon>
@@ -85,6 +90,7 @@ const DashboardNav = ({ user, isTutorialHidden, tutorialChange }, { router }) =>
 
 DashboardNav.propTypes = {
   user: PropTypes.object.isRequired,
+  hasRunOfInterestInProgress: PropTypes.bool.isRequired,
   isTutorialHidden: PropTypes.bool.isRequired,
   tutorialChange: PropTypes.func.isRequired,
 };

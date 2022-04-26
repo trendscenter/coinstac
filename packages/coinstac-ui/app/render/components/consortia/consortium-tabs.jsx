@@ -320,7 +320,7 @@ class ConsortiumTabs extends Component {
           && (
             <ConsortiumRuns
               runs={this.getConsortiumRuns()}
-              consortia={consortia}
+              consortium={consortium}
               owner={isOwner}
             />
           )

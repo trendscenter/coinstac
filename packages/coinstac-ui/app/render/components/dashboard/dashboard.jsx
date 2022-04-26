@@ -43,10 +43,9 @@ import PullComputationsListener from './listeners/pull-computations-listener';
 import RemoteRunsListener from './listeners/remote-runs-listener';
 import UserPermissionsListener from './listeners/user-permissions-listener';
 import TreeviewListener from './listeners/treeview-listener';
-import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
-
+import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
 
 function Dashboard({
   children,
@@ -115,6 +114,8 @@ function Dashboard({
   useStartInitialRuns(); // starts pipelines on app startup
   useStartDecentralizedRun(); // starts decentralized runs when the api server sends a subscription
 
+  const runsOfInterestInProgress = useSelectRunsOfInterest(72, 'started');
+
   const unreadThreadsCount = useMemo(
     () => {
       if (!threads) return 0;
@@ -157,6 +158,7 @@ function Dashboard({
         <CoinstacAbbr />
         <DashboardNav
           user={auth.user}
+          hasRunOfInterestInProgress={Boolean(runsOfInterestInProgress.length)}
           isTutorialHidden={auth.isTutorialHidden}
           tutorialChange={data => dispatch(tutorialChange(data))}
         />
@@ -172,7 +174,6 @@ function Dashboard({
         </List>
       </div>
       <div className="dashboard-content">
-        <TopNotificationProgressBar consortia={consortia} runs={runs} />
         <main className="content-pane">
           {canShowBackButton && (
             <button
