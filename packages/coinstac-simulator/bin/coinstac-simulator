@@ -12,7 +12,7 @@ const parseJson = require('json-parse-even-better-errors');
 const pkg = require('../package.json');
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'debug',
   transports: [
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
@@ -449,7 +449,8 @@ if (program.upload) {
   }
 
   fulfilledPipelineSpec
-    .then((pipelineSpec) => {
-      runPipeline(pipelineSpec);
+    .then(async (pipelineSpec) => {
+      await runPipeline(pipelineSpec);
+      process.exit(0);
     });
 }

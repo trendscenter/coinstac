@@ -27,7 +27,7 @@ const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_S
  * @return {Promise<string>} Success flag
  */
 let startup = Promise.resolve();
-if (program.noImages) {
+if (!program.noImages) {
   startup = axios.post(
     `${apiServer}/authenticate`,
     {

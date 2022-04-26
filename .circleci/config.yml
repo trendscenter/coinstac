@@ -10,7 +10,7 @@ jobs:
       - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
       - run: cd coinstac && docker-compose up --exit-code-from ui
       - store_artifacts:
-          path: /home/circleci/screenshots
+          path: screenshots/
 workflows:
   build-and-test:
     jobs:
