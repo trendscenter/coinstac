@@ -136,16 +136,16 @@ module.exports = {
                 callback: (error, output) => {
                   if (error) {
                     pipelineErrorCallback(error);
-                    return resolve(lastInput);
+                    return resolve({
+                      output: lastInput,
+                      controllerState: JSON.parse(JSON.stringify(controllerState)),
+                    });
                   }
                   reject(output);
                 },
               });
             } if (type === 'suspend') {
-              // waterfallQueue = [];
-              // pipelineErrorCallback(new Error(stopTypes.suspend));
-              setStateProp('stopSignal', Object.assign({ resolve, reject }, { type: stopTypes[type] }));
-              // return resolve(lastInput);
+              setStateProp('stopSignal', { resolve, reject, type: stopTypes[type] });
             }
           } else {
             throw new Error('Invalid stop type');
@@ -366,12 +366,16 @@ module.exports = {
                 }
                 if (
                   controllerState.stopSignal
+                  && controllerState.success !== true
                   && (controllerState.state === 'Finished iteration'
                   || controllerState.state === 'Recieved data from network')
                 ) {
                   const iterationError = new Error(controllerState.stopSignal.type);
-                  const lastInput = store.getAndRemove(runId, clientId);
-                  controllerState.stopSignal.resolve(lastInput);
+                  const output = store.getAndRemove(runId, clientId);
+                  controllerState.stopSignal.resolve({
+                    output,
+                    controllerState: JSON.parse(JSON.stringify(controllerState)),
+                  });
                   waterfallQueue = [];
                   err(iterationError);
                 } else {

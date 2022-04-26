@@ -332,8 +332,8 @@ module.exports = {
           throw new Error('Invalid pipeline ID');
         }
         return this.stopPipeline(runId, 'suspend')
-          .then((output) => {
-            const packagedState = merge(
+          .then(({ output, controllerState }) => {
+            const packagedState = JSON.parse(JSON.stringify(merge(
               {},
               {
                 activePipelineState: {
@@ -346,8 +346,7 @@ module.exports = {
                 },
               },
               {
-                controllerState:
-                run.pipeline.pipelineSteps[run.pipeline.currentStep].controllerState,
+                controllerState,
               },
               {
                 controllerState: {
@@ -356,7 +355,7 @@ module.exports = {
                   stopSignal: null,
                 },
               }
-            );
+            )));
             return Object.assign({ output }, packagedState);
           });
       },
