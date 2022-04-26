@@ -11,6 +11,8 @@ const {
   WS_CONNECTION_STARTED,
   WS_CONNECTION_TERMINATED,
 } = require('./data/events');
+const transactionLoggerPlugin = require('./transactionLoggerPlugin');
+
 
 async function startServer() {
   const server = new ApolloServer({
@@ -50,6 +52,9 @@ async function startServer() {
         eventEmitter.emit(WS_CONNECTION_TERMINATED, connectionId);
       },
     },
+    plugins: [
+      transactionLoggerPlugin,
+    ],
   });
   await server.start();
 
