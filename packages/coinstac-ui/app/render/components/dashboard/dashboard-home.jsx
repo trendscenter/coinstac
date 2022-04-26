@@ -33,7 +33,7 @@ function DashboardHome({
   networkVolume, classes, notifyError, notifyInfo,
 }) {
   const suspendPipeline = runId => async () => {
-    const runSaveState = await ipcRenderer.send('suspend-pipeline', { runId });
+    const runSaveState = await ipcRenderer.invoke('suspend-pipeline', { runId });
     saveSuspendedRun(runId, runSaveState);
   };
 

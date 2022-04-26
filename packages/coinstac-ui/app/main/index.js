@@ -531,7 +531,7 @@ loadConfig()
         }
       });
 
-      ipcMain.on('suspend-pipeline', async (e, { runId }) => {
+      ipcMain.handle('suspend-pipeline', async (e, { runId }) => {
         try {
           return initializedCore.pipelineManager.suspendPipeline(runId);
         } catch (err) {

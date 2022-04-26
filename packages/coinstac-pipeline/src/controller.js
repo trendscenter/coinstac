@@ -2,6 +2,7 @@
 
 const debug = require('debug');
 const Emitter = require('events');
+const { merge } = require('lodash');
 const Computation = require('./computation');
 const Store = require('./io-store');
 const utils = require('./utils');
@@ -39,8 +40,7 @@ module.exports = {
   }) {
     const store = Store.init(clientId);
     let waterfallQueue;
-    let remoteHandler1;
-    let computationCache = {};
+    let givenHandler;
     let pipelineErrorCallback;
     const currentComputations = computations.map(
       comp => Computation.create({
@@ -71,6 +71,7 @@ module.exports = {
       cacheDirectory: '/tmp',
       transferDirectory: `${dockerBaseDir}/transfer/${clientId}/${runId}`,
       clientId,
+      computationCache: {},
       currentBoxCommand: undefined,
       currentComputations,
       initialized: false,
@@ -80,11 +81,23 @@ module.exports = {
       received: Date.now(),
       runType: 'sequential',
       state: undefined,
+      savedPreviousState: undefined,
       stopSignal: undefined,
       success: false,
     };
 
-    if (saveState) ({ controllerState } = saveState.controllerState);
+    if (saveState) {
+      controllerState = merge(
+        controllerState,
+        saveState.controllerState,
+        // add back in props removed for serialzation
+        {
+          activeComputations: [],
+          currentComputations,
+        }
+      );
+      controllerState.savedPreviousState = saveState.controllerState.state;
+    }
 
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;
@@ -100,7 +113,6 @@ module.exports = {
 
     return {
       activeControlBox,
-      computationCache,
       computationStep,
       controller,
       controllerState,
@@ -114,12 +126,11 @@ module.exports = {
       stop: (type) => {
         return new Promise((resolve, reject) => {
           if (stopTypes[type]) {
-            const lastInput = store.getAndRemove(runId, clientId);
-            // waterfallQueue = [];
             if (type === 'user') {
+              const lastInput = store.get(runId, clientId);
               const iterationError = new Error(stopTypes.user);
               store.put(runId, clientId, iterationError);
-              return remoteHandler1({
+              return givenHandler({
                 success: false,
                 iteration: controllerState.iteration,
                 callback: (error, output) => {
@@ -127,15 +138,18 @@ module.exports = {
                     pipelineErrorCallback(error);
                     return resolve(lastInput);
                   }
-                  return reject(output);
+                  reject(output);
                 },
               });
             } if (type === 'suspend') {
-              pipelineErrorCallback(stopTypes.suspend);
-              return resolve(lastInput);
+              // waterfallQueue = [];
+              // pipelineErrorCallback(new Error(stopTypes.suspend));
+              setStateProp('stopSignal', Object.assign({ resolve, reject }, { type: stopTypes[type] }));
+              // return resolve(lastInput);
             }
+          } else {
+            throw new Error('Invalid stop type');
           }
-          throw new Error('Invalid stop type');
         });
       },
       /**
@@ -146,18 +160,18 @@ module.exports = {
        * @return {Promise}                resolves to the final computation output
        */
       start: (input, remoteHandler) => {
-        remoteHandler1 = remoteHandler;
+        givenHandler = remoteHandler;
         setStateProp('state', 'Started');
-        controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
+        controllerState.initial = true;
         if (!controllerState.initialized) {
           controllerState.runType = activeControlBox.runType || controllerState.runType;
           controllerState.initialized = true;
           controllerState.computationIndex = 0;
-          /* eslint-disable max-len */
-          controllerState.activeComputations[controllerState.computationIndex] = controllerState.currentComputations[controllerState.computationIndex];
-          /* eslint-enable max-len */
           setStateProp('iteration', 0);
         }
+
+        controllerState.activeComputations[controllerState.computationIndex] = controllerState
+          .currentComputations[controllerState.computationIndex];
 
         /**
          * Churns a comp iterartion based on current controller state and box output.
@@ -188,7 +202,7 @@ module.exports = {
                 .start(
                   {
                     input: compInput,
-                    cache: computationCache,
+                    cache: controllerState.computationCache,
                     // picks only relevant attribs for comp
                     state: (({
                       baseDirectory,
@@ -214,7 +228,8 @@ module.exports = {
                   const compTime = Date.now() - compStart;
                   totalCompTime += compTime;
                   debugProfilePipeline(`Computation time with overhead on ${clientId} took: ${compTime}ms`);
-                  computationCache = Object.assign(computationCache, cache);
+                  controllerState.computationCache = Object
+                    .assign(controllerState.computationCache, cache);
                   controllerState.success = !!success;
                   setStateProp('state', 'Finished iteration');
                   store.put(runId, clientId, output);
@@ -340,16 +355,30 @@ module.exports = {
           trampoline(() => {
             return waterfallQueue.length
               ? function _cb(...args) {
-                if (controllerState.stopSignal) {
-                  // const iterationError = new Error(controllerState.stopSignal.type);
-                  // controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
-                  // err(iterationError);
+                if (controllerState.initial
+                    && controllerState.savedPreviousState) {
+                  // load state given from resume
+                  controllerState.state = controllerState.savedPreviousState;
+                  if (activeControlBox
+                    .preIteration(controllerState) === 'remote') {
+                    store.put(runId, clientId, initialInput);
+                  }
+                }
+                if (
+                  controllerState.stopSignal
+                  && (controllerState.state === 'Finished iteration'
+                  || controllerState.state === 'Recieved data from network')
+                ) {
+                  const iterationError = new Error(controllerState.stopSignal.type);
+                  const lastInput = store.getAndRemove(runId, clientId);
+                  controllerState.stopSignal.resolve(lastInput);
+                  waterfallQueue = [];
+                  err(iterationError);
                 } else {
                   const fn = waterfallQueue.shift();
                   controllerState.currentBoxCommand = activeControlBox
                     .preIteration(controllerState);
-                  if ((controllerState.mode === 'local' && controllerState.iteration === 0)
-                    || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
+                  if (controllerState.initial) {
                     // add initial input to first iteration
                     args.unshift(initialInput);
                   } else if (args.length === 0) {
@@ -367,8 +396,8 @@ module.exports = {
 
                   // necessary if this function call turns out synchronous
                   // the stack won't clear and overflow, has limited perf impact
+                  controllerState.initial = false;
                   setImmediate(() => fn.apply(this, args.concat([_cb, err])));
-                  controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
                 }
               }
               : undefined; // steps complete

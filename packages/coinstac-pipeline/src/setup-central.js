@@ -247,6 +247,9 @@ async function setupCentral({
                   !== data.iteration
                 ) {
                   logger.silly(`Duplicate message client ${id}`);
+                  logger.silly(store.has(runId, id));
+                  logger.silly(activePipelines[runId].pipeline.currentState.currentIteration);
+                  logger.silly(JSON.stringify(data));
                   return;
                 }
                 store.put(runId, id, output);
