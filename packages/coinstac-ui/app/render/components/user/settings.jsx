@@ -274,6 +274,7 @@ class Settings extends Component {
             && (
             <Typography variant="subtitle1" className={classes.warning}>
               To use network volumes on Windows users must run the COINSTAC application with administrator priviledges
+              or have Windows Developer Mode enabled
             </Typography>
             )
           }
