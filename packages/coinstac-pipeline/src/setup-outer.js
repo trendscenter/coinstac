@@ -178,11 +178,11 @@ async function setupOuter({
     );
   };
 
-  async function communicate(pipeline, success, messageIteration) {
-    const message = store.getAndRemove(pipeline.id, clientId);
+  async function communicate(pipeline, success, messageIteration, input) {
+    const message = input || store.getAndRemove(pipeline.id, clientId);
     if (message instanceof Error) { // eslint-disable-line no-lonely-if
       if (!activePipelines[pipeline.id].registered) {
-        activePipelines[pipeline.id].stashedOutput = message;
+        activePipelines[pipeline.id].stashedOutput = { output: message, success };
       } else {
         publishData('run', {
           id: clientId,
@@ -214,7 +214,7 @@ async function setupOuter({
         .then((data) => {
           if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
             if (!activePipelines[pipeline.id].registered) {
-              activePipelines[pipeline.id].stashedOutput = message;
+              activePipelines[pipeline.id].stashedOutput = { output: message, success };
             } else {
               const archive = archiver('tar', {
                 gzip: true,
@@ -284,7 +284,7 @@ async function setupOuter({
             }
           } else {
             if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
-              activePipelines[pipeline.id].stashedOutput = message;
+              activePipelines[pipeline.id].stashedOutput = { output: message, success };
             } else {
               logger.debug('############# Local client sending out data');
               publishData('run', {
@@ -448,8 +448,9 @@ async function setupOuter({
             if (activePipelines[data.runId].stashedOutput) {
               communicate(
                 activePipelines[data.runId].pipeline,
-                activePipelines[data.runId].stashedOutput,
-                activePipelines[data.runId].pipeline.currentState.currentIteration
+                activePipelines[data.runId].stashedOutput.success,
+                activePipelines[data.runId].pipeline.currentState.currentIteration,
+                activePipelines[data.runId].stashedOutput.output
               );
             }
           }
