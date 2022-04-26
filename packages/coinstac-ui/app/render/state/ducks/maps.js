@@ -149,6 +149,7 @@ export const updateMapStatus = applyAsyncLoading(
           consortiumId,
           pipelineId: pipeline.id,
           complete: false,
+          map: currentMap.map,
         },
       });
     }
@@ -158,12 +159,43 @@ export const updateMapStatus = applyAsyncLoading(
 
     const unfulfilledInputsAreEqual = isEqual(newPipelineInputs, oldPipelineInputs);
 
+    function mergeFulfilledPipelineInputs() {
+      if (!currentMap.map || !currentMap.map.length) return;
+
+      const mergedMap = [...currentMap.map];
+
+      pipeline.steps.forEach((step, stepIndex) => {
+        const stepMap = {
+          ...mergedMap[stepIndex],
+          inputMap: {
+            ...mergedMap[stepIndex].inputMap,
+          },
+        };
+
+        Object.keys(step.inputMap).forEach((inputMapKey) => {
+          if (!step.inputMap[inputMapKey].fulfilled) return;
+
+          stepMap.inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
+        });
+
+        mergedMap[stepIndex] = stepMap;
+      });
+
+      return mergedMap;
+    }
+
+    let mergedMap;
+    if (unfulfilledInputsAreEqual) {
+      mergedMap = mergeFulfilledPipelineInputs();
+    }
+
     dispatch(({
       type: UPDATE_MAP_STATUS,
       payload: {
         consortiumId,
         pipelineId: pipeline.id,
         pipelineSnapshot: pipeline,
+        map: mergedMap || currentMap.map,
         complete: unfulfilledInputsAreEqual,
       },
     }));
@@ -227,6 +259,7 @@ export default function reducer(state = INITIAL_STATE, action) {
                 ...map,
                 isComplete: action.payload.complete,
                 pipelineSnapshot: action.payload.pipelineSnapshot,
+                map: action.payload.map,
               };
             }
 
