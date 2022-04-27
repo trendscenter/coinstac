@@ -86,8 +86,9 @@ const typeDefs = `
   }
 
   type Run {
-    id: ID!,
+    id: ID!
     clients: JSON
+    observers: JSON
     consortiumId: ID!
     startDate: String
     endDate: String
