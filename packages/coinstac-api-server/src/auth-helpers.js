@@ -195,7 +195,7 @@ const helperFunctions = {
     const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
     return {
-      isValid: Boolean(user && user.id),
+      isValid: true,
       credentials: user || null,
     };
   },

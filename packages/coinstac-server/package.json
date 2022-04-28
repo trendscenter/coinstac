@@ -10,7 +10,7 @@
     "clean:computations": "node scripts/clean-computations.js",
     "test": "echo Refactor tests",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "start": "node src/index.js"
+    "start": "node src/index.js -n"
   },
   "repository": {
     "type": "git",
