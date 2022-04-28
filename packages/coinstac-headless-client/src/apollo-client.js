@@ -32,7 +32,7 @@ function createApolloClient(authToken) {
   const authMiddleware = new ApolloLink((operation, forward) => {
     operation.setContext({
       headers: {
-        authorization: authToken,
+        authorization: `Bearer ${authToken}`,
       },
     });
 

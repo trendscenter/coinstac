@@ -29,6 +29,20 @@ const helperFunctions = {
     });
   },
   /**
+  * Create token for headless user
+  * @param {string} id headless user id
+  * @param {string} apiKey api key used for
+  * @return {string} A JWT for the requested user
+  */
+  createAuthTokenForHeadless(id, apiKey) {
+    return jwt.sign({ id, apiKey }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+    });
+  },
+  /**
    * Decode and verify validity of token
    * @param {string} token
    * @returns object that was inside token
@@ -194,9 +208,23 @@ const helperFunctions = {
   async validateToken(data) {
     const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
+    if (user) {
+      return {
+        isValid: true,
+        credentials: user,
+      };
+    }
+
+    const db = database.getDbInstance();
+
+    const headlessClient = await db.collection('headlessClients').findOne({
+      _id: ObjectID(data.decoded.payload.id),
+      apiKey: data.decoded.payload.apiKey,
+    });
+
     return {
-      isValid: Boolean(user && user.id),
-      credentials: user || null,
+      isValid: Boolean(headlessClient),
+      credentials: headlessClient,
     };
   },
   /**

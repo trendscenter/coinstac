@@ -235,6 +235,7 @@ const typeDefs = `
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
     fetchHeadlessClient(id: ID!): HeadlessClient
+    fetchHeadlessClientConfig: JSON
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
     fetchAvailableHeadlessClients: [HeadlessClient]
