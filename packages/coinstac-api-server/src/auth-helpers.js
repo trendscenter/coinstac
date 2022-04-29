@@ -320,10 +320,17 @@ const helperFunctions = {
   async validateHeadlessClientApiKey(req, h) {
     const db = database.getDbInstance();
 
-    const headlessClient = await db.collection('headlessClients').findOne({ name: req.payload.name });
+    let headlessClientId;
+    try {
+      headlessClientId = ObjectID(req.payload.id);
+    } catch (error) {
+      return Boom.unauthorized('Invalid client id');
+    }
+
+    const headlessClient = await db.collection('headlessClients').findOne({ _id: headlessClientId });
 
     if (!headlessClient) {
-      return Boom.unauthorized('No headless client is registered with this api key');
+      return Boom.unauthorized('No headless client is registered with id');
     }
 
     const apiKeyMatch = await helperFunctions.verifyPassword(
