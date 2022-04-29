@@ -30,10 +30,9 @@ async function getIdToken(username, password) {
   }
 }
 
-async function fetchComputations(id_token) {
+async function fetchComputations() {
   const headers = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${id_token}`,
   };
 
   const payload = {
@@ -56,9 +55,8 @@ async function fetchComputations(id_token) {
   }
 }
 
-async function fetchPreprocessComputations(username, password) {
-  const id_token = await getIdToken(username, password);
-  const computations = await fetchComputations(id_token);
+async function fetchPreprocessComputations() {
+  const computations = await fetchComputations();
   return computations;
 }
 
