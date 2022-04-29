@@ -1,11 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Checkbox from '@material-ui/core/Checkbox';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import JSONInput from 'react-json-editor-ajrm';
 import locale from 'react-json-editor-ajrm/locale/en';
 
@@ -33,56 +29,33 @@ const styles = theme => ({
 function MapsObjectField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
-  const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
-  const [val, setVal] = useState(initialVal);
-  const [useDefault, setUseDefault] = useState(false);
+  const initialVal = useMemo(() => {
+    if (!fieldDataMap) return fieldDescription.default || {};
+    return fieldDataMap.value;
+  }, []);
 
-  function changeHandler(e) {
-    setVal(e.target.value);
-    const value = fieldDescription.type === 'number' ? parseInt(e.target.value, 10) : e.target.value;
-    onChange(fieldName, { fieldType: fieldDescription.type, value });
-  }
-
-  function defaultHandler() {
-    setUseDefault(!useDefault);
-    if (!useDefault) {
-      setVal(fieldDescription.default);
+  useEffect(() => {
+    // call the on change in the first render to set the default value
+    if (!fieldDataMap && fieldDescription.default) {
       onChange(fieldName, { fieldType: fieldDescription.type, value: fieldDescription.default });
     }
-  }
+  }, []);
 
-  function isMapped() {
-    if (fieldDataMap) {
-      return true;
-    }
+  function handleJsonInputChange(value) {
+    onChange(fieldName, { fieldType: fieldDescription.type, value: value.jsObject });
   }
 
   return (
     <div>
       <Typography variant="h6" className={classes.header}>
         {fieldDescription.label}
-        {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
       <JSONInput
-        disabled={useDefault}
-        onChange={e => changeHandler(e)}
-        value={val}
-        placeholder={val || fieldDescription.default}
+        onChange={handleJsonInputChange}
+        placeholder={initialVal}
         locale={locale}
         height="250px"
         theme="light_mitsuketa_tribute"
-      />
-      <FormControlLabel
-        control={(
-          <Checkbox
-            checked={useDefault}
-            onChange={e => defaultHandler(e)}
-            value={useDefault}
-          />
-        )}
-        label={
-          <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
-        }
       />
     </div>
   );
