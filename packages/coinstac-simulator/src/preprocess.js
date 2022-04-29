@@ -33,8 +33,7 @@ async function getIdToken(username, password) {
 async function fetchComputations(id_token) {
   const headers = {
     'Content-Type': 'application/json',
-    // Authorization: `Bearer ${id_token}`,
-    Authorization: `Bearer ${id_token}325953953`,
+    Authorization: `Bearer ${id_token}`,
   };
 
   const payload = {
