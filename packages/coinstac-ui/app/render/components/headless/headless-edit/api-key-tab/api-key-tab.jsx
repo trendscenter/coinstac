@@ -11,6 +11,8 @@ import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import JSONInput from 'react-json-editor-ajrm';
+import locale from 'react-json-editor-ajrm/locale/en';
 
 import useStyles from './api-key-tab.styles';
 
@@ -71,27 +73,24 @@ function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
       </Button>
       <Dialog open={!!currentApiKey}>
         <DialogTitle>API Key generated</DialogTitle>
-        <Box paddingY={2} paddingX={3}>
-          <Typography variant="body2">
-            The following key was generated for this cloud user. Copy it and use it to configure the
-            cloud user. This key will be visible only now. If you lose it, you&#39;ll have to
-            generate another one.
-          </Typography>
-          <Box display="flex" alignItems="center">
-            <TextField
-              value={currentApiKey}
-              disabled
-              fullWidth
-            />
-            <Tooltip title="Copy to clipboard">
-              <IconButton
-                variant="contained"
-                onClick={copyToClipboard}
-              >
-                <FileCopyIcon />
-              </IconButton>
-            </Tooltip>
+        <Box paddingBottom={2} paddingX={3}>
+          <Box marginBottom={2}>
+            <Typography variant="body2">
+              The following key was generated for this cloud user. Copy it and use it to configure
+              the cloud user. This key will be visible only now. If you lose it, you&#39;ll have to
+              generate another one.
+            </Typography>
           </Box>
+          <JSONInput
+            locale={locale}
+            height="150px"
+            width="100%"
+            viewOnly
+            placeholder={[{
+              id: headlessClientData.id,
+              apiKey: currentApiKey,
+            }]}
+          />
         </Box>
         <Box textAlign="right" marginBottom={2} marginRight={3}>
           <Button

@@ -17,7 +17,10 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
 `;
 
 async function fetchHeadlessClientConfig(apolloClient) {
-  const { data } = await apolloClient.query({ query: FETCH_HEADLESS_CLIENT_CONFIG_QUERY });
+  const { data } = await apolloClient.query({
+    query: FETCH_HEADLESS_CLIENT_CONFIG_QUERY,
+    fetchPolicy: 'network-only',
+  });
 
   const headlessClientConfig = get(data, 'fetchHeadlessClientConfig');
 
