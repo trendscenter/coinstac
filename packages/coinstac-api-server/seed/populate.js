@@ -621,8 +621,11 @@ async function populateRuns() {
       status: 'complete',
     },
     {
-      id: 'results-2',
+      _id: RUN_IDS[3],
       clients: {
+        [USER_IDS[0].toHexString()]: 'test1',
+      },
+      observers: {
         [USER_IDS[0].toHexString()]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],

@@ -36,10 +36,12 @@ module.exports = {
     const cache = {};
     let currentStep;
     let currentState;
+    let savedStateInput;
 
     const stateEmitter = new Emitter();
     if (saveState) {
       ({ currentStep } = saveState.pipelineState);
+      savedStateInput = saveState.output;
     }
 
     const pipelineSteps = steps.map(
@@ -167,7 +169,12 @@ module.exports = {
         };
         // TODO: FP here
         const loadInput = (step) => {
-          const output = {};
+          let output = {};
+          if (savedStateInput) {
+            output = savedStateInput;
+            savedStateInput = undefined;
+            return output;
+          }
           for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
             if (val.fromCache) {
               output[key] = cache[val.fromCache.step].variables[val.fromCache.variable].value;

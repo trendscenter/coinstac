@@ -471,6 +471,15 @@ const resolvers = {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
     },
+    fetchHeadlessClientConfig: async (parent, args, { credentials }) => {
+      try {
+        const headlessClientConfig = await headlessClientsController.fetchHeadlessClientConfig(credentials);
+
+        return headlessClientConfig ? headlessClientConfig.computationWhitelist : null;
+      } catch (error) {
+        return Boom.internal(`Failed to fetch the headless client ${id}`, error);
+      }
+    },
     fetchAllDatasetsSubjectGroups: async () => {
       const db = database.getDbInstance();
 
@@ -532,7 +541,7 @@ const resolvers = {
       }
 
       if (!run) {
-        return Boom.notFound('Run not found');
+        return null
       }
 
       return transformToClient(run);

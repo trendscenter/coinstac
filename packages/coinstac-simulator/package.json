@@ -40,7 +40,7 @@
     "coinstac-manager": "^6.4.0",
     "coinstac-pipeline": "^6.4.0",
     "commander": "^2.15.1",
-    "convict": "^4.3.2",
+    "convict": "^6.2.2",
     "csv-parse": "^5.0.4",
     "exit-hook": "^2.2.0",
     "glob": "^7.1.2",

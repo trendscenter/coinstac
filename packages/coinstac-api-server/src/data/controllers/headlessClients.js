@@ -90,7 +90,6 @@ async function fetchAccessibleHeadlessClients(credentials) {
   return headlessClients;
 }
 
-
 async function createHeadlessClient(data, credentials) {
   if (!credentials.permissions.roles.admin) {
     throw new NotAuthorizedError('You do not have permission to execute this operation');
@@ -207,8 +206,22 @@ async function generateHeadlessClientApiKey(headlessClientId, credentials) {
   return key;
 }
 
+/**
+ * This function is called by the own headless client on every pipeline run to retrieve
+ * its configuration
+ */
+async function fetchHeadlessClientConfig(credentials) {
+  const db = database.getDbInstance();
+
+  return db.collection('headlessClients').findOne(
+    { _id: ObjectID(credentials._id) },
+    { projection: { computationWhitelist: 1 } }
+  );
+}
+
 module.exports = {
   fetchHeadlessClient,
+  fetchHeadlessClientConfig,
   fetchAllHeadlessClients,
   fetchAccessibleHeadlessClients,
   createHeadlessClient,

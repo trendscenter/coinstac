@@ -8,7 +8,7 @@ module.exports = {
       name: Joi.string().required(),
       repository: Joi.string().required(),
       version: Joi.string().required(),
-    }).required(),
+    }).unknown(true).required(),
     computation: Joi.object().keys({
       command: Joi.array()
         .items(Joi.string().required())

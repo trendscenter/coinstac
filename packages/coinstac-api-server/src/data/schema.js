@@ -86,8 +86,9 @@ const typeDefs = `
   }
 
   type Run {
-    id: ID!,
+    id: ID!
     clients: JSON
+    observers: JSON
     consortiumId: ID!
     startDate: String
     endDate: String
@@ -234,6 +235,7 @@ const typeDefs = `
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
     fetchHeadlessClient(id: ID!): HeadlessClient
+    fetchHeadlessClientConfig: JSON
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
     fetchAvailableHeadlessClients: [HeadlessClient]
