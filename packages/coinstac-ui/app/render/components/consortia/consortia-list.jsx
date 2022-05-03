@@ -522,6 +522,9 @@ class ConsortiaList extends Component {
           clients: {
             [auth.user.id]: auth.user.username,
           },
+          observers: {
+            [auth.user.id]: auth.user.username,
+          },
           consortiumId: consortium.id,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
