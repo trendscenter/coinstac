@@ -1,18 +1,21 @@
 /* eslint-disable import/prefer-default-export */
 import { dirname, join } from 'path';
 import { deepParseJson } from 'deep-parse-json';
+import { REHYDRATE, createMigrate } from 'redux-persist';
 
+import localDBMigrations from '../migrations';
 import { API_TOKEN_KEY, setUser } from './auth';
 
 let electronStore;
 let persistConfig;
 let storePersistor;
 
+// Increment this version by one everytime the persisted store must undergo a migration
+const CURRENT_PERSISTED_STORE_VERSION = 1;
+
 export const CLEAR_STATE = 'CLEAR_STATE';
-export const REHYDRATE = 'REHYDRATE';
 
 export const clearState = state => ({ type: CLEAR_STATE, payload: state });
-export const rehydrate = state => ({ type: REHYDRATE, payload: state });
 
 function init(store, config, persistor) {
   electronStore = store;
@@ -32,9 +35,15 @@ const loadUserState = (user, authTokenData) => async (dispatch) => {
   if (data) {
     const parsedState = deepParseJson(data);
 
-    delete parsedState._persist;
+    const migrate = createMigrate(localDBMigrations, { debug: true });
 
-    dispatch(rehydrate(parsedState));
+    const migratedState = await migrate(parsedState, CURRENT_PERSISTED_STORE_VERSION);
+
+    dispatch({
+      type: REHYDRATE,
+      key: 'root',
+      payload: migratedState,
+    });
   }
 
   localStorage.setItem(API_TOKEN_KEY, JSON.stringify(authTokenData));
