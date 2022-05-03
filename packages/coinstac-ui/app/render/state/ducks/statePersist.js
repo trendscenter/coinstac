@@ -11,7 +11,7 @@ let persistConfig;
 let storePersistor;
 
 // Increment this version by one everytime the persisted store must undergo a migration
-const CURRENT_PERSISTED_STORE_VERSION = 1;
+export const CURRENT_PERSISTED_STORE_VERSION = 1;
 
 export const CLEAR_STATE = 'CLEAR_STATE';
 
