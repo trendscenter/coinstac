@@ -78,8 +78,6 @@ async function startServer() {
         sub: helperFunctions.subject,
         nbf: true,
         exp: true,
-        maxAgeSec: 43200, // 24 hours
-        timeSkewSec: 15,
       },
     });
 
