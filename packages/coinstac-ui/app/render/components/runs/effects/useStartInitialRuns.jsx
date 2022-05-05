@@ -21,7 +21,7 @@ function useStartInitialRuns() {
   const ranFirstTime = useRef(false);
 
   const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY, {
-    onError: (error) => { console.error({ error }); },
+    onError: () => {},
   });
 
   const [getAllRuns, { data: runsData }] = useLazyQuery(FETCH_ALL_USER_RUNS_QUERY);
