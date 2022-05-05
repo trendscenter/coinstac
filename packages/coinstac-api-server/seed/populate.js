@@ -1,9 +1,28 @@
 const path = require('path');
 const { ObjectID } = require('mongodb');
+const fs = require('fs');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 const fetchAllComputations = require('./fetchAllComputations');
 
+async function getComputationsFromSeedData() {
+  const seedDataPath = './seed/data';
+  const fileNames = await fs.promises.readdir(seedDataPath);
+  const filePromises = fileNames.filter((fileName) => {
+    return fileName.includes('.json');
+  }).map(async (fileName) => {
+    const json = await fs.promises.readFile(path.join(seedDataPath, fileName));
+    return JSON.parse(json);
+  });
+
+  return Promise.all(filePromises);
+}
+
+async function getComputations() {
+  const computationsFromApi = await fetchAllComputations();
+  const computationsFromSeedData = await getComputationsFromSeedData();
+  return [...computationsFromApi, ...computationsFromSeedData];
+}
 
 async function populateComputations(computations) {
   const db = database.getDbInstance();
@@ -198,7 +217,7 @@ async function populateHeadlessClients() {
 }
 
 async function populate(closeConnection = true) {
-  const computations = await fetchAllComputations();
+  const computations = await getComputations();
   await database.connect();
   await database.dropDbInstance();
   database.getDbInstance();
