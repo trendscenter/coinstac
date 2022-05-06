@@ -1,6 +1,6 @@
 [
   {
-    "name": "Headless 1",
+    "id": "HEADLESS_CLIENT_ID",
     "apiKey": "testApiKey"
   }
 ]

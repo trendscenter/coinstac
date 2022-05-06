@@ -27,7 +27,7 @@ const schemaFields = {
     id: String!
     tags: [String]
     version: String
-    compspecVersion: String
+    compspecVersion: Int
     controller: String
     preprocess: Boolean
   `,

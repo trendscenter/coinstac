@@ -521,6 +521,15 @@ const resolvers = {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
     },
+    fetchHeadlessClientConfig: async (parent, args, { credentials }) => {
+      try {
+        const headlessClientConfig = await headlessClientsController.fetchHeadlessClientConfig(credentials);
+
+        return headlessClientConfig ? headlessClientConfig.computationWhitelist : null;
+      } catch (error) {
+        return Boom.internal(`Failed to fetch the headless client ${id}`, error);
+      }
+    },
     fetchAllDatasetsSubjectGroups: async (parent, args, { credentials }) => {
       if (!isAuthenticatedUser(credentials)) {
         return Boom.forbidden('unauthenticated user');
