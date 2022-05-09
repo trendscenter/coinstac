@@ -3,7 +3,21 @@ const config = require('./config');
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}${config.path}`;
 
-const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess }}}';
+const query = `
+query fetchAllComputations($preprocess: Boolean) 
+  {
+    fetchAllComputations(preprocess: $preprocess) {
+      id,
+      computation {
+        type, dockerImage, command, input
+      },
+      meta {
+          id,
+          name,
+          preprocess
+      }
+    }
+  }`;
 
 async function fetchAllComputations() {
   const headers = {

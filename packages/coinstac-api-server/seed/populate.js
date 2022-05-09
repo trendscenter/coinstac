@@ -21,7 +21,22 @@ async function getComputationsFromSeedData() {
 async function getComputations() {
   const computationsFromApi = await fetchAllComputations();
   const computationsFromSeedData = await getComputationsFromSeedData();
-  return [...computationsFromApi, ...computationsFromSeedData];
+
+  // dedupe computations, overwriting api computations with seed data computations if there are collisions.
+  const computationsByMetaId = {};
+  computationsFromApi.forEach((computation) => {
+    computationsByMetaId[computation.meta.id] = computation;
+  });
+  computationsFromSeedData.forEach((computation) => {
+    computationsByMetaId[computation.meta.id] = computation;
+  });
+
+  const computations = Object.keys(computationsByMetaId).map((key) => {
+    return computationsByMetaId[key];
+  });
+
+
+  return computations;
 }
 
 async function populateComputations(computations) {

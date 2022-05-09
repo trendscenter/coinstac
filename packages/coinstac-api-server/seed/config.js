@@ -5,11 +5,4 @@ const config = {
   path: '/api',
 };
 
-// const config = {
-//   protocol: 'http',
-//   apiServer: process.env.API_SERVER_HOSTNAME,
-//   port: process.env.API_SERVER_PORT,
-//   path: '',
-// };
-
 module.exports = config;
