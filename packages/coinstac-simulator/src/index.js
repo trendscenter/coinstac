@@ -70,7 +70,7 @@ const startRun = ({
           clientId: `local${i}`,
           mode: 'local',
           remotePort,
-          mqttPort,
+          mqttRemotePort: mqttPort,
           operatingDirectory: path.resolve(operatingDirectory),
         });
         pipelines.locals.push({
