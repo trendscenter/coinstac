@@ -33,7 +33,6 @@ const startRun = ({
       });
   })
     .then(async (mqttPort) => {
-      console.log(`------------------- MQTT PORT: ${mqttPort}`);
       const pipelines = {
         locals: [],
       };
