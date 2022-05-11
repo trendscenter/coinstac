@@ -59,7 +59,7 @@ program.on('--help', () => {
 program.parse(process.argv);
 
 let globalMode = 'local';
-const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
+const inputSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
 if (program.loglevel) {
   DEBUG_MODE = true;
@@ -141,7 +141,18 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
   return run;
 };
 
-const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
+const upload = async () => {
+  if (!program.username && !program.password) {
+    logger.error('Username and password required for compspec upload');
+    process.exit(1);
+  }
+  logger.info('Uploading computation schema.');
+  return compUpload.compspecUpload(program.username, program.password, logger);
+};
+
+const promptGenerateAndPreprocess = async () => {
+  const pipelineSpecPath = './pipelineSpec.json';
+  const baseDir = path.join(program.directory || '', 'coinstac/');
   let rawSpec;
   let pipelineSpec;
   let specError;
@@ -290,23 +301,130 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
   }
 };
 
+const pipelineSpecFulfill = () => {
+  return Promise.all([
+    readFile(program.compspec ? program.compspec : 'compspec.json'),
+    readFile(program.inputspec ? program.inputspec : inputSpecPath),
+  ].map(p => p.catch(error => error)))
+    .then((specs) => {
+      const comp = JSON.parse(specs[0]);
+      globalMode = comp.computation.remote ? 'decentralized' : 'local';
+      const mode = new Array(specs.length).fill(globalMode);
+
+      let specProm;
+      if (specs[1].code === 'ENOENT') {
+        const memo = {};
+        specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
+          return prom.then(() => {
+            return createInputMap(comp.computation.input[variable], variable);
+          }).then(res => Object.assign(memo, res));
+        }, Promise.resolve())
+          .then((res) => {
+            return inquirer.prompt({
+              type: 'confirm',
+              name: 'write',
+              message: `Write out the input spec just entered? This WILL overwrite any spec in
+          ${inputSpecPath}`,
+            }).then((response) => {
+              const prom = Promise.resolve(res);
+              if (response.write) {
+                prom.then(res => writeFile(inputSpecPath, JSON.stringify(res))
+                  .then(res => res));
+              }
+              return prom;
+            });
+          });
+      } else {
+        specProm = JSON.parse(specs[1]);
+      }
+
+      return Promise.all([specProm])
+        .then((inputSpec) => {
+          let generatedPipeSpec;
+          if (Array.isArray(inputSpec[0])) {
+            generatedPipeSpec = inputSpec[0].map(spec => pipelineSpecFactory(spec, mode, comp));
+          } else {
+            generatedPipeSpec = pipelineSpecFactory(inputSpec[0], mode, comp);
+          }
+
+          return generatedPipeSpec;
+        });
+    });
+};
+
+const pipelineSpecFulfillPipelineOption = () => {
+  return readFile(program.pipeline)
+    .then((pipeSpec) => {
+      const compSpecs = JSON.parse(pipeSpec);
+      const fileProm = compSpecs.reduce((memo, spec, index) => {
+        const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
+        memo.push(Promise.all([
+          readFile(path.resolve(baseDir, spec))
+            .then(file => JSON.parse(file)).catch(() => {
+              throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
+            }),
+          readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
+            .then(file => JSON.parse(file)).catch(() => {
+              throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
+            }),
+        ]));
+        return memo;
+      }, []);
+      return Promise.all(fileProm)
+        .then((fileGroups) => {
+          // each group element is [0] compspec, [1] inputSpec
+          // group compspecs and inputspecs into an object we can create pipepecs from
+          const mode = fileGroups.reduce((memo, fileGroup) => {
+            if (fileGroup[0].computation.remote) {
+              memo.push('decentralized');
+              globalMode = 'decentralized';
+            } else {
+              memo.push('local');
+            }
+            return memo;
+          }, []);
+
+          let clientCount;
+          const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
+            memo.compSpecs.push(fileGroup[0]);
+            const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
+
+            clientCount = clientCount || inputSpec.length;
+            if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
+
+            inputSpec.forEach((spec, idx) => {
+              if (memo.inputSpecs[idx]) {
+                memo.inputSpecs[idx][index] = spec;
+              } else {
+                memo.inputSpecs[idx] = [spec];
+              }
+            });
+
+            return memo;
+          }, { compSpecs: [], inputSpecs: [] });
+
+          const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
+            return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
+          });
+
+          return pipelineSpecs;
+        });
+    });
+};
 
 if (program.preprocess) {
-  return promptGenerateAndPreprocess(
-    './pipelineSpec.json',
-    path.join(program.directory || '', 'coinstac/')
-  )
-    .then(() => process.exit(0));
+  promptGenerateAndPreprocess()
+    .then(() => {
+      process.exit();
+    })
+    .catch((e) => {
+      logger.error(e.message);
+      process.exit(1);
+    });
 }
 
 if (program.upload) {
-  if (!program.username && !program.password) {
-    logger.error('Username and password required for compspec upload');
-    process.exit(1);
-  }
-  logger.info('Uploading computation schema.');
-
-  compUpload.compspecUpload(program.username, program.password, logger)
+  upload()
     .then(() => {
       process.exit();
     })
@@ -318,137 +436,9 @@ if (program.upload) {
   let fulfilledPipelineSpec;
 
   if (program.pipeline) {
-    fulfilledPipelineSpec = readFile(program.pipeline)
-      .then((pipeSpec) => {
-        const compSpecs = JSON.parse(pipeSpec);
-        const fileProm = compSpecs.reduce((memo, spec, index) => {
-          const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
-          memo.push(Promise.all([
-            readFile(path.resolve(baseDir, spec))
-              .then(file => JSON.parse(file)).catch(() => {
-                throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
-              }),
-            readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
-              .then(file => JSON.parse(file)).catch(() => {
-                throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
-              }),
-          ]));
-          return memo;
-        }, []);
-        return Promise.all(fileProm)
-          .then((fileGroups) => {
-            // each group element is [0] compspec, [1] inputSpec
-            // group compspecs and inputspecs into an object we can create pipepecs from
-            const mode = fileGroups.reduce((memo, fileGroup) => {
-              if (fileGroup[0].computation.remote) {
-                memo.push('decentralized');
-                globalMode = 'decentralized';
-              } else {
-                memo.push('local');
-              }
-              return memo;
-            }, []);
-
-            let clientCount;
-            const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
-              memo.compSpecs.push(fileGroup[0]);
-              const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
-
-              clientCount = clientCount || inputSpec.length;
-              if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
-
-              inputSpec.forEach((spec, idx) => {
-                if (memo.inputSpecs[idx]) {
-                  memo.inputSpecs[idx][index] = spec;
-                } else {
-                  memo.inputSpecs[idx] = [spec];
-                }
-              });
-
-              return memo;
-            }, { compSpecs: [], inputSpecs: [] });
-
-            const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
-              return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
-            });
-
-            return pipelineSpecs;
-          });
-      });
+    fulfilledPipelineSpec = pipelineSpecFulfillPipelineOption();
   } else {
-    fulfilledPipelineSpec = Promise.all([
-      readFile(program.compspec ? program.compspec : 'compspec.json'),
-      readFile(program.inputspec ? program.inputspec : inSpecPath),
-    ].map(p => p.catch(error => error)))
-      .then((specs) => {
-        const comp = JSON.parse(specs[0]);
-        globalMode = comp.computation.remote ? 'decentralized' : 'local';
-        const mode = new Array(specs.length).fill(globalMode);
-        /**
-         * Create a spec via cmdline if none is given
-         * @param  {Object} variable [description]
-         * @param  {[type]} key      [description]
-         * @return {[type]}          [description]
-         */
-        // const createInputSpec = (variable, key) => {
-        //   return inquirer.prompt({
-        //     type: 'input',
-        //     name: `${key}`,
-        //     message: `Please give a ${variable.type} input for variable: ${key}
-        //   Files can use glob paterns to resolve to multiple file paths from the input dir
-        //   ie: **/*.txt`,
-        //   }).then((value) => {
-        //     return Promise.all([
-        //       variable.type === 'files' ? glob(value[key]) : value[key],
-        //     ]).then((resolvedVal) => {
-        //       const coerce = variable.type === 'number'
-        //         ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-        //       return {
-        //         [key]: { value: coerce },
-        //       };
-        //     });
-        //   });
-        // };
-
-        let specProm;
-        if (specs[1].code === 'ENOENT') {
-          const memo = {};
-          specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
-            return prom.then(() => {
-              return createInputMap(comp.computation.input[variable], variable);
-            }).then(res => Object.assign(memo, res));
-          }, Promise.resolve())
-            .then((res) => {
-              return inquirer.prompt({
-                type: 'confirm',
-                name: 'write',
-                message: `Write out the input spec just entered? This WILL overwrite any spec in
-            ${inSpecPath}`,
-              }).then((response) => {
-                const prom = Promise.resolve(res);
-                if (response.write) {
-                  prom.then(res => writeFile(inSpecPath, JSON.stringify(res))
-                    .then(res => res));
-                }
-                return prom;
-              });
-            });
-        } else {
-          specProm = JSON.parse(specs[1]);
-        }
-
-        return Promise.all([specProm])
-          .then((inputSpec) => {
-            let generatedPipeSpec;
-            if (Array.isArray(inputSpec[0])) {
-              generatedPipeSpec = inputSpec[0].map(spec => pipelineSpecFactory(spec, mode, comp));
-            } else {
-              generatedPipeSpec = pipelineSpecFactory(inputSpec[0], mode, comp);
-            }
-
-            return generatedPipeSpec;
-          });
-      });
+    fulfilledPipelineSpec = pipelineSpecFulfill();
   }
 
   fulfilledPipelineSpec
