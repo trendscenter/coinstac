@@ -226,6 +226,7 @@ const promptGenerateAndPreprocess = async () => {
           logger.info('no .csv files found');
           process.exit(0);
         }
+
         await inquirer.prompt([{
           type: 'number',
           name: 'select covariates file',
@@ -301,58 +302,24 @@ const promptGenerateAndPreprocess = async () => {
   }
 };
 
-const pipelineSpecFulfill = () => {
-  return Promise.all([
-    readFile(program.compspec ? program.compspec : 'compspec.json'),
-    readFile(program.inputspec ? program.inputspec : inputSpecPath),
-  ].map(p => p.catch(error => error)))
-    .then((specs) => {
-      const comp = JSON.parse(specs[0]);
-      globalMode = comp.computation.remote ? 'decentralized' : 'local';
-      const mode = new Array(specs.length).fill(globalMode);
+const pipelineSpecFulfill = async () => {
+  const compspec = JSON.parse(await readFile(program.compspec ? program.compspec : 'compspec.json'));
+  const inputSpec = JSON.parse(await readFile(program.inputspec ? program.inputspec : inputSpecPath));
+  globalMode = compspec.computation.remote ? 'decentralized' : 'local';
+  const mode = new Array(2).fill(globalMode);
 
-      let specProm;
-      if (specs[1].code === 'ENOENT') {
-        const memo = {};
-        specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
-          return prom.then(() => {
-            return createInputMap(comp.computation.input[variable], variable);
-          }).then(res => Object.assign(memo, res));
-        }, Promise.resolve())
-          .then((res) => {
-            return inquirer.prompt({
-              type: 'confirm',
-              name: 'write',
-              message: `Write out the input spec just entered? This WILL overwrite any spec in
-          ${inputSpecPath}`,
-            }).then((response) => {
-              const prom = Promise.resolve(res);
-              if (response.write) {
-                prom.then(res => writeFile(inputSpecPath, JSON.stringify(res))
-                  .then(res => res));
-              }
-              return prom;
-            });
-          });
-      } else {
-        specProm = JSON.parse(specs[1]);
-      }
+  // TODO: create an inputSpec if one doesn't exist
 
-      return Promise.all([specProm])
-        .then((inputSpec) => {
-          let generatedPipeSpec;
-          if (Array.isArray(inputSpec[0])) {
-            generatedPipeSpec = inputSpec[0].map(spec => pipelineSpecFactory(spec, mode, comp));
-          } else {
-            generatedPipeSpec = pipelineSpecFactory(inputSpec[0], mode, comp);
-          }
-
-          return generatedPipeSpec;
-        });
-    });
+  let generatedPipeSpec;
+  if (Array.isArray(inputSpec)) {
+    generatedPipeSpec = inputSpec.map(spec => pipelineSpecFactory(spec, mode, compspec));
+  } else {
+    generatedPipeSpec = pipelineSpecFactory(inputSpec, mode, compspec);
+  }
+  return generatedPipeSpec;
 };
 
-const pipelineSpecFulfillPipelineOption = () => {
+const pipelineSpecFulfillPipelineOption = async () => {
   return readFile(program.pipeline)
     .then((pipeSpec) => {
       const compSpecs = JSON.parse(pipeSpec);
