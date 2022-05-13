@@ -320,63 +320,61 @@ const pipelineSpecFulfill = async () => {
 };
 
 const pipelineSpecFulfillPipelineOption = async () => {
-  return readFile(program.pipeline)
-    .then((pipeSpec) => {
-      const compSpecs = JSON.parse(pipeSpec);
-      const fileProm = compSpecs.reduce((memo, spec, index) => {
-        const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
-        memo.push(Promise.all([
-          readFile(path.resolve(baseDir, spec))
-            .then(file => JSON.parse(file)).catch(() => {
-              throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
-            }),
-          readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
-            .then(file => JSON.parse(file)).catch(() => {
-              throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
-            }),
-        ]));
-        return memo;
-      }, []);
-      return Promise.all(fileProm)
-        .then((fileGroups) => {
-          // each group element is [0] compspec, [1] inputSpec
-          // group compspecs and inputspecs into an object we can create pipepecs from
-          const mode = fileGroups.reduce((memo, fileGroup) => {
-            if (fileGroup[0].computation.remote) {
-              memo.push('decentralized');
-              globalMode = 'decentralized';
-            } else {
-              memo.push('local');
-            }
-            return memo;
-          }, []);
+  const pipeSpec = await readFile(program.pipeline);
 
-          let clientCount;
-          const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
-            memo.compSpecs.push(fileGroup[0]);
-            const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
+  const compSpecs = JSON.parse(pipeSpec);
+  const fileProm = compSpecs.reduce((memo, spec, index) => {
+    const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
+    memo.push(Promise.all([
+      readFile(path.resolve(baseDir, spec))
+        .then(file => JSON.parse(file)).catch(() => {
+          throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
+        }),
+      readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
+        .then(file => JSON.parse(file)).catch(() => {
+          throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
+        }),
+    ]));
+    return memo;
+  }, []);
 
-            clientCount = clientCount || inputSpec.length;
-            if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
+  const fileGroups = await fileProm;
+  // each group element is [0] compspec, [1] inputSpec
+  // group compspecs and inputspecs into an object we can create pipepecs from
+  const mode = fileGroups.reduce((memo, fileGroup) => {
+    if (fileGroup[0].computation.remote) {
+      memo.push('decentralized');
+      globalMode = 'decentralized';
+    } else {
+      memo.push('local');
+    }
+    return memo;
+  }, []);
 
-            inputSpec.forEach((spec, idx) => {
-              if (memo.inputSpecs[idx]) {
-                memo.inputSpecs[idx][index] = spec;
-              } else {
-                memo.inputSpecs[idx] = [spec];
-              }
-            });
+  let clientCount;
+  const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
+    memo.compSpecs.push(fileGroup[0]);
+    const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
 
-            return memo;
-          }, { compSpecs: [], inputSpecs: [] });
+    clientCount = clientCount || inputSpec.length;
+    if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
 
-          const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
-            return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
-          });
-
-          return pipelineSpecs;
-        });
+    inputSpec.forEach((spec, idx) => {
+      if (memo.inputSpecs[idx]) {
+        memo.inputSpecs[idx][index] = spec;
+      } else {
+        memo.inputSpecs[idx] = [spec];
+      }
     });
+
+    return memo;
+  }, { compSpecs: [], inputSpecs: [] });
+
+  const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
+    return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
+  });
+
+  return pipelineSpecs;
 };
 
 if (program.preprocess) {
