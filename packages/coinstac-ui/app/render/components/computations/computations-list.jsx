@@ -120,7 +120,9 @@ class ComputationsList extends Component {
   }
 
   getTable = (computations) => {
-    const { auth: { user }, docker, classes } = this.props;
+    const {
+      auth: { user }, docker, classes, dockerStatus,
+    } = this.props;
     const { activeComp, isDeleting, computationToDelete } = this.state;
 
     const sortedComputations = computations.sort((a, b) => {
@@ -157,6 +159,7 @@ class ComputationsList extends Component {
                   <Button
                     variant="contained"
                     color="secondary"
+                    disabled={!dockerStatus}
                     onClick={() => this.removeImage(
                       comp.id,
                       comp.computation.dockerImage,
@@ -174,6 +177,7 @@ class ComputationsList extends Component {
                   <Button
                     variant="contained"
                     color="secondary"
+                    disabled={!dockerStatus}
                     onClick={
                       this.pullComputations([{
                         img: comp.computation.dockerImage,
@@ -300,7 +304,9 @@ class ComputationsList extends Component {
   }
 
   render() {
-    const { computations, classes, auth } = this.props;
+    const {
+      computations, classes, auth, dockerStatus,
+    } = this.props;
     const { ownedComputations, otherComputations, showModal } = this.state;
 
     return (
@@ -326,6 +332,7 @@ class ComputationsList extends Component {
           <Button
             variant="contained"
             color="primary"
+            disabled={!dockerStatus}
             className={classes.downloadAllButton}
             onClick={this.pullComputations(
               computations.map(comp => ({
@@ -368,6 +375,7 @@ ComputationsList.defaultProps = {
 };
 
 ComputationsList.propTypes = {
+  dockerStatus: PropTypes.bool.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,

@@ -28,12 +28,11 @@ import {
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
+import useDockerStatus from '../../hooks/useDockerStatus';
+import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
 import DashboardNav from './dashboard-nav';
 import DashboardTutorialModal from './dashboard-tutorial';
 import DockerStatus from './docker-status';
-
-import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
-import useDockerStatus from './effects/useDockerStatus';
 import NotificationsListener from './listeners/notifications-listener';
 import DockerEventsListeners from './listeners/docker-events-listeners';
 import LocalRunStatusListeners from './listeners/local-run-status-listeners';
