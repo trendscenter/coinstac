@@ -92,8 +92,6 @@ class ComputationsList extends Component {
       showModal: false,
       isDeleting: false,
     };
-
-    this.pullComputations = this.pullComputations.bind(this);
   }
 
   componentDidMount() {
@@ -179,7 +177,7 @@ class ComputationsList extends Component {
                     color="secondary"
                     disabled={!dockerStatus}
                     onClick={
-                      this.pullComputations([{
+                      () => this.handlePullComputations([{
                         img: comp.computation.dockerImage,
                         compId: comp.id,
                         compName: comp.meta.name,
@@ -264,7 +262,6 @@ class ComputationsList extends Component {
     });
   }
 
-
   removeComputation = () => {
     const { removeComputation, notifySuccess, notifyError } = this.props;
     const { computationToDelete } = this.state;
@@ -296,11 +293,9 @@ class ComputationsList extends Component {
       });
   }
 
-  pullComputations(comps) {
+  handlePullComputations = (computations) => {
     const { pullComputations } = this.props;
-    return () => {
-      pullComputations({ computations: comps });
-    };
+    pullComputations({ computations });
   }
 
   render() {
@@ -334,7 +329,7 @@ class ComputationsList extends Component {
             color="primary"
             disabled={!dockerStatus}
             className={classes.downloadAllButton}
-            onClick={this.pullComputations(
+            onClick={() => this.handlePullComputations(
               computations.map(comp => ({
                 img: comp.computation.dockerImage,
                 compId: comp.id,

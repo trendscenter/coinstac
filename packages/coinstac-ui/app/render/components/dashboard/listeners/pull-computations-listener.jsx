@@ -21,7 +21,7 @@ function PullComputationsListener({ userId, notifyInfo, pullComputations }) {
   const consortium = get(data, 'consortiumPipelineChanged');
 
   useEffect(() => {
-    if (!consortium || !(userId in consortium.members)) return;
+    if (!consortium || !(userId in consortium.activeMembers)) return;
 
     const pipelineData = apolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const computationData = apolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
