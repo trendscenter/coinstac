@@ -23,9 +23,9 @@ async function create(config, authToken) {
   const clientCoreConfig = {
     fileServer: {
       hostname: process.env.FILE_SERVER_HOSTNAME,
-      pathname: process.env.FILE_SERVER_HOSTNAME,
-      port: process.env.FILE_SERVER_HOSTNAME,
-      protocol: process.env.FILE_SERVER_HOSTNAME,
+      pathname: process.env.FILE_SERVER_PATHNAME,
+      port: process.env.FILE_SERVER_PORT,
+      protocol: process.env.FILE_SERVER_PROTOCOL,
     },
     mqttServer: {
       hostname: process.env.MQTT_SERVER_HOSTNAME,
