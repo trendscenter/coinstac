@@ -1,9 +1,7 @@
 #!/usr/bin/env node
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
-const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
-const inquirer = require('inquirer');
 const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
@@ -12,9 +10,9 @@ const term = require('terminal-kit').terminal;
 
 const pkg = require('../package.json');
 
-term.on('key', function (name, matches, data) {
+term.on('key', (name, matches, data) => {
   if (name === 'CTRL_C') { process.exit(); }
-})
+});
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -79,7 +77,6 @@ const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
 const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
-const { elseif } = require('swig-templates/lib/tags');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
@@ -180,15 +177,14 @@ const promptGenerateAndPreprocess = async () => {
     // list options of computations
     if (computations.length < 1) {
       logger.error('no computations returned from API');
-      process.exit(1)
+      process.exit(1);
     }
 
     term('Select a preprocessing computation: ');
-    pipelineSpec && term('\n\n*** Note: this will rename your current pipelineSpec and create a new one ***')
+    pipelineSpec && term('\n\n*** Note: this will rename your current pipelineSpec and create a new one ***');
     const selectComputationAnswer = await term.singleColumnMenu(
-      computations.map((computation, index) => { return `${index}) ${computation.meta.id}` }
-      ), {}
-    ).promise
+      computations.map((computation, index) => { return `${index}) ${computation.meta.id}`; }), {}
+    ).promise;
 
     // download the selected computation
     const selectedComputation = computations[selectComputationAnswer.selectedIndex];
@@ -234,27 +230,27 @@ const promptGenerateAndPreprocess = async () => {
       process.exit(0);
     }
 
-    term(`Select Covariates File to use for pipeline:`)
-    const covariatesFileAnswer = term.singleColumnMenu(csvs.map((csv, index) => { return `${index}) ${csv}` }))
+    term('Select Covariates File to use for pipeline:');
+    const covariatesFileAnswer = term.singleColumnMenu(csvs.map((csv, index) => { return `${index}) ${csv}`; }));
 
-      //  create an inputspec from the csv and the api results
-      const baseInputSpec = JSON.parse(
-        JSON.stringify(selectedComputation.computation.input)
-      );
-      const fulfilledInputMap = createInputMap(baseInputSpec, csvs[covariatesFileAnswer.selectedIndex]);
-      const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
-      if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
-      fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
+    //  create an inputspec from the csv and the api results
+    const baseInputSpec = JSON.parse(
+      JSON.stringify(selectedComputation.computation.input)
+    );
+    const fulfilledInputMap = createInputMap(baseInputSpec, csvs[covariatesFileAnswer.selectedIndex]);
+    const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
+    if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
+    fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
-      term('pipelineSpec.json created')
-      term('If you dont want to use default options\nPlease edit pipelineSpec.json manually')
-      term('Proceed with pipeline? y,n')
-      const proceed = await term.yesOrNo({yes: ['y'], no: ['n']})
+    term('pipelineSpec.json created');
+    term('If you dont want to use default options\nPlease edit pipelineSpec.json manually');
+    term('Proceed with pipeline? y,n');
+    const proceed = await term.yesOrNo({ yes: ['y'], no: ['n'] });
 
-      if (proceed){
-        return startPreprocessRun(generatedPipeSpec, baseDir)
-      }
-      process.exit();
+    if (proceed) {
+      return startPreprocessRun(generatedPipeSpec, baseDir);
+    }
+    process.exit();
   };
 
   if (rawSpec) {
@@ -271,26 +267,19 @@ const promptGenerateAndPreprocess = async () => {
   if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
   } else if (specError) {
-    await inquirer.prompt([{
-      type: 'confirm',
-      name: 'newSpec',
-      message: specError,
-    }]).then(async (resp) => {
-      if (resp.newSpec) {
-        await genSpecAndProcess(pipelineSpec, baseDir);
-      }
-    });
-  } else {
-    await inquirer.prompt([{
-      type: 'confirm',
-      name: 'run',
-      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
-    }]).then(async (resp) => {
-      if (resp.run) {
-        return startPreprocessRun(pipelineSpec, baseDir);
-      }
+    term(specError);
+    const newSpec = await term.yesOrNo({ yes: ['ENTER', 'y'], no: ['n'] }).promise;
+    if (newSpec) {
       await genSpecAndProcess(pipelineSpec, baseDir);
-    });
+    }
+  } else {
+    term(`Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`);
+    const useExistingPipeline = term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
+    if (useExistingPipeline) {
+      await startPreprocessRun(pipelineSpec, baseDir);
+    } else {
+      await genSpecAndProcess(pipelineSpec, baseDir);
+    }
   }
 };
 
@@ -375,10 +364,10 @@ if (program.preprocess) {
       await promptGenerateAndPreprocess();
       process.exit();
     } catch (error) {
-      logger.error(error.message)
+      logger.error(error.message);
       process.exit(1);
     }
-  })()
+  })();
 } else if (program.upload) {
   upload()
     .then(() => {
