@@ -30,10 +30,9 @@ async function getIdToken(username, password) {
   }
 }
 
-async function fetchComputations(id_token) {
+async function fetchComputations() {
   const headers = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${id_token}`,
   };
 
   const payload = {
@@ -45,16 +44,19 @@ async function fetchComputations(id_token) {
   };
   try {
     const response = await axios.post('/graphql', payload, { headers });
+    if (response.data?.errors?.[0]) {
+      throw response.data.errors[0].message;
+    }
     return response.data.data.fetchAllComputations;
   } catch (error) {
     logger.error('Error connecting to API');
+    logger.error(error);
     throw error;
   }
 }
 
-async function fetchPreprocessComputations(username, password) {
-  const id_token = await getIdToken(username, password);
-  const computations = await fetchComputations(id_token);
+async function fetchPreprocessComputations() {
+  const computations = await fetchComputations();
   return computations;
 }
 

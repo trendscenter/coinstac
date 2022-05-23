@@ -28,7 +28,7 @@ async function startServer() {
       }
 
       return {
-        credentials: request.auth ? request.auth.credentials : null,
+        credentials: request.auth?.credentials?.id ? request.auth.credentials : null,
       };
     },
     subscriptions: {
@@ -64,7 +64,6 @@ async function startServer() {
   });
 
   await app.register(Jwt);
-
   app.auth.strategy('coinstac-jwt', 'jwt',
     {
       keys: {
@@ -86,6 +85,11 @@ async function startServer() {
 
   await server.applyMiddleware({
     app,
+    route: {
+      auth: {
+        mode: 'try',
+      },
+    },
   });
 
   await server.installSubscriptionHandlers(app.listener);

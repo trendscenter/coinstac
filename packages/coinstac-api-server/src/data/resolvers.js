@@ -217,6 +217,10 @@ function isAllowedForComputationChange(permissions) {
   return isAdmin(permissions) || isAuthor(permissions);
 }
 
+function isAuthenticatedUser(credentials) {
+  return Boolean(credentials);
+}
+
 const pubsub = new PubSub();
 
 initSubscriptions(pubsub);
@@ -229,7 +233,10 @@ const resolvers = {
      * Returns all results.
      * @return {array} All results
      */
-    fetchAllResults: async () => {
+    fetchAllResults: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const results = await db.collection('runs').find().toArray();
@@ -241,7 +248,10 @@ const resolvers = {
      * @param {string} args.resultId  Requested pipeline ID
      * @return {object} Requested pipeline if id present, null otherwise
      */
-    fetchResult: async (_, args) => {
+    fetchResult: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!args.resultId) {
         return null;
       }
@@ -256,6 +266,9 @@ const resolvers = {
      * @return {array} All consortia to which the current user access
      */
     fetchAllConsortia: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const consortia = await db.collection('consortia').find({
@@ -273,7 +286,10 @@ const resolvers = {
      * @param {string} args.consortiumId Requested consortium ID
      * @return {object} Requested consortium if id present, null otherwise
      */
-    fetchConsortium: async (_, args) => {
+    fetchConsortium: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!args.consortiumId) {
         return null;
       }
@@ -287,7 +303,8 @@ const resolvers = {
      * Returns all computations.
      * @return {array} All computations
      */
-    fetchAllComputations: async (_, { preprocess }) => {
+    fetchAllComputations: async (parent, { preprocess }, { credentials }) => {
+      // public method
       const db = database.getDbInstance();
 
       let computations;
@@ -305,7 +322,10 @@ const resolvers = {
      * @param {array} args.computationIds Requested computation ids
      * @return {array} List of computation objects
      */
-    fetchComputation: async (_, { computationIds }) => {
+    fetchComputation: async (parent, { computationIds }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!Array.isArray(computationIds) || computationIds.length === 0) {
         return null;
       }
@@ -323,6 +343,9 @@ const resolvers = {
      * @return {array} List of all pipelines
      */
     fetchAllPipelines: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const pipelineSteps = await db.collection('pipelines').aggregate([
@@ -377,7 +400,10 @@ const resolvers = {
      * @param {string} args.pipelineId  Requested pipeline ID
      * @return {object} Requested pipeline if id present, null otherwise
      */
-    fetchPipeline: async (_, args) => {
+    fetchPipeline: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!args.pipelineId) {
         return null;
       }
@@ -391,16 +417,25 @@ const resolvers = {
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: (_, args) => {
+    fetchUser: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       return helperFunctions.getUserDetailsByID(args.userId);
     },
-    fetchAllUsers: async () => {
+    fetchAllUsers: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const users = await db.collection('users').find().toArray();
       return transformToClient(users);
     },
     fetchAllUserRuns: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       let runs;
@@ -419,6 +454,9 @@ const resolvers = {
       return transformToClient(runs);
     },
     fetchAllThreads: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const threads = await db.collection('threads').find({
@@ -428,6 +466,9 @@ const resolvers = {
       return transformToClient(threads);
     },
     fetchUsersOnlineStatus: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       // Find the users that are in the same consortia as the logged user
       const db = database.getDbInstance();
 
@@ -452,17 +493,26 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAllHeadlessClients: async () => {
+    fetchAllHeadlessClients: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
 
       return transformToClient(headlessClients);
     },
     fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const headlessClients = await headlessClientsController.fetchAccessibleHeadlessClients(credentials);
 
       return transformToClient(headlessClients);
     },
     fetchHeadlessClient: async (parent, { id }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       try {
         const headlessClient = await headlessClientsController.fetchHeadlessClient(id, credentials);
 
@@ -480,7 +530,10 @@ const resolvers = {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
     },
-    fetchAllDatasetsSubjectGroups: async () => {
+    fetchAllDatasetsSubjectGroups: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const result = await db.collection('datasets').aggregate([
@@ -493,7 +546,10 @@ const resolvers = {
 
       return result.length ? result[0].subjectGroups : [];
     },
-    searchDatasets: async (parent, { searchString = '', subjectGroups = [], modality = '' }) => {
+    searchDatasets: async (parent, { searchString = '', subjectGroups = [], modality = '' }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const searchObj = {};
@@ -516,7 +572,10 @@ const resolvers = {
 
       return transformToClient(datasets);
     },
-    fetchDataset: async (parent, { id }) => {
+    fetchDataset: async (parent, { id }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
@@ -524,6 +583,9 @@ const resolvers = {
       return transformToClient(dataset);
     },
     fetchRun: async (parent, { runId }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       let run;
@@ -546,7 +608,10 @@ const resolvers = {
 
       return transformToClient(run);
     },
-    getPipelines: async () => {
+    getPipelines: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const result = await axios.get(
         `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
       );
@@ -562,6 +627,9 @@ const resolvers = {
      * @return {object} New computation object
      */
     addComputation: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { permissions } = credentials;
       const { computationSchema } = args;
 
@@ -617,6 +685,9 @@ const resolvers = {
      * @return {object} Updated user object
      */
     addUserRole: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
@@ -652,6 +723,9 @@ const resolvers = {
      * @return {object} New/updated run object
      */
     createRun: async (parent, { consortiumId }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!credentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
@@ -715,7 +789,12 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium id to delete
      * @return {object} Deleted consortium
      */
-    deleteConsortiumById: async (parent, args, { credentials: { permissions } }) => {
+    deleteConsortiumById: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
+
+      const { permissions } = credentials;
       if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
@@ -789,7 +868,11 @@ const resolvers = {
      * @param {string} args.pipelineId Pipeline id to delete
      * @return {object} Deleted pipeline
      */
-    deletePipeline: async (parent, args, { credentials: { permissions } }) => {
+    deletePipeline: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
+      const { permissions } = credentials;
       const db = database.getDbInstance();
 
       const pipelineId = ObjectID(args.pipelineId);
@@ -845,6 +928,9 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     joinConsortium: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
@@ -864,6 +950,9 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     leaveConsortium: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       await removeUserPermissions({ userId: ObjectID(credentials.id), role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
 
       return helperFunctions.getUserDetails(credentials.username);
@@ -876,6 +965,9 @@ const resolvers = {
      * @return {object} Deleted computation
      */
     removeComputation: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
       const computation = await db.collection('computations').findOne({ _id: ObjectID(args.computationId) });
 
@@ -906,6 +998,9 @@ const resolvers = {
      * @return {object} Updated user object
      */
     removeUserRole: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
@@ -941,7 +1036,10 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: async (_, args) => {
+    saveActivePipeline: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -1007,6 +1105,9 @@ const resolvers = {
      * @return {object} New/updated consortium object
      */
     saveConsortium: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { permissions } = credentials;
 
       const isUpdate = !!args.consortium.id;
@@ -1069,6 +1170,9 @@ const resolvers = {
      * @return {object} New/updated consortium object
      */
     saveConsortiumActiveMembers: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { permissions } = credentials;
 
       if (!permissions.consortia[args.consortiumId].includes('owner')) {
@@ -1100,7 +1204,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.error Error
      */
-    saveError: async (_, args) => {
+    saveError: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const run = await db.collection('runs').findOne({
@@ -1141,7 +1248,10 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: async (_, args) => {
+    savePipeline: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -1228,7 +1338,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.results Results
      */
-    saveResults: async (_, args) => {
+    saveResults: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const run = await db.collection('runs').findOne({
@@ -1269,7 +1382,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.data State data
      */
-    updateRunState: async (_, args) => {
+    updateRunState: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const result = await db.collection('runs').findOneAndUpdate({
@@ -1295,6 +1411,9 @@ const resolvers = {
      * @return {object} Updated user object
      */
     updateUserConsortiumStatus: async (parent, { consortiumId, status }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const result = await db.collection('users').findOneAndUpdate({
@@ -1320,6 +1439,9 @@ const resolvers = {
      * @return {object} Updated consortia
      */
     updateConsortiumMappedUsers: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const updateObj = {};
@@ -1352,6 +1474,9 @@ const resolvers = {
      * @return {object} Updated consortia
      */
     updateConsortiaMappedUsers: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!Array.isArray(args.consortia) || args.consortia.length === 0) {
         return;
       }
@@ -1393,6 +1518,9 @@ const resolvers = {
      * @return {boolean} Success status
      */
     updatePassword: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { currentPassword, newPassword } = args;
       const db = database.getDbInstance();
 
@@ -1429,6 +1557,9 @@ const resolvers = {
      * @return {object} Updated message
      */
     saveMessage: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { title, recipients, content, action } = args;
       const threadId = args.threadId ? ObjectID(args.threadId) : null;
 
@@ -1538,7 +1669,10 @@ const resolvers = {
      * @param {string} args.userId User Id
      * @return {object} None
      */
-    setReadMessage: async (_, args) => {
+    setReadMessage: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { threadId, userId } = args;
 
       const db = database.getDbInstance();
@@ -1565,6 +1699,9 @@ const resolvers = {
      * @return {object} Created issue
      */
     createIssue: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { title, body } = args.issue;
 
       const repository = process.env.COINSTAC_REPOSITORY_NAME
@@ -1582,6 +1719,9 @@ const resolvers = {
       }
     },
     createHeadlessClient: async (parent, { data }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       try {
         const headlessClient = await headlessClientsController.createHeadlessClient(data, credentials);
 
@@ -1595,6 +1735,9 @@ const resolvers = {
       }
     },
     updateHeadlessClient: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { headlessClientId, data } = args;
 
       try {
@@ -1610,6 +1753,9 @@ const resolvers = {
       }
     },
     deleteHeadlessClient: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { headlessClientId } = args;
 
       try {
@@ -1625,6 +1771,9 @@ const resolvers = {
       }
     },
     generateHeadlessClientApiKey: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { headlessClientId } = args;
 
       try {
@@ -1639,6 +1788,9 @@ const resolvers = {
       }
     },
     saveDataset: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const { id, datasetDescription, participantsDescription, otherInfo } = args.input;
 
       const db = database.getDbInstance();
@@ -1685,6 +1837,9 @@ const resolvers = {
       return transformToClient(result);
     },
     deleteDataset: async (parent, { id }, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
@@ -1698,6 +1853,9 @@ const resolvers = {
       return transformToClient(dataset);
     },
     deleteUser: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!isAdmin(credentials.permissions)) {
         return Boom.unauthorized('You do not have permission to delete this user');
       }
@@ -1710,7 +1868,7 @@ const resolvers = {
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
 
       const soleOwner = ownedConsortia.reduce((sole, con) => {
-        if(Object.keys(con.owners).length <= 1) sole = true;
+        if (Object.keys(con.owners).length <= 1) sole = true;
         return sole;
       }, false)
 
@@ -1747,6 +1905,9 @@ const resolvers = {
       eventEmitter.emit(USER_CHANGED, user);
     },
     stopRun: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       if (!isAdmin(credentials.permissions)) {
         return Boom.unauthorized('You do not have permission to stop this run')
       }
@@ -1756,6 +1917,9 @@ const resolvers = {
       );
     },
     deleteRun: async (parent, args, { credentials }) => {
+      if (!isAuthenticatedUser(credentials)) {
+        return Boom.forbidden('unauthenticated user');
+      }
       const db = database.getDbInstance();
 
       const runs = await db.collection('runs').find({
@@ -1895,6 +2059,9 @@ const resolvers = {
     usersOnlineStatusChanged: {
       subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged'),
       resolve: async (payload, args, context, info) => {
+        if (!isAuthenticatedUser(credentials)) {
+          return Boom.forbidden('unauthenticated user');
+        }
         // Find the users that are in the same consortia as the logged user
         const db = database.getDbInstance();
 

@@ -155,10 +155,6 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
 
   // authenticate and fetch computations
   const genSpecAndProcess = async (pipelineSpec, baseDir) => {
-    if (program.username === undefined || program.password === undefined) {
-      logger.error('Username and password required');
-      process.exit(1);
-    }
     const computations = await fetchPreprocessComputations(program.username, program.password);
     // list options of computations
     await inquirer.prompt([{
