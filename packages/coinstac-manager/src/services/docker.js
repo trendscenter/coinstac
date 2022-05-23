@@ -46,7 +46,7 @@ module.exports = {
       if (process.LOGLEVEL === 'debug') utils.logger.debug(`Container debug port at: 44${portmunge}`);
       const tcpOpt = `${process.env.CI ? port : 8881}/tcp`;
       const defaultOpts = {
-      // this port is coupled w/ the internal base server image FYI
+        // this port is coupled w/ the internal base server image FYI
         ExposedPorts: {
           [tcpOpt]: {},
           ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
@@ -387,4 +387,10 @@ module.exports = {
   ping: () => docker.ping(),
   getImage: id => docker.getImage(id),
   pull: (id, cb) => docker.pull(id, cb),
+  getContainerStats: () => {
+    const containers = docker.listContainers({ all: true }, (err, containers) => {
+      console.log(`ALL: ${containers.length}`);
+    });
+    return containers;
+  },
 };

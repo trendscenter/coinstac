@@ -345,4 +345,5 @@ module.exports = {
   stopAllServices,
   Docker,
   docker: dockerService.docker,
+  getContainerStats: dockerService.getContainerStats,
 };

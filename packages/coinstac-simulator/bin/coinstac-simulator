@@ -75,7 +75,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
+const { pullImages, getContainerStats } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -359,8 +359,10 @@ const pipelineSpecFulfillPipelineOption = async () => {
 };
 
 if (program.preprocess) {
+
   (async () => {
     try {
+      const x = await getContainerStats();
       await promptGenerateAndPreprocess();
       process.exit();
     } catch (error) {
