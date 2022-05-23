@@ -1,9 +1,9 @@
 const axios = require('axios');
 
-async function authenticate(apiKey, name) {
+async function authenticate(apiKey, headlessClientId) {
   const response = await axios.post(`${process.env.API_URL}/authenticateWithApiKey`, {
     apiKey,
-    name,
+    id: headlessClientId,
   });
 
   return response.data;

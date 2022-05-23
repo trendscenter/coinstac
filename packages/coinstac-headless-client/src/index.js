@@ -18,7 +18,7 @@ const apiConf = JSON.parse(readFileSync(process.env.HEADLESS_CLIENT_CONFIG));
 async function start() {
   apiConf.forEach(async (apiClient) => {
     try {
-      const { authToken, client } = await authenticate(apiClient.apiKey, apiClient.name);
+      const { authToken, client } = await authenticate(apiClient.apiKey, apiClient.id);
 
       const apolloClient = createApolloClient(authToken);
 

@@ -9,7 +9,7 @@ import maps from './ducks/maps';
 import createRunsReducer from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
 import suspendedRuns from './ducks/suspendedRuns';
-import { CLEAR_STATE, REHYDRATE } from './ducks/statePersist';
+import { CLEAR_STATE } from './ducks/statePersist';
 
 function rootReducer(persistStorage) {
   const appReducer = combineReducers({
@@ -27,13 +27,6 @@ function rootReducer(persistStorage) {
 
   return (state, action) => {
     if (action.type === CLEAR_STATE) {
-      state = {
-        ...state,
-        ...action.payload,
-      };
-    }
-
-    if (action.type === REHYDRATE) {
       state = {
         ...state,
         ...action.payload,

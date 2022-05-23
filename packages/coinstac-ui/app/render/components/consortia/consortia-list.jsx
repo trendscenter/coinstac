@@ -257,7 +257,9 @@ class ConsortiaList extends Component {
 
       if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
-        if (hasDockerComputation && !dockerStatus) {
+        if (auth.user.id in consortium.activeMembers
+          && hasDockerComputation
+          && !dockerStatus) {
           actions.push(
             <Tooltip title="Docker is not running" placement="top">
               <Button
@@ -518,6 +520,9 @@ class ConsortiaList extends Component {
         const localRun = {
           id: uuid(),
           clients: {
+            [auth.user.id]: auth.user.username,
+          },
+          observers: {
             [auth.user.id]: auth.user.username,
           },
           consortiumId: consortium.id,

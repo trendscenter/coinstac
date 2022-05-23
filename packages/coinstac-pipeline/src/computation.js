@@ -3,6 +3,7 @@
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
 const path = require('path');
+const { userInfo } = require('os');
 const utils = require('./utils');
 
 /**
@@ -46,6 +47,7 @@ const managerOptions = ({
           NetworkMode: process.env.CI_DOCKER_NETWORK,
         };
       }
+      if (process.platform === 'linux') opts.docker.User = `${userInfo().uid}:${userInfo().gid}`;
       break;
     case 'singularity':
       opts = [

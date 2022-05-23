@@ -30,7 +30,7 @@ program
   .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
-  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
+  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output] or ./coinstac for preprocessing')
   .option('-t, --showinput', ' on errors show comp input that computation failed with')
   .option('-e, --debug', ' enter debug mode, displays extra info including input')
   .option('-p, --pipeline [path]', ' give a pipeline file to run a full pipeline from, working dir used is first comp listed')
@@ -292,7 +292,10 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
 
 
 if (program.preprocess) {
-  return promptGenerateAndPreprocess('./pipelineSpec.json', 'coinstac/')
+  return promptGenerateAndPreprocess(
+    './pipelineSpec.json',
+    path.join(program.directory || '', 'coinstac/')
+  )
     .then(() => process.exit(0));
 }
 
