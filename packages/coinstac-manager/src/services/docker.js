@@ -387,10 +387,11 @@ module.exports = {
   ping: () => docker.ping(),
   getImage: id => docker.getImage(id),
   pull: (id, cb) => docker.pull(id, cb),
-  getContainerStats: () => {
-    const containers = docker.listContainers({ all: true }, (err, containers) => {
-      console.log(`ALL: ${containers.length}`);
-    });
-    return containers;
+  getContainerStats: async () => {
+    const containers = await docker.listContainers();
+    const result = Promise.all(containers.map((container) => {
+      return docker.getContainer(container.Id).stats({ id: container.id, stream: false });
+    }));
+    return result;
   },
 };
