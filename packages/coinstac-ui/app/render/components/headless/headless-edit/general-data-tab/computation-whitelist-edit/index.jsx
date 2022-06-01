@@ -58,7 +58,7 @@ function ComputationWhitelistEdit({
         <Typography variant="h6" className={classes.cloudUserTitle}>Computation Whitelist:</Typography>
         <Tooltip
           title={
-            <Typography variant="body1">Configure which computations this cloud user will be able to run</Typography>
+            <Typography variant="body1">Configure which computations this vault user will be able to run</Typography>
           }
         >
           <InfoIcon />

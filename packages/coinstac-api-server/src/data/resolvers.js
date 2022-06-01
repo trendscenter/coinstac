@@ -983,7 +983,7 @@ const resolvers = {
       };
 
       if (pipeline.headlessMembers) {
-        // Sets only the cloud users as the default active members
+        // Sets only the vault users as the default active members
         updateObj.$set.activeMembers = {
           ...pipeline.headlessMembers
         };

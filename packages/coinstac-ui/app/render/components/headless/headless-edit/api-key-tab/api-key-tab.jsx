@@ -58,9 +58,9 @@ function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
     <Box marginTop={3}>
       <Typography variant="body1">
         {headlessClientData && headlessClientData.hasApiKey
-          && 'This cloud user already has a configured API Key. In case you lost or forgot the current API key you can generate another one.'}
+          && 'This vault user already has a configured API Key. In case you lost or forgot the current API key you can generate another one.'}
         {headlessClientData && !headlessClientData.hasApiKey
-          && 'This cloud user does not have a configured API Key. Click on the button to generate one.'}
+          && 'This vault user does not have a configured API Key. Click on the button to generate one.'}
       </Typography>
       <Button
         type="button"
@@ -76,8 +76,8 @@ function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
         <Box paddingBottom={2} paddingX={3}>
           <Box marginBottom={2}>
             <Typography variant="body2">
-              The following key was generated for this cloud user. Copy it and use it to configure
-              the cloud user. This key will be visible only now. If you lose it, you&#39;ll have to
+              The following key was generated for this vault user. Copy it and use it to configure
+              the vault user. This key will be visible only now. If you lose it, you&#39;ll have to
               generate another one.
             </Typography>
           </Box>
