@@ -62,8 +62,11 @@ async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
   );
 
   // Listen for local pipeline state updates
-  pipeline.stateEmitter.on('update', () => {});
+  pipeline.stateEmitter.on('update', (data) => {
+    console.log('Pipeline update', data);
+  });
   await result;
+  console.log('Pipeline finished');
 
   coinstacClientCore.unlinkFiles(run.id);
 }
@@ -81,12 +84,10 @@ async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
 
         await startPipelineRun(run, headlessClientConfig, coinstacClientCore);
       } catch (error) {
-        // eslint-disable-next-line
         console.error(`An error occurred on during a run: ${error}`);
       }
     },
     error: (error) => {
-      // eslint-disable-next-line no-console
       console.error('An error occurred on the new runs subscription', error);
     },
   });
