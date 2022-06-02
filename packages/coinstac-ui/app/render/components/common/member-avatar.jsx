@@ -48,7 +48,7 @@ function MemberAvatar({
 }) {
   const { data } = useQuery(FETCH_USER_QUERY, {
     variables: { userId: id },
-    onError: () => {},
+    onError: (error) => { console.error({ error }); },
   });
 
   const user = get(data, 'fetchUser');

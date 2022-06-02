@@ -25,7 +25,7 @@ function ComputationWhitelistEdit({
   const classes = useStyles();
 
   const { data: computationsData } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY, {
-    onError: () => {},
+    onError: (error) => { console.error({ error }); },
   });
 
   const computations = get(computationsData, 'fetchAllComputations');

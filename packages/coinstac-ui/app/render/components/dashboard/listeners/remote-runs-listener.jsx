@@ -31,7 +31,7 @@ function RemoteRunsListener({
   const { data } = useQuery(FETCH_ALL_USER_RUNS_QUERY, {
     variables: { userId },
     skip: ranFirstQuery.current,
-    onError: () => {},
+    onError: (error) => { console.error({ error }); },
   });
   const { data: subscriptionData } = useSubscription(USER_RUN_CHANGED_SUBSCRIPTION, {
     variables: { userId },
