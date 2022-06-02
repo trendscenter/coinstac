@@ -4,7 +4,9 @@
     "id": "coinstac-combatdc",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/combat-dc",
-    "description": "Decentralized Combat Test"
+    "description": "Decentralized Combat Test",
+    "projectLink": "https://github.com/trendscenter/coinstac-combat",
+    "testDataLink": "https://github.com/trendscenter/coinstac-combat/tree/ridge-combat/test/input"
   },
   "computation": {
     "type": "docker",

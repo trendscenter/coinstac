@@ -9,7 +9,9 @@
          "vbm",
          "preprocess"
       ],
-      "preprocess":true
+      "preprocess":true,
+      "projectLink": "https://github.com/trendscenter/Coinstac_VBM_computation",
+      "testDataLink": "https://github.com/trendscenter/Coinstac_VBM_computation/tree/master/test/input/local0/simulatorRun"
    },
    "computation":{
       "type":"docker",

@@ -5,7 +5,9 @@
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations_gpu.git",
     "description": "GPU enabled NN implementations in COINSTAC with. This only runs on GPU available machines.",
-    "compspecVersion": 2
+    "compspecVersion": 2,
+    "projectLink": "https://github.com/trendscenter/dinunet_implementations",
+    "testDataLink": "https://github.com/trendscenter/dinunet_implementations/tree/master/datasets/test_fsl/input"
   },
   "computation": {
     "type": "docker",

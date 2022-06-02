@@ -4,7 +4,9 @@
     "id": "ssr-fsl",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-ssr-fsl",
-    "description": "Decentralized Regression (Singleshot) for Brain Volumetric Data"
+    "description": "Decentralized Regression (Singleshot) for Brain Volumetric Data",
+    "projectLink": "https://github.com/trendscenter/coinstac-ssr-fsl",
+    "testDataLink": "https://github.com/trendscenter/coinstac-ssr-fsl/tree/master/test/input"
   },
   "computation": {
       "type": "docker",

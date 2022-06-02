@@ -21,6 +21,8 @@ const sharedFields = {
       id
       compspecVersion
       preprocess
+      projectLink
+      testDataLink
     }
     delete
     submittedBy

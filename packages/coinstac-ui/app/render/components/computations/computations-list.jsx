@@ -1,8 +1,8 @@
 import React, { Component, Fragment } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { graphql } from '@apollo/react-hoc';
+import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { graphql } from '@apollo/react-hoc';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Fab from '@material-ui/core/Fab';
@@ -12,6 +12,7 @@ import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
+import { shell } from 'electron';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
@@ -74,9 +75,7 @@ const styles = theme => ({
   },
   computationButtons: {
     display: 'flex',
-    '& > button': {
-      marginLeft: theme.spacing(1),
-    },
+    columnGap: theme.spacing(1),
   },
 });
 
@@ -153,38 +152,59 @@ class ComputationsList extends Component {
                 {comp.meta.description}
               </Typography>
               <div className={classes.computationActions}>
-                {compLocalImage ? (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => this.removeImage(
-                      comp.id,
-                      comp.computation.dockerImage,
-                      compLocalImage.id
-                    )}
-                  >
-                    Remove Image (
-                    <em>
-                      {compLocalImage.size.toString().slice(0, -6)}
-                      MB
-                    </em>
-                    )
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={
-                      this.pullComputations([{
-                        img: comp.computation.dockerImage,
-                        compId: comp.id,
-                        compName: comp.meta.name,
-                      }])
-                    }
-                  >
-                    Download Image
-                  </Button>
-                )}
+                <div className={classes.computationButtons}>
+                  {compLocalImage ? (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={() => this.removeImage(
+                        comp.id,
+                        comp.computation.dockerImage,
+                        compLocalImage.id
+                      )}
+                    >
+                      Remove Image (
+                      <em>
+                        {compLocalImage.size.toString().slice(0, -6)}
+                        MB
+                      </em>
+                      )
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      onClick={
+                        this.pullComputations([{
+                          img: comp.computation.dockerImage,
+                          compId: comp.id,
+                          compName: comp.meta.name,
+                        }])
+                      }
+                    >
+                      Download Image
+                    </Button>
+                  )}
+                  {comp.meta.projectLink && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => this.openGitHubProjectLink(comp.meta.projectLink)}
+                    >
+                      View GitHub Project Page
+                    </Button>
+                  )}
+
+                  {comp.meta.testDataLink && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => this.openTestDataLink(comp.meta.testDataLink)}
+                    >
+                      View Test Data
+                    </Button>
+                  )}
+                </div>
 
                 <div className={classes.computationButtons}>
                   <Button
@@ -237,6 +257,14 @@ class ComputationsList extends Component {
         })}
       </div>
     );
+  }
+
+  openGitHubProjectLink = (link) => {
+    shell.openExternal(link);
+  }
+
+  openTestDataLink = (link) => {
+    shell.openExternal(link);
   }
 
   setActiveComp = (comp) => {
