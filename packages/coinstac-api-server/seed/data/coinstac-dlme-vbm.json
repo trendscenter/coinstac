@@ -1,256 +1,151 @@
 {
-  "meta": {
-    "name": "Decentralized Linear Mixed Effects Model - Freesurfer",
-    "id": "dlme-fs",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstc-LME-Freesurfer",
-    "description": "Decentralized linear mixed effects model for Freesurfer data"
-  },
-  "computation":
-  {
-    "type": "docker",
-    "dockerImage": "coinstacteam/dlme-fs",
-    "command": ["python","\/computation\/scripts\/local.py"],
-    "remote":
-    {
-      "type": "docker",
-      "dockerImage": "coinstacteam/dlme-fs",
-      "command": ["python","\/computation\/scripts\/remote.py"]
-    },
-    "input":
-    {
-      "covariates": {
-        "label": "Covariates",
-        "type": "csv",
-        "items": ["boolean", "number"],
-        "source": "member",
-        "order": 0
+   "meta":{
+      "name":"Decentralized Linear Mixed Effects Model - VBM",
+      "id":"dlme-vbm",
+      "version":"v1.0.0",
+      "repository":"https:\/\/github.com\/trendscenter\/coinstc-LME-VBM",
+      "description":"Decentralized linear mixed effects model for VBM/NiFTI data"
+   },
+   "computation":{
+      "type":"docker",
+      "dockerImage":"coinstacteam/dlme-vbm",
+      "command":[
+         "python",
+         "\/computation\/scripts\/local.py"
+      ],
+      "remote":{
+         "type":"docker",
+         "dockerImage":"coinstacteam/dlme-vbm",
+         "command":[
+            "python",
+            "\/computation\/scripts\/remote.py"
+         ]
       },
-      "data": {
-        "label": "Data",
-        "type": "freesurfer",
-        "items": ["FreeSurfer"],
-        "extensions": ["csv", "txt"],
-        "source": "owner",
-        "order": 1
+      "input":{
+         "covariates":{
+            "label":"Covariates",
+            "type":"csv",
+            "items": ["boolean", "number", "string"],
+            "source":"member",
+            "order":0
+         },
+         "data":{
+            "label":"Data",
+            "type":"freesurfer",
+            "items":[
+               "NiFTI"
+            ],
+            "extensions":[
+               "csv",
+               "txt"
+            ],
+            "source":"owner",
+            "order":1
+         },
+         "contrasts":{
+            "label":"contrasts",
+            "type":"object",
+            "default":[
+               {
+                  "name":{
+                     "value":"contrast1"
+                  },
+                  "vector":{
+                     "value":[
+                        1,
+                        0,
+                        0,
+                        0
+                     ]
+                  }
+               },
+               {
+                  "name":{
+                     "value":"contrast2"
+                  },
+                  "vector":{
+                     "value":[
+                        0,
+                        1,
+                        0,
+                        0
+                     ]
+                  }
+               },
+               {
+                  "name":{
+                     "value":"contrast3"
+                  },
+                  "vector":{
+                     "value":[
+                        0,
+                        0,
+                        1,
+                        0
+                     ]
+                  }
+               },
+               {
+                  "name":{
+                     "value":"contrast4"
+                  },
+                  "vector":{
+                     "value":[
+                        [
+                           1,
+                           0,
+                           0,
+                           0
+                        ],
+                        [
+                           0,
+                           1,
+                           0,
+                           0
+                        ],
+                        [
+                           0,
+                           1,
+                           0,
+                           0
+                        ],
+                        [
+                           0,
+                           0,
+                           0,
+                           1
+                        ]
+                     ]
+                  }
+               }
+            ],
+            "source":"owner",
+            "order":2
+         },
+         "mask_threshold":{
+            "label":"mask_threshold",
+            "type":"number",
+            "source":"owner",
+            "default":0.05,
+            "order":3
+         },
+         "voxel_size":{
+            "label":"voxel_size",
+            "type":"number",
+            "source":"owner",
+            "default":2,
+            "order":4
+         }
       },
-      "contrasts": {
-        "label":"contrasts",
-        "type": "object",
-        "default": [
-           {
-              "name":{
-                 "value":"contrast1"
-              },
-              "vector":{
-                 "value":[
-                    1,
-                    0,
-                    0
-                 ]
-              }
-           },
-           {
-              "name":{
-                 "value":"contrast2"
-              },
-              "vector":{
-                 "value":[
-                    0,
-                    1,
-                    0
-                 ]
-              }
-           },
-           {
-              "name":{
-                 "value":"contrast3"
-              },
-              "vector":{
-                 "value":[
-                    0,
-                    0,
-                    1
-                 ]
-              }
-           },
-           {
-              "name":{
-                 "value":"contrast4"
-              },
-              "vector":{
-                 "value":[
-                    [
-                       1,
-                       0,
-                       0
-                    ],
-                    [
-                       0,
-                       1,
-                       0
-                    ],
-                    [
-                       0,
-                       0,
-                       1
-                    ]
-                 ]
-              }
-           }
-        ],
-        "source": "owner",
-        "order": 2
+      "output":{
+         "global_result_images":{
+            "label":"global_result_images",
+            "type":"array"
+         },
+         "local_result_images":{
+            "label":"global_result_images",
+            "type":"array"
+         }
       }
-    },
-    "output":
-    {
-      "regressions":
-      {
-        "label": "Regressions",
-        "type": "array",
-        "items":
-        {
-          "ROI": {"label": "Region of Interest","type": "string"},
-          "global_stats":
-          {
-            "label": "Global Stats",
-            "type": "object",
-            "items":
-            {
-              "parameter_estimates":
-              {
-                "label": "Parameter Estimates",
-                "type": "object",
-                "items":
-                {
-                  "sigmasquared": {"label": "sigmasquared","type": "array"},
-                  "CovRandomEffects": {"label": "CovRandomEffects","type": "array"}
-                }
-              },
-              "inference_statistics":
-              {
-                "label": "Inference Statistics",
-                "type": "object",
-                "items":
-                {
-                  "llh": {"label": "Log Likelihood","type": "number"},
-                  "resms": {"label": "Residual Mean Squares","type": "number"},
-                  "covB": {"label": "Covariance of Beta","type": "array"},
-                  "contrasts":
-                  {
-                    "label": "Contrasts",
-                    "type": "object",
-                    "items":
-                    {
-                      "T-Contrasts":
-                      {
-                        "label": "T-Contrasts",
-                        "type": "array",
-                        "items":
-                        {
-                          "name" : {"label": "Contrast Name","type": "string"},
-                          "vector": {"label": "Contrast Vector","type": "array"},
-                          "beta": {"label": "Beta","type": "number"},
-                          "stderrorbeta": {"label": "StdErrorBeta","type": "number"},
-                          "dof": {"label": "Degrees of Freedom","type": "number"},
-                          "tstat": {"label": "T-Statistic","type": "number"},
-                          "pvalue": {"label": "P-Value","type": "number"}
-                        }
-                      },
-                      "F-Contrasts":
-                      {
-                        "label": "F-Contrasts",
-                        "type": "array",
-                        "items":
-                        {
-                          "name" : {"label": "Contrast Name","type": "string"},
-                          "vector": {"label": "Contrast Vector","type": "array"},
-                          "dof": {"label": "Degrees of Freedom","type": "number"},
-                          "fstat": {"label": "F-Statistic","type": "number"},
-                          "pvalue": {"label": "P-Value","type": "number"},
-                          "rsquared": {"label": "RSquared","type": "number"}
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "local_stats":
-          {
-            "label": "Local Stats",
-            "type": "object",
-            "items":
-            {
-              "parameter_estimates":
-              {
-                "label": "Parameter Estimates",
-                "type": "object",
-                "items":
-                {
-                  "sigmasquared": {"label": "sigmasquared","type": "array"},
-                  "CovRandomEffects": {"label": "CovRandomEffects","type": "array"}
-                }
-              },
-              "inference_statistics":
-              {
-                "label": "Inference Statistics",
-                "type": "object",
-                "items":
-                {
-                  "llh": {"label": "Log Likelihood","type": "number"},
-                  "resms": {"label": "Residual Mean Squares","type": "number"},
-                  "covB": {"label": "Covariance of Beta","type": "array"},
-                  "contrasts":
-                  {
-                    "label": "Contrasts",
-                    "type": "object",
-                    "items":
-                    {
-                      "T-Contrasts":
-                      {
-                        "label": "T-Contrasts",
-                        "type": "array",
-                        "items":
-                        {
-                          "name" : {"label": "Contrast Name","type": "string"},
-                          "vector": {"label": "Contrast Vector","type": "array"},
-                          "beta": {"label": "Beta","type": "number"},
-                          "stderrorbeta": {"label": "StdErrorBeta","type": "number"},
-                          "dof": {"label": "Degrees of Freedom","type": "number"},
-                          "tstat": {"label": "T-Statistic","type": "number"},
-                          "pvalue": {"label": "P-Value","type": "number"}
-                        }
-                      },
-                      "F-Contrasts":
-                      {
-                        "label": "F-Contrasts",
-                        "type": "array",
-                        "items":
-                        {
-                          "name" : {"label": "Contrast Name","type": "string"},
-                          "vector": {"label": "Contrast Vector","type": "array"},
-                          "dof": {"label": "Degrees of Freedom","type": "number"},
-                          "fstat": {"label": "F-Statistic","type": "number"},
-                          "pvalue": {"label": "P-Value","type": "number"},
-                          "rsquared": {"label": "RSquared","type": "number"}
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "display": [
-    {
-      "type": "simple-table"
-    }
-  ]
- }
+   }
 }
