@@ -3,15 +3,14 @@
       "id":"vbm-pre",
       "name":"VBM Preprocessor",
       "version":"v1.0",
-      "repository":"https://github.com/trendscenter/Coinstac_VBM_computation",
+      "repository":"https:\/\/github.com\/trendscenter\/Coinstac_VBM_computation",
       "description":"This computation runs Voxel Based Morphometry on structural T1 weighted MRI scans(BIDS format and T1w nifiti) using SPMv12 standalone and MATLAB Runtimev713. Each scan takes approximately 5 mins to run on a system with 2.3 GHz,i5 equivalent processor, 8GB RAM. Each scan output directory takes about 150MB space. Please make sure to have the space and resources.",
       "tags":[
          "vbm",
          "preprocess"
       ],
       "preprocess":true,
-      "projectLink": "https://github.com/trendscenter/Coinstac_VBM_computation",
-      "testDataLink": "https://github.com/trendscenter/Coinstac_VBM_computation/tree/master/test/input/local0/simulatorRun"
+      "testData": "tree\/master\/test\/input\/local0\/simulatorRun"
    },
    "computation":{
       "type":"docker",

@@ -185,21 +185,21 @@ class ComputationsList extends Component {
                       Download Image
                     </Button>
                   )}
-                  {comp.meta.projectLink && (
+                  {comp.meta.repository && (
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => this.openGitHubProjectLink(comp.meta.projectLink)}
+                      onClick={() => this.openGitHubProjectLink(comp.meta)}
                     >
                       View GitHub Project Page
                     </Button>
                   )}
 
-                  {comp.meta.testDataLink && (
+                  {comp.meta.repository && comp.meta.testData && (
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => this.openTestDataLink(comp.meta.testDataLink)}
+                      onClick={() => this.openTestDataLink(comp.meta)}
                     >
                       View Test Data
                     </Button>
@@ -259,12 +259,12 @@ class ComputationsList extends Component {
     );
   }
 
-  openGitHubProjectLink = (link) => {
-    shell.openExternal(link);
+  openGitHubProjectLink = (meta) => {
+    shell.openExternal(meta.repository);
   }
 
-  openTestDataLink = (link) => {
-    shell.openExternal(link);
+  openTestDataLink = (meta) => {
+    shell.openExternal(`${meta.repository}/${meta.testData}`);
   }
 
   setActiveComp = (comp) => {

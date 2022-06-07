@@ -3,10 +3,9 @@
     "name": "Decentralized Parallel Independent Component Analysis demo",
     "id": "coinstac-dpica",
     "version": "v1.0.0",
-    "repository": "https://github.com/MartOfTheNorth/dpica/tree/simulator",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-dpica",
     "description": "Decentralized Parallel Independent Component Analysis on FIT Data",
-    "projectLink": "https://github.com/trendscenter/coinstac-dpica",
-    "testDataLink": "https://github.com/trendscenter/coinstac-dpica/tree/main/test/input"
+    "testData": "tree\/main\/test\/input"
   },
   "computation": {
     "type": "docker",

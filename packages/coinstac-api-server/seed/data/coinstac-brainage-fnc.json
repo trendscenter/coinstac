@@ -5,8 +5,7 @@
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-brainage-fnc",
     "description": "Brain Age Prediction using Linear SVR model and FNC matrices as features\n\n",
-    "projectLink": "https://github.com/trendscenter/coinstac-brainage-fnc",
-    "testDataLink": "https://github.com/trendscenter/coinstac-brainage-fnc/tree/main/test/input"
+    "testData": "tree\/main\/test\/input"
   },
   "computation": {
     "type": "docker",

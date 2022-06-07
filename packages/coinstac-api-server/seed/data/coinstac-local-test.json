@@ -3,7 +3,7 @@
         "name": "Local Test",
         "id": "coinstac-local-test",
         "version": "v1.0.0",
-        "repository": "github.com/user/computation.git",
+        "repository": "",
         "description": "a test that sums the last two numbers together for the next"
     },
     "computation": {

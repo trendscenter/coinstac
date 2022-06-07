@@ -3,7 +3,7 @@
     "name": "Regression - VBM Stats",
     "id": "vbm-stats",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm-stats",
+    "repository": "",
     "description": "Decentralized Regression for quantities, average, median, and average of lower and upper quartile for ROI from nifti files"
   },
   "computation": {

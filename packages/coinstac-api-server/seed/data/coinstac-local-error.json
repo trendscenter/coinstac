@@ -3,7 +3,7 @@
     "name": "Local Error Test",
     "id": "coinstac-local-error",
     "version": "v1.0.0",
-    "repository": "github.com\/user\/computation.git",
+    "repository": "",
     "description": "errors locally"
   },
   "computation": {

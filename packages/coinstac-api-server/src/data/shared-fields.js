@@ -30,8 +30,7 @@ const schemaFields = {
     compspecVersion: Int
     controller: String
     preprocess: Boolean
-    projectLink: String
-    testDataLink: String
+    testData: String
   `,
   computationRemoteFields: `
     type: String

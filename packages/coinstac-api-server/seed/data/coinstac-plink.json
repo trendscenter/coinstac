@@ -3,11 +3,10 @@
     "name": "Plink Computation in COINSTAC",
     "id": "coinstac-plink",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-plink.git",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-plink",
     "description": "A way to use plink genetic analysis in COINSTAC.",
     "compspecVersion": 2,
-    "projectLink": "https://github.com/trendscenter/coinstac-plink",
-    "testDataLink": "https://github.com/trendscenter/coinstac-plink/tree/master/test/input"
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

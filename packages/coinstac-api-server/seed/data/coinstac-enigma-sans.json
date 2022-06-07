@@ -6,8 +6,7 @@
       "repository":"https:\/\/github.com\/trendscenter\/coinstac-enigma-sans",
       "description":"ENIGMA SANS computation",
       "compspecVersion": 2,
-      "projectLink": "https://github.com/trendscenter/coinstac-enigma-sans",
-      "testDataLink": "https://github.com/trendscenter/coinstac-enigma-sans/tree/master/test/input"
+      "testData": "tree\/master\/test\/input"
    },
    "computation":{
       "type":"docker",

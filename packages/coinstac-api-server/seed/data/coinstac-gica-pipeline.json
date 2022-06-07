@@ -3,10 +3,9 @@
         "name": "Decentralized GICA",
         "id": "gica",
         "version": "v1.0.0",
-        "repository": "https:\/\/github.com\/MRN-Code\/coinstac_gica_pipeline",
+        "repository": "https:\/\/github.com\/trendscenter\/coinstac_gica_pipeline",
         "description": "a demo for decentralized gica",
-        "projectLink": "https://github.com/trendscenter/coinstac_gica_pipeline",
-        "testDataLink": "https://github.com/trendscenter/coinstac_gica_pipeline/tree/master/test"
+        "testData": "tree\/master\/test"
     },
     "computation": {
         "type": "docker",

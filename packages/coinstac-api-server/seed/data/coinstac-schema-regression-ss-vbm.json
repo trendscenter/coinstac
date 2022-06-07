@@ -3,7 +3,7 @@
     "name": "Ridge Regression (Singleshot) - VBM",
     "id": "ssr-vbm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-ssr-vbm",
+    "repository": "",
     "description": "Decentralized Regression (Singleshot) for Voxel-based Morphometry"
   },
   "computation": {

@@ -3,7 +3,7 @@
     "name": "Decentralized Error Test",
     "id": "coinstac-decentralized-error",
     "version": "v1.0.0",
-    "repository": "github.com\/user\/computation.git",
+    "repository": "",
     "description": "causes a decentralized error"
   },
   "computation": {

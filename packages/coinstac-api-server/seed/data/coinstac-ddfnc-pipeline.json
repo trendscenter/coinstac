@@ -3,10 +3,9 @@
         "name": "Decentralized Dynamic Functional Connectivity (DDFNC) Pipeline",
         "id": "ddfnc",
         "version": "v1.0.0",
-        "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ddfnc_pipeline",
+        "repository": "https:\/\/github.com\/trendscenter\/coinstac_ddfnc_pipeline",
         "description": "a demo for decentralized dfnc",
-        "projectLink": "https://github.com/trendscenter/coinstac_ddfnc_pipeline",
-        "testDataLink": "https://github.com/trendscenter/coinstac_ddfnc_pipeline/tree/master/test"
+        "testData": "tree\/master\/test"
     },
     "computation": {
         "type": "docker",
