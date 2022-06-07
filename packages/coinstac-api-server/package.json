@@ -16,6 +16,7 @@
     "@hapi/jwt": "^2.1.0",
     "@sendgrid/mail": "^6.5.0",
     "apollo-server-hapi": "^2.25.3",
+    "aws-sdk": "^2.1150.0",
     "axios": "^0.21.1",
     "boom": "^5.2.0",
     "coinstac-graphql-schema": "^6.4.0",
