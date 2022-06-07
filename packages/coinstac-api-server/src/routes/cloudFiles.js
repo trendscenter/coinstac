@@ -1,5 +1,5 @@
-const helperFunctions = require('../auth-helpers');
 const AWS = require('aws-sdk');
+const helperFunctions = require('../auth-helpers');
 
 
 function uploadToS3(fileName, fileStream) {
@@ -12,7 +12,7 @@ function uploadToS3(fileName, fileStream) {
 module.exports = [
   {
     method: 'POST',
-    path: '/uploadFile',
+    path: '/uploadFiles',
     config: {
       auth: false,
       pre: [
@@ -41,7 +41,7 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/downloadFile',
+    path: '/downloadFiles',
     config: {
       auth: false,
       pre: [

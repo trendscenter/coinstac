@@ -438,42 +438,8 @@ class CoinstacClient {
 
   uploadFiles(runId) {
     const fullPath = path.join(this.appDirectory, 'output', this.clientId, runId);
-
-    return fs.stat(fullPath).then((stats) => {
-      return stats.isDirectory();
-    })
-      .catch((err) => {
-        if (err.code === 'ENOENT') return false;
-        throw err;
-      })
-      .then((exists) => {
-        if (!exists) {
-          return [];
-        }
-
-        return fs.readdir(fullPath);
-      })
-      .then((filesArray) => {
-        const uploadPromises = [];
-        filesArray.forEach(async (file) => {
-          file = path.resolve(fullPath, file);
-          fs.stat(file).then(async (fstats) => {
-            if (fstats.isDirectory()) {
-              uploadPromises.push(
-                // upload
-                // fs.rmdir(file, { recursive: true })
-              );
-            } else {
-              uploadPromises.push(
-                // upload
-              );
-            }
-          }).catch((e) => {
-            this.logger.error(`Failed uploading files: ${e}`);
-          });
-        });
-        return Promise.all(uploadPromises);
-      });
+    // get the files
+    // upload them all through an axios post
   }
 }
 
