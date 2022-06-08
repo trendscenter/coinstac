@@ -17,6 +17,8 @@ module.exports = [
     config: {
       auth: false,
       pre: [
+        // validate the API token
+        // deterimine if the user is a part of the run
         // { method: helperFunctions.validateUser, assign: 'user' },
       ],
       handler: async (req, h) => {
