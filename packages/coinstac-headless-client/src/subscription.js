@@ -68,8 +68,7 @@ async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
   await result;
   console.log('Pipeline finished');
 
-  // upload files
-  
+  await coinstacClientCore.uploadFiles(run.id);
   await coinstacClientCore.unlinkFiles(run.id);
 }
 

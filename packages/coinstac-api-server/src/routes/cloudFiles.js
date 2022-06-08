@@ -3,9 +3,10 @@ const helperFunctions = require('../auth-helpers');
 
 
 function uploadToS3(fileName, fileStream) {
-  const params = { Bucket: 'bucket', Key: fileName, Body: fileStream };
-  const s3 = new AWS.S3();
-  return s3.upload(params).promise();
+  // const params = { Bucket: 'bucket', Key: fileName, Body: fileStream };
+  // const s3 = new AWS.S3();
+  // return s3.upload(params).promise();
+  return Promise.resolve('resolved');
 }
 
 
@@ -29,7 +30,6 @@ module.exports = [
             return uploadToS3(fileName, fileStream);
           })
         );
-
         return h.response().code(201);
       },
       payload: {

@@ -436,11 +436,32 @@ class CoinstacClient {
       });
   }
 
-  uploadFiles(runId) {
-    const fullPath = path.join(this.appDirectory, 'output', this.clientId, runId);
-    // get the files
+  async uploadFiles(runId) {
+    const fullPath = path.join(__dirname);
+    // const fullPath = path.join(this.appDirectory, 'output', this.clientId, runId);
+    const formData = new FormData();
+    const fileNames = await fs.readdir(fullPath);
+    fileNames.forEach((fileName) => {
+      const filePath = path.join(fullPath, fileName);
+      const readStream = createReadStream(filePath);
+      formData.append('file', readStream, fileName);
+    });
+
     // upload them all through an axios post
+    axios.post(
+      `${this.clientServerURL}/uploadFiles`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          ...formData.getHeaders()
+        },
+      }
+    ).then((result) => {
+      console.log(result);
+    }).catch((e) => {
+      console.log(e);
+    });
   }
-}
 
 module.exports = CoinstacClient;
