@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const axios = require('axios');
 const fs = require('fs');
-const { parse } = require('csv-parse/sync');
+const { parse } = require('csv-parse/sync'); // eslint-disable-line
 const path = require('path');
 const winston = require('winston');
 const config = require('./config');
