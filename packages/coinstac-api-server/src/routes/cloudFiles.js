@@ -15,21 +15,21 @@ module.exports = [
     method: 'POST',
     path: '/uploadFiles',
     config: {
-      auth: false,
+      auth: 'coinstac-jwt',
       pre: [
-        // validate the API token
-        // deterimine if the user is a part of the run
-        // { method: helperFunctions.validateUser, assign: 'user' },
+        { method: helperFunctions.canUserUpload, assign: 'runId' },
       ],
       handler: async (req, h) => {
         const { payload } = req;
+        const { runId } = req.pre;
         await Promise.all(
           payload.file.map((fileStream) => {
             const fileName = fileStream.hapi.filename;
             fileStream.on('data', (d) => {
               console.log(d);
             });
-            return uploadToS3(fileName, fileStream);
+            console.log(`${runId}-${fileName}`);
+            return uploadToS3(`${runId}-${fileName}`, fileStream);
           })
         );
         return h.response().code(201);

@@ -425,6 +425,20 @@ const helperFunctions = {
       });
     });
   },
+  async canUserUpload(req) {
+    // is user a part of the run
+    const userId = req.auth.artifacts.decoded.payload.id;
+    const { runId } = req.payload;
+    const db = database.getDbInstance();
+    try {
+      const run = await db.collection('runs').findOne({ [`clients.${userId}`]: { $exists: true }, _id: ObjectID(runId) });
+      if (run) {
+        return runId;
+      }
+    } catch (e) {
+      return Boom.badRequest('invalid user/run combination');
+    }
+  },
   audience,
   issuer,
   subject,

@@ -463,5 +463,5 @@ class CoinstacClient {
       console.log(e);
     });
   }
-
+}
 module.exports = CoinstacClient;
