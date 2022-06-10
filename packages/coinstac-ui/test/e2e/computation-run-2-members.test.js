@@ -335,7 +335,7 @@ describe('e2e run computation with 2 members', () => {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
-      appWindow1.waitForSelector(`h6:has-text("Results: ${CONS_NAME} || ${PIPE_NAME}")`, {
+      appWindow1.waitForSelector(`h6:has-text("Results: ${CONS_NAME} | ${PIPE_NAME}")`, {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
