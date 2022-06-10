@@ -88,6 +88,7 @@ async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
       }
     },
     error: (error) => {
+      // eslint-disable-next-line no-console
       console.error('An error occurred on the new runs subscription', error);
     },
   });
