@@ -235,7 +235,6 @@ class ConsortiumTabs extends Component {
       addUserRole,
       removeUserRole,
       pipelines,
-      consortia,
       classes,
       tutorialChange,
     } = this.props;
