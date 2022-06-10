@@ -73,7 +73,7 @@
     "sha-1": "^0.1.1",
     "shortid": "^2.2.8",
     "showdown": "^1.9.1",
-    "subscriptions-transport-ws": "^0.8.3",
+    "subscriptions-transport-ws": "^0.11.0",
     "tail": "^1.2.3",
     "uuid": "^8.3.2",
     "winston": "^3.4.0"

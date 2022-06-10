@@ -29,9 +29,8 @@ function ResultItem({
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Box display="flex">
-            <Typography variant="body2" className={classes.label}>Name:</Typography>
             {datasetDescription && datasetDescription.Name && (
-              <Typography variant="body2">{ datasetDescription.Name }</Typography>
+              <Typography variant="h5">{ datasetDescription.Name }</Typography>
             )}
           </Box>
           {participantsDescription && (
@@ -70,6 +69,9 @@ function ResultItem({
           )}
         </Box>
         <Box display="flex" flexDirection="column" justifyContent="center">
+          <Typography variant="body2" style={{ textAlign: 'center' }}>
+            Data Owner
+          </Typography>
           <MemberAvatar
             id={owner.id}
             name={owner.username}
