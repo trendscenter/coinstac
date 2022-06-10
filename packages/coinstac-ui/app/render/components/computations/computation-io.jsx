@@ -138,7 +138,8 @@ const mapStateToProps = ({ auth }) => ({
 
 const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
 const ComputationIOWithAlert = connect(
-  mapStateToProps, { notifySuccess, notifyError }
+  mapStateToProps,
+  { notifySuccess, notifyError }
 )(ComputationIOWithData);
 
 export default withStyles(styles)(ComputationIOWithAlert);

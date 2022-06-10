@@ -235,7 +235,6 @@ class ConsortiumTabs extends Component {
       addUserRole,
       removeUserRole,
       pipelines,
-      consortia,
       classes,
       tutorialChange,
     } = this.props;
@@ -320,7 +319,7 @@ class ConsortiumTabs extends Component {
           && (
             <ConsortiumRuns
               runs={this.getConsortiumRuns()}
-              consortia={consortia}
+              consortium={consortium}
               owner={isOwner}
             />
           )

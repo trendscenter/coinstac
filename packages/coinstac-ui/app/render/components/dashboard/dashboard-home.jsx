@@ -11,6 +11,7 @@ import Divider from '@material-ui/core/Divider';
 import RunsList from '../common/runs-list';
 import { saveSuspendedRun, deleteSuspendedRun } from '../../state/ducks/suspendedRuns';
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
 
 const HOURS_SINCE_ACTIVE = 72;
 
@@ -29,11 +30,13 @@ const stopPipeline = (pipelineId, runId) => () => {
 };
 
 function DashboardHome({
-  consortia, runs, maps, user, suspendedRuns, saveSuspendedRun, deleteSuspendedRun,
+  consortia, maps, user, suspendedRuns, saveSuspendedRun, deleteSuspendedRun,
   networkVolume, classes, notifyError, notifyInfo,
 }) {
+  const filteredRuns = useSelectRunsOfInterest(HOURS_SINCE_ACTIVE);
+
   const suspendPipeline = runId => async () => {
-    const runSaveState = await ipcRenderer.send('suspend-pipeline', { runId });
+    const runSaveState = await ipcRenderer.invoke('suspend-pipeline', { runId });
     saveSuspendedRun(runId, runSaveState);
   };
 
@@ -72,10 +75,9 @@ function DashboardHome({
         {`Run Activity in the Last ${HOURS_SINCE_ACTIVE} Hours`}
       </Typography>
       <RunsList
+        runs={filteredRuns}
         consortia={consortia}
-        hoursSinceActive={HOURS_SINCE_ACTIVE}
-        limitToComplete={false}
-        runs={runs}
+        noRunMessage={`No activity in the last ${HOURS_SINCE_ACTIVE} hours`}
         stopPipeline={stopPipeline}
         suspendPipeline={suspendPipeline}
         resumePipeline={resumePipeline}
@@ -86,13 +88,11 @@ function DashboardHome({
 
 DashboardHome.defaultProps = {
   consortia: [],
-  runs: [],
 };
 
 DashboardHome.propTypes = {
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  runs: PropTypes.array,
   maps: PropTypes.array.isRequired,
   user: PropTypes.object.isRequired,
   networkVolume: PropTypes.bool.isRequired,

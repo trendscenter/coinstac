@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "6.4.0",
+  "version": "6.4.4",
   "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
@@ -38,15 +38,16 @@
     "axios": "^0.21.1",
     "coinstac-common": "^6.4.0",
     "coinstac-manager": "^6.4.0",
-    "coinstac-pipeline": "^6.4.0",
+    "coinstac-pipeline": "^6.4.4",
     "commander": "^2.15.1",
-    "convict": "^4.3.2",
+    "convict": "^6.2.2",
     "csv-parse": "^5.0.4",
     "exit-hook": "^2.2.0",
     "glob": "^7.1.2",
     "inquirer": "^5.2.0",
     "json-parse-even-better-errors": "^2.3.1",
     "lodash": "^4.17.10",
+    "portscanner": "^2.2.0",
     "winston": "^3.0.0"
   },
   "devDependencies": {

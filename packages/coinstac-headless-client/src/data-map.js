@@ -9,7 +9,7 @@ function mapData(pipeline, headlessClientConfig) {
 
   pipeline.steps.forEach((step) => {
     const inputMap = {};
-    const stepMappedData = headlessClientConfig.computationWhitelist[step.computations[0].id];
+    const stepMappedData = headlessClientConfig[step.computations[0].id];
 
     Object.keys(step.inputMap).forEach((inputMapKey) => {
       inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };

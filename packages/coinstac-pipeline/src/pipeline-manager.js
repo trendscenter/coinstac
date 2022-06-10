@@ -7,6 +7,7 @@ const Emitter = require('events');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
+const { merge } = require('lodash');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -170,6 +171,7 @@ module.exports = {
               userDirectories,
               owner: spec.owner,
               logger: utils.logger,
+              saveState,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             outputDirectory: userDirectories.outputDirectory,
@@ -188,7 +190,6 @@ module.exports = {
           activePipelines[runId],
           saveState ? saveState.activePipeline : {}
         );
-
         // remote client object creation
         Object.keys(clients).forEach((clientId) => {
           remoteClients[clientId] = Object.assign(
@@ -330,23 +331,31 @@ module.exports = {
         if (!run) {
           throw new Error('Invalid pipeline ID');
         }
-
-        const packagedState = {
-          activePipelineState: {
-            currentState: run.currentState,
-          },
-          pipelineState: {
-            currentStep: run.pipeline.currentStep,
-          },
-          controllerState: run.pipeline.pipelineSteps[run.pipeline.currentStep].controllerState,
-        };
-
-
         return this.stopPipeline(runId, 'suspend')
-          .then((output) => {
-            packagedState.controllerState.stopSignal = undefined;
-            packagedState.controllerState.currentComputations = undefined;
-            packagedState.controllerState.activeComputations = undefined;
+          .then(({ output, controllerState }) => {
+            const packagedState = JSON.parse(JSON.stringify(merge(
+              {},
+              {
+                activePipelineState: {
+                  currentState: run.currentState,
+                },
+              },
+              {
+                pipelineState: {
+                  currentStep: run.pipeline.currentStep,
+                },
+              },
+              {
+                controllerState,
+              },
+              {
+                controllerState: {
+                  currentComputations: null,
+                  activeComputations: null,
+                  stopSignal: null,
+                },
+              }
+            )));
             return Object.assign({ output }, packagedState);
           });
       },
