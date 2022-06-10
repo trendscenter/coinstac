@@ -5,10 +5,14 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import { kebabCase } from 'lodash';
+import path from 'path';
+
 import { notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 
 const styles = {
@@ -17,9 +21,7 @@ const styles = {
   column: { padding: '1rem' },
   spacer: { width: '1rem', color: '#fff !important' },
   image: { width: '100%', height: 'auto' },
-  pdfButton: {
-    position: 'absolute', top: '15.75rem', right: '1rem', zIndex: '9',
-  },
+  pdfLoading: { marginLeft: '.5rem' },
   subItem: {
     position: 'relative', float: 'left', width: '95%', marginRight: '5%',
   },
@@ -31,6 +33,11 @@ const styles = {
 class Images extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      generatingPdf: false,
+    };
+
     this.drawImageResults = this.drawImageResults.bind(this);
   }
 
@@ -44,7 +51,7 @@ class Images extends Component {
 
   // ignore weird class-methods-use-this lint error
   // eslint-disable-next-line
-    humanize(str) {
+  humanize(str) {
     const frags = str.split('_');
     for (let i = 0; i < frags.length; i += 1) {
       frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
@@ -62,7 +69,7 @@ class Images extends Component {
    */
 
   drawImageResults(obj) {
-    const { classes } = this.props;
+    const { classes, resultsPath } = this.props;
     const output = [];
 
     Object.entries(obj).forEach(([key, value]) => {
@@ -103,7 +110,7 @@ class Images extends Component {
             <img
               key={`${v}-img`}
               alt={`${v}-img`}
-              src={`data:image/png;base64, ${v}`}
+              src={path.join(resultsPath, v)}
               className={classes.image}
             />
           );
@@ -150,7 +157,7 @@ class Images extends Component {
           }
         } else {
           page.push(
-            <div className={classNames(`page-${k}`, classes.subpage)} ref={`page-${k}`} key={`page-${k}`}>
+            <div className={classNames(`page-${k}`, classes.subpage)} id={`page-${k}`} key={`page-${k}`}>
               {item}
               <table className={classes.container}>
                 <tr className={classes.container}>
@@ -190,20 +197,24 @@ class Images extends Component {
     return output;
   }
 
-  renderCanvas = () => {
+  renderCanvas = async () => {
     const { plotData } = this.props;
     const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
     const globalResults = ReactDOM.findDOMNode(this.globalPage);
 
     RasterizeHTML.drawHTML(globalResults.innerHTML, globalCanvas);
 
-    Object.entries(plotData.local_stats).forEach(([key]) => {
-      const canvas = `${key}_canvas`;
-      const page = `page-${key}`;
-      const keyCanvas = ReactDOM.findDOMNode(this[canvas]);
-      const keyResults = ReactDOM.findDOMNode(this[page]);
-      RasterizeHTML.drawHTML(keyResults.innerHTML, keyCanvas);
+    const renderCanvasPromises = Object.entries(plotData.local_stats).map(async ([key]) => {
+      const canvasId = `local-canvas-${key}`;
+      const pageId = `page-${key}`;
+
+      const localCanvas = document.getElementById(canvasId);
+      const keyResults = document.getElementById(pageId);
+
+      return RasterizeHTML.drawHTML(keyResults.innerHTML, localCanvas);
     });
+
+    await Promise.all(renderCanvasPromises);
   }
 
   componentDidMount = () => {
@@ -214,6 +225,9 @@ class Images extends Component {
     const {
       plotData, title, writeLog, notifyError,
     } = this.props;
+
+    this.setState({ generatingPdf: true });
+
     const canvas = ReactDOM.findDOMNode(this.globalCanvas);
 
     try {
@@ -226,10 +240,10 @@ class Images extends Component {
 
       doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
 
-      Object.entries(plotData.local_stats).forEach(([key]) => {
-        const canvas = `${key}_canvas`;
-        const keyCanvas = ReactDOM.findDOMNode(this[canvas]);
-        const canvasImg = keyCanvas.toDataURL('image/jpg', 1.0);
+      const allLocalCanvas = ReactDOM.findDOMNode(this.localCanvasWrapper).getElementsByClassName('canvas');
+
+      [].forEach.call(allLocalCanvas, (localCanvas) => {
+        const canvasImg = localCanvas.toDataURL('image/jpg', 1.0);
 
         doc.addPage();
         doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
@@ -239,11 +253,15 @@ class Images extends Component {
     } catch (err) {
       writeLog({ type: 'error', message: err });
       notifyError(err.message);
+    } finally {
+      this.setState({ generatingPdf: false });
     }
   }
 
   render() {
-    const { imagePath, plotData, classes } = this.props;
+    const { plotData, classes } = this.props;
+    const { generatingPdf } = this.state;
+
     let globalItems;
     let localItems;
     let height = 0;
@@ -257,7 +275,14 @@ class Images extends Component {
 
       // eslint-disable-next-line no-unused-vars
       Object.entries(plotData.local_stats).forEach(([key, value]) => {
-        localCanvas.push(<canvas className="canvas" ref={`${key}_canvas`} width="1600" height={height} />);
+        localCanvas.push(
+          <canvas
+            id={`local-canvas-${key}`}
+            className="canvas"
+            width="1600"
+            height={height}
+          />
+        );
       });
     }
 
@@ -265,26 +290,33 @@ class Images extends Component {
       <div>
         {globalItems && localItems && (
           <div>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={this.savePDF}
-              className={classes.pdfButton}
-            >
-              Download as pdf
-            </Button>
+            <Box textAlign="right">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={this.savePDF}
+                disabled={generatingPdf}
+              >
+                Download as pdf
+                {generatingPdf && (
+                  <CircularProgress
+                    disableShrink
+                    color="secondary"
+                    size={20}
+                    className={classes.pdfLoading}
+                  />
+                )}
+              </Button>
+            </Box>
             <div id="images" ref={(ref) => { this.results = ref; }}>
               {plotData && this.drawImageResults(plotData)}
             </div>
             <div className={classes.print}>
               <canvas ref={(ref) => { this.globalCanvas = ref; }} width="1600" height={height} />
-              {localCanvas}
+              <div ref={(ref) => { this.localCanvasWrapper = ref; }}>
+                {localCanvas}
+              </div>
             </div>
-          </div>
-        )}
-        {imagePath && (
-          <div>
-            <img src={imagePath} className={classes.image} alt="result-iamge" />
           </div>
         )}
       </div>
@@ -293,12 +325,12 @@ class Images extends Component {
 }
 
 Images.defaultProps = {
-  imagePath: '',
+  resultsPath: '',
 };
 
 Images.propTypes = {
   classes: PropTypes.object.isRequired,
-  imagePath: PropTypes.string,
+  resultsPath: PropTypes.string,
   plotData: PropTypes.object,
   title: PropTypes.string.isRequired,
   notifyError: PropTypes.func.isRequired,
