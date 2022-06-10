@@ -75,6 +75,11 @@ export const isUserInGroup = (userId, groupArr) => {
     : userId in groupArr;
 };
 
+export const isUserOnlyOwner = (userId, owners = {}) => {
+  const userIds = Object.keys(owners);
+  return userIds.length === 1 && userIds[0] === userId;
+};
+
 /**
  * Read the csv with freesurfer data
  * @param {Csv files} files
