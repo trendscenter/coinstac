@@ -577,7 +577,14 @@ class ConsortiaList extends Component {
 
   async joinConsortium(consortiumId, activePipelineId) {
     const {
-      auth, client, consortia, pullComputations, notifyInfo, notifyError, joinConsortium,
+      auth,
+      client,
+      consortia,
+      pullComputations,
+      notifyInfo,
+      notifyError,
+      joinConsortium,
+      dockerStatus
     } = this.props;
 
     joinConsortium(consortiumId);
@@ -609,9 +616,7 @@ class ConsortiaList extends Component {
       });
     });
 
-    const consortium = find(consortia, { id: consortiumId });
-
-    if (consortium && auth.user.id in consortium.activeMembers) {
+    if (dockerStatus) {
       pullComputations({ consortiumId, computations });
       notifyInfo('Pipeline computations downloading via Docker.');
     }

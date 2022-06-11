@@ -191,7 +191,7 @@ function Dashboard({
       <DockerEventsListeners />
       <LogListener />
       <UpdateDataMapStatusStartupListener maps={maps} consortia={consortia} userId={auth.user.id} />
-      <PullComputationsListener userId={auth.user.id} />
+      <PullComputationsListener userId={auth.user.id} dockerStatus={dockerStatus} />
       <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
       <UserPermissionsListener userId={auth.user.id} />
       <TreeviewListener

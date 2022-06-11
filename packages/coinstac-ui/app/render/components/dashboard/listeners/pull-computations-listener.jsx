@@ -14,14 +14,19 @@ import { pullComputations } from '../../../state/ducks/docker';
 /**
  * Pulls computation images automatically once the pipeline is set for a given consortium.
  */
-function PullComputationsListener({ userId, notifyInfo, pullComputations }) {
+function PullComputationsListener({
+  userId,
+  notifyInfo,
+  pullComputations,
+  dockerStatus,
+}) {
   const { data } = useSubscription(CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION);
   const apolloClient = useApolloClient();
 
   const consortium = get(data, 'consortiumPipelineChanged');
 
   useEffect(() => {
-    if (!consortium || !(userId in consortium.activeMembers)) return;
+    if (!consortium || !(userId in consortium.activeMembers) || !dockerStatus) return;
 
     const pipelineData = apolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const computationData = apolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
