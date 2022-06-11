@@ -4,7 +4,7 @@
     "id": "ssr-test",
     "version": "v1.0.0",
     "repository": "https://github.com/trendscenter/coinstac-ssr-test",
-    "testData": "https://github.com/trendscenter/coinstac-ssr-test/test",
+    "testData": "tree/master/test/input",
     "description": "Regression (Singleshot) on test data"
   },
   "computation": {
