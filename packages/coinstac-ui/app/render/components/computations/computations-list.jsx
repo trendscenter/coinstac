@@ -91,8 +91,6 @@ class ComputationsList extends Component {
       showModal: false,
       isDeleting: false,
     };
-
-    this.pullComputations = this.pullComputations.bind(this);
   }
 
   componentDidMount() {
@@ -119,7 +117,9 @@ class ComputationsList extends Component {
   }
 
   getTable = (computations) => {
-    const { auth: { user }, docker, classes } = this.props;
+    const {
+      auth: { user }, docker, classes, dockerStatus,
+    } = this.props;
     const { activeComp, isDeleting, computationToDelete } = this.state;
 
     const sortedComputations = computations.sort((a, b) => {
@@ -157,6 +157,7 @@ class ComputationsList extends Component {
                     <Button
                       variant="contained"
                       color="secondary"
+                      disabled={!dockerStatus}
                       onClick={() => this.removeImage(
                         comp.id,
                         comp.computation.dockerImage,
@@ -173,9 +174,10 @@ class ComputationsList extends Component {
                   ) : (
                     <Button
                       variant="contained"
+                      disabled={!dockerStatus}
                       color="secondary"
                       onClick={
-                        this.pullComputations([{
+                        () => this.handlePullComputations([{
                           img: comp.computation.dockerImage,
                           compId: comp.id,
                           compName: comp.meta.name,
@@ -205,7 +207,6 @@ class ComputationsList extends Component {
                     </Button>
                   )}
                 </div>
-
                 <div className={classes.computationButtons}>
                   <Button
                     variant="contained"
@@ -288,7 +289,6 @@ class ComputationsList extends Component {
     });
   }
 
-
   removeComputation = () => {
     const { removeComputation, notifySuccess, notifyError } = this.props;
     const { computationToDelete } = this.state;
@@ -320,15 +320,15 @@ class ComputationsList extends Component {
       });
   }
 
-  pullComputations(comps) {
+  handlePullComputations = (computations) => {
     const { pullComputations } = this.props;
-    return () => {
-      pullComputations({ computations: comps });
-    };
+    pullComputations({ computations });
   }
 
   render() {
-    const { computations, classes, auth } = this.props;
+    const {
+      computations, classes, auth, dockerStatus,
+    } = this.props;
     const { ownedComputations, otherComputations, showModal } = this.state;
 
     return (
@@ -354,8 +354,9 @@ class ComputationsList extends Component {
           <Button
             variant="contained"
             color="primary"
+            disabled={!dockerStatus}
             className={classes.downloadAllButton}
-            onClick={this.pullComputations(
+            onClick={() => this.handlePullComputations(
               computations.map(comp => ({
                 img: comp.computation.dockerImage,
                 compId: comp.id,
@@ -396,6 +397,7 @@ ComputationsList.defaultProps = {
 };
 
 ComputationsList.propTypes = {
+  dockerStatus: PropTypes.bool.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
