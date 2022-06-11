@@ -1,9 +1,10 @@
 {
   "meta": {
-    "name": "Test Coinstac transfering files",
+    "name": "File transfering test",
     "id": "coinstac-file-transfer-test",
     "version": "v1.0.0",
-    "repository": "github.com\/user\/computation.git",
+    "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-file-transfer-test",
+    "testData": "tree/master/packages/coinstac-images/coinstac-file-transfer-test/test/input",
     "description": "sends a large file"
   },
   "computation": {

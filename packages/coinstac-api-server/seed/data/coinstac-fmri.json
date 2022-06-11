@@ -4,7 +4,8 @@
       "name":"fMRI Preprocessing Pipeline (New)",
       "version":"v1.0.0_20210820",
       "repository":"https://github.com/trendscenter/coinstac_fmriport_bforge",
-      "description":"This computation preprocesses 12-ch and 32-ch fMRI data using a SPM pipeline"
+      "description":"This computation preprocesses 12-ch and 32-ch fMRI data using a SPM pipeline",
+      "testData": "tree\/main\/test"
    },
    "computation":{
       "type":"docker",

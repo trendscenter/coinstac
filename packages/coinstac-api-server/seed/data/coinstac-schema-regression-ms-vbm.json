@@ -4,7 +4,8 @@
     "id": "msr-vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-msr-vbm",
-    "description": "Decentralized Regression (Multishot) for Voxel-based Morphometry"
+    "description": "Decentralized Regression (Multishot) for Voxel-based Morphometry",
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

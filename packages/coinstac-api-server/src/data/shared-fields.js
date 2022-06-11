@@ -30,6 +30,7 @@ const schemaFields = {
     compspecVersion: Int
     controller: String
     preprocess: Boolean
+    testData: String
   `,
   computationRemoteFields: `
     type: String
