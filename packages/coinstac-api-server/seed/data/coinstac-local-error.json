@@ -3,8 +3,9 @@
     "name": "Local Error Test",
     "id": "coinstac-local-error",
     "version": "v1.0.0",
-    "repository": "github.com\/user\/computation.git",
-    "description": "errors locally"
+    "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-local-error",
+    "testData": "tree/master/packages/coinstac-images/coinstac-local-error/test/input",
+    "description": "Tests local pipeline error handling"
   },
   "computation": {
     "type": "docker",

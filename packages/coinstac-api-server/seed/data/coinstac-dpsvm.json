@@ -3,8 +3,9 @@
     "name": "Differentially Private Support Vector Machines Demo",
     "id": "dpsvm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_dpSVM",
-    "description": "A test from single shot regresssion"
+    "repository": "https:\/\/github.com\/trendscenter/coinstac-dpsvm",
+    "description": "A test from single shot regresssion",
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

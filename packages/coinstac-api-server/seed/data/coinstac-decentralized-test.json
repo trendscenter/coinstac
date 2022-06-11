@@ -1,9 +1,10 @@
 {
     "meta": {
-        "name": "Decentralized Test",
+        "name": "Decentralized Test Computation",
         "id": "coinstac-decentralized-test",
         "version": "v1.0.0",
-        "repository": "github.com/user/computation.git",
+        "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-decentralized-test",
+        "testData": "tree/master/packages/coinstac-images/coinstac-decentralized-test/test/input",
         "description": "a test that sums the last two numbers together for the next"
     },
     "computation": {

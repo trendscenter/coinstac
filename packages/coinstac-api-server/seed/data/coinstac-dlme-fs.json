@@ -3,8 +3,9 @@
     "name": "Decentralized Linear Mixed Effects Model - Freesurfer",
     "id": "dlme-fs",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstc-LME-Freesurfer",
-    "description": "Decentralized linear mixed effects model for Freesurfer data"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-LME-Freesurfer",
+    "description": "Decentralized linear mixed effects model for Freesurfer data",
+    "testData": "tree\/master\/test\/input"
   },
   "computation":
   {
@@ -22,7 +23,7 @@
       "covariates": {
         "label": "Covariates",
         "type": "csv",
-        "items": ["boolean", "number"],
+        "items": ["boolean", "number", "string"],
         "source": "member",
         "order": 0
       },

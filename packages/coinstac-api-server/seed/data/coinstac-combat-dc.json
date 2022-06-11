@@ -3,8 +3,9 @@
     "name": "Decentralized Combat",
     "id": "coinstac-combatdc",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/combat-dc",
-    "description": "Decentralized Combat Test"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-combat",
+    "description": "Decentralized Combat Test",
+    "testData": "tree/ridge-combat/test/input"
   },
   "computation": {
     "type": "docker",

@@ -51,9 +51,11 @@ const PipelineStates = (
 
   return (
     <div>
-      <Typography variant="h4" className={classes.pageTitle}>
-        Pipeline States
-      </Typography>
+      <div className="page-header">
+        <Typography variant="h4" className={classes.pageTitle}>
+          Pipeline States
+        </Typography>
+      </div>
       <Divider />
       <Card className={classes.controlsCard}>
         <Button onClick={getPipelines} variant="contained">

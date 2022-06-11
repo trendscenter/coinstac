@@ -50,6 +50,13 @@ const styles = theme => ({
     alignItems: 'center',
     flexWrap: 'wrap',
   },
+  ownerBadge: {
+    background: 'rgb(103, 174, 63)',
+    color: 'white',
+    padding: '0.5rem 1rem 0',
+    marginTop: '-1rem',
+    lineHeight: '2',
+  },
 });
 
 function ListItem({
@@ -82,7 +89,7 @@ function ListItem({
           { itemObject.name }
         </Typography>
         {
-          itemOptions.owner && <Typography>Owner</Typography>
+          itemOptions.owner && <Typography className={classes.ownerBadge}>Owner</Typography>
         }
       </div>
       <Typography variant="body2" className={classes.description}>

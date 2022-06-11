@@ -3,8 +3,9 @@
         "name": "Decentralized Mancova",
         "id": "dmancova",
         "version": "v1.0.0",
-        "repository": "",
-        "description": "A demo for decentralized mancova"
+        "repository": "https:\/\/github.com\/trendscenter\/coinstac-mancova",
+        "description": "A demo for decentralized mancova",
+        "testData": "tree\/master\/test\/input"
     },
     "computation": {
         "type": "docker",
