@@ -3,8 +3,9 @@
         "name": "Local Test",
         "id": "coinstac-local-test",
         "version": "v1.0.0",
-        "repository": "",
-        "description": "a test that sums the last two numbers together for the next"
+        "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-local-test",
+        "testData": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-local-test/test",
+        "description": "A test that sums the last two numbers together for the next locally"
     },
     "computation": {
         "type": "docker",
