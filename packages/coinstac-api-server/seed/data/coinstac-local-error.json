@@ -4,7 +4,7 @@
     "id": "coinstac-local-error",
     "version": "v1.0.0",
     "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-local-error",
-    "testData": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-local-error/test",
+    "testData": "tree/master/packages/coinstac-images/coinstac-local-error/test/input",
     "description": "Tests local pipeline error handling"
   },
   "computation": {
