@@ -198,7 +198,7 @@ function RunItem(props) {
           {consortiumName}
           {
             pipelineSnapshot
-            && <span>{` || ${pipelineSnapshot.name}`}</span>
+            && <span>{` | ${pipelineSnapshot.name}`}</span>
           }
         </Typography>
         {

@@ -168,7 +168,7 @@ class Result extends Component {
               consortium && run.pipelineSnapshot
               && (
                 <Typography variant="h6">
-                  {`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}
+                  {`Results: ${consortium.name} | ${run.pipelineSnapshot.name}`}
                 </Typography>
               )
             }

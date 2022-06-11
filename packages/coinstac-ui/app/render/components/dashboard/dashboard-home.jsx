@@ -67,9 +67,11 @@ function DashboardHome({
 
   return (
     <div>
-      <Typography variant="h4" className={classes.pageTitle}>
-        {`${user.username}'s Home`}
-      </Typography>
+      <div className="page-header">
+        <Typography variant="h4" className={classes.pageTitle}>
+          {`${user.username}'s Home`}
+        </Typography>
+      </div>
       <Divider />
       <Typography variant="h6" className={classes.pageSubtitle}>
         {`Run Activity in the Last ${HOURS_SINCE_ACTIVE} Hours`}

@@ -22,7 +22,7 @@
       "covariates": {
         "label": "Covariates",
         "type": "csv",
-        "items": ["boolean", "number"],
+        "items": ["boolean", "number", "string"],
         "source": "member",
         "order": 0
       },
