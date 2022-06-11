@@ -3,7 +3,8 @@
     "name": "Regression (Singleshot) - Test",
     "id": "ssr-test",
     "version": "v1.0.0",
-    "repository": "",
+    "repository": "https://github.com/trendscenter/coinstac-ssr-test",
+    "testData": "https://github.com/trendscenter/coinstac-ssr-test/test",
     "description": "Regression (Singleshot) on test data"
   },
   "computation": {
