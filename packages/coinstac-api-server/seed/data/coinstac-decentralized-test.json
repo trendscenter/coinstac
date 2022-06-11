@@ -4,7 +4,7 @@
         "id": "coinstac-decentralized-test",
         "version": "v1.0.0",
         "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-decentralized-test",
-        "testData": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-decentralized-error/test",
+        "testData": "tree/master/test/input",
         "description": "a test that sums the last two numbers together for the next"
     },
     "computation": {
