@@ -3,7 +3,8 @@
     "name": "File transfer stress test",
     "id": "coinstac-file-stress-test",
     "version": "v1.0.0",
-    "repository": "",
+    "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-file-stress-test",
+    "repository": "https://github.com/trendscenter/coinstac/tree/master/packages/coinstac-images/coinstac-file-stress-test/test",
     "description": "sends many small files"
   },
   "computation": {
