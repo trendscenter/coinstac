@@ -4,7 +4,7 @@
     "id": "ssr-vbm",
     "version": "v1.0.0",
     "repository": "https://github.com/trendscenter/coinstac-ssr-vbm",
-    "testData": "https://github.com/trendscenter/coinstac-ssr-vbm/test",
+    "testData": "tree/master/test/input",
     "description": "Decentralized Regression (Singleshot) for Voxel-based Morphometry"
   },
   "computation": {
