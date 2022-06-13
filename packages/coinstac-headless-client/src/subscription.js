@@ -5,6 +5,12 @@ const get = require('lodash/get');
 const parseHeadlessClientConfig = require('./parse-headless-client-config');
 const mapData = require('./data-map');
 
+const FETCH_ALL_USER_RUNS_QUERY = gql`
+  query fetchAllUserRuns {
+    ${queries.fetchAllUserRuns}
+  }
+`;
+
 const RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION = gql`
   subscription runWithHeadlessClientStarted($clientId: ID)
     ${queries.runWithHeadlessClientStarted}
@@ -15,6 +21,10 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
     fetchHeadlessClientConfig
   }
 `;
+
+async function shouldUploadFiles(userId, runId){
+  
+}
 
 async function fetchHeadlessClientConfig(apolloClient) {
   const { data } = await apolloClient.query({
@@ -31,7 +41,7 @@ async function fetchHeadlessClientConfig(apolloClient) {
   return parseHeadlessClientConfig(headlessClientConfig);
 }
 
-async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
+async function startPipelineRun(run, headlessClientConfig, coinstacClientCore, apolloClient) {
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
   }
@@ -68,7 +78,15 @@ async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
   await result;
   console.log('Pipeline finished');
 
-  await coinstacClientCore.uploadFiles(run.id);
+  // determine: should the node I am, upload
+  // are all of the members on this run vault users?
+  // if so, am I the first on the list?
+  let shouldUploadFiles = false;
+
+
+  if (shouldUploadFiles) {
+    await coinstacClientCore.uploadFiles(run.id);
+  }
   await coinstacClientCore.unlinkFiles(run.id);
 }
 
@@ -83,7 +101,7 @@ async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
       try {
         const headlessClientConfig = await fetchHeadlessClientConfig(apolloClient);
 
-        await startPipelineRun(run, headlessClientConfig, coinstacClientCore);
+        await startPipelineRun(run, headlessClientConfig, coinstacClientCore, apolloClient);
       } catch (error) {
         console.error(`An error occurred on during a run: ${error}`);
       }
