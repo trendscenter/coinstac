@@ -4,7 +4,8 @@
     "id": "regression-vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm",
-    "description": "Decentralized Regression for Voxel-based Morphometry"
+    "description": "Decentralized Regression for Voxel-based Morphometry",
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

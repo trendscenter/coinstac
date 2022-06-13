@@ -7,7 +7,7 @@
 import React from 'react';
 import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import App from './components/app';
-import ComputationsList from './components/computations/computations-list';
+import ComputationsListContainer from './components/computations/computations-list-container';
 import ComputationSubmission from './components/computations/computation-submission';
 import ConsortiaList from './components/consortia/consortia-list';
 import ConsortiumTabs from './components/consortia/consortium-tabs';
@@ -64,7 +64,7 @@ export default (
         <Route path=":resultId" component={Result} />
       </Route>
       <Route path="computations" component={RouteContainer}>
-        <IndexRoute component={ComputationsList} />
+        <IndexRoute component={ComputationsListContainer} />
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="headlessClients" component={RouteContainer}>
