@@ -5,12 +5,6 @@ const get = require('lodash/get');
 const parseHeadlessClientConfig = require('./parse-headless-client-config');
 const mapData = require('./data-map');
 
-const FETCH_ALL_USER_RUNS_QUERY = gql`
-  query fetchAllUserRuns {
-    ${queries.fetchAllUserRuns}
-  }
-`;
-
 const RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION = gql`
   subscription runWithHeadlessClientStarted($clientId: ID)
     ${queries.runWithHeadlessClientStarted}
@@ -22,20 +16,46 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
   }
 `;
 
-async function shouldUploadFiles(userId, runId, apolloClient) {
-  const fetchResult = apolloClient.query({
+const FETCH_ALL_USER_RUNS_QUERY = gql`
+  query fetchAllUserRuns 
+    ${queries.fetchAllUserRuns}
+  
+`;
+
+async function shouldUploadFiles(clientId, runId, apolloClient) {
+  // find the matching run document
+  const { data } = await apolloClient.query({
     query: FETCH_ALL_USER_RUNS_QUERY,
-  })
+  });
 
-  
+  const runs = data.fetchAllUserRuns;
+  const matchingRuns = runs.filter((run) => {
+    return run.id === runId;
+  });
 
-  // iterate through the results
-  // find the run that matches the runId
-  // check to see if the current userId is the first in the client list
-  
+  if (matchingRuns.length < 1) {
+    return false;
+  }
+  const run = matchingRuns[0];
 
+  // is this a vault only run?
+  const clientIds = Object.keys(run.clients);
+  const headlessMemeberIds = Object.keys(run.pipelineSnapshot.headlessMembers);
+  const notVaultOnly = clientIds.some((id) => {
+    return !headlessMemeberIds.includes(id);
+  });
+
+  if (notVaultOnly) {
+    return false;
+  }
+
+  // is this clientId the first in the clients array?
+  if (Object.keys(run.clients)[0] === (clientId)) {
+    return true;
+  }
+
+  return false;
 }
-
 async function fetchHeadlessClientConfig(apolloClient) {
   const { data } = await apolloClient.query({
     query: FETCH_HEADLESS_CLIENT_CONFIG_QUERY,
@@ -51,7 +71,13 @@ async function fetchHeadlessClientConfig(apolloClient) {
   return parseHeadlessClientConfig(headlessClientConfig);
 }
 
-async function startPipelineRun(run, headlessClientConfig, coinstacClientCore, apolloClient) {
+async function startPipelineRun(
+  run,
+  headlessClientConfig,
+  coinstacClientCore,
+  apolloClient,
+  clientId
+) {
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
   }
@@ -88,13 +114,7 @@ async function startPipelineRun(run, headlessClientConfig, coinstacClientCore, a
   await result;
   console.log('Pipeline finished');
 
-  // determine: should the node I am, upload
-  // are all of the members on this run vault users?
-  // if so, am I the first on the list?
-  let shouldUploadFiles = false;
-
-
-  if (shouldUploadFiles) {
+  if (await shouldUploadFiles(clientId, run.id, apolloClient)) {
     await coinstacClientCore.uploadFiles(run.id);
   }
   await coinstacClientCore.unlinkFiles(run.id);
@@ -111,7 +131,13 @@ async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
       try {
         const headlessClientConfig = await fetchHeadlessClientConfig(apolloClient);
 
-        await startPipelineRun(run, headlessClientConfig, coinstacClientCore, apolloClient);
+        await startPipelineRun(
+          run,
+          headlessClientConfig,
+          coinstacClientCore,
+          apolloClient,
+          clientId
+        );
       } catch (error) {
         console.error(`An error occurred on during a run: ${error}`);
       }
