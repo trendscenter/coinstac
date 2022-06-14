@@ -22,8 +22,18 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
   }
 `;
 
-async function shouldUploadFiles(userId, runId){
+async function shouldUploadFiles(userId, runId, apolloClient) {
+  const fetchResult = apolloClient.query({
+    query: FETCH_ALL_USER_RUNS_QUERY,
+  })
+
   
+
+  // iterate through the results
+  // find the run that matches the runId
+  // check to see if the current userId is the first in the client list
+  
+
 }
 
 async function fetchHeadlessClientConfig(apolloClient) {

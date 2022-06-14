@@ -48,6 +48,9 @@ module.exports = [
       auth: false,
       pre: [
         // { method: helperFunctions.validateUser, assign: 'user' },
+        // determine if this user has permission to download this file
+        // was this user a part of the consortia that owned this run?
+
       ],
       handler: (req, h) => {
 
