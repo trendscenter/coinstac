@@ -1074,6 +1074,19 @@ async function populateHeadlessClients() {
             },
           },
         },
+        [COMPUTATION_IDS[8]]: {
+          inputMap: {
+            covariates: {
+              type: 'csv',
+              dataMap: [
+                { csvColumn: 'age', variableName: 'age', type: 'number' },
+                { csvColumn: 'isControl', variableName: 'isControl', type: 'boolean' },
+                { csvColumn: 'sex', variableName: 'sex', type: 'string' },
+              ],
+              dataFilePath: path.resolve('../../algorithm-development/test-data/nifti-test-data/site1/site1_Covariate.csv'),
+            },
+          },
+        },
       },
       owners: {},
     },

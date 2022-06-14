@@ -56,7 +56,8 @@
         "label": "Covariates",
         "type": "csv",
         "items": ["boolean", "number", "string"],
-        "source": "member"
+        "source": "member",
+        "extensions": ["csv", "txt"]
       },
       "data": {
         "label": "Data",
