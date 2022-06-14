@@ -47,7 +47,6 @@ const managerOptions = ({
           NetworkMode: process.env.CI_DOCKER_NETWORK,
         };
       }
-      if (process.platform === 'linux') opts.docker.User = `${userInfo().uid}:${userInfo().gid}`;
       break;
     case 'singularity':
       opts = [
