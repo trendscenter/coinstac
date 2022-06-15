@@ -12,6 +12,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
 const { ncp } = require('ncp');
+const FormData = require('form-data');
+const { createReadStream } = require('fs');
+const http = require('http');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -20,6 +23,21 @@ const { Logger, transports: { Console } } = winston;
 
 const Manager = require('coinstac-manager');
 const PipelineManager = require('coinstac-pipeline');
+
+async function getAllFiles(directoryName, results = []) {
+  const files = await fs.readdir(directoryName, { withFileTypes: true });
+  // eslint-disable-next-line no-restricted-syntax
+  for (const f of files) {
+    const fullPath = path.join(directoryName, f.name);
+    if (f.isDirectory()) {
+      // eslint-disable-next-line no-await-in-loop
+      await getAllFiles(fullPath, results);
+    } else {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
 
 
 /**
@@ -437,26 +455,41 @@ class CoinstacClient {
   }
 
   async uploadFiles(runId) {
-    const fullPath = path.join(__dirname);
-    // const fullPath = path.join(this.appDirectory, 'output', this.clientId, runId);
+    const runOutputPath = path.join(this.appDirectory, 'output', this.clientId, runId);
     const formData = new FormData();
-    const fileNames = await fs.readdir(fullPath);
-    fileNames.forEach((fileName) => {
-      const filePath = path.join(fullPath, fileName);
+    formData.append('runId', runId);
+    const filePaths = await getAllFiles(runOutputPath);
+
+    filePaths.forEach((filePath) => {
       const readStream = createReadStream(filePath);
+      const fileName = path.relative(runOutputPath, filePath);
       formData.append('file', readStream, fileName);
     });
 
-    // upload them all through an axios post
+    const contentLength = await new Promise((resolve, reject) => {
+      formData.getLength((err, length) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(length);
+      });
+    })
+
+    const postConfig = {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        ...formData.getHeaders(),
+        // 'Content-Length': contentLength,
+      },
+      maxContentLength: 100000000,
+      maxBodyLength: 1000000000,
+    };
+
+
     axios.post(
-      `${this.clientServerURL}/uploadFiles`,
+      `${process.env.API_URL}/uploadFiles`,
       formData,
-      {
-        headers: {
-          Authorization: `Bearer ${this.token}`,
-          ...formData.getHeaders()
-        },
-      }
+      postConfig
     ).then((result) => {
       console.log(result);
     }).catch((e) => {
@@ -464,4 +497,6 @@ class CoinstacClient {
     });
   }
 }
+
+
 module.exports = CoinstacClient;

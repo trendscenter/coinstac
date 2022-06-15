@@ -38,6 +38,7 @@ module.exports = [
         output: 'stream',
         parse: true,
         multipart: true,
+        allow: ['multipart/form-data', 'application/json'],
       },
     },
   },
@@ -53,7 +54,6 @@ module.exports = [
 
       ],
       handler: (req, h) => {
-
         return h.response().code(201);
       },
     },

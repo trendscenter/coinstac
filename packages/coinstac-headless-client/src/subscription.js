@@ -78,6 +78,13 @@ async function startPipelineRun(
   apolloClient,
   clientId
 ) {
+  /// testing. delete this
+  await coinstacClientCore.uploadFiles('62aa21eb4979440880bd22f5');
+  return;
+  ///
+
+
+
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
   }

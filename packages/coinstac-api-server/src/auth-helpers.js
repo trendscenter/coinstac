@@ -435,6 +435,7 @@ const helperFunctions = {
       if (run) {
         return runId;
       }
+      return Boom.badRequest('run not found');
     } catch (e) {
       return Boom.badRequest('invalid user/run combination');
     }
