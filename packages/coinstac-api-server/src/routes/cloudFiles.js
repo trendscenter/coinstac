@@ -39,6 +39,7 @@ module.exports = [
         parse: true,
         multipart: true,
         allow: ['multipart/form-data', 'application/json'],
+        maxBytes: 1000000000000
       },
     },
   },

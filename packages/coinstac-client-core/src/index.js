@@ -13,8 +13,8 @@ const path = require('path');
 const winston = require('winston');
 const { ncp } = require('ncp');
 const FormData = require('form-data');
-const { createReadStream } = require('fs');
-const http = require('http');
+const { createReadStream, createWriteStream } = require('fs');
+const archiver = require('archiver');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -39,6 +39,29 @@ async function getAllFiles(directoryName, results = []) {
   return results;
 }
 
+function createTarFromDir(dir, zippedFilePath) {
+  return new Promise((resolve, reject) => {
+    const output = createWriteStream(zippedFilePath);
+    const archive = archiver('tar', {
+      gzip: true,
+      gzipOptions: {
+        level: 9,
+      },
+    });
+    archive.on('error', (err) => {
+      reject(err);
+    });
+    output.on('close', () => {
+      resolve('closed');
+    });
+    output.on('end', () => {
+      resolve('data has been drained');
+    });
+    archive.pipe(output);
+    archive.directory(dir, false);
+    archive.finalize();
+  });
+}
 
 /**
  * Create a user client for COINSTAC
@@ -455,36 +478,25 @@ class CoinstacClient {
   }
 
   async uploadFiles(runId) {
-    const runOutputPath = path.join(this.appDirectory, 'output', this.clientId, runId);
+    const runOutputDirectory = path.join(this.appDirectory, 'output', this.clientId, runId);
     const formData = new FormData();
     formData.append('runId', runId);
-    const filePaths = await getAllFiles(runOutputPath);
 
-    filePaths.forEach((filePath) => {
-      const readStream = createReadStream(filePath);
-      const fileName = path.relative(runOutputPath, filePath);
-      formData.append('file', readStream, fileName);
-    });
-
-    const contentLength = await new Promise((resolve, reject) => {
-      formData.getLength((err, length) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(length);
-      });
-    })
+    // zip the contents of the run directory
+    const fileName = `${runId}.tar.gz`;
+    const zippedFilePath = path.join(this.appDirectory, 'output', this.clientId, fileName);
+    await createTarFromDir(runOutputDirectory, zippedFilePath);
+    const readStream = createReadStream(zippedFilePath);
+    formData.append('file', readStream, fileName);
 
     const postConfig = {
       headers: {
         Authorization: `Bearer ${this.token}`,
         ...formData.getHeaders(),
-        // 'Content-Length': contentLength,
       },
       maxContentLength: 100000000,
       maxBodyLength: 1000000000,
     };
-
 
     axios.post(
       `${process.env.API_URL}/uploadFiles`,
