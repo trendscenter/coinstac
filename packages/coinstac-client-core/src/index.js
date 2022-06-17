@@ -486,6 +486,7 @@ class CoinstacClient {
     const fileName = `${runId}.tar.gz`;
     const zippedFilePath = path.join(this.appDirectory, 'output', this.clientId, fileName);
     await createTarFromDir(runOutputDirectory, zippedFilePath);
+    // append the readStream
     const readStream = createReadStream(zippedFilePath);
     formData.append('file', readStream, fileName);
 
