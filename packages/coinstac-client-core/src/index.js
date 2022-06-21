@@ -508,6 +508,8 @@ class CoinstacClient {
     }).catch((e) => {
       console.log(e);
     });
+
+    // delete the zipped file here?
   }
 }
 

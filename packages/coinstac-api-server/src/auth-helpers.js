@@ -440,6 +440,25 @@ const helperFunctions = {
       return Boom.badRequest('invalid user/run combination');
     }
   },
+  async canUserDownload(req) {
+    const userId = req.auth.artifacts.decoded.payload.id;
+    const { runId } = req.payload;
+    // is this user a member of the consortium?
+    const db = database.getDbInstance();
+
+    try {
+      const run = await db.collection('runs').findOne({ _id: ObjectID(runId) });
+      const { consortiumId } = run;
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      const consortiaParticipantIds = [...Object.keys(consortium.owners), ...Object.keys(consortium.members), ...Object.keys(consortium.activeMembers)];
+      if (consortiaParticipantIds.includes(userId)) {
+        return runId;
+      }
+      return Boom.badRequest('run not found');
+    } catch (e) {
+      return Boom.badRequest('invalid user/run combination');
+    }
+  },
   audience,
   issuer,
   subject,
