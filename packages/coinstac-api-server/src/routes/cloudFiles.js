@@ -2,16 +2,18 @@ const AWS = require('aws-sdk');
 const { isArray } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
+});
+
 function uploadToS3(fileName, fileStream) {
   const params = {
     Bucket: process.env.AWS_S3_RUN_ASSETS_BUCKET_NAME,
     Key: fileName,
     Body: fileStream,
   };
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
-  });
+
   return s3.upload(params).promise();
 }
 
@@ -20,10 +22,6 @@ function downloadFromS3(fileName) {
     Bucket: process.env.AWS_S3_RUN_ASSETS_BUCKET_NAME,
     Key: fileName,
   };
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
-  });
   return s3.getObject(params).promise();
 }
 
@@ -75,12 +73,13 @@ module.exports = [
         const fileKey = `${runId}/${runId}.tar.gz`;
         try {
           const result = await downloadFromS3(fileKey);
-          return h.response(result).code(200);
+          return h.response(result.Body).code(200);
         } catch (e) {
           console.log(e);
+          return h.response(e).code(500);
         }
 
-        return h.response().code(201);
+      
       },
       payload: {
         output: 'stream',
