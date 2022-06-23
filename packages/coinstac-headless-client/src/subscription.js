@@ -19,7 +19,6 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
 const FETCH_ALL_USER_RUNS_QUERY = gql`
   query fetchAllUserRuns 
     ${queries.fetchAllUserRuns}
-  
 `;
 
 async function shouldUploadFiles(clientId, runId, apolloClient) {
@@ -78,11 +77,6 @@ async function startPipelineRun(
   apolloClient,
   clientId
 ) {
-  // /// testing. delete this
-  // await coinstacClientCore.uploadFiles('62aa21eb4979440880bd22f5');
-  // return;
-  // ///
-
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
   }
