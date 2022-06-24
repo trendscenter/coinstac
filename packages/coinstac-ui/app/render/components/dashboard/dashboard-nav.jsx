@@ -31,14 +31,6 @@ const DashboardNav = ({
         <ListItemText primary="Home" />
         {hasRunOfInterestInProgress && <CircularProgress disableShrink size={20} />}
       </ListItem>
-      <ListItem button component="a" href="#/dashboard/maps">
-        <ListItemIcon><ListAltIcon /></ListItemIcon>
-        <ListItemText primary="Maps" id="maps-menu" />
-      </ListItem>
-      <ListItem button component="a" href="#/dashboard/computations">
-        <ListItemIcon><StorageIcon /></ListItemIcon>
-        <ListItemText primary="Computations" />
-      </ListItem>
       <ListItem button component="a" href="#/dashboard/consortia">
         <ListItemIcon><ViewListIcon /></ListItemIcon>
         <ListItemText primary="Consortia" id="consortia-menu" />
@@ -47,17 +39,25 @@ const DashboardNav = ({
         <ListItemIcon><AssignmentIcon /></ListItemIcon>
         <ListItemText primary="Pipelines" />
       </ListItem>
+      <ListItem button component="a" href="#/dashboard/maps">
+        <ListItemIcon><ListAltIcon /></ListItemIcon>
+        <ListItemText primary="Maps local data" id="maps-menu" />
+      </ListItem>
       <ListItem button component="a" href="#/dashboard/results">
         <ListItemIcon><EqualizerIcon /></ListItemIcon>
         <ListItemText primary="Results" />
       </ListItem>
-      <ListItem button component={Link} to="/dashboard/logs">
-        <ListItemIcon><DescriptionIcon /></ListItemIcon>
-        <ListItemText primary="Logs" />
+      <ListItem button component="a" href="#/dashboard/computations">
+        <ListItemIcon><StorageIcon /></ListItemIcon>
+        <ListItemText primary="Computations" />
       </ListItem>
       <ListItem button component={Link} to="/dashboard/data-discovery">
         <ListItemIcon><LanguageIcon /></ListItemIcon>
         <ListItemText primary="Data Discovery" />
+      </ListItem>
+      <ListItem button component={Link} to="/dashboard/logs">
+        <ListItemIcon><DescriptionIcon /></ListItemIcon>
+        <ListItemText primary="Logs" />
       </ListItem>
       {(isAdmin(user) || isOwnerOfAnyHeadlessClient(user)) && (
         <ListItem button component={Link} to="/dashboard/headlessClients">

@@ -864,7 +864,23 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     leaveConsortium: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+
+      const userId = credentials.id;
+      const ownerIds = Object.keys(consortium.owners);
+
+      const isOwner = ownerIds.includes(userId);
+
+      if (isOwner && ownerIds.length <= 1) {
+        return Boom.forbidden('User is the only owner of this consortium');
+      }
+
       await removeUserPermissions({ userId: ObjectID(credentials.id), role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
+
+      if (isOwner) {
+        await removeUserPermissions({ userId: ObjectID(credentials.id), role: 'owner', doc: ObjectID(args.consortiumId), table: 'consortia' });
+      }
 
       return helperFunctions.getUserDetails(credentials.username);
     },

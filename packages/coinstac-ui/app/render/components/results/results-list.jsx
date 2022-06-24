@@ -4,17 +4,10 @@ import { useSelector } from 'react-redux';
 import Typography from '@material-ui/core/Typography';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
-import { withStyles } from '@material-ui/core/styles';
 
 import RunsList from '../common/runs-list';
 import FileViewer from './file-viewer';
 import { isUserInGroup } from '../../utils/helpers';
-
-const styles = theme => ({
-  pageTitle: {
-    marginBottom: theme.spacing(2),
-  },
-});
 
 const ResultsList = ({ runs, consortia, classes }) => {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -39,7 +32,7 @@ const ResultsList = ({ runs, consortia, classes }) => {
   return (
     <div>
       <div className="page-header">
-        <Typography variant="h4" className={classes.pageTitle}>
+        <Typography variant="h4">
           Results
         </Typography>
       </div>
@@ -72,4 +65,4 @@ ResultsList.defaultProps = {
   consortia: null,
 };
 
-export default withStyles(styles)(ResultsList);
+export default ResultsList;

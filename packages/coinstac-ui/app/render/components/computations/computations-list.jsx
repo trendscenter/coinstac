@@ -1,8 +1,8 @@
 import React, { Component, Fragment } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { graphql } from '@apollo/react-hoc';
+import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { graphql } from '@apollo/react-hoc';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Fab from '@material-ui/core/Fab';
@@ -12,6 +12,7 @@ import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
+import { shell } from 'electron';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
@@ -74,9 +75,7 @@ const styles = theme => ({
   },
   computationButtons: {
     display: 'flex',
-    '& > button': {
-      marginLeft: theme.spacing(1),
-    },
+    columnGap: theme.spacing(1),
   },
 });
 
@@ -92,8 +91,6 @@ class ComputationsList extends Component {
       showModal: false,
       isDeleting: false,
     };
-
-    this.pullComputations = this.pullComputations.bind(this);
   }
 
   componentDidMount() {
@@ -120,7 +117,9 @@ class ComputationsList extends Component {
   }
 
   getTable = (computations) => {
-    const { auth: { user }, docker, classes } = this.props;
+    const {
+      auth: { user }, docker, classes, dockerStatus,
+    } = this.props;
     const { activeComp, isDeleting, computationToDelete } = this.state;
 
     const sortedComputations = computations.sort((a, b) => {
@@ -153,39 +152,61 @@ class ComputationsList extends Component {
                 {comp.meta.description}
               </Typography>
               <div className={classes.computationActions}>
-                {compLocalImage ? (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => this.removeImage(
-                      comp.id,
-                      comp.computation.dockerImage,
-                      compLocalImage.id
-                    )}
-                  >
-                    Remove Image (
-                    <em>
-                      {compLocalImage.size.toString().slice(0, -6)}
-                      MB
-                    </em>
-                    )
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={
-                      this.pullComputations([{
-                        img: comp.computation.dockerImage,
-                        compId: comp.id,
-                        compName: comp.meta.name,
-                      }])
-                    }
-                  >
-                    Download Image
-                  </Button>
-                )}
+                <div className={classes.computationButtons}>
+                  {compLocalImage ? (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      disabled={!dockerStatus}
+                      onClick={() => this.removeImage(
+                        comp.id,
+                        comp.computation.dockerImage,
+                        compLocalImage.id
+                      )}
+                    >
+                      Remove Image (
+                      <em>
+                        {compLocalImage.size.toString().slice(0, -6)}
+                        MB
+                      </em>
+                      )
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      disabled={!dockerStatus}
+                      color="secondary"
+                      onClick={
+                        () => this.handlePullComputations([{
+                          img: comp.computation.dockerImage,
+                          compId: comp.id,
+                          compName: comp.meta.name,
+                        }])
+                      }
+                    >
+                      Download Image
+                    </Button>
+                  )}
+                  {comp.meta.repository && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => this.openGitHubProjectLink(comp.meta)}
+                    >
+                      View GitHub Project Page
+                    </Button>
+                  )}
 
+                  {comp.meta.repository && comp.meta.testData && (
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => this.openTestDataLink(comp.meta)}
+                    >
+                      View Test Data
+                    </Button>
+                  )}
+                </div>
                 <div className={classes.computationButtons}>
                   <Button
                     variant="contained"
@@ -239,6 +260,14 @@ class ComputationsList extends Component {
     );
   }
 
+  openGitHubProjectLink = (meta) => {
+    shell.openExternal(meta.repository);
+  }
+
+  openTestDataLink = (meta) => {
+    shell.openExternal(`${meta.repository}/${meta.testData}`);
+  }
+
   setActiveComp = (comp) => {
     const { activeComp } = this.state;
 
@@ -259,7 +288,6 @@ class ComputationsList extends Component {
       computationToDelete: computationId,
     });
   }
-
 
   removeComputation = () => {
     const { removeComputation, notifySuccess, notifyError } = this.props;
@@ -292,15 +320,15 @@ class ComputationsList extends Component {
       });
   }
 
-  pullComputations(comps) {
+  handlePullComputations = (computations) => {
     const { pullComputations } = this.props;
-    return () => {
-      pullComputations({ computations: comps });
-    };
+    pullComputations({ computations });
   }
 
   render() {
-    const { computations, classes, auth } = this.props;
+    const {
+      computations, classes, auth, dockerStatus,
+    } = this.props;
     const { ownedComputations, otherComputations, showModal } = this.state;
 
     return (
@@ -326,8 +354,9 @@ class ComputationsList extends Component {
           <Button
             variant="contained"
             color="primary"
+            disabled={!dockerStatus}
             className={classes.downloadAllButton}
-            onClick={this.pullComputations(
+            onClick={() => this.handlePullComputations(
               computations.map(comp => ({
                 img: comp.computation.dockerImage,
                 compId: comp.id,
@@ -368,6 +397,7 @@ ComputationsList.defaultProps = {
 };
 
 ComputationsList.propTypes = {
+  dockerStatus: PropTypes.bool.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,

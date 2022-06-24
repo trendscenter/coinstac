@@ -59,19 +59,20 @@
     "differential",
     "privacy"
   ],
-  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "author": "TReNDS Development - The TReNDS Center <info@trendscenter.org> (https://trendscenter.org/)",
   "contributors": [
     "Chris Dieringer <cdaringe@gmail.org>",
     "Cory Reed <swashcap@gmail.com>",
     "Ross Kelly <rkelly@mrn.org>",
     "Drew Landis <landis.d@gmail.com>",
-    "Sergey Plis <splis@mrn.org>"
+    "Sergey Plis <splis@mrn.org>",
+    "Dylan Martin <dylanrossmartin@gmail.com>"
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac/issues"
+    "url": "https://github.com/trendscenter/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac#readme",
+  "homepage": "https://github.com/trendscenter/coinstac#readme",
   "pre-commit": {
     "colors": true,
     "silent": false,

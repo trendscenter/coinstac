@@ -7,7 +7,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, some, flowRight as compose,
+  get, orderBy, some, flowRight as compose, find,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -48,7 +48,7 @@ import {
 import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
-import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
+import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
@@ -156,7 +156,7 @@ class ConsortiaList extends Component {
     return pipelines.filter(pipe => pipe.owningConsortium === consortium.id);
   }
 
-  getOptions(member, owner, consortium) {
+  getOptions(member, owner, onlyOwner, consortium) {
     const {
       auth,
       maps,
@@ -363,7 +363,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    if (member && !owner) {
+    if ((owner && !onlyOwner) || (!owner && member)) {
       actions.push(
         <Button
           key={`${consortium.id}-leave-cons-button`}
@@ -376,7 +376,9 @@ class ConsortiaList extends Component {
           Leave Consortium
         </Button>
       );
-    } else if (!member && !owner && consortium.activePipelineId) {
+    }
+
+    if (!member && !owner && consortium.activePipelineId) {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
@@ -430,6 +432,7 @@ class ConsortiaList extends Component {
           this.getOptions(
             isUserInGroup(user.id, consortium.members),
             isUserInGroup(user.id, consortium.owners),
+            isUserOnlyOwner(user.id, consortium.owners),
             consortium
           )
         }
@@ -555,11 +558,17 @@ class ConsortiaList extends Component {
   }
 
   async leaveConsortium(consortiumId) {
-    const { client, deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+    const {
+      client, deleteAllDataMappingsFromConsortium, leaveConsortium, notifyError,
+    } = this.props;
 
     await deleteAllDataMappingsFromConsortium(consortiumId);
 
-    leaveConsortium(consortiumId);
+    try {
+      await leaveConsortium(consortiumId);
+    } catch (error) {
+      notifyError(get(error, 'message', 'Failed to start pipeline'));
+    }
 
     return client.refetchQueries({
       include: [FETCH_ALL_PIPELINES_QUERY],
@@ -568,7 +577,14 @@ class ConsortiaList extends Component {
 
   async joinConsortium(consortiumId, activePipelineId) {
     const {
-      client, pullComputations, notifyInfo, notifyError, joinConsortium,
+      auth,
+      client,
+      consortia,
+      pullComputations,
+      notifyInfo,
+      notifyError,
+      joinConsortium,
+      dockerStatus
     } = this.props;
 
     joinConsortium(consortiumId);
@@ -600,8 +616,10 @@ class ConsortiaList extends Component {
       });
     });
 
-    pullComputations({ consortiumId, computations });
-    notifyInfo('Pipeline computations downloading via Docker.');
+    if (dockerStatus) {
+      pullComputations({ consortiumId, computations });
+      notifyInfo('Pipeline computations downloading via Docker.');
+    }
   }
 
   async deleteConsortium() {
