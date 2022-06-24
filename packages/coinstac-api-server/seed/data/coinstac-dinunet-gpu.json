@@ -3,9 +3,10 @@
     "name": "Decentralized Deep Artificial Neural Networks in COINSTAC (GPU accelerated)",
     "id": "coinstac-dinunet-gpu",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations_gpu.git",
+    "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations",
     "description": "GPU enabled NN implementations in COINSTAC with. This only runs on GPU available machines.",
-    "compspecVersion": 2
+    "compspecVersion": 2,
+    "testData": "tree/master/datasets/test_fsl/input"
   },
   "computation": {
     "type": "docker",

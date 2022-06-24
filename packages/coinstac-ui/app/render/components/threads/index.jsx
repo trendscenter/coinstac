@@ -155,9 +155,9 @@ class Threads extends Component {
       return;
     }
 
-    const { members, activePipelineId } = consortium;
+    const { members, activeMembers, activePipelineId } = consortium;
 
-    if (auth.user.id in members || !activePipelineId) {
+    if (auth.user.id in members || auth.user.id in activeMembers || !activePipelineId) {
       router.push('/dashboard/consortia');
       return;
     }

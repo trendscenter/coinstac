@@ -5,10 +5,15 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Divider from '@material-ui/core/Divider';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import classNames from 'classnames';
 import { kebabCase } from 'lodash';
+import path from 'path';
+
 import { notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 
 const styles = {
@@ -17,9 +22,7 @@ const styles = {
   column: { padding: '1rem' },
   spacer: { width: '1rem', color: '#fff !important' },
   image: { width: '100%', height: 'auto' },
-  pdfButton: {
-    position: 'absolute', top: '15.75rem', right: '1rem', zIndex: '9',
-  },
+  pdfLoading: { marginLeft: '.5rem' },
   subItem: {
     position: 'relative', float: 'left', width: '95%', marginRight: '5%',
   },
@@ -31,7 +34,10 @@ const styles = {
 class Images extends Component {
   constructor(props) {
     super(props);
-    this.drawImageResults = this.drawImageResults.bind(this);
+
+    this.state = {
+      generatingPdf: false,
+    };
   }
 
   /**
@@ -44,7 +50,7 @@ class Images extends Component {
 
   // ignore weird class-methods-use-this lint error
   // eslint-disable-next-line
-    humanize(str) {
+  humanize(str) {
     const frags = str.split('_');
     for (let i = 0; i < frags.length; i += 1) {
       frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
@@ -54,156 +60,24 @@ class Images extends Component {
     return string;
   }
 
-  /**
-   * drawImageResults
-   * Takes computation Result Object and displays list of Images
-   * @param  {Object} obj Result Object
-   * @return {Object}     JSX of Global and Local Results with Images
-   */
-
-  drawImageResults(obj) {
-    const { classes } = this.props;
-    const output = [];
-
-    Object.entries(obj).forEach(([key, value]) => {
-      const page = [];
-      const col1 = [];
-      const col2 = [];
-      let subcol1 = [];
-      let subcol2 = [];
-      if (key.includes('global')) {
-        page.push(
-          <span key={`span-global-${key}`}>
-            <h2>{this.humanize(key)}</h2>
-            <hr />
-          </span>
-        );
-      }
-      Object.entries(value).forEach(([k, v], i) => {
-        const itemsLength = Object.entries(value).length;
-        const item = [];
-        if (key.includes('global')) {
-          item.push(
-            <h4 key={`image-${k}`}>{this.humanize(k).replace('.png', '')}</h4>
-          );
-        } else {
-          item.push(
-            <span key={`span-${k}`}>
-              <h2 key={`image-${k}`}>
-                Local Stats -
-                {' '}
-                {this.humanize(k).replace('.png', '')}
-              </h2>
-              <hr />
-            </span>
-          );
-        }
-        if (typeof v === 'string') {
-          item.push(
-            <img
-              key={`${v}-img`}
-              alt={`${v}-img`}
-              src={`data:image/png;base64, ${v}`}
-              className={classes.image}
-            />
-          );
-        } else {
-          Object.entries(v).forEach(([l, w], h) => {
-            const subItemsLength = Object.entries(v).length;
-            const subitem = [];
-            subitem.push(
-              <h4 key={`image-${k}-${l}`}>
-                {this.humanize(l).replace('.png', '')}
-              </h4>
-            );
-            if (typeof w === 'string') {
-              subitem.push(
-                <img
-                  alt={`${w}-img`}
-                  src={`data:image/png;base64, ${w}`}
-                  className={classes.image}
-                />
-              );
-            }
-            if (h + 1 <= subItemsLength / 2 && subcol1.length < subItemsLength / 2) {
-              subcol1.push(
-                <div className={classNames('item', classes.imgItem)} key={`image-sub1-${key}-${k}-${l}`}>{subitem}</div>
-              );
-            }
-            if (h + 1 > subItemsLength / 2 && subcol2.length < subItemsLength / 2) {
-              subcol2.push(
-                <div className={classNames('item', classes.imgItem)} key={`image-sub2-${key}-${k}-${l}`}>{subitem}</div>
-              );
-            }
-          });
-        }
-        if (key.includes('global')) {
-          if (i + 1 <= itemsLength / 2) {
-            col1.push(
-              <div className={classNames('item', classes.imgItem)} key={`page-${key}-${k}`}>{item}</div>
-            );
-          }
-          if (i + 1 > itemsLength / 2) {
-            col2.push(
-              <div className={classNames('item', classes.imgItem)} key={`page-${key}-${k}`}>{item}</div>
-            );
-          }
-        } else {
-          page.push(
-            <div className={classNames(`page-${k}`, classes.subpage)} ref={`page-${k}`} key={`page-${k}`}>
-              {item}
-              <table className={classes.container}>
-                <tr className={classes.container}>
-                  <td className={classes.column}>{subcol1}</td>
-                  <td className={classes.spacer}>&nbsp; &nbsp; &nbsp;</td>
-                  <td className={classes.column}>{subcol2}</td>
-                </tr>
-              </table>
-            </div>
-          );
-          subcol1 = [];
-          subcol2 = [];
-        }
-      });
-
-      page.push(
-        <table className={classes.container}>
-          <tr className={classes.container}>
-            <td className={classes.column}>{col1}</td>
-            <td className={classes.spacer}>&nbsp; &nbsp; &nbsp;</td>
-            <td className={classes.column}>{col2}</td>
-          </tr>
-        </table>
-      );
-
-      if (key.includes('global')) {
-        output.push(
-          <div key={`page-${key}`} className={classNames(`page-${key}`, classes.page)} ref={(ref) => { this.globalPage = ref; }}>{page}</div>
-        );
-      } else {
-        output.push(
-          <div key={`page-${key}`} className={classNames('local_stats', classes.page)} ref={`local_page_${key}`}>{page}</div>
-        );
-      }
-    });
-
-    return output;
-  }
-
-  renderCanvas = () => {
+  renderCanvas = async () => {
     const { plotData } = this.props;
     const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
     const globalResults = ReactDOM.findDOMNode(this.globalPage);
 
     RasterizeHTML.drawHTML(globalResults.innerHTML, globalCanvas);
 
-    Object.entries(plotData.local_stats).forEach(([key]) => {
-      const canvas = `${key}_canvas`;
-      const page = `page-${key}`;
-      const keyCanvas = ReactDOM.findDOMNode(this[canvas]);
-      const keyResults = ReactDOM.findDOMNode(this[page]);
-      RasterizeHTML.drawHTML(keyResults.innerHTML, keyCanvas);
+    const renderCanvasPromises = Object.entries(plotData.local_stats).map(async ([key]) => {
+      const canvasId = `local-canvas-${key}`;
+      const pageId = `page-${key}`;
+
+      const localCanvas = document.getElementById(canvasId);
+      const keyResults = document.getElementById(pageId);
+
+      return RasterizeHTML.drawHTML(keyResults.innerHTML, localCanvas);
     });
+
+    await Promise.all(renderCanvasPromises);
   }
 
   componentDidMount = () => {
@@ -214,6 +88,9 @@ class Images extends Component {
     const {
       plotData, title, writeLog, notifyError,
     } = this.props;
+
+    this.setState({ generatingPdf: true });
+
     const canvas = ReactDOM.findDOMNode(this.globalCanvas);
 
     try {
@@ -226,10 +103,10 @@ class Images extends Component {
 
       doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
 
-      Object.entries(plotData.local_stats).forEach(([key]) => {
-        const canvas = `${key}_canvas`;
-        const keyCanvas = ReactDOM.findDOMNode(this[canvas]);
-        const canvasImg = keyCanvas.toDataURL('image/jpg', 1.0);
+      const allLocalCanvas = ReactDOM.findDOMNode(this.localCanvasWrapper).getElementsByClassName('canvas');
+
+      [].forEach.call(allLocalCanvas, (localCanvas) => {
+        const canvasImg = localCanvas.toDataURL('image/jpg', 1.0);
 
         doc.addPage();
         doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
@@ -239,11 +116,15 @@ class Images extends Component {
     } catch (err) {
       writeLog({ type: 'error', message: err });
       notifyError(err.message);
+    } finally {
+      this.setState({ generatingPdf: false });
     }
   }
 
   render() {
-    const { imagePath, plotData, classes } = this.props;
+    const { resultsPath, plotData, classes } = this.props;
+    const { generatingPdf } = this.state;
+
     let globalItems;
     let localItems;
     let height = 0;
@@ -257,7 +138,14 @@ class Images extends Component {
 
       // eslint-disable-next-line no-unused-vars
       Object.entries(plotData.local_stats).forEach(([key, value]) => {
-        localCanvas.push(<canvas className="canvas" ref={`${key}_canvas`} width="1600" height={height} />);
+        localCanvas.push(
+          <canvas
+            id={`local-canvas-${key}`}
+            className="canvas"
+            width="1600"
+            height={height}
+          />
+        );
       });
     }
 
@@ -265,26 +153,66 @@ class Images extends Component {
       <div>
         {globalItems && localItems && (
           <div>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={this.savePDF}
-              className={classes.pdfButton}
-            >
-              Download as pdf
-            </Button>
-            <div id="images" ref={(ref) => { this.results = ref; }}>
-              {plotData && this.drawImageResults(plotData)}
-            </div>
+            {/* <Box textAlign="right">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={this.savePDF}
+                disabled={generatingPdf}
+              >
+                Download as pdf
+                {generatingPdf && (
+                  <CircularProgress
+                    disableShrink
+                    color="secondary"
+                    size={20}
+                    className={classes.pdfLoading}
+                  />
+                )}
+              </Button>
+            </Box> */}
+            <Box py={2}>
+              {plotData && plotData.local_stats && (
+                <Box>
+                  <Typography variant="h4">Local stats</Typography>
+                  {plotData.local_stats.map(localStatImg => (
+                    <Box paddingY={1}>
+                      <Typography variant="h5">{`Local stats - ${this.humanize(localStatImg)}`}</Typography>
+                      <img
+                        key={localStatImg}
+                        alt={localStatImg}
+                        src={path.join(resultsPath, localStatImg)}
+                        className={classes.image}
+                      />
+                      <Divider />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+              {plotData && plotData.global_stats && (
+                <Box>
+                  <Typography variant="h4">Global stats</Typography>
+                  {plotData.global_stats.map(globalStatImg => (
+                    <Box paddingY={1}>
+                      <Typography variant="h5">{`Global stats - ${this.humanize(globalStatImg.replace('global_stats/', ''))}`}</Typography>
+                      <img
+                        key={globalStatImg}
+                        alt={globalStatImg}
+                        src={path.join(resultsPath, globalStatImg)}
+                        className={classes.image}
+                      />
+                      <Divider />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
             <div className={classes.print}>
               <canvas ref={(ref) => { this.globalCanvas = ref; }} width="1600" height={height} />
-              {localCanvas}
+              <div ref={(ref) => { this.localCanvasWrapper = ref; }}>
+                {localCanvas}
+              </div>
             </div>
-          </div>
-        )}
-        {imagePath && (
-          <div>
-            <img src={imagePath} className={classes.image} alt="result-iamge" />
           </div>
         )}
       </div>
@@ -293,12 +221,12 @@ class Images extends Component {
 }
 
 Images.defaultProps = {
-  imagePath: '',
+  resultsPath: '',
 };
 
 Images.propTypes = {
   classes: PropTypes.object.isRequired,
-  imagePath: PropTypes.string,
+  resultsPath: PropTypes.string,
   plotData: PropTypes.object,
   title: PropTypes.string.isRequired,
   notifyError: PropTypes.func.isRequired,
