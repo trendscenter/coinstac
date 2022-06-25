@@ -7,7 +7,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, some, flowRight as compose, find,
+  get, orderBy, some, flowRight as compose,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -24,7 +24,7 @@ import { v4 as uuid } from 'uuid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import { tutorialChange } from '../../state/ducks/auth';
+import { pipelineTutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -49,7 +49,7 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -577,14 +577,12 @@ class ConsortiaList extends Component {
 
   async joinConsortium(consortiumId, activePipelineId) {
     const {
-      auth,
       client,
-      consortia,
       pullComputations,
       notifyInfo,
       notifyError,
       joinConsortium,
-      dockerStatus
+      dockerStatus,
     } = this.props;
 
     joinConsortium(consortiumId);
@@ -661,7 +659,7 @@ class ConsortiaList extends Component {
       consortia,
       classes,
       auth,
-      tutorialChange,
+      pipelineTutorialChange,
     } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
@@ -724,11 +722,11 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
-        {!auth.isTutorialHidden && (
+        {auth.showPipelineTutorial && (
           <Joyride
-            steps={STEPS.consortiaList}
+            steps={PIPELINE_TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
-            callback={tutorialChange}
+            callback={pipelineTutorialChange}
           />
         )}
       </div>
@@ -759,7 +757,7 @@ ConsortiaList.propTypes = {
   startLoading: PropTypes.func.isRequired,
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -809,7 +807,7 @@ export default withStyles(styles)(
       pullComputations,
       deleteAllDataMappingsFromConsortium,
       startRun,
-      tutorialChange,
+      pipelineTutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)

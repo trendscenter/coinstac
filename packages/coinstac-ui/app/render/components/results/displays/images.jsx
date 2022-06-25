@@ -6,8 +6,8 @@ import PropTypes from 'prop-types';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import CircularProgress from '@material-ui/core/CircularProgress';
+// import Button from '@material-ui/core/Button';
+// import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
@@ -123,7 +123,7 @@ class Images extends Component {
 
   render() {
     const { resultsPath, plotData, classes } = this.props;
-    const { generatingPdf } = this.state;
+    const { generatingPdf } = this.state; // eslint-disable-line no-unused-vars
 
     let globalItems;
     let localItems;

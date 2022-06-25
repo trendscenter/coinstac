@@ -17,7 +17,7 @@ import {
 import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const styles = theme => ({
   tabTitle: {
@@ -49,7 +49,7 @@ const styles = theme => ({
 });
 
 function ConsortiumPipeline({
-  consortium, owner, classes, pipelines, isTutorialHidden, tutorialChange,
+  consortium, owner, classes, pipelines, showPipelineTutorial, pipelineTutorialChange,
   saveActivePipeline,
 }) {
   const [activePipeline, setActivePipeline] = useState(null);
@@ -192,11 +192,11 @@ function ConsortiumPipeline({
           </div>
         </div>
       )}
-      {!isTutorialHidden && (
+      {showPipelineTutorial && (
         <Joyride
-          steps={STEPS.consortiumPipeline}
+          steps={PIPELINE_TUTORIAL_STEPS.consortiumPipeline}
           disableScrollParentFix
-          callback={tutorialChange}
+          callback={pipelineTutorialChange}
         />
       )}
     </div>
@@ -208,9 +208,9 @@ ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
-  isTutorialHidden: PropTypes.bool.isRequired,
+  showPipelineTutorial: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
 };
 
 // TODO: Move this to shared props?

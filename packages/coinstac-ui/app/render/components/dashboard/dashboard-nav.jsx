@@ -19,10 +19,10 @@ import SecurityIcon from '@material-ui/icons/Security';
 import LanguageIcon from '@material-ui/icons/Language';
 
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const DashboardNav = ({
-  user, hasRunOfInterestInProgress, isTutorialHidden, tutorialChange,
+  user, hasRunOfInterestInProgress, showPipelineTutorial, pipelineTutorialChange,
 }, { router }) => (
   <Fragment>
     <List className="mainnav">
@@ -78,11 +78,11 @@ const DashboardNav = ({
         </ListItem>
       )}
     </List>
-    {!isTutorialHidden && router.location.pathname === '/dashboard' && (
+    {showPipelineTutorial && router.location.pathname === '/dashboard' && (
       <Joyride
-        steps={STEPS.dashboardNav}
+        steps={PIPELINE_TUTORIAL_STEPS.dashboardNav}
         disableScrollParentFix
-        callback={tutorialChange}
+        callback={pipelineTutorialChange}
       />
     )}
   </Fragment>
@@ -91,8 +91,8 @@ const DashboardNav = ({
 DashboardNav.propTypes = {
   user: PropTypes.object.isRequired,
   hasRunOfInterestInProgress: PropTypes.bool.isRequired,
-  isTutorialHidden: PropTypes.bool.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  showPipelineTutorial: PropTypes.bool.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
 };
 
 DashboardNav.contextTypes = {

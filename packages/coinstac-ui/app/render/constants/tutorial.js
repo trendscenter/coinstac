@@ -1,4 +1,4 @@
-export default {
+export const PIPELINE_TUTORIAL_STEPS = {
   consortiumPipeline: [
     {
       id: 'cp-create-pipeline',
@@ -102,3 +102,5 @@ export default {
     },
   ],
 };
+
+export const VAULT_TUTORIAL_STEPS = {};
