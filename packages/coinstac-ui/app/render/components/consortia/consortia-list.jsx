@@ -24,7 +24,7 @@ import { v4 as uuid } from 'uuid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import { pipelineTutorialChange } from '../../state/ducks/auth';
+import { pipelineTutorialChange, vaultTutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -49,7 +49,7 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -660,9 +660,12 @@ class ConsortiaList extends Component {
       classes,
       auth,
       pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
     const { search, showModal } = this.state;
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
+
+    const { showPipelineTutorial, showVaultTutorial } = auth;
 
     return (
       <div>
@@ -722,11 +725,18 @@ class ConsortiaList extends Component {
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
-        {auth.showPipelineTutorial && (
+        {showPipelineTutorial && (
           <Joyride
             steps={PIPELINE_TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
             callback={pipelineTutorialChange}
+          />
+        )}
+        {showVaultTutorial && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.consortiaList}
+            disableScrollParentFix
+            callback={vaultTutorialChange}
           />
         )}
       </div>
@@ -758,6 +768,7 @@ ConsortiaList.propTypes = {
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
   pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -808,6 +819,7 @@ export default withStyles(styles)(
       deleteAllDataMappingsFromConsortium,
       startRun,
       pipelineTutorialChange,
+      vaultTutorialChange,
       startLoading: start,
       finishLoading: finish,
     })(ConsortiaListWithData)

@@ -21,7 +21,7 @@ import { omit } from 'lodash';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const styles = theme => ({
   textField: {
@@ -137,9 +137,11 @@ class ConsortiumAbout extends Component {
       classes,
       savingStatus,
       showPipelineTutorial,
+      showVaultTutorial,
       saveConsortium,
       consortiumUsers,
       pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
 
     const { newMember, isAddingMember } = this.state;
@@ -292,6 +294,14 @@ class ConsortiumAbout extends Component {
             callback={pipelineTutorialChange}
           />
         )}
+        {showVaultTutorial && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.consortiumAbout}
+            continuous
+            disableScrollParentFix
+            callback={vaultTutorialChange}
+          />
+        )}
       </ValidatorForm>
     );
   }
@@ -306,11 +316,13 @@ ConsortiumAbout.propTypes = {
   users: PropTypes.array,
   consortiumUsers: PropTypes.array,
   showPipelineTutorial: PropTypes.bool.isRequired,
+  showVaultTutorial: PropTypes.bool.isRequired,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
   pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiumAbout.defaultProps = {

@@ -54,7 +54,7 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
-import { pipelineTutorialChange } from '../../state/ducks/auth';
+import { pipelineTutorialChange, vaultTutorialChange } from '../../state/ducks/auth';
 import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import {
@@ -62,7 +62,7 @@ import {
   getGraphQLErrorMessage,
   isUserInGroup,
 } from '../../utils/helpers';
-import { PIPELINE_TUTORIAL_STEPS } from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
   the available pipelines list will be filtered by the ones that the cloud users can run.`;
@@ -684,6 +684,7 @@ class Pipeline extends Component {
       auth,
       availableHeadlessClients,
       pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
     const {
       consortium,
@@ -989,6 +990,14 @@ class Pipeline extends Component {
             callback={pipelineTutorialChange}
           />
         )}
+        {auth.showVaultTutorial && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.pipeline}
+            continuous
+            disableScrollParentFix
+            callback={vaultTutorialChange}
+          />
+        )}
       </div>
     );
   }
@@ -1025,6 +1034,7 @@ Pipeline.propTypes = {
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -1065,6 +1075,7 @@ const connectedComponent = connect(mapStateToProps, {
   notifyError,
   updateMapStatus,
   pipelineTutorialChange,
+  vaultTutorialChange,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

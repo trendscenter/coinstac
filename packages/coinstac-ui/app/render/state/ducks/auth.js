@@ -32,6 +32,7 @@ const INITIAL_STATE = {
   showPipelineTutorial: localStorage.getItem('showPipelineTutorial') === 'true',
   pipelineTutorialSteps: [],
   showVaultTutorial: localStorage.getItem('showVaultTutorial') === 'true',
+  vaultTutorialSteps: [],
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -50,8 +51,9 @@ const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
 const TOGGLE_PIPELINE_TUTORIAL = 'TOGGLE_PIPELINE_TUTORIAL';
+const PIPELINE_TUTORIAL_CHANGE = 'PIPELINE_TUTORIAL_CHANGE';
 const TOGGLE_VAULT_TUTORIAL = 'TOGGLE_VAULT_TUTORIAL';
-const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
+const VAULT_TUTORIAL_CHANGE = 'VAULT_TUTORIAL_CHANGE';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -75,11 +77,14 @@ export const setNetworkVolume = networkVolume => ({
 export const togglePipelineTutorial = () => ({
   type: TOGGLE_PIPELINE_TUTORIAL,
 });
+export const pipelineTutorialChange = payload => ({
+  type: PIPELINE_TUTORIAL_CHANGE, payload,
+});
 export const toggleVaultTutorial = () => ({
   type: TOGGLE_VAULT_TUTORIAL,
 });
-export const pipelineTutorialChange = payload => ({
-  type: TUTORIAL_CHANGE, payload,
+export const vaultTutorialChange = payload => ({
+  type: VAULT_TUTORIAL_CHANGE, payload,
 });
 
 // Helpers
@@ -256,6 +261,7 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     showPipelineTutorial,
     pipelineTutorialSteps,
     showVaultTutorial,
+    vaultTutorialSteps,
   } = state;
   const { pathname } = payload || {};
 
@@ -326,7 +332,7 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         ...state,
         locationStacks: [...locationStacks, pathname],
       };
-    case TUTORIAL_CHANGE: {
+    case PIPELINE_TUTORIAL_CHANGE: {
       if ((payload.action !== 'close' && payload.action !== 'next')
         || payload.lifecycle !== 'complete') {
         return state;
@@ -335,15 +341,38 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       const newPipelineTutorialSteps = pipelineTutorialSteps.includes(payload.step.id)
         ? pipelineTutorialSteps : [...pipelineTutorialSteps, payload.step.id];
 
-      if (newPipelineTutorialSteps.length >= 15) {
-        localStorage.setItem('showPipelineTutorial', false);
-      }
-
-      return {
+      const newState = {
         ...state,
         pipelineTutorialSteps: newPipelineTutorialSteps,
-        showPipelineTutorial: newPipelineTutorialSteps.length <= 15,
       };
+
+      if (newPipelineTutorialSteps.length >= 15) {
+        localStorage.setItem('showPipelineTutorial', false);
+        newState.showPipelineTutorial = false;
+      }
+
+      return newState;
+    }
+    case VAULT_TUTORIAL_CHANGE: {
+      if ((payload.action !== 'close' && payload.action !== 'next')
+        || payload.lifecycle !== 'complete') {
+        return state;
+      }
+
+      const newVaultTutorialSteps = vaultTutorialSteps.includes(payload.step.id)
+        ? vaultTutorialSteps : [...vaultTutorialSteps, payload.step.id];
+
+      const newState = {
+        ...state,
+        vaultTutorialSteps: newVaultTutorialSteps,
+      };
+
+      if (newVaultTutorialSteps.length >= 14) {
+        localStorage.setItem('showVaultTutorial', false);
+        newState.showVaultTutorial = false;
+      }
+
+      return newState;
     }
     default:
       return state;
