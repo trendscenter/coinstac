@@ -51,11 +51,11 @@ module.exports = [
               return uploadToS3(`${runId}/${fileName}`, fileStream);
             })
           );
-          // update the run document to indicate upload is complete
-          await db.collection('runs').updateOne({ _id: ObjectID(runId) }, { $set: { assetsUploaded: true } });
         } catch (e) {
           return h.response(e).code(500);
         }
+        // update the run document to indicate upload is complete
+        await db.collection('runs').updateOne({ _id: ObjectID(runId) }, { $set: { assetsUploaded: true } });
         return h.response('file uploaded').code(201);
       },
       payload: {

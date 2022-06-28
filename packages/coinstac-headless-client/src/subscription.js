@@ -2,9 +2,9 @@ const { gql } = require('@apollo/client/core');
 const { queries } = require('coinstac-graphql-schema');
 const get = require('lodash/get');
 const path = require('path');
+const fs = require('fs').promises;
 const parseHeadlessClientConfig = require('./parse-headless-client-config');
 const mapData = require('./data-map');
-const fs = require('fs').promises;
 
 const RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION = gql`
   subscription runWithHeadlessClientStarted($clientId: ID)
@@ -17,9 +17,9 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
   }
 `;
 
-const FETCH_ALL_USER_RUNS_QUERY = gql`
-  query fetchAllUserRuns 
-    ${queries.fetchAllUserRuns}
+const FETCH_RUN_QUERY = gql`
+  query fetchRun($runId: ID!)
+    ${queries.fetchRun}
 `;
 
 async function shouldUploadFiles(clientId, runId, apolloClient, appDirectory) {
@@ -30,21 +30,12 @@ async function shouldUploadFiles(clientId, runId, apolloClient, appDirectory) {
     return false;
   }
 
-
   // find the matching run document
   const { data } = await apolloClient.query({
-    query: FETCH_ALL_USER_RUNS_QUERY,
+    query: FETCH_RUN_QUERY,
+    variables: { runId },
   });
-
-  const runs = data.fetchAllUserRuns;
-  const matchingRuns = runs.filter((run) => {
-    return run.id === runId;
-  });
-
-  if (matchingRuns.length < 1) {
-    return false;
-  }
-  const run = matchingRuns[0];
+  const run = data.fetchRun;
 
   // is this a vault only run?
   const clientIds = Object.keys(run.clients);
