@@ -1,9 +1,10 @@
 const { gql } = require('@apollo/client/core');
 const { queries } = require('coinstac-graphql-schema');
 const get = require('lodash/get');
-
+const path = require('path');
 const parseHeadlessClientConfig = require('./parse-headless-client-config');
 const mapData = require('./data-map');
+const fs = require('fs').promises;
 
 const RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION = gql`
   subscription runWithHeadlessClientStarted($clientId: ID)
@@ -21,7 +22,15 @@ const FETCH_ALL_USER_RUNS_QUERY = gql`
     ${queries.fetchAllUserRuns}
 `;
 
-async function shouldUploadFiles(clientId, runId, apolloClient) {
+async function shouldUploadFiles(clientId, runId, apolloClient, appDirectory) {
+  // are there files in the output directory?
+  const runOutputDirectory = path.join(appDirectory, 'output', clientId, runId);
+  const files = await fs.readdir(runOutputDirectory);
+  if (files.length < 1) {
+    return false;
+  }
+
+
   // find the matching run document
   const { data } = await apolloClient.query({
     query: FETCH_ALL_USER_RUNS_QUERY,
@@ -113,7 +122,7 @@ async function startPipelineRun(
   await result;
   console.log('Pipeline finished');
 
-  if (await shouldUploadFiles(clientId, run.id, apolloClient)) {
+  if (await shouldUploadFiles(clientId, run.id, apolloClient, coinstacClientCore.appDirectory)) {
     await coinstacClientCore.uploadFiles(run.id);
   }
   await coinstacClientCore.unlinkFiles(run.id);

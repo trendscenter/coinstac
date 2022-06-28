@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const { isArray } = require('lodash');
+const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
+const database = require('../database');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
@@ -38,6 +40,10 @@ module.exports = [
         const { payload } = req;
         const { runId } = req.pre;
         const fileStreams = isArray(payload.file) ? payload.file : [payload.file];
+
+        // update the document to indicate files should be uploaded
+        const db = database.getDbInstance();
+        await db.collection('runs').updateOne({ _id: ObjectID(runId) }, { $set: { shouldUploadAssets: true, assetsUploaded: false } });
         try {
           await Promise.all(
             fileStreams.map((fileStream) => {
@@ -45,6 +51,8 @@ module.exports = [
               return uploadToS3(`${runId}/${fileName}`, fileStream);
             })
           );
+          // update the run document to indicate upload is complete
+          await db.collection('runs').updateOne({ _id: ObjectID(runId) }, { $set: { assetsUploaded: true } });
         } catch (e) {
           return h.response(e).code(500);
         }
@@ -79,7 +87,7 @@ module.exports = [
           return h.response(e).code(500);
         }
 
-      
+
       },
       payload: {
         output: 'stream',
