@@ -22,6 +22,7 @@ import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
+import { API_TOKEN_KEY } from '../../state/ducks/auth';
 
 const styles = theme => ({
   paper: {
@@ -221,7 +222,13 @@ class Result extends Component {
                 color="primary"
                 style={{ marginLeft: 10 }}
                 onClick={() => {
-                  ipcRenderer.invoke('download-run-assets', { runId: run.id }).then((result) => {
+                  const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
+                  const clientId = user.id;
+                  const { apiServer } = window.config;
+                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
+                  ipcRenderer.invoke('download-run-assets', {
+                    runId: run.id, authToken, clientId, apiServerUrl,
+                  }).then((result) => {
                     console.log(result);
                   });
                 }}
@@ -254,7 +261,7 @@ class Result extends Component {
                 && (
                   <String
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                   />
                 )
               }
@@ -273,7 +280,7 @@ class Result extends Component {
                     computationOutput={computationOutput}
                     plotData={plotData}
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                     clients={run.clients}
                   />
                 )
@@ -283,7 +290,7 @@ class Result extends Component {
                 && (
                   <Iframe
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                     value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
                     appDirectory={appDirectory}
                     user={user}
@@ -297,7 +304,7 @@ class Result extends Component {
                   <Images
                     resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                   />
                 )
               }
