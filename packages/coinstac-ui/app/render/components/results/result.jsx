@@ -13,7 +13,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import moment from 'moment';
-import { shell } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
@@ -213,7 +213,23 @@ class Result extends Component {
               Open Local Results
             </Button>
           </div>
-
+          <div className={classes.resultButton}>
+            {run.shouldUploadAssets && (
+              <Button
+                disabled={!run.assetsUploaded}
+                variant="contained"
+                color="primary"
+                style={{ marginLeft: 10 }}
+                onClick={() => {
+                  ipcRenderer.invoke('download-run-assets', { runId: run.id }).then((result) => {
+                    console.log(result);
+                  });
+                }}
+              >
+                Download results
+              </Button>
+            )}
+          </div>
         </Paper>
 
         <Tabs
@@ -308,11 +324,11 @@ class Result extends Component {
                       && run.pipelineSnapshot.steps.map((step, index) => (
                         <PipelineStep
                           computationId={step.computations[0].id}
-                          deleteStep={() => {}}
+                          deleteStep={() => { }}
                           eventKey={step.id}
                           id={step.id}
                           key={step.id}
-                          moveStep={() => {}}
+                          moveStep={() => { }}
                           owner={false}
                           pipelineIndex={index}
                           previousComputationIds={
@@ -321,7 +337,7 @@ class Result extends Component {
                               .map(s => s.computations[0].id)
                           }
                           step={step}
-                          updateStep={() => {}}
+                          updateStep={() => { }}
                         />
                       ))
                     }

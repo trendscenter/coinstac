@@ -12,6 +12,7 @@
 Error.stackTraceLimit = 100;
 
 const fs = require('fs');
+const axios = require('axios');
 
 if (process.env.CI) {
   // write out DEBUG:mqttjs* logs to file
@@ -693,6 +694,42 @@ loadConfig()
             }];
             mainWindow.webContents.send('docker-out', { output, compId, compName: imgName });
           });
+      });
+
+      ipcMain.handle('download-run-assets', (event, { runId, authToken }) => {
+        // get the base directory to construct the full path from
+        const { appDirectory } = initializedCore;
+        const clientId = '';
+        const runOutputDirectory = path.join(appDirectory, 'output', clientId, runId);
+        const writer = fs.createWriteStream(runOutputDirectory);
+        // get the api url
+        const apiUrl = process.env.API_URL;
+
+        // axios post to the url
+        axios.post(
+          `${apiUrl}/downloadFiles`,
+          { runId },
+          { headers: { Authorization: `Bearer ${authToken}` } }
+        ).then((response) => {
+          // stream to the correct output directory
+          return new Promise((resolve, reject) => {
+            response.data.pipe(writer);
+            let error = null;
+            writer.on('error', (err) => {
+              error = err;
+              writer.close();
+              reject(err);
+            });
+            writer.on('close', () => {
+              if (!error) {
+                resolve(true);
+              }
+            });
+          });
+        });
+
+
+
       });
     });
   });
