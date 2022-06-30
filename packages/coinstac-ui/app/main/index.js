@@ -767,10 +767,10 @@ loadConfig()
         const readStream = fs.createReadStream(outputFilePath);
         const writeStream = tar.extract(runOutputDirectory);
         readStream.pipe(gunzip()).pipe(writeStream);
-        
+
         await new Promise((resolve, reject) => {
-          writeStream.on('end', () => {
-            console.log('writeStream ended');
+          writeStream.on('finish', () => {
+            console.log('writeStream finished');
             resolve();
           });
           readStream.on('error', reject);
@@ -778,7 +778,7 @@ loadConfig()
         // delete the tar.gz
         await fs.promises.unlink(outputFilePath);
 
-        return "this is a test value";
+        return 'download complete';
       });
     });
   });

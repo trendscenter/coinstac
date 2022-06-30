@@ -68,6 +68,7 @@ class Result extends Component {
     displayTypes: [],
     plotData: [],
     selectedTabIndex: 0,
+    downloading: false,
   };
 
   componentDidMount() {
@@ -135,7 +136,7 @@ class Result extends Component {
 
   render() {
     const {
-      run, selectedTabIndex, plotData, computationOutput,
+      run, selectedTabIndex, plotData, computationOutput, downloading,
     } = this.state;
     const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
@@ -217,7 +218,7 @@ class Result extends Component {
           <div className={classes.resultButton}>
             {run.shouldUploadAssets && (
               <Button
-                disabled={!run.assetsUploaded}
+                disabled={!run.assetsUploaded || downloading}
                 variant="contained"
                 color="primary"
                 style={{ marginLeft: 10 }}
@@ -226,10 +227,17 @@ class Result extends Component {
                   const clientId = user.id;
                   const { apiServer } = window.config;
                   const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
-                  const result = await ipcRenderer.invoke('download-run-assets', {
-                    runId: run.id, authToken, clientId, apiServerUrl,
-                  });
-                  console.log(result);
+                  this.setState({ downloading: true });
+                  try {
+                    const result = await ipcRenderer.invoke('download-run-assets', {
+                      runId: run.id, authToken, clientId, apiServerUrl,
+                    });
+                    console.log(result);
+                    this.setState({ downloading: false });
+                  } catch (e) {
+                    console.log(e);
+                    this.setState({ downloading: false });
+                  }
                 }}
               >
                 Download results
