@@ -221,16 +221,15 @@ class Result extends Component {
                 variant="contained"
                 color="primary"
                 style={{ marginLeft: 10 }}
-                onClick={() => {
+                onClick={async () => {
                   const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
                   const clientId = user.id;
                   const { apiServer } = window.config;
                   const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
-                  ipcRenderer.invoke('download-run-assets', {
+                  const result = await ipcRenderer.invoke('download-run-assets', {
                     runId: run.id, authToken, clientId, apiServerUrl,
-                  }).then((result) => {
-                    console.log(result);
                   });
+                  console.log(result);
                 }}
               >
                 Download results

@@ -733,7 +733,8 @@ loadConfig()
         const formData = new FormData();
         formData.append('runId', runId);
         // axios post to the url
-        axios.post(
+
+        const response = await axios.post(
           `${apiServerUrl}/downloadFiles`,
           formData,
           {
@@ -744,38 +745,40 @@ loadConfig()
             },
             responseType: 'stream',
           }
-        ).then(async (response) => {
-          // stream to the correct output directory
-          await new Promise((resolve, reject) => {
-            response.data.pipe(writer);
-            let error = null;
-            writer.on('error', (err) => {
-              error = err;
-              writer.close();
-              reject(err);
-            });
-            writer.on('close', () => {
-              if (!error) {
-                resolve(true);
-              }
-            });
-          });
+        );
 
-          // extract the tar
-          const readStream = fs.createReadStream(outputFilePath);
-          const writeStream = tar.extract(runOutputDirectory);
-          readStream.pipe(gunzip()).pipe(writeStream);
-          await new Promise((resolve, reject) => {
-            writeStream.on('end', () => {
-              console.log('writeStream ended');
-              resolve();
-            });
-            readStream.on('error', reject);
+        // stream to the correct output directory
+        await new Promise((resolve, reject) => {
+          response.data.pipe(writer);
+          let error = null;
+          writer.on('error', (err) => {
+            error = err;
+            writer.close();
+            reject(err);
           });
-          await fs.promises.unlink(outputFilePath);
-        }).catch((e) => {
-          console.log(e);
+          writer.on('close', () => {
+            if (!error) {
+              resolve(true);
+            }
+          });
         });
+
+        // extract the tar
+        const readStream = fs.createReadStream(outputFilePath);
+        const writeStream = tar.extract(runOutputDirectory);
+        readStream.pipe(gunzip()).pipe(writeStream);
+        
+        await new Promise((resolve, reject) => {
+          writeStream.on('end', () => {
+            console.log('writeStream ended');
+            resolve();
+          });
+          readStream.on('error', reject);
+        });
+        // delete the tar.gz
+        await fs.promises.unlink(outputFilePath);
+
+        return "this is a test value";
       });
     });
   });
