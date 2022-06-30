@@ -20,6 +20,7 @@
     "axios": "^0.21.1",
     "boom": "^5.2.0",
     "coinstac-graphql-schema": "^6.4.5",
+    "form-data": "^4.0.0",
     "github-api": "^3.3.0",
     "graphql": "^15.5.0",
     "graphql-subscriptions": "^1.2.1",

@@ -13,6 +13,8 @@ Error.stackTraceLimit = 100;
 
 const fs = require('fs');
 const axios = require('axios');
+const FormData = require('form-data');
+const tar = require('tar-fs');
 
 if (process.env.CI) {
   // write out DEBUG:mqttjs* logs to file
@@ -66,6 +68,7 @@ const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
+const { resolve } = require('path');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -696,22 +699,53 @@ loadConfig()
           });
       });
 
-      ipcMain.handle('download-run-assets', (event, { runId, authToken, clientId, apiServerUrl }) => {
+      ipcMain.handle('download-run-assets', async (event,
+        {
+          runId,
+          authToken,
+          clientId,
+          apiServerUrl,
+        }) => {
         // get the base directory to construct the full path from
         const { appDirectory } = initializedCore;
         const runOutputDirectory = path.join(appDirectory, 'output', clientId, runId);
-        const writer = fs.createWriteStream(runOutputDirectory);
-        // get the api url
 
+        // make the outputDirectory if it doesn't exist
+        async function pathExists(path) {
+          let exists = false;
+          try {
+            await fs.promises.access(path);
+            exists = true;
+          } catch {
+            exists = false;
+          }
+          return exists;
+        }
+        if (!await pathExists(runOutputDirectory)) {
+          await fs.promises.mkdir(runOutputDirectory, { recursive: true });
+        }
 
+        // create the file at the end path and start writing to it
+        const outputFilePath = path.join(runOutputDirectory, `${runId}.tar.gz`);
+        const writer = fs.createWriteStream(outputFilePath);
+
+        const formData = new FormData();
+        formData.append('runId', runId);
         // axios post to the url
         axios.post(
           `${apiServerUrl}/downloadFiles`,
-          { runId },
-          { headers: { Authorization: `Bearer ${authToken}` } }
-        ).then((response) => {
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              ...formData.getHeaders(),
+
+            },
+            responseType: 'stream',
+          }
+        ).then(async (response) => {
           // stream to the correct output directory
-          return new Promise((resolve, reject) => {
+          await new Promise((resolve, reject) => {
             response.data.pipe(writer);
             let error = null;
             writer.on('error', (err) => {
@@ -725,10 +759,21 @@ loadConfig()
               }
             });
           });
+
+          // extract the tar
+          const readStream = fs.createReadStream(outputFilePath);
+          const writeStream = tar.extract(runOutputDirectory);
+          readStream.pipe(writeStream);
+          await new Promise((resolve, reject) => {
+            writeStream.on('end', () => {
+              console.log('writeStream ended');
+              resolve();
+            });
+            readStream.on('error', reject);
+          });
+        }).catch((e) => {
+          console.log(e);
         });
-
-
-
       });
     });
   });

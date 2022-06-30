@@ -24,7 +24,8 @@ function downloadFromS3(fileName) {
     Bucket: process.env.AWS_S3_RUN_ASSETS_BUCKET_NAME,
     Key: fileName,
   };
-  return s3.getObject(params).promise();
+  const fileStream = s3.getObject(params).createReadStream();
+  return fileStream;
 }
 
 module.exports = [
@@ -80,8 +81,8 @@ module.exports = [
         const { runId } = req.pre;
         const fileKey = `${runId}/${runId}.tar.gz`;
         try {
-          const result = await downloadFromS3(fileKey);
-          return h.response(result.Body).code(200);
+          const fileStream = await downloadFromS3(fileKey);
+          return h.response(fileStream).code(200);
         } catch (e) {
           console.log(e);
           return h.response(e).code(500);
