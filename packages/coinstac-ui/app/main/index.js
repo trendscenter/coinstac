@@ -15,6 +15,7 @@ const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
 const tar = require('tar-fs');
+const gunzip = require('gunzip-maybe');
 
 if (process.env.CI) {
   // write out DEBUG:mqttjs* logs to file
@@ -763,7 +764,7 @@ loadConfig()
           // extract the tar
           const readStream = fs.createReadStream(outputFilePath);
           const writeStream = tar.extract(runOutputDirectory);
-          readStream.pipe(writeStream);
+          readStream.pipe(gunzip()).pipe(writeStream);
           await new Promise((resolve, reject) => {
             writeStream.on('end', () => {
               console.log('writeStream ended');
@@ -771,6 +772,7 @@ loadConfig()
             });
             readStream.on('error', reject);
           });
+          await fs.promises.unlink(outputFilePath);
         }).catch((e) => {
           console.log(e);
         });
