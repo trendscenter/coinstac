@@ -69,6 +69,7 @@ class Result extends Component {
     plotData: [],
     selectedTabIndex: 0,
     downloading: false,
+    filesExist: false,
   };
 
   componentDidMount() {
@@ -120,6 +121,7 @@ class Result extends Component {
       run,
       plotData,
     });
+    this.doFilesExist(run.id);
   }
 
   handleOpenResult = () => {
@@ -134,9 +136,16 @@ class Result extends Component {
     this.setState({ selectedTabIndex: value });
   }
 
+  doFilesExist = async (runId) => {
+    const { auth: { user, appDirectory } } = this.props;
+    const directoryPath = path.join(appDirectory, 'output', user.id, runId);
+    const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
+    this.setState({ filesExist: exist });
+  }
+
   render() {
     const {
-      run, selectedTabIndex, plotData, computationOutput, downloading,
+      run, selectedTabIndex, plotData, computationOutput, downloading, filesExist,
     } = this.state;
     const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
@@ -218,7 +227,7 @@ class Result extends Component {
           <div className={classes.resultButton}>
             {run.shouldUploadAssets && (
               <Button
-                disabled={!run.assetsUploaded || downloading}
+                disabled={!run.assetsUploaded || downloading || filesExist}
                 variant="contained"
                 color="primary"
                 style={{ marginLeft: 10 }}
@@ -234,6 +243,7 @@ class Result extends Component {
                     });
                     console.log(result);
                     this.setState({ downloading: false });
+                    await this.doFilesExist(run.id);
                   } catch (e) {
                     console.log(e);
                     this.setState({ downloading: false });
@@ -309,6 +319,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    filesExist={filesExist}
                     resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name} `}

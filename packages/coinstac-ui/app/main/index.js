@@ -780,5 +780,19 @@ loadConfig()
 
         return 'download complete';
       });
+
+      ipcMain.handle('filesExist', async (event, { directoryPath }) => {
+        try {
+          // check to see if directory exists
+          const fileNames = await fs.promises.readdir(directoryPath);
+          // check to see if directory is empty
+          if (fileNames.length > 0) {
+            return true;
+          }
+          return false;
+        } catch (e) {
+          return false;
+        }
+      });
     });
   });
