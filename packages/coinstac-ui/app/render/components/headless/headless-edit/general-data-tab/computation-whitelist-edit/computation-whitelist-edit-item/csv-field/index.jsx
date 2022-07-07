@@ -122,6 +122,14 @@ function CsvField({ editWhitelist, whitelistData }) {
     });
   };
 
+  const trimField = fieldName => (e) => {
+    editWhitelist({
+      ...whitelistData,
+      type: 'csv',
+      [fieldName]: e.target.value.trim(),
+    });
+  }
+
   const handleColumnsChange = (evt) => {
     const { value } = evt.target;
     setColumns(value);
@@ -136,6 +144,7 @@ function CsvField({ editWhitelist, whitelistData }) {
           placeholder="Data File Path"
           value={whitelistData && whitelistData.dataFilePath ? whitelistData.dataFilePath : ''}
           onChange={editField('dataFilePath')}
+          onBlur={trimField('dataFilePath')}
           fullWidth
         />
       </Box>
