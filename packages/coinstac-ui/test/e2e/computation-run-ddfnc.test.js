@@ -193,7 +193,7 @@ describe('Run ddfnc computation with 2 members', () => {
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
   });
-  
+
   it('sets the created pipeline to the consortium', async () => {
     await appWindow1.click('a:has-text("Consortia")');
 
@@ -217,24 +217,6 @@ describe('Run ddfnc computation with 2 members', () => {
     ]);
   });
 
-  it('joins a consortium', async () => {
-    await appWindow2.click('a:has-text("Consortia")');
-
-    await appWindow2.click(`button[name="${CONS_NAME}-join-cons-button"]`, { timeout: EXIST_TIMEOUT });
-
-    // Assert
-    return Promise.all([
-      appWindow2.waitForSelector(`button[name="${CONS_NAME}-leave-cons-button"]`, {
-        state: 'visible',
-        timeout: EXIST_TIMEOUT,
-      }).should.eventually.not.equal(null),
-      appWindow2.waitForSelector(`div:has-text("${COMPUTATION_NAME} Download Complete")`, {
-        state: 'visible',
-        timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
-      }).should.eventually.not.equal(null),
-    ]);
-  });
-
   it('map data to consortium on site 1', async () => {
     await appWindow1.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
 
@@ -251,6 +233,24 @@ describe('Run ddfnc computation with 2 members', () => {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
+  });
+
+  it('joins a consortium', async () => {
+    await appWindow2.click('a:has-text("Consortia")');
+
+    await appWindow2.click(`button[name="${CONS_NAME}-join-cons-button"]`, { timeout: EXIST_TIMEOUT });
+
+    // Assert
+    return Promise.all([
+      appWindow2.waitForSelector(`button[name="${CONS_NAME}-leave-cons-button"]`, {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow2.waitForSelector(`div:has-text("${COMPUTATION_NAME} Download Complete")`, {
+        state: 'visible',
+        timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
+      }).should.eventually.not.equal(null),
+    ]);
   });
 
   it('map data to consortium on site 2', async () => {
