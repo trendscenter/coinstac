@@ -41,7 +41,7 @@
     "start": "concurrently \"npm run api-server\" \"sleep 6 && npm run server\" \"npm run watch\" ",
     "switch:prod": "cp packages/coinstac-ui/config/local-production.json packages/coinstac-ui/config/local.json",
     "switch:dev": "cp packages/coinstac-ui/config/local-development.json packages/coinstac-ui/config/local.json",
-    "switch:local": "cp packages/coinstac-ui/config/local-example.json packages/coinstac-ui/config/local.json",
+    "switch:local": "cp packages/coinstac-ui/config/local-local.json packages/coinstac-ui/config/local.json",
     "switch:ci": "cp packages/coinstac-ui/config/local-ci.json packages/coinstac-ui/config/local.json",
     "test": "lerna run test --concurrency=1",
     "watch": "cd packages/coinstac-ui/ && npm run watch"
@@ -59,19 +59,20 @@
     "differential",
     "privacy"
   ],
-  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "author": "TReNDS Development - The TReNDS Center <info@trendscenter.org> (https://trendscenter.org/)",
   "contributors": [
     "Chris Dieringer <cdaringe@gmail.org>",
     "Cory Reed <swashcap@gmail.com>",
     "Ross Kelly <rkelly@mrn.org>",
     "Drew Landis <landis.d@gmail.com>",
-    "Sergey Plis <splis@mrn.org>"
+    "Sergey Plis <splis@mrn.org>",
+    "Dylan Martin <dylanrossmartin@gmail.com>"
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac/issues"
+    "url": "https://github.com/trendscenter/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac#readme",
+  "homepage": "https://github.com/trendscenter/coinstac#readme",
   "pre-commit": {
     "colors": true,
     "silent": false,

@@ -66,8 +66,8 @@ const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
 
-const getAllFilesInDirectory = (directory) => {
-  const dirents = fs.readdirSync(directory, { withFileTypes: true });
+const getAllFilesInDirectory = async (directory) => {
+  const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
   const files = dirents.map((dirent) => {
     const res = path.resolve(directory, dirent.name);
     return dirent.isDirectory() ? getAllFilesInDirectory(res) : res;
@@ -201,46 +201,46 @@ loadConfig()
       ipcMain.on('prepare-consortia-files', async (event, { userId, fileTree, appDirectory }) => {
         const userRunDirectory = path.join(appDirectory, 'runs', userId);
 
-        if (!fs.existsSync(userRunDirectory)) {
-          fs.mkdirSync(userRunDirectory, { recursive: true });
+        if (await !exists(userRunDirectory)) {
+          await fs.promises.mkdir(userRunDirectory, { recursive: true });
         }
-
         const res = [];
 
-        fileTree.forEach((consortium) => {
-          const consortiumDirectory = path.join(userRunDirectory, consortium.name);
+        fileTree.forEach(async (consortium) => {
+          const sanitizedName = consortium.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+          const consortiumDirectory = path.join(userRunDirectory, sanitizedName);
 
-          if (!fs.existsSync(consortiumDirectory)) {
-            fs.mkdirSync(consortiumDirectory);
+          if (await !exists(consortiumDirectory)) {
+            await fs.promises.mkdir(consortiumDirectory, { recursive: true });
           }
 
-          consortium.runs.forEach((run) => {
+          consortium.runs.forEach(async (run) => {
             const runDirectory = path.join(
               consortiumDirectory,
               `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`
             );
 
-            if (!fs.existsSync(runDirectory)) {
-              fs.mkdirSync(runDirectory, { recursive: true });
+            if (await !exists(runDirectory)) {
+              await fs.promises.mkdir(runDirectory, { recursive: true });
             }
 
             const outputDirectory = path.join(appDirectory, 'output', userId, run.id);
 
-            if (fs.existsSync(outputDirectory)) {
-              const allFiles = getAllFilesInDirectory(outputDirectory);
+            if (await exists(outputDirectory)) {
+              const allFiles = await getAllFilesInDirectory(outputDirectory);
 
-              allFiles.forEach((file) => {
+              allFiles.forEach(async (file) => {
                 const relativePath = path.relative(outputDirectory, file);
                 const symlinkPath = path.join(runDirectory, relativePath);
-
                 const symlinkDirectory = path.dirname(symlinkPath);
 
-                if (!fs.existsSync(symlinkDirectory)) {
-                  fs.mkdirSync(symlinkDirectory, { recursive: true });
+                if (await !exists(symlinkDirectory)) {
+                  await fs.promises.mkdir(symlinkDirectory, { recursive: true });
                 }
 
-                if (!fs.existsSync(symlinkPath)) {
-                  fs.symlinkSync(file, symlinkPath);
+
+                if (await !exists(symlinkPath)) {
+                  await fs.promises.symlink(file, symlinkPath);
                 }
 
                 const createdSymlinkPath = path
@@ -531,7 +531,7 @@ loadConfig()
         }
       });
 
-      ipcMain.on('suspend-pipeline', async (e, { runId }) => {
+      ipcMain.handle('suspend-pipeline', async (e, { runId }) => {
         try {
           return initializedCore.pipelineManager.suspendPipeline(runId);
         } catch (err) {
@@ -653,7 +653,7 @@ loadConfig()
      * @return {String[]} List of file paths being retrieved
     */
       ipcMain.handle('open-dialog', (event, { org, filters, properties }) => {
-        let dialogFilters;
+        let dialogFilters = [];
         let dialogProperties;
         let postDialogFunc;
 
@@ -668,10 +668,11 @@ loadConfig()
           dialogProperties = ['openDirectory'];
           postDialogFunc = ipcFunctions.manualDirectorySelection;
         } else {
-          dialogFilters = filters;
+          dialogFilters = filters || [];
           dialogProperties = properties;
           postDialogFunc = ipcFunctions.manualDirectorySelection;
         }
+        dialogFilters.push({ name: 'All Files', extensions: ['*'] });
 
         return fileFunctions.showDialog(
           mainWindow,

@@ -1,6 +1,6 @@
 {
   "name": "coinstac-api-server",
-  "version": "6.3.0",
+  "version": "6.4.5",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "apollo-server-hapi": "^2.25.3",
     "axios": "^0.21.1",
     "boom": "^5.2.0",
-    "coinstac-graphql-schema": "^6.2.0",
+    "coinstac-graphql-schema": "^6.4.5",
     "github-api": "^3.3.0",
     "graphql": "^15.5.0",
     "graphql-subscriptions": "^1.2.1",

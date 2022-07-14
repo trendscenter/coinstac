@@ -8,6 +8,7 @@ const schemaFields = {
     tags: [String]
     owners: JSON
     members: JSON
+    activeMembers: JSON
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean
@@ -26,9 +27,10 @@ const schemaFields = {
     id: String!
     tags: [String]
     version: String
-    compspecVersion: String
+    compspecVersion: Int
     controller: String
     preprocess: Boolean
+    testData: String
   `,
   computationRemoteFields: `
     type: String
@@ -45,11 +47,6 @@ const schemaFields = {
     timeout: Int
     limitOutputToOwner: Boolean
     headlessMembers: JSON
-  `,
-  pipelineControllerFields: `
-    id: ID
-    options: JSON
-    type: String
   `,
   pipelineStepFields: `
     id: ID!
@@ -72,6 +69,7 @@ const schemaFields = {
     photo: String
     photoID: String
     name: String
+    delete: Boolean
   `,
 };
 

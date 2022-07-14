@@ -1,7 +1,7 @@
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
@@ -15,6 +15,7 @@ import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
 import { toggleTutorial, tutorialChange } from '../../state/ducks/auth';
+import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -27,12 +28,11 @@ import {
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
+import useDockerStatus from '../../hooks/useDockerStatus';
+import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
 import DashboardNav from './dashboard-nav';
 import DashboardTutorialModal from './dashboard-tutorial';
 import DockerStatus from './docker-status';
-
-import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
-import useDockerStatus from './effects/useDockerStatus';
 import NotificationsListener from './listeners/notifications-listener';
 import DockerEventsListeners from './listeners/docker-events-listeners';
 import LocalRunStatusListeners from './listeners/local-run-status-listeners';
@@ -42,36 +42,45 @@ import PullComputationsListener from './listeners/pull-computations-listener';
 import RemoteRunsListener from './listeners/remote-runs-listener';
 import UserPermissionsListener from './listeners/user-permissions-listener';
 import TreeviewListener from './listeners/treeview-listener';
-import TopNotificationProgressBar from '../runs/top-notification-progress-bar';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
-import { notifyError } from '../../state/ducks/notifyAndLog';
-
+import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
 
 function Dashboard({
-  auth,
   children,
-  runs,
-  maps,
   router,
-  notifyError,
-  hideTutorial,
 }) {
-  const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const auth = useSelector(state => state.auth);
+  const runs = useSelector(state => state.runs.runs);
+  const maps = useSelector(state => state.maps.consortiumDataMappings);
+
+  const dispatch = useDispatch();
+
+  const [showTutorialModal, setShowTutorialModal] = useState(!auth.isTutorialHidden);
 
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
-  } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
+  } = useQuery(FETCH_ALL_CONSORTIA_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: computationData, subscribeToMore: subscribeToComputations,
-  } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY);
+  } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: pipelinesData, subscribeToMore: subscribeToPipelines,
-  } = useQuery(FETCH_ALL_PIPELINES_QUERY);
+  } = useQuery(FETCH_ALL_PIPELINES_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
   const {
     data: threadsData, subscribeToMore: subscribeToThreads,
-  } = useQuery(FETCH_ALL_THREADS_QUERY);
-  const { subscribeToMore: subscribeToUserRuns } = useQuery(FETCH_ALL_USER_RUNS_QUERY);
+  } = useQuery(FETCH_ALL_THREADS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
+  const { subscribeToMore: subscribeToUserRuns } = useQuery(FETCH_ALL_USER_RUNS_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
 
   useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
   useEntityListSubscription(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
@@ -82,7 +91,7 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
     ipcRenderer.on('main-error', (event, arg) => {
-      notifyError(`Unexpected error: ${arg.message || arg.error || arg}`);
+      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error || arg}`));
     });
   }, []);
 
@@ -103,6 +112,8 @@ function Dashboard({
 
   useStartInitialRuns(); // starts pipelines on app startup
   useStartDecentralizedRun(); // starts decentralized runs when the api server sends a subscription
+
+  const runsOfInterestInProgress = useSelectRunsOfInterest(72, 'started');
 
   const unreadThreadsCount = useMemo(
     () => {
@@ -128,7 +139,7 @@ function Dashboard({
     setShowTutorialModal(false);
 
     if (neverShow) {
-      toggleTutorial();
+      dispatch(toggleTutorial());
     }
   };
 
@@ -146,8 +157,9 @@ function Dashboard({
         <CoinstacAbbr />
         <DashboardNav
           user={auth.user}
-          hideTutorial={hideTutorial}
-          tutorialChange={tutorialChange}
+          hasRunOfInterestInProgress={Boolean(runsOfInterestInProgress.length)}
+          isTutorialHidden={auth.isTutorialHidden}
+          tutorialChange={data => dispatch(tutorialChange(data))}
         />
         <List>
           <ListItem>
@@ -161,7 +173,6 @@ function Dashboard({
         </List>
       </div>
       <div className="dashboard-content">
-        <TopNotificationProgressBar consortia={consortia} runs={runs} />
         <main className="content-pane">
           {canShowBackButton && (
             <button
@@ -180,7 +191,7 @@ function Dashboard({
       <DockerEventsListeners />
       <LogListener />
       <UpdateDataMapStatusStartupListener maps={maps} consortia={consortia} userId={auth.user.id} />
-      <PullComputationsListener userId={auth.user.id} />
+      <PullComputationsListener userId={auth.user.id} dockerStatus={dockerStatus} />
       <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
       <UserPermissionsListener userId={auth.user.id} />
       <TreeviewListener
@@ -196,19 +207,9 @@ function Dashboard({
 
 Dashboard.displayName = 'Dashboard';
 
-Dashboard.defaultProps = {
-  runs: [],
-  maps: [],
-};
-
 Dashboard.propTypes = {
-  auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  runs: PropTypes.array,
-  maps: PropTypes.array,
   router: PropTypes.object.isRequired,
-  notifyError: PropTypes.func.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
 };
 
 const { apiServer, subApiServer } = window.config;
@@ -239,21 +240,6 @@ function ConnectedDashboard(props) {
   );
 }
 
-const mapStateToProps = ({ auth, runs, maps }) => ({
-  auth,
-  runs: runs.runs,
-  maps: maps.consortiumDataMappings,
-  hideTutorial: auth.hideTutorial,
-});
-
-const mapDispatchToProps = {
-  toggleTutorial,
-  tutorialChange,
-  notifyError,
-};
-
-const connectedComponent = connect(
-  mapStateToProps, mapDispatchToProps
-)(withRouter(ConnectedDashboard));
+const connectedComponent = withRouter(ConnectedDashboard);
 
 export default connectedComponent;

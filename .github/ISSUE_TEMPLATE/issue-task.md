@@ -7,20 +7,12 @@ assignees: ''
 
 ---
 
-## Expected Behavior
-<!--- Tell us what should happen -->
+## Task Description
+<!--- what needs to be done -->
 
-## Current Behavior
-<!--- Tell us what happens instead of the expected behavior -->
-
-## Possible Solution
-<!--- Not obligatory, but suggest a fix/reason for the bug, -->
+## Task Notes
+<!--- not obligatory, caveats and helpful tips -->
 
 ## Steps to Reproduce
-<!--- Provide a link to a live example, or an unambiguous set of steps to -->
+<!--- steps to repoduce if a bug -->
 
-## Context (Environment)
-<!--- eg: App, server, pipeline, etc -->
-
-## Possible Implementation
-<!--- Not obligatory, but suggest an idea for implementing addition or change -->

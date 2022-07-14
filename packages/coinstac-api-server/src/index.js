@@ -11,10 +11,16 @@ const {
   WS_CONNECTION_STARTED,
   WS_CONNECTION_TERMINATED,
 } = require('./data/events');
+const transactionLoggerPlugin = require('./transactionLoggerPlugin');
+
 
 async function startServer() {
   const server = new ApolloServer({
     schema,
+    formatError: (err) => {
+      console.error(err?.extensions?.exception?.stacktrace);
+      return err;
+    },
     context: (contextao) => {
       const { connection, request } = contextao;
       if (connection) {
@@ -46,6 +52,9 @@ async function startServer() {
         eventEmitter.emit(WS_CONNECTION_TERMINATED, connectionId);
       },
     },
+    plugins: [
+      transactionLoggerPlugin,
+    ],
   });
   await server.start();
 
@@ -69,8 +78,6 @@ async function startServer() {
         sub: helperFunctions.subject,
         nbf: true,
         exp: true,
-        maxAgeSec: 43200, // 24 hours
-        timeSkewSec: 15,
       },
     });
 

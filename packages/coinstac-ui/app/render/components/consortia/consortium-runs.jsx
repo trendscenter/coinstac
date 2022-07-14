@@ -1,24 +1,36 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import RunsList from '../common/runs-list';
 
-const ConsortiumRuns = ({ runs, consortia }) => (
-  <RunsList
-    consortia={consortia}
-    hoursSinceActive={0}
-    limitToComplete={false}
-    runs={runs}
-  />
-);
+import RunsList from '../common/runs-list';
+import { isUserInGroup } from '../../utils/helpers';
+
+const ConsortiumRuns = ({ auth, runs, consortium }) => {
+  const filteredRuns = useMemo(() => {
+    if (!runs) return [];
+
+    return runs.filter(run => run.consortiumId === consortium.id
+      && (isUserInGroup(auth.user.id, run.observers)
+        || (run.sharedUsers && isUserInGroup(auth.user.id, run.sharedUsers))
+      ));
+  }, [runs]);
+
+  return (
+    <RunsList
+      runs={filteredRuns}
+      consortia={[consortium]}
+      noRunMessage="No runs found"
+    />
+  );
+};
 
 ConsortiumRuns.propTypes = {
-  consortia: PropTypes.array,
+  auth: PropTypes.object.isRequired,
+  consortium: PropTypes.object.isRequired,
   runs: PropTypes.array,
 };
 
 ConsortiumRuns.defaultProps = {
-  consortia: null,
   runs: null,
 };
 

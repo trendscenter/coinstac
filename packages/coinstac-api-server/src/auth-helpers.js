@@ -19,7 +19,7 @@ const helperFunctions = {
    * @param {string} user id of authenticating user passed in from route handler
    * @return {string} A JWT for the requested user
    */
-  createToken(id) {
+  createToken(id) { // Done
     return jwt.sign({ id }, process.env.API_JWT_SECRET, {
       audience,
       issuer,
@@ -29,11 +29,25 @@ const helperFunctions = {
     });
   },
   /**
+  * Create token for headless user
+  * @param {string} id headless user id
+  * @param {string} apiKey api key used for
+  * @return {string} A JWT for the requested user
+  */
+  createAuthTokenForHeadless(id, apiKey) {
+    return jwt.sign({ id, apiKey }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+    });
+  },
+  /**
    * Decode and verify validity of token
    * @param {string} token
    * @returns object that was inside token
    */
-  decodeToken(token) {
+  decodeToken(token) { // Done
     return jwt.verify(token, process.env.API_JWT_SECRET);
   },
   /**
@@ -194,9 +208,23 @@ const helperFunctions = {
   async validateToken(data) {
     const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
+    if (user) {
+      return {
+        isValid: true,
+        credentials: user,
+      };
+    }
+
+    const db = database.getDbInstance();
+
+    const headlessClient = await db.collection('headlessClients').findOne({
+      _id: ObjectID(data.decoded.payload.id),
+      apiKey: data.decoded.payload.apiKey,
+    });
+
     return {
-      isValid: user && user.id,
-      credentials: user || null,
+      isValid: Boolean(headlessClient),
+      credentials: headlessClient,
     };
   },
   /**
@@ -270,7 +298,7 @@ const helperFunctions = {
     const user = await db.collection('users').findOne({ username: req.payload.username });
 
     if (!user) {
-      return Boom.unauthorized('Incorrect username or password.');
+      return Boom.unauthorized('Incorrect username or password');
     }
 
     const passwordMatch = await helperFunctions.verifyPassword(
@@ -281,7 +309,7 @@ const helperFunctions = {
       return h.response(transformToClient(user));
     }
 
-    return Boom.unauthorized('Incorrect username or password.');
+    return Boom.unauthorized('Incorrect username or password');
   },
   /**
    * Validate api key used by headless client
@@ -292,10 +320,17 @@ const helperFunctions = {
   async validateHeadlessClientApiKey(req, h) {
     const db = database.getDbInstance();
 
-    const headlessClient = await db.collection('headlessClients').findOne({ name: req.payload.name });
+    let headlessClientId;
+    try {
+      headlessClientId = ObjectID(req.payload.id);
+    } catch (error) {
+      return Boom.unauthorized('Invalid client id');
+    }
+
+    const headlessClient = await db.collection('headlessClients').findOne({ _id: headlessClientId });
 
     if (!headlessClient) {
-      return Boom.unauthorized('No headless client is registered with this api key');
+      return Boom.unauthorized('No headless client is registered with id');
     }
 
     const apiKeyMatch = await helperFunctions.verifyPassword(
@@ -303,7 +338,7 @@ const helperFunctions = {
     );
 
     if (!apiKeyMatch) {
-      return Boom.unauthorized('Invalid API key.');
+      return Boom.unauthorized('Invalid API key');
     }
 
     return h.response(transformToClient(headlessClient));
@@ -332,7 +367,7 @@ const helperFunctions = {
 
       return h.response({ email });
     } catch (err) {
-      Boom.badRequest(err);
+      return Boom.badRequest(err);
     }
   },
   /**

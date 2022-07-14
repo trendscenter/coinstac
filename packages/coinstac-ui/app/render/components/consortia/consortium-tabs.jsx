@@ -8,8 +8,10 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { graphql } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
+
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
+import ConsortiumMembers from './consortium-members';
 import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
 import {
@@ -43,6 +45,7 @@ class ConsortiumTabs extends Component {
       description: '',
       members: {},
       owners: {},
+      activeMembers: {},
       activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
@@ -59,6 +62,7 @@ class ConsortiumTabs extends Component {
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
+    this.toggleCurrentActiveMember = this.toggleCurrentActiveMember.bind(this);
   }
 
   componentDidMount() {
@@ -104,6 +108,7 @@ class ConsortiumTabs extends Component {
         // eslint-disable-next-line react/no-did-update-set-state
         this.setState({
           consortiumUsers,
+          consortium: remoteConsortium,
         });
       }
     }
@@ -202,6 +207,27 @@ class ConsortiumTabs extends Component {
     }));
   }
 
+  toggleCurrentActiveMember(userId, username, active) {
+    this.setState((prevState) => {
+      const newActiveMembers = { ...prevState.consortium.activeMembers };
+
+      if (active) {
+        newActiveMembers[userId] = username;
+      } else {
+        delete newActiveMembers[userId];
+      }
+
+      return {
+        ...prevState,
+        consortium: {
+          ...prevState.consortium,
+          activeMembers: newActiveMembers,
+        },
+      };
+    });
+  }
+
+
   render() {
     const {
       auth,
@@ -209,12 +235,11 @@ class ConsortiumTabs extends Component {
       addUserRole,
       removeUserRole,
       pipelines,
-      consortia,
       classes,
       tutorialChange,
     } = this.props;
 
-    const { user, hideTutorial } = auth;
+    const { user, isTutorialHidden } = auth;
     const {
       selectedTabIndex,
       consortium,
@@ -237,7 +262,7 @@ class ConsortiumTabs extends Component {
             {title}
           </Typography>
         </div>
-        {!hideTutorial && isEditingConsortium && (
+        {!isTutorialHidden && isEditingConsortium && (
           <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
         )}
         <Tabs
@@ -247,6 +272,7 @@ class ConsortiumTabs extends Component {
         >
           <Tab label="About" />
           {isEditingConsortium && <Tab id="pipeline-tab" label="Pipelines" />}
+          {isEditingConsortium && isOwner && <Tab label="Active Members" />}
           {isEditingConsortium && isOwner && <Tab label="Runs" />}
         </Tabs>
         {
@@ -263,7 +289,7 @@ class ConsortiumTabs extends Component {
               user={user}
               users={users}
               savingStatus={savingStatus}
-              hideTutorial={hideTutorial || isEditingConsortium}
+              isTutorialHidden={isTutorialHidden || isEditingConsortium}
               tutorialChange={tutorialChange}
             />
           )
@@ -275,17 +301,25 @@ class ConsortiumTabs extends Component {
               consortium={consortium}
               owner={isOwner}
               pipelines={pipelines}
-              hideTutorial={hideTutorial}
+              isTutorialHidden={isTutorialHidden}
               tutorialChange={tutorialChange}
             />
           )
         }
+        {selectedTabIndex === 2 && (
+          <ConsortiumMembers
+            consortium={consortium}
+            pipelines={pipelines}
+            currentActiveMembers={consortium.activeMembers}
+            toggleCurrentActiveMember={this.toggleCurrentActiveMember}
+          />
+        )}
         {
-          selectedTabIndex === 2
+          selectedTabIndex === 3
           && (
             <ConsortiumRuns
               runs={this.getConsortiumRuns()}
-              consortia={consortia}
+              consortium={consortium}
               owner={isOwner}
             />
           )

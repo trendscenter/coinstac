@@ -6,19 +6,19 @@ import docker from './ducks/docker';
 import loading from './ducks/loading';
 import localRunResults from './ducks/localRunResults';
 import maps from './ducks/maps';
-import runs from './ducks/runs';
+import createRunsReducer from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
 import suspendedRuns from './ducks/suspendedRuns';
-import { CLEAR_STATE, REHYDRATE } from './ducks/statePersist';
+import { CLEAR_STATE } from './ducks/statePersist';
 
-function rootReducer() {
+function rootReducer(persistStorage) {
   const appReducer = combineReducers({
     app,
     auth,
     docker,
     loading,
     notifications,
-    runs,
+    runs: createRunsReducer(persistStorage),
     maps,
     localRunResults,
     suspendedRuns,
@@ -27,13 +27,6 @@ function rootReducer() {
 
   return (state, action) => {
     if (action.type === CLEAR_STATE) {
-      state = {
-        ...state,
-        ...action.payload,
-      };
-    }
-
-    if (action.type === REHYDRATE) {
       state = {
         ...state,
         ...action.payload,

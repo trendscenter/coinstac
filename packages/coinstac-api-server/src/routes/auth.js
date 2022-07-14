@@ -52,10 +52,9 @@ module.exports = [
         { method: helperFunctions.validateHeadlessClientApiKey, assign: 'headlessClient' },
       ],
       handler: (req, h) => {
-        req.pre.headlessClient.apiKey = undefined;
-
         return h.response({
-          authToken: helperFunctions.createToken(req.pre.headlessClient.id),
+          authToken: helperFunctions.createAuthTokenForHeadless(req.pre.headlessClient.id,
+            req.pre.headlessClient.apiKey),
           client: req.pre.headlessClient,
         }).code(201);
       },
@@ -112,7 +111,7 @@ module.exports = [
       handler: (req, h) => {
         eventEmitter.emit(USER_LOGOUT, req.payload.username);
 
-        return h.response().code(200);
+        return h.response({ username: req.payload.username }).code(200);
       },
     },
   },

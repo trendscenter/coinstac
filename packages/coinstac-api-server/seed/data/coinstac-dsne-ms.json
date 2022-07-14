@@ -3,8 +3,9 @@
     "name": "Decentralized Multishot TSNE Demo",
     "id": "dsne-ms",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-dsne-multishot\/",
-    "description": "A Test from Decentralized Multishot TSNE"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-dsne-multishot",
+    "description": "A Test from Decentralized Multishot TSNE",
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

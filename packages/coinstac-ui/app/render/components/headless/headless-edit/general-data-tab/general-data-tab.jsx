@@ -37,7 +37,8 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
     setSubmitError(e.message);
   }
 
-  const { data: usersData } = useQuery(FETCH_ALL_USERS_QUERY);
+  const { data: usersData } = useQuery(FETCH_ALL_USERS_QUERY,
+    { onError: (error) => { console.error({ error }); } });
   const [createHeadlessClient, { data: createData, loading: creating }] = useMutation(
     CREATE_HEADLESS_CLIENT_MUTATION,
     {
@@ -209,7 +210,7 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
           {submitError && (
             <React.Fragment>
               <ErrorIcon color="error" />
-              { submitError }
+              {submitError}
             </React.Fragment>
           )}
         </Box>

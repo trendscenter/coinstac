@@ -12,11 +12,17 @@ import { selectSuspendedRunsStates } from '../../../state/ducks/suspendedRuns';
  */
 function useStartInitialRuns() {
   const suspendedRunsStates = useSelector(selectSuspendedRunsStates);
+  const auth = useSelector(state => state.auth);
+
+  const loggedUserId = get(auth, 'user.id');
+
   const dispatch = useDispatch();
 
   const ranFirstTime = useRef(false);
 
-  const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY);
+  const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY, {
+    onError: (error) => { console.error({ error }); },
+  });
 
   const [getAllRuns, { data: runsData }] = useLazyQuery(FETCH_ALL_USER_RUNS_QUERY);
 
@@ -37,7 +43,7 @@ function useStartInitialRuns() {
     if (!runs) return;
 
     runs.forEach((run) => {
-      if (run.status !== 'started' || run.id in suspendedRunsStates) return;
+      if (run.status !== 'started' || run.id in suspendedRunsStates || !(loggedUserId in run.clients)) return;
 
       const consortium = consortia.find(c => c.id === run.consortiumId);
 

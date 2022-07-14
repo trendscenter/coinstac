@@ -11,8 +11,10 @@ import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
 import createElectronStorage from 'redux-persist-electron-storage';
+import autoMergeLevel1 from 'redux-persist/lib/stateReconciler/autoMergeLevel1';
+
 import rootReducer from './root-reducer';
-import { init as initPersistStateReducer } from './ducks/statePersist';
+import { init as initPersistStateReducer, CURRENT_PERSISTED_STORE_VERSION } from './ducks/statePersist';
 
 const ElectronStore = require('electron-store');
 
@@ -21,11 +23,13 @@ const electronStore = new ElectronStore();
 const persistConfig = {
   key: 'root',
   storage: createElectronStorage({ electronStore }),
-  whitelist: ['maps', 'localRunResults', 'suspendedRuns'],
+  whitelist: ['maps', 'localRunResults', 'suspendedRuns', 'runs'],
+  stateReconciler: autoMergeLevel1,
+  version: CURRENT_PERSISTED_STORE_VERSION,
 };
 
-export default function () {
-  const persistedReducer = persistReducer(persistConfig, rootReducer());
+export default function configureStore() {
+  const persistedReducer = persistReducer(persistConfig, rootReducer(persistConfig.storage));
   const middleware = [
     thunkMiddleware,
     promiseMiddleware,

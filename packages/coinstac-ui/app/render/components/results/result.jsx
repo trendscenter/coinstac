@@ -168,7 +168,7 @@ class Result extends Component {
               consortium && run.pipelineSnapshot
               && (
                 <Typography variant="h6">
-                  {`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}
+                  {`Results: ${consortium.name} | ${run.pipelineSnapshot.name}`}
                 </Typography>
               )
             }
@@ -279,7 +279,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
-                    imagePath={path.join(appDirectory, 'output', user.id, run.id)}
+                    resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />

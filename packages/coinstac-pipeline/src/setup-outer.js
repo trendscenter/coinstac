@@ -30,6 +30,7 @@ async function setupOuter({
   remoteURL,
   remotePort,
   remotePathname,
+  mqttSubChannel,
 }) {
   const request = remoteProtocol.trim() === 'https:' ? https : http;
   let mqttClient;
@@ -170,25 +171,25 @@ async function setupOuter({
 
   const publishData = (key, data, qos = 0) => {
     mqttClient.publish(
-      key,
+      `${mqttSubChannel}${key}`,
       JSON.stringify(data),
       { qos },
       (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
     );
   };
 
-  async function communicate(pipeline, success, messageIteration) {
-    const message = store.getAndRemove(pipeline.id, clientId);
+  async function communicate(pipeline, success, messageIteration, input) {
+    const message = input || store.getAndRemove(pipeline.id, clientId);
     if (message instanceof Error) { // eslint-disable-line no-lonely-if
       if (!activePipelines[pipeline.id].registered) {
-        activePipelines[pipeline.id].stashedOutput = message;
+        activePipelines[pipeline.id].stashedOutput = { output: message, success };
       } else {
         publishData('run', {
           id: clientId,
           runId: pipeline.id,
           error: { message: message.message, error: message.error, stack: message.stack },
           debug: { sent: Date.now() },
-        });
+        }, 1);
         activePipelines[pipeline.id].stashedOutput = undefined;
       }
     } else {
@@ -213,7 +214,7 @@ async function setupOuter({
         .then((data) => {
           if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
             if (!activePipelines[pipeline.id].registered) {
-              activePipelines[pipeline.id].stashedOutput = message;
+              activePipelines[pipeline.id].stashedOutput = { output: message, success };
             } else {
               const archive = archiver('tar', {
                 gzip: true,
@@ -252,7 +253,7 @@ async function setupOuter({
                   files: [...files],
                   iteration: messageIteration,
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 activePipelines[pipeline.id].stashedOutput = undefined;
                 transferFiles(
                   'post',
@@ -277,13 +278,13 @@ async function setupOuter({
                   runId: pipeline.id,
                   error: { message: e.message, error: e.error, stack: e.stack },
                   debug: { sent: Date.now() },
-                });
+                }, 1);
                 throw e;
               });
             }
           } else {
             if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
-              activePipelines[pipeline.id].stashedOutput = message;
+              activePipelines[pipeline.id].stashedOutput = { output: message, success };
             } else {
               logger.debug('############# Local client sending out data');
               publishData('run', {
@@ -303,7 +304,7 @@ async function setupOuter({
             runId: pipeline.id,
             error: e,
             debug: { sent: Date.now() },
-          });
+          }, 1);
           throw e;
         });
     }
@@ -321,6 +322,7 @@ async function setupOuter({
             clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
             reconnectPeriod: 5000,
             connectTimeout: 15 * 1000,
+            clean: false,
           }
         );
         client.on('offline', () => {
@@ -333,10 +335,10 @@ async function setupOuter({
         client.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+          client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
           resolve(client);
@@ -355,10 +357,10 @@ async function setupOuter({
             client.on('connect', () => {
               clientInit = true;
               logger.silly(`mqtt connection up ${clientId}`);
-              client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-register`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
-              client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              client.subscribe(`${mqttSubChannel}${clientId}-run`, { qos: 1 }, (err) => {
                 if (err) logger.error(`Mqtt error: ${err}`);
               });
               resolve(client);
@@ -377,7 +379,7 @@ async function setupOuter({
       const data = JSON.parse(dataBuffer);
       // TODO: step check?
       switch (topic) {
-        case `${clientId}-run`:
+        case `${mqttSubChannel}${clientId}-run`:
           if (!data.error && activePipelines[data.runId]) {
             if (activePipelines[data.runId].pipeline.currentState.currentIteration
               !== data.iteration
@@ -409,7 +411,7 @@ async function setupOuter({
               publishData('finished', {
                 id: clientId,
                 runId: data.runId,
-              });
+              }, 1);
             }
 
             if (error) {
@@ -418,7 +420,7 @@ async function setupOuter({
                 id: clientId,
                 runId: data.runId,
                 error: { stack: error.stack, message: error.message },
-              });
+              }, 1);
               activePipelines[data.runId].remote.reject(error);
             } else {
               store.put(data.runId, clientId, data.output);
@@ -439,15 +441,16 @@ async function setupOuter({
           }
 
           break;
-        case `${clientId}-register`:
+        case `${mqttSubChannel}${clientId}-register`:
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;
             if (activePipelines[data.runId].stashedOutput) {
               communicate(
                 activePipelines[data.runId].pipeline,
-                activePipelines[data.runId].stashedOutput,
-                activePipelines[data.runId].pipeline.currentState.currentIteration
+                activePipelines[data.runId].stashedOutput.success,
+                activePipelines[data.runId].pipeline.currentState.currentIteration,
+                activePipelines[data.runId].stashedOutput.output
               );
             }
           }

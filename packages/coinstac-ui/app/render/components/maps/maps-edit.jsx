@@ -52,21 +52,21 @@ function MapsEdit({
   function commitSaveDataMap(e) {
     e.preventDefault();
 
-    let unfulfilledArr = Object.entries(pipeline.steps[0].inputMap);
-
-    unfulfilledArr = unfulfilledArr.filter(item => item[1].fulfilled === false);
-
-    const dataMapArr = Object.entries(dataMap);
+    const unfulfilledArr = Object.keys(pipeline.steps[0].inputMap).reduce((memo, item) => {
+      if (pipeline.steps[0].inputMap[item]?.fulfilled === false) {
+        memo[item] = pipeline.steps[0].inputMap[item];
+      }
+      return memo;
+    }, {});
 
     const undef = [];
 
-    unfulfilledArr.forEach((v, i) => {
-      if (typeof dataMapArr[i] !== 'number' && !dataMapArr[i]) {
-        undef.push(unfulfilledArr[i][0]);
-      }
+    Object.keys(unfulfilledArr).forEach((key) => {
+      if (!dataMap[key]) undef.push(key);
     });
 
-    if (undef && typeof undef === 'object' && undef.length > 0) {
+
+    if (undef.length > 0) {
       undef.forEach((item) => {
         setAlertMsg(`Please set value for ${item}`);
         setError(true);

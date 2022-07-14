@@ -25,7 +25,7 @@ const compspecUpload = (username, password, logger) => {
         throw new Error(err);
       }
 
-      const payload = JSON.stringify({
+      const payload = ({
         operationName: config.graphql.operationName,
         query: config.graphql.query,
         variables: {
@@ -38,11 +38,16 @@ const compspecUpload = (username, password, logger) => {
         Authorization: `Bearer ${data.id_token}`,
       };
 
-      const { data: createdData } = await axios.post('/graphql', payload, { headers });
+      try {
+        const { data: createdData } = await axios.post('/graphql', payload, { headers });
 
-      if (createdData.errors) {
-        throw new Error(get(createdData, 'errors.0.message', 'Failed to upload computation'));
+        if (createdData.errors) {
+          throw new Error(get(createdData, 'errors.0.message', 'Failed to upload computation'));
+        }
+      } catch (e) {
+        throw new Error(e?.response?.data?.errors[0]?.message || e.message);
       }
+
 
       logger.info('Successfully uploaded computation schema');
       resolve();

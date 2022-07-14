@@ -4,7 +4,8 @@
     "id": "regression-fsl",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-fsl",
-    "description": "Decentralized Regression for Brain Volumetric Data"
+    "description": "Decentralized Regression for Brain Volumetric Data",
+    "testData": "tree\/master\/test\/input"
   },
   "computation": {
     "type": "docker",

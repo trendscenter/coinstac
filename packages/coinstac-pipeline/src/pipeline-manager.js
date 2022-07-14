@@ -7,6 +7,7 @@ const Emitter = require('events');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
+const { merge } = require('lodash');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -42,6 +43,7 @@ module.exports = {
     mqttRemoteProtocol = 'mqtt:',
     mqttRemoteWSProtocol = 'ws:',
     mqttRemoteWSPathname = '',
+    mqttSubChannel = '',
     remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
@@ -99,6 +101,7 @@ module.exports = {
         store,
         remotePort,
         debugProfileClient,
+        mqttSubChannel,
       }));
     } else {
       ({
@@ -113,6 +116,7 @@ module.exports = {
         mqttRemoteWSProtocol,
         mqttRemoteWSPort,
         mqttRemoteWSPathname,
+        mqttSubChannel,
         activePipelines,
         debugProfileClient,
         store,
@@ -167,6 +171,7 @@ module.exports = {
               userDirectories,
               owner: spec.owner,
               logger: utils.logger,
+              saveState,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             outputDirectory: userDirectories.outputDirectory,
@@ -185,7 +190,6 @@ module.exports = {
           activePipelines[runId],
           saveState ? saveState.activePipeline : {}
         );
-
         // remote client object creation
         Object.keys(clients).forEach((clientId) => {
           remoteClients[clientId] = Object.assign(
@@ -205,7 +209,7 @@ module.exports = {
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
-          publishData('register', { id: clientId, runId });
+          publishData('register', { id: clientId, runId }, 1);
         }
 
         /**
@@ -239,7 +243,7 @@ module.exports = {
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
             Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-              mqttServer.publish(`${clientId}-register`, JSON.stringify({ runId }));
+              mqttServer.publish(`${mqttSubChannel}${clientId}-register`, JSON.stringify({ runId }), { qos: 1 });
             });
           }
         };
@@ -303,11 +307,7 @@ module.exports = {
                   throw err;
                 });
             }
-            // local pipeline user stop error, or other uncaught error
-            publishData('run', {
-              id: clientId, runId, error: { message: err.message, stack: err.stack },
-            }, 1);
-            cleanupPipeline(runId)
+            return cleanupPipeline(runId)
               .then(() => {
                 throw err;
               });
@@ -331,23 +331,31 @@ module.exports = {
         if (!run) {
           throw new Error('Invalid pipeline ID');
         }
-
-        const packagedState = {
-          activePipelineState: {
-            currentState: run.currentState,
-          },
-          pipelineState: {
-            currentStep: run.pipeline.currentStep,
-          },
-          controllerState: run.pipeline.pipelineSteps[run.pipeline.currentStep].controllerState,
-        };
-
-
         return this.stopPipeline(runId, 'suspend')
-          .then((output) => {
-            packagedState.controllerState.stopSignal = undefined;
-            packagedState.controllerState.currentComputations = undefined;
-            packagedState.controllerState.activeComputations = undefined;
+          .then(({ output, controllerState }) => {
+            const packagedState = JSON.parse(JSON.stringify(merge(
+              {},
+              {
+                activePipelineState: {
+                  currentState: run.currentState,
+                },
+              },
+              {
+                pipelineState: {
+                  currentStep: run.pipeline.currentStep,
+                },
+              },
+              {
+                controllerState,
+              },
+              {
+                controllerState: {
+                  currentComputations: null,
+                  activeComputations: null,
+                  stopSignal: null,
+                },
+              }
+            )));
             return Object.assign({ output }, packagedState);
           });
       },
@@ -364,6 +372,12 @@ module.exports = {
         if (currentStep) {
           return currentStep.stop(type);
         }
+      },
+      getPipelines() {
+        return {
+          remoteClients,
+          activePipelines,
+        };
       },
       waitingOnForRun,
     };

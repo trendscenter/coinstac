@@ -84,7 +84,27 @@ class PipelineStep extends Component {
   };
 
   componentDidMount() {
-    this.prefillDataFromHeadlessClients();
+    const {
+      compIO, isEdit, updateStep, step,
+    } = this.props;
+
+    if (compIO) {
+      this.groupInputs(compIO);
+
+      if (!isEdit) {
+        const inputMapDefaultValues = this.fillDefaultValues(compIO);
+        const inputMapPrefill = this.prefillDataFromHeadlessClients();
+
+        updateStep({
+          ...step,
+          inputMap: {
+            ...step.inputMap,
+            ...inputMapDefaultValues,
+            ...inputMapPrefill,
+          },
+        });
+      }
+    }
   }
 
   componentDidUpdate() {
@@ -284,7 +304,7 @@ class PipelineStep extends Component {
 
     return connectDragSource(connectDropTarget(
       <div className={classes.pipelineStep} key={`step-${step.id}`}>
-        <Accordion className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
+        <Accordion className="pipeline-step" expanded style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>

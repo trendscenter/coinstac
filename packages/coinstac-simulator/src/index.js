@@ -4,6 +4,7 @@ const Pipeline = require('coinstac-pipeline');
 const path = require('path');
 const { fork } = require('child_process');
 const exitHook = require('exit-hook');
+const portscanner = require('portscanner');
 
 /**
  * Starts a simulator run with the given pipeline spec
@@ -18,30 +19,35 @@ const startRun = ({
   spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
 }) => {
   return new Promise((resolve, reject) => {
-    // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
-    const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
-    mqtt.on('message', (m) => {
-      if (m.e) return reject(m.e);
-      if (m.started) resolve();
-    });
-    exitHook(() => {
-      mqtt.kill();
-    });
+    portscanner.findAPortNotInUse(1883, 2001, '127.0.0.1')
+      .then((mqttPort) => {
+        // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
+        const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), [mqttPort], { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+        mqtt.on('message', (m) => {
+          if (m.e) return reject(m.e);
+          if (m.started) resolve(mqttPort);
+        });
+        exitHook(() => {
+          mqtt.kill();
+        });
+      });
   })
-    .then(async () => {
+    .then(async (mqttPort) => {
       const pipelines = {
         locals: [],
       };
       clientCount = parseInt(clientCount, 10);
+      const remotePort = await portscanner.findAPortNotInUse(3300, 4001, '127.0.0.1');
 
       if (runMode === 'decentralized') {
         const remoteSpec = Array.isArray(spec) ? spec[0] : spec;
         const remoteManager = await Pipeline.create({
           clientId: 'remote',
           mode: 'remote',
+          remotePort,
           operatingDirectory: path.resolve(operatingDirectory),
           mqttRemoteURL: 'localhost',
-          mqttRemotePort: '1883',
+          mqttRemotePort: mqttPort,
           mqttRemoteProtocol: 'mqtt:',
         });
         pipelines.remote = {
@@ -62,6 +68,8 @@ const startRun = ({
         const localPipelineManager = await Pipeline.create({ // eslint-disable-line no-await-in-loop, max-len
           clientId: `local${i}`,
           mode: 'local',
+          remotePort,
+          mqttRemotePort: mqttPort,
           operatingDirectory: path.resolve(operatingDirectory),
         });
         pipelines.locals.push({

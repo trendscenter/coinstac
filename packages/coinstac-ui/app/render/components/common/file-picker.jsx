@@ -93,7 +93,7 @@ function FilePicker({
                   <FileCopyIcon />
                 </ListItemIcon>
                 <ListItemText primary={`Click to see selected ${directory ? 'directories' : 'files'}`} />
-                { expandList ? <ExpandLessIcon /> : <ExpandMoreIcon /> }
+                {expandList ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </ListItem>
             </List>
             <Collapse in={expandList} timeout="auto">
@@ -137,6 +137,7 @@ FilePicker.defaultProps = {
   tooltip: null,
   extensions: [],
   selected: [],
+  deleteItem: null,
 };
 
 FilePicker.propTypes = {
@@ -148,7 +149,7 @@ FilePicker.propTypes = {
   tooltip: PropTypes.string,
   selected: PropTypes.array,
   classes: PropTypes.object.isRequired,
-  deleteItem: PropTypes.func.isRequired,
+  deleteItem: PropTypes.func,
 };
 
 export default withStyles(styles)(FilePicker);

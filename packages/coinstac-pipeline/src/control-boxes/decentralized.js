@@ -7,7 +7,8 @@ module.exports = {
       return 'doneRemote';
     } if (controllerState.success) {
       return 'done';
-    } if (controllerState.remoteInitial) {
+    } if (controllerState.initial
+      && controllerState.mode === 'remote') {
       return 'firstServerRemote';
     } if (controllerState.state === 'Finished iteration'
     || controllerState.state === 'Iteration finished with an error') {

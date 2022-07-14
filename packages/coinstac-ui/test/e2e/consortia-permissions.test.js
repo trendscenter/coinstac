@@ -110,7 +110,7 @@ describe('e2e consortia permissions', () => {
     await appWindow1.click('button:has-text("Log In")');
 
     try {
-      await appWindow1.click('button:has-text("Never Show Again")');
+      await appWindow1.click('button:has-text("Never Show Again")', { timeout: 5000 });
     } catch {}
 
     // Assert
@@ -125,7 +125,7 @@ describe('e2e consortia permissions', () => {
     await appWindow2.click('button:has-text("Log In")');
 
     try {
-      await appWindow2.click('button:has-text("Never Show Again")');
+      await appWindow2.click('button:has-text("Never Show Again")', { timeout: 5000 });
     } catch {}
 
     // Assert

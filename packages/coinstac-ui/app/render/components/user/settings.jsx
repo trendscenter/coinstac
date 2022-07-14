@@ -74,6 +74,9 @@ const styles = theme => ({
     alignItems: 'center',
     marginTop: theme.spacing(2),
   },
+  warning: {
+    color: 'red',
+  },
 });
 
 class Settings extends Component {
@@ -187,7 +190,7 @@ class Settings extends Component {
       classes,
       clientServerURL,
       networkVolume,
-      hideTutorial,
+      isTutorialHidden,
       toggleTutorial,
     } = this.props;
     const {
@@ -266,14 +269,25 @@ class Settings extends Component {
             onChange={this.handleNetworkVolumeChange}
           />
         </div>
+        <div>
+          {networkVolume
+            && (
+            <Typography variant="subtitle1" className={classes.warning}>
+              To use network volumes on Windows users must run the COINSTAC application
+              with administrator priviledges or have Windows Developer Mode enabled
+            </Typography>
+            )
+          }
+
+        </div>
 
         <Typography variant="h5" className={classes.topMargin}>
           Hide tutorial for running pipeline
         </Typography>
         <div className={classes.directory}>
           <Switch
-            checked={hideTutorial}
-            value={hideTutorial}
+            checked={isTutorialHidden}
+            value={isTutorialHidden}
             onChange={toggleTutorial}
           />
         </div>
@@ -346,7 +360,7 @@ class Settings extends Component {
 Settings.propTypes = {
   clientServerURL: PropTypes.string.isRequired,
   networkVolume: PropTypes.bool.isRequired,
-  hideTutorial: PropTypes.bool.isRequired,
+  isTutorialHidden: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
@@ -373,7 +387,7 @@ const ComponentWithData = compose(
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
   networkVolume: auth.networkVolume,
-  hideTutorial: auth.hideTutorial,
+  isTutorialHidden: auth.isTutorialHidden,
 });
 
 const connectedComponent = connect(mapStateToProps, {

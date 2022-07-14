@@ -18,16 +18,16 @@ function getOnlineUsers() {
   }, {});
 }
 
-function _wsConnectionStarted(connectionId, userId) {
+function wsConnectionStarted(connectionId, userId) {
   connections.set(connectionId, userId);
 }
 
-function _wsConnectionTerminated(connectionId) {
+function wsConnectionTerminated(connectionId) {
   connections.delete(connectionId);
 }
 
-eventEmitter.on(WS_CONNECTION_STARTED, _wsConnectionStarted);
-eventEmitter.on(WS_CONNECTION_TERMINATED, _wsConnectionTerminated);
+eventEmitter.on(WS_CONNECTION_STARTED, wsConnectionStarted);
+eventEmitter.on(WS_CONNECTION_TERMINATED, wsConnectionTerminated);
 
 module.exports = {
   getOnlineUsers,

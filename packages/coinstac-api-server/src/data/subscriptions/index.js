@@ -146,7 +146,7 @@ function runChanged(run) {
 
   pubSub.publish('userRunChanged', {
     userRunChanged: r,
-    runId: r.id,
+    runId: r?.id,
   });
 }
 
