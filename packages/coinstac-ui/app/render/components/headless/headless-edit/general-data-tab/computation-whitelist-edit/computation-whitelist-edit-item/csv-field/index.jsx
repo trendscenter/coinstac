@@ -128,6 +128,13 @@ function CsvField({ editWhitelist, whitelistData }) {
     setColumnsError('');
   };
 
+  const handleDeleteColumnMap = (index) => {
+    editWhitelist({
+      ...whitelistData,
+      dataMap: whitelistData.dataMap.filter((_, idx) => idx !== index),
+    });
+  };
+
   return (
     <Box>
       <Box>
@@ -179,6 +186,7 @@ function CsvField({ editWhitelist, whitelistData }) {
                 <TableCell>CSV Column</TableCell>
                 <TableCell>Pipeline Variable name</TableCell>
                 <TableCell>Type</TableCell>
+                <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -193,6 +201,11 @@ function CsvField({ editWhitelist, whitelistData }) {
                     </TableCell>
                     <TableCell>
                       <Input placeholder="Type" value={columnData.type || ''} onChange={editColumnMap('type', index)} />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => handleDeleteColumnMap(index)}>
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
