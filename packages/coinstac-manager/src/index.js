@@ -3,7 +3,6 @@
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const portscanner = require('portscanner');
-const http = require('http');
 const utils = require('./utils');
 const dockerService = require('./services/docker');
 const singularityService = require('./services/singularity');
@@ -197,30 +196,12 @@ const pruneImages = (provider = 'docker') => {
  */
 const pullImage = (computation, provider = 'docker') => {
   return new Promise((resolve, reject) => {
-    if (process.platform === 'win32') {
-      // NOTE: this uses a fixed api version, while this should be respected in docker
-      // a better solution should be found
-      const options = {
-        socketPath: '//./pipe/docker_engine',
-        path: `/v1.37/images/create?fromImage=${encodeURIComponent(computation)}`,
-        method: 'POST',
-      };
-
-      const callback = (res) => {
-        res.setEncoding('utf8');
-        resolve(res);
-      };
-
-      const clientRequest = http.request(options, callback);
-      clientRequest.end();
-    } else {
-      serviceProviders[provider].pull(computation, (err, stream) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(stream);
-      });
-    }
+    serviceProviders[provider].pull(computation, (err, stream) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(stream);
+    });
   });
 };
 

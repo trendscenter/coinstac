@@ -4,6 +4,7 @@ const Docker = require('dockerode');
 const _ = require('lodash');
 const request = require('request-stream');
 const WS = require('ws');
+const http = require('http');
 const utils = require('../utils');
 
 const docker = new Docker();
@@ -46,7 +47,7 @@ module.exports = {
       if (process.LOGLEVEL === 'debug') utils.logger.debug(`Container debug port at: 44${portmunge}`);
       const tcpOpt = `${process.env.CI ? port : 8881}/tcp`;
       const defaultOpts = {
-      // this port is coupled w/ the internal base server image FYI
+        // this port is coupled w/ the internal base server image FYI
         ExposedPorts: {
           [tcpOpt]: {},
           ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
@@ -386,5 +387,25 @@ module.exports = {
   listImages: (opts, cb) => docker.listImages(opts, cb),
   ping: () => docker.ping(),
   getImage: id => docker.getImage(id),
-  pull: (id, cb) => docker.pull(id, cb),
+  pull: (id, cb) => {
+    if (process.platform === 'win32') {
+      // NOTE: this uses a fixed api version, while this should be respected in docker
+      // a better solution should be found
+      const options = {
+        socketPath: '//./pipe/docker_engine',
+        path: `/v1.37/images/create?fromImage=${encodeURIComponent(id)}`,
+        method: 'POST',
+      };
+
+      const callback = (res) => {
+        res.setEncoding('utf8');
+        cb(null, res);
+      };
+
+      const clientRequest = http.request(options, callback);
+      clientRequest.end();
+    } else {
+      return docker.pull(id, cb);
+    }
+  },
 };

@@ -1,6 +1,7 @@
 'use strict';
 
 const { spawn } = require('child_process');
+const path = require('path');
 const WS = require('ws');
 const utils = require('../utils');
 
@@ -205,5 +206,13 @@ module.exports = {
         });
     };
     return tryStartService();
+  },
+  pull: (imageName, callback) => {
+    try {
+      const pullProcess = spawn('singularity', ['pull', path.join(imageLibLocation, imageName), `library://${imageName}:latest`]);
+      callback(null, pullProcess.stdout);
+    } catch (err) {
+      callback(err);
+    }
   },
 };
