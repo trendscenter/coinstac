@@ -18,7 +18,6 @@ process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
 
-const Manager = require('coinstac-manager');
 const PipelineManager = require('coinstac-pipeline');
 
 
@@ -49,9 +48,6 @@ class CoinstacClient {
     this.appDirectory = opts.appDirectory;
     this.clientServerURL = opts.clientServerURL;
     this.imageDirectory = opts.imageDirectory;
-
-    this.Manager = Manager;
-    this.Manager.setLogger(this.logger);
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -84,9 +80,10 @@ class CoinstacClient {
       mqttRemoteURL: this.options.mqttServer.hostname,
       mqttSubChannel: this.options.mqttServer.subChannel,
       imageDirectory: this.imageDirectory,
-    }).then((manager) => {
-      this.pipelineManager = manager;
-      return manager;
+    }).then((pipelineManager) => {
+      this.pipelineManager = pipelineManager;
+      this.Manager = pipelineManager.coinstacManager;
+      return pipelineManager;
     });
   }
 

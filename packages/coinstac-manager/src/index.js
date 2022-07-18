@@ -5,7 +5,9 @@ const { reduce } = require('lodash');
 const portscanner = require('portscanner');
 const utils = require('./utils');
 const dockerService = require('./services/docker');
-const singularityService = require('./services/singularity');
+const SingularityService = require('./services/singularity');
+
+const singularityService = SingularityService();
 
 const serviceProviders = {
   docker: dockerService,
@@ -13,7 +15,6 @@ const serviceProviders = {
 };
 
 const { logger } = utils;
-
 
 let services = {};
 const portBlackList = new Set();
@@ -26,6 +27,14 @@ let portLock = false;
 const setLogger = (loggerInstance) => {
   utils.setLogger(loggerInstance);
   return loggerInstance;
+};
+
+/**
+ * Set the the singularity image directory
+ * @param {Object} imageDirectory the directory that singularity uses for images
+ */
+const setImageDirectory = (imageDirectory) => {
+  serviceProviders.singularity.setImageDirectory(imageDirectory);
 };
 
 /**
@@ -326,4 +335,5 @@ module.exports = {
   stopAllServices,
   Docker,
   docker: dockerService.docker,
+  setImageDirectory,
 };
