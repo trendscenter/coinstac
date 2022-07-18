@@ -48,6 +48,7 @@ class CoinstacClient {
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory;
     this.clientServerURL = opts.clientServerURL;
+    this.imageDirectory = opts.imageDirectory;
 
     this.Manager = Manager;
     this.Manager.setLogger(this.logger);
@@ -82,6 +83,7 @@ class CoinstacClient {
       mqttRemoteWSPathname: this.options.mqttWSServer.pathname,
       mqttRemoteURL: this.options.mqttServer.hostname,
       mqttSubChannel: this.options.mqttServer.subChannel,
+      imageDirectory: this.imageDirectory,
     }).then((manager) => {
       this.pipelineManager = manager;
       return manager;
@@ -296,7 +298,7 @@ class CoinstacClient {
             if (
               networkVolume
               || (filePaths.directories
-              && filePaths.directories.length > 0)
+                && filePaths.directories.length > 0)
             ) {
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {

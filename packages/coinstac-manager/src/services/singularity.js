@@ -211,6 +211,8 @@ module.exports = {
     try {
       const pullProcess = spawn('singularity', ['pull', path.join(imageLibLocation, imageName), `library://${imageName}:latest`]);
       callback(null, pullProcess.stdout);
+
+      // if the command fails internally this catch won't catch
     } catch (err) {
       callback(err);
     }
