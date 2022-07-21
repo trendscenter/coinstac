@@ -770,7 +770,7 @@ loadConfig()
 
         await new Promise((resolve, reject) => {
           writeStream.on('finish', () => {
-            console.log('writeStream finished');
+            logger('writeStream finished');
             resolve();
           });
           readStream.on('error', reject);

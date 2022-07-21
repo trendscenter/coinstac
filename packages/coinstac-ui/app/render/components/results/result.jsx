@@ -23,6 +23,7 @@ import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
 import { API_TOKEN_KEY } from '../../state/ducks/auth';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   paper: {
@@ -145,7 +146,14 @@ class Result extends Component {
 
   render() {
     const {
-      run, selectedTabIndex, plotData, computationOutput, downloading, filesExist,
+      run,
+      selectedTabIndex,
+      plotData,
+      computationOutput,
+      downloading,
+      filesExist,
+      notifyError,
+      notifySuccess,
     } = this.state;
     const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
@@ -238,14 +246,16 @@ class Result extends Component {
                   const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
                   this.setState({ downloading: true });
                   try {
-                    const result = await ipcRenderer.invoke('download-run-assets', {
+                    await ipcRenderer.invoke('download-run-assets', {
                       runId: run.id, authToken, clientId, apiServerUrl,
                     });
-                    console.log(result);
                     this.setState({ downloading: false });
-                    await this.doFilesExist(run.id);
+                    const filesExist = await this.doFilesExist(run.id);
+                    if (filesExist) {
+                      notifySuccess('files downloaded');
+                    }
                   } catch (e) {
-                    console.log(e);
+                    notifyError(e.toString());
                     this.setState({ downloading: false });
                   }
                 }}
@@ -429,6 +439,7 @@ const mapStateToProps = ({ auth, runs: { runs } }) => {
 
 const connectedComponent = compose(
   connect(mapStateToProps),
+  { notifySuccess, notifyError },
   DragDropContext(HTML5Backend)
 )(Result);
 
