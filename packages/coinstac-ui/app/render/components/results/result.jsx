@@ -142,6 +142,7 @@ class Result extends Component {
     const directoryPath = path.join(appDirectory, 'output', user.id, runId);
     const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
     this.setState({ filesExist: exist });
+    return exist;
   }
 
   render() {
@@ -152,10 +153,14 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
-      notifyError,
-      notifySuccess,
+
     } = this.state;
-    const { consortia, classes, auth: { appDirectory, user } } = this.props;
+    const {
+      consortia,
+      classes,
+      auth: { appDirectory, user },
+      notifyError,
+      notifySuccess, } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let { displayTypes } = this.state;
     let stepsLength = -1;
@@ -252,7 +257,7 @@ class Result extends Component {
                     this.setState({ downloading: false });
                     const filesExist = await this.doFilesExist(run.id);
                     if (filesExist) {
-                      notifySuccess('files downloaded');
+                      notifySuccess('Files Downloaded');
                     }
                   } catch (e) {
                     notifyError(e.toString());
@@ -431,6 +436,8 @@ Result.propTypes = {
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs: { runs } }) => {
@@ -438,8 +445,7 @@ const mapStateToProps = ({ auth, runs: { runs } }) => {
 };
 
 const connectedComponent = compose(
-  connect(mapStateToProps),
-  { notifySuccess, notifyError },
+  connect(mapStateToProps, { notifySuccess, notifyError }),
   DragDropContext(HTML5Backend)
 )(Result);
 

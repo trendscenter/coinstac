@@ -69,7 +69,6 @@ const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
-const { resolve } = require('path');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -770,11 +769,15 @@ loadConfig()
 
         await new Promise((resolve, reject) => {
           writeStream.on('finish', () => {
-            logger('writeStream finished');
+            logger.verbose('writeStream finished');
             resolve();
           });
-          readStream.on('error', reject);
+          readStream.on('error',
+            (e) => {
+              reject(e);
+            });
         });
+
         // delete the tar.gz
         await fs.promises.unlink(outputFilePath);
 

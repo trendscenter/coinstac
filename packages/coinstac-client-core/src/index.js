@@ -504,9 +504,9 @@ class CoinstacClient {
       formData,
       postConfig
     ).then((result) => {
-      this.logger(result);
+      this.logger.info(result);
     }).catch((e) => {
-      this.logger(e);
+      this.logger.error(e);
     });
 
     // delete the zipped file here?
