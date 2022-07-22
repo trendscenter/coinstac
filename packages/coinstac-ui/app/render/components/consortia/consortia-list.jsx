@@ -7,7 +7,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, some, flowRight as compose, find,
+  get, orderBy, some, flowRight as compose,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -378,7 +378,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    if (!member && !owner && consortium.activePipelineId) {
+    if (!member && !owner) {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
@@ -577,14 +577,12 @@ class ConsortiaList extends Component {
 
   async joinConsortium(consortiumId, activePipelineId) {
     const {
-      auth,
       client,
-      consortia,
       pullComputations,
       notifyInfo,
       notifyError,
       joinConsortium,
-      dockerStatus
+      dockerStatus,
     } = this.props;
 
     joinConsortium(consortiumId);
