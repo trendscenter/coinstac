@@ -9,7 +9,8 @@ const { exec } = require('child_process');
 const appPath = path.join(__dirname, '../..');
 
 const EXIST_TIMEOUT = 30000;
-const COMPUTATION_TIMEOUT = 7200000;
+const LOGIN_TIMEOUT = 30000;
+const COMPUTATION_TIMEOUT = 10800000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
@@ -120,11 +121,13 @@ describe('Run ddfnc computation with 2 members', () => {
 
     await appWindow2.click('button:has-text("Log In")');
 
+    await appWindow2.click('button:has-text("Never Show Again")');
     // Assert
     return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
   });
 
   it('accesses the Add Consortium page', async () => {
+
     await appWindow1.click('a:has-text("Consortia")');
 
     await appWindow1.click('a[name="create-consortium-button"]', { timeout: EXIST_TIMEOUT });
@@ -254,18 +257,18 @@ describe('Run ddfnc computation with 2 members', () => {
   });
 
   it('map data to consortium on site 2', async () => {
-    await appWindow1.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
 
-    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
+    await appWindow2.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
-    await appWindow1.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
 
-    await appWindow1.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
 
-    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
+    await appWindow2.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return appWindow1.waitForSelector('button:has-text("Start Pipeline")', {
+    return appWindow2.waitForSelector('button:has-text("Leave Consortium")', {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
@@ -274,13 +277,13 @@ describe('Run ddfnc computation with 2 members', () => {
   it('runs a computation', async () => {
     try {
 
-    await appWindow1.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
+      await appWindow1.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
-    // Assert
-    return appWindow1.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
-      state: 'visible',
-      timeout: COMPUTATION_TIMEOUT,
-    }).should.eventually.not.equal(null);
+      // Assert
+      return appWindow1.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
+        state: 'visible',
+        timeout: COMPUTATION_TIMEOUT,
+      }).should.eventually.not.equal(null);
     } catch (e) {
       console.log(`-----------------------------------------${e}`);
     }

@@ -132,9 +132,9 @@
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e-single": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run.test.js",
     "test:e2e-double": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run-2-members.test.js",
-    "test:e2e-ddfnc": "npm run build:webpack && env NODE_ENV=test DATA_TYPE=ddfnc mocha --timeout=3000000 test/e2e/computation-run-ddfnc.test.js",
-    "test:e2e-fmri": "npm run build:webpack && env NODE_ENV=test mocha --timeout=3000000 test/e2e/computation-run-fmri.test.js",
-    "test:e2e-vbm-pre": "npm run build:webpack && env NODE_ENV=test mocha --timeout=3000000 test/e2e/computation-run-vbm-pre.test.js",
+    "test:e2e-ddfnc": "npm run build:webpack && env NODE_ENV=test DATA_TYPE=ddfnc mocha --timeout=10800000 test/e2e/computation-run-ddfnc.test.js",
+    "test:e2e-fmri": "npm run build:webpack && env NODE_ENV=test mocha --timeout=7200000 test/e2e/computation-run-fmri.test.js",
+    "test:e2e-vbm-pre": "npm run build:webpack && env NODE_ENV=test mocha --timeout=7200000 test/e2e/computation-run-vbm-pre.test.js",
     "test:e2e": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/*.test.js",
     "watch": "cross-env NODE_ENV=development webpack-dev-server --mode=development"
   },
