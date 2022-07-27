@@ -12,6 +12,9 @@ const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
 const { ncp } = require('ncp');
+const FormData = require('form-data');
+const { createReadStream, createWriteStream } = require('fs');
+const archiver = require('archiver');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -21,6 +24,44 @@ const { Logger, transports: { Console } } = winston;
 const Manager = require('coinstac-manager');
 const PipelineManager = require('coinstac-pipeline');
 
+async function getAllFiles(directoryName, results = []) {
+  const files = await fs.readdir(directoryName, { withFileTypes: true });
+  // eslint-disable-next-line no-restricted-syntax
+  for (const f of files) {
+    const fullPath = path.join(directoryName, f.name);
+    if (f.isDirectory()) {
+      // eslint-disable-next-line no-await-in-loop
+      await getAllFiles(fullPath, results);
+    } else {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
+
+function createTarFromDir(dir, zippedFilePath) {
+  return new Promise((resolve, reject) => {
+    const output = createWriteStream(zippedFilePath);
+    const archive = archiver('tar', {
+      gzip: true,
+      gzipOptions: {
+        level: 9,
+      },
+    });
+    archive.on('error', (err) => {
+      reject(err);
+    });
+    output.on('close', () => {
+      resolve('closed');
+    });
+    output.on('end', () => {
+      resolve('data has been drained');
+    });
+    archive.pipe(output);
+    archive.directory(dir, false);
+    archive.finalize();
+  });
+}
 
 /**
  * Create a user client for COINSTAC
@@ -296,7 +337,7 @@ class CoinstacClient {
             if (
               networkVolume
               || (filePaths.directories
-              && filePaths.directories.length > 0)
+                && filePaths.directories.length > 0)
             ) {
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {
@@ -435,6 +476,42 @@ class CoinstacClient {
         return Promise.all(unlinkPromises);
       });
   }
+
+  async uploadFiles(runId) {
+    const runOutputDirectory = path.join(this.appDirectory, 'output', this.clientId, runId);
+    const formData = new FormData();
+    formData.append('runId', runId);
+
+    // zip the contents of the run directory
+    const fileName = `${runId}.tar.gz`;
+    const zippedFilePath = path.join(this.appDirectory, 'output', this.clientId, fileName);
+    await createTarFromDir(runOutputDirectory, zippedFilePath);
+    // append the readStream
+    const readStream = createReadStream(zippedFilePath);
+    formData.append('file', readStream, fileName);
+
+    const postConfig = {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        ...formData.getHeaders(),
+      },
+      maxContentLength: 100000000,
+      maxBodyLength: 1000000000,
+    };
+
+    axios.post(
+      `${process.env.API_URL}/uploadFiles`,
+      formData,
+      postConfig
+    ).then((result) => {
+      this.logger.info(result);
+    }).catch((e) => {
+      this.logger.error(e);
+    });
+
+    // delete the zipped file here?
+  }
 }
+
 
 module.exports = CoinstacClient;
