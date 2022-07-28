@@ -267,7 +267,7 @@ loadConfig()
             logger,
             userId,
             appDirectory,
-            path.join(appDirectory, config.get('singularityDir')),
+            config.get('singularityDir'),
             clientServerURL || config.get('clientServerURL'),
             token
           )
