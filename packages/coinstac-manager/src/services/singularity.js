@@ -69,7 +69,7 @@ const SingularityService = () => {
       })];
       const tryStartService = () => {
         utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
-        return startContainer(Object.assing({ opts, command }))
+        return startContainer(Object.assign({ opts, command }))
           .then((container) => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);
