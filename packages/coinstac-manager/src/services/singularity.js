@@ -18,10 +18,12 @@ const SingularityService = () => {
     const State = { Running: true };
     const process = spawn(
       'singularity',
-      'exec',
-      opts.args,
-      `-B ${opts.binds}`,
-      `${path.join(imageDirectory, opts.opts.image)}`,
+      [
+        'exec',
+        opts.args,
+        `-B ${opts.binds}`,
+        `${path.join(imageDirectory, opts.opts.image)}`,
+      ],
       opts.command
     );
 
