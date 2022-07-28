@@ -23,8 +23,8 @@ const SingularityService = () => {
         opts.args,
         `-B ${opts.binds}`,
         `${path.join(imageDirectory, opts.opts.image)}`,
-      ],
-      opts.command
+        ...opts.command
+      ]
     );
 
     return new Promise((resolve, reject) => {
