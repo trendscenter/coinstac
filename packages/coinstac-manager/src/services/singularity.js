@@ -21,7 +21,7 @@ const SingularityService = () => {
       'exec',
       opts.args,
       `-B ${opts.binds}`,
-      `${path.join(imageDirectory, opts.image)}`,
+      `${path.join(imageDirectory, opts.opts.image)}`,
       opts.command
     );
 
