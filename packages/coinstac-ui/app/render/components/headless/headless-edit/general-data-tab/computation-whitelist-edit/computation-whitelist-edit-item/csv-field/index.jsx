@@ -128,7 +128,7 @@ function CsvField({ editWhitelist, whitelistData }) {
       type: 'csv',
       [fieldName]: e.target.value.trim(),
     });
-  }
+  };
 
   const handleColumnsChange = (evt) => {
     const { value } = evt.target;

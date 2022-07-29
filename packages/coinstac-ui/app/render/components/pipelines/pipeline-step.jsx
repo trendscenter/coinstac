@@ -109,7 +109,7 @@ class PipelineStep extends Component {
 
   componentDidUpdate() {
     const {
-      compIO, possibleInputs, isEdit, updateStep, step,
+      compIO, possibleInputs, updateStep, step,
     } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
@@ -120,19 +120,17 @@ class PipelineStep extends Component {
     if ((!compInputs || !compInputs.length) && compIO) {
       this.groupInputs(compIO);
 
-      if (!isEdit) {
-        const inputMapDefaultValues = this.fillDefaultValues(compIO);
-        const inputMapPrefill = this.prefillDataFromHeadlessClients();
+      const inputMapDefaultValues = this.fillDefaultValues(compIO);
+      const inputMapPrefill = this.prefillDataFromHeadlessClients();
 
-        updateStep({
-          ...step,
-          inputMap: {
-            ...step.inputMap,
-            ...inputMapDefaultValues,
-            ...inputMapPrefill,
-          },
-        });
-      }
+      updateStep({
+        ...step,
+        inputMap: {
+          ...step.inputMap,
+          ...inputMapDefaultValues,
+          ...inputMapPrefill,
+        },
+      });
     }
   }
 

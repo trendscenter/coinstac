@@ -9,7 +9,7 @@ import RunsList from '../common/runs-list';
 import FileViewer from './file-viewer';
 import { isUserInGroup } from '../../utils/helpers';
 
-const ResultsList = ({ runs, consortia, classes }) => {
+const ResultsList = ({ runs, consortia }) => {
   const [selectedTab, setSelectedTab] = useState(0);
 
   const auth = useSelector(state => state.auth);
@@ -55,7 +55,6 @@ const ResultsList = ({ runs, consortia, classes }) => {
 };
 
 ResultsList.propTypes = {
-  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array,
   runs: PropTypes.array,
 };
