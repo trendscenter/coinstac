@@ -486,7 +486,7 @@ loadConfig()
             },
           };
 
-          mainWindow.webContents.send('save-local-run', { run: pipelineRun });
+          mainWindow.webContents.send('save-local-run', { run: pipelineRun, steps });
 
           await startPipelineRun(run, filesArray, consortium, networkVolume, runState);
         } catch (error) {
