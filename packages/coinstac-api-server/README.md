@@ -11,6 +11,11 @@ The API Server hosts the GraphQL endpoints called by the UI and other services.
   * Setup database with test data: `npm run test-setup`
   * Start server: `npm run start`
 
+## AWS keys for vault-only runs
+The following environment variables are needed for uploading and downloading run assets from s3
+AWS_S3_RUN_ASSETS_BUCKET_NAME=
+AWS_S3_ACCESS_KEY_ID=
+AWS_S3_SECRET_ACCESS_KEY=
 ## License
 
 MIT. See [LICENSE](./LICENSE) for details.

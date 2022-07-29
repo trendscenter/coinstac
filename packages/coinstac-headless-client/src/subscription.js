@@ -1,7 +1,8 @@
 const { gql } = require('@apollo/client/core');
 const { queries } = require('coinstac-graphql-schema');
 const get = require('lodash/get');
-
+const path = require('path');
+const fs = require('fs').promises;
 const parseHeadlessClientConfig = require('./parse-headless-client-config');
 const mapData = require('./data-map');
 
@@ -16,6 +17,44 @@ const FETCH_HEADLESS_CLIENT_CONFIG_QUERY = gql`
   }
 `;
 
+const FETCH_RUN_QUERY = gql`
+  query fetchRun($runId: ID!)
+    ${queries.fetchRun}
+`;
+
+async function shouldUploadFiles(clientId, runId, apolloClient, appDirectory) {
+  // are there files in the output directory?
+  const runOutputDirectory = path.join(appDirectory, 'output', clientId, runId);
+  const files = await fs.readdir(runOutputDirectory);
+  if (files.length < 1) {
+    return false;
+  }
+
+  // find the matching run document
+  const { data } = await apolloClient.query({
+    query: FETCH_RUN_QUERY,
+    variables: { runId },
+  });
+  const run = data.fetchRun;
+
+  // is this a vault only run?
+  const clientIds = Object.keys(run.clients);
+  const headlessMemeberIds = Object.keys(run.pipelineSnapshot.headlessMembers);
+  const notVaultOnly = clientIds.some((id) => {
+    return !headlessMemeberIds.includes(id);
+  });
+
+  if (notVaultOnly) {
+    return false;
+  }
+
+  // is this clientId the first in the clients array?
+  if (Object.keys(run.clients)[0] === (clientId)) {
+    return true;
+  }
+
+  return false;
+}
 async function fetchHeadlessClientConfig(apolloClient) {
   const { data } = await apolloClient.query({
     query: FETCH_HEADLESS_CLIENT_CONFIG_QUERY,
@@ -31,7 +70,13 @@ async function fetchHeadlessClientConfig(apolloClient) {
   return parseHeadlessClientConfig(headlessClientConfig);
 }
 
-async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
+async function startPipelineRun(
+  run,
+  headlessClientConfig,
+  coinstacClientCore,
+  apolloClient,
+  clientId
+) {
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
   }
@@ -68,7 +113,10 @@ async function startPipelineRun(run, headlessClientConfig, coinstacClientCore) {
   await result;
   console.log('Pipeline finished');
 
-  coinstacClientCore.unlinkFiles(run.id);
+  if (await shouldUploadFiles(clientId, run.id, apolloClient, coinstacClientCore.appDirectory)) {
+    await coinstacClientCore.uploadFiles(run.id);
+  }
+  await coinstacClientCore.unlinkFiles(run.id);
 }
 
 async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
@@ -82,7 +130,13 @@ async function subscribeToNewRuns(clientId, apolloClient, coinstacClientCore) {
       try {
         const headlessClientConfig = await fetchHeadlessClientConfig(apolloClient);
 
-        await startPipelineRun(run, headlessClientConfig, coinstacClientCore);
+        await startPipelineRun(
+          run,
+          headlessClientConfig,
+          coinstacClientCore,
+          apolloClient,
+          clientId
+        );
       } catch (error) {
         console.error(`An error occurred on during a run: ${error}`);
       }

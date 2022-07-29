@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
+const path = require('path');
 
 /**
  * Generates manager options per computation type
@@ -46,9 +47,8 @@ const managerOptions = ({
       break;
     case 'singularity':
       opts = {
-        args: '--contain',
-        binds: `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/cache:/cache:rw,${operatingDirectory}/transfer:/transfer:rw`,
-        image: computation.image,
+        binds: `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/transfer:/transfer:rw`,
+        image: path.join(imageDirectory, computation.image),
       };
       break;
     default:
@@ -120,7 +120,7 @@ module.exports = {
           }
         )
           .then((service) => {
-            return service(input, mode, computation.command);
+            return service({ input, mode, command: computation.command });
           });
       },
       /**

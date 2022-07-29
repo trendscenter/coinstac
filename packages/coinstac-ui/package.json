@@ -28,7 +28,9 @@
     "electron-default-menu": "^1.0.1",
     "electron-store": "^8.0.1",
     "electron-updater": "^4.6.1",
+    "form-data": "^4.0.0",
     "graphql": "^15.5.0",
+    "gunzip-maybe": "^1.4.2",
     "immutability-helper": "^2.7.0",
     "ipc-promise": "^0.1.4",
     "js-yaml": "^4.1.0",
@@ -75,6 +77,7 @@
     "showdown": "^1.9.1",
     "subscriptions-transport-ws": "^0.11.0",
     "tail": "^1.2.3",
+    "tar-fs": "^2.1.1",
     "uuid": "^8.3.2",
     "winston": "^3.4.0"
   },

@@ -166,7 +166,7 @@ class MapsCsvField extends React.Component {
     }
 
     const keys = Object.keys(fieldDataMap.maps);
-    return keys.filter(key => !fieldDataMap.maps[key]).length === 0;
+    return keys.length > 0 && keys.filter(key => !fieldDataMap.maps[key]).length === 0;
   }
 
   setInitialState(fieldDataMap) {
@@ -176,6 +176,8 @@ class MapsCsvField extends React.Component {
   }
 
   appendSelectedFiles(selectedFiles) {
+    if (!selectedFiles || !selectedFiles.length) return;
+
     const { fieldDataMap } = this.props;
 
     let files;

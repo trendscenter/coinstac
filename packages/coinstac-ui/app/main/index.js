@@ -12,6 +12,10 @@
 Error.stackTraceLimit = 100;
 
 const fs = require('fs');
+const axios = require('axios');
+const FormData = require('form-data');
+const tar = require('tar-fs');
+const gunzip = require('gunzip-maybe');
 
 if (process.env.CI) {
   // write out DEBUG:mqttjs* logs to file
@@ -483,7 +487,7 @@ loadConfig()
             },
           };
 
-          mainWindow.webContents.send('save-local-run', { run: pipelineRun });
+          mainWindow.webContents.send('save-local-run', { run: pipelineRun, steps });
 
           await startPipelineRun(run, filesArray, consortium, networkVolume, runState);
         } catch (error) {
@@ -694,6 +698,105 @@ loadConfig()
             }];
             mainWindow.webContents.send('docker-out', { output, compId, compName: imgName });
           });
+      });
+
+      ipcMain.handle('download-run-assets', async (event,
+        {
+          runId,
+          authToken,
+          clientId,
+          apiServerUrl,
+        }) => {
+        // get the base directory to construct the full path from
+        const { appDirectory } = initializedCore;
+        const runOutputDirectory = path.join(appDirectory, 'output', clientId, runId);
+
+        // make the outputDirectory if it doesn't exist
+        async function pathExists(path) {
+          let exists = false;
+          try {
+            await fs.promises.access(path);
+            exists = true;
+          } catch {
+            exists = false;
+          }
+          return exists;
+        }
+        if (!await pathExists(runOutputDirectory)) {
+          await fs.promises.mkdir(runOutputDirectory, { recursive: true });
+        }
+
+        // create the file at the end path and start writing to it
+        const outputFilePath = path.join(runOutputDirectory, `${runId}.tar.gz`);
+        const writer = fs.createWriteStream(outputFilePath);
+
+        const formData = new FormData();
+        formData.append('runId', runId);
+        // axios post to the url
+
+        const response = await axios.post(
+          `${apiServerUrl}/downloadFiles`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+              ...formData.getHeaders(),
+
+            },
+            responseType: 'stream',
+          }
+        );
+
+        // stream to the correct output directory
+        await new Promise((resolve, reject) => {
+          response.data.pipe(writer);
+          let error = null;
+          writer.on('error', (err) => {
+            error = err;
+            writer.close();
+            reject(err);
+          });
+          writer.on('close', () => {
+            if (!error) {
+              resolve(true);
+            }
+          });
+        });
+
+        // extract the tar
+        const readStream = fs.createReadStream(outputFilePath);
+        const writeStream = tar.extract(runOutputDirectory);
+        readStream.pipe(gunzip()).pipe(writeStream);
+
+        await new Promise((resolve, reject) => {
+          writeStream.on('finish', () => {
+            logger.verbose('writeStream finished');
+            resolve();
+          });
+          readStream.on('error',
+            (e) => {
+              reject(e);
+            });
+        });
+
+        // delete the tar.gz
+        await fs.promises.unlink(outputFilePath);
+
+        return 'download complete';
+      });
+
+      ipcMain.handle('filesExist', async (event, { directoryPath }) => {
+        try {
+          // check to see if directory exists
+          const fileNames = await fs.promises.readdir(directoryPath);
+          // check to see if directory is empty
+          if (fileNames.length > 0) {
+            return true;
+          }
+          return false;
+        } catch (e) {
+          return false;
+        }
       });
     });
   });

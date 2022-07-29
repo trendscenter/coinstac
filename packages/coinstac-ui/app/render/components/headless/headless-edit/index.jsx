@@ -37,7 +37,7 @@ function HeadlessEdit({ params }) {
   }
 
   const isCreation = !data;
-  const title = isCreation ? 'Cloud User Creation' : 'Cloud User Edit';
+  const title = isCreation ? 'Vault User Creation' : 'Vault User Edit';
 
   const headlessClientData = get(data, 'fetchHeadlessClient');
 

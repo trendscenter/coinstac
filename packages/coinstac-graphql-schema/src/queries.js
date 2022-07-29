@@ -237,6 +237,13 @@ const queries = {
       }
     }
   `,
+  fetchRun: `
+  {
+    fetchRun(runId: $runId) {
+      ${sharedFields.runFields}
+    }
+  }
+  `,
   runStarted: `
     {
       runStarted(userId: $userId) {
