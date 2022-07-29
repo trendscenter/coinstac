@@ -50,6 +50,7 @@ import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
+import ErrorDialog from '../common/error-dialog';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -109,6 +110,7 @@ class ConsortiaList extends Component {
     this.state = {
       consortiumToDelete: -1,
       showModal: false,
+      showErrorDialog: false,
       isConsortiumPipelinesMenuOpen: false,
       search: '',
       consortiumJoinedByThread:
@@ -128,6 +130,7 @@ class ConsortiaList extends Component {
     this.selectPipeline = this.selectPipeline.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
     this.stopPipeline = this.stopPipeline.bind(this);
+    this.closeErrorDialog = this.closeErrorDialog.bind(this);
   }
 
   componentDidMount() {
@@ -537,7 +540,14 @@ class ConsortiaList extends Component {
 
         startRun(localRun, consortium);
       } catch ({ graphQLErrors }) {
-        notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
+        const errorCode = get(graphQLErrors, '0.extensions.exception.data.errorCode', '');
+        const errorMessage = get(graphQLErrors, '0.message', 'Failed to start pipeline');
+
+        if (errorCode === 'VAULT_OFFLINE') {
+          this.setState({ showErrorDialog: true, errorMessage, errorTitle: 'Vault offline' });
+        } else {
+          notifyError(errorMessage);
+        }
       } finally {
         finishLoading('start-pipeline');
       }
@@ -654,6 +664,10 @@ class ConsortiaList extends Component {
     this.closeConsortiumPipelinesMenu();
   }
 
+  closeErrorDialog() {
+    this.setState({ showErrorDialog: false });
+  }
+
   render() {
     const {
       consortia,
@@ -661,7 +675,10 @@ class ConsortiaList extends Component {
       auth,
       tutorialChange,
     } = this.props;
-    const { search, showModal } = this.state;
+    const {
+      search, showModal, showErrorDialog, errorMessage, errorTitle,
+    } = this.state;
+
     const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
     return (
@@ -721,6 +738,12 @@ class ConsortiaList extends Component {
           itemName="consortium"
           show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
+        />
+        <ErrorDialog
+          handleClose={this.closeErrorDialog}
+          open={showErrorDialog}
+          title={errorTitle}
+          message={errorMessage}
         />
         {!auth.isTutorialHidden && (
           <Joyride

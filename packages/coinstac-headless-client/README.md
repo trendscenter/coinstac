@@ -26,8 +26,7 @@ To run the client you'll need to set the following environment variables. These 
 If running in the TReNDs system, contact the TReNDs team for an application username, api key, and to setup computation specific whitelists and compspec locations.
 
 ```
-API_KEY - API key associated with the headless client
-HEADLESS_CLIENT_NAME - Name of the headless client as configured on the COINSTAC API database
+HEADLESS_CLIENT_CONFIG - config file containing vaults id's and api keys
 API_URL - URL address of the COINSTAC API
 SUB_API_URL - URL address of the subscription COINSTAC API
 COINSTAC_WORKING_DIRECTORY - working directory for pipeline operation
@@ -50,8 +49,7 @@ MQTT_WS_SERVER_PROTOCOL
 
 Example for running locally
 ```
-export API_KEY=testApiKey
-export HEADLESS_CLIENT_NAME="Headless 1"
+export HEADLESS_CLIENT_CONFIG="./test-conf.json"
 export API_URL="http://localhost:3100"
 export SUB_API_URL="ws://localhost:3100"
 
