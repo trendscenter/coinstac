@@ -16,6 +16,7 @@ const managerOptions = ({
   computation,
   operatingDirectory,
   containerOptions,
+  imageDirectory,
 }) => {
   let opts;
   switch (computation.type) {
