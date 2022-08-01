@@ -309,11 +309,10 @@ loadConfig()
       function startPipelineRun(run, filesArray, consortium, networkVolume, runState) {
         const pipeline = run.pipelineSnapshot;
 
-        // const computationImageList = pipeline.steps
-        //   .map(step => step.computations
-        //     .map(comp => comp.computation.dockerImage))
-        //   .reduce((acc, val) => acc.concat(val), []);
-        const computationImageList = [];
+        const computationImageList = pipeline.steps
+          .map(step => step.computations
+            .map(comp => comp.computation.dockerImage))
+          .reduce((acc, val) => acc.concat(val), []);
 
         return initializedCore.Manager.pullImagesFromList(computationImageList)
           .then((compStreams) => {
