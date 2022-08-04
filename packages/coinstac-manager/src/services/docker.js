@@ -3,9 +3,7 @@
 const Docker = require('dockerode');
 const _ = require('lodash');
 const request = require('request-stream');
-
 const http = require('http');
-
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
