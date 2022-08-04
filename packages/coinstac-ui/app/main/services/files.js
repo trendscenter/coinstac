@@ -19,8 +19,43 @@ function mockFileDialog() {
       count = 1;
   }
 
-  const testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
-  return Promise.resolve({ filePaths: [testDataFilePath] });
+  let testDataFilePath = '';
+  const paths = [];
+
+  switch (process.env.DATA_TYPE) {
+    case 'ddfnc':
+      if (count === 1) {
+        paths.push(path.join(__dirname, `../../../../../algorithm-development/test-data/ddfnc-test-data/site${count}/vsdwa_000995291749_0002.nii`));
+        testDataFilePath = paths;
+      }
+      if (count === 2) {
+        paths.push(path.join(__dirname, `../../../../../algorithm-development/test-data/ddfnc-test-data/site${count}/vsdwa_000306518979_0002.nii`));
+        testDataFilePath = paths;
+      }
+      break;
+    case 'fmri':
+      testDataFilePath = path.join(__dirname, '../../../../../algorithm-development/test-data/fmri-test-data/bids_2_subjects/');
+      break;
+    case 'fsl':
+      testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
+      break;
+    case 'nifti':
+      testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/nifti-test-data/site${count}/site${count}_Covariate.csv`);
+      break;
+    case 'niftism':
+      testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/nifti-test-data/site${count}/site${count}_Covariate_sm.csv`);
+      break;
+    default:
+      testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
+  }
+
+  if (typeof testDataFilePath === 'object') {
+    return Promise.resolve({ filePaths: testDataFilePath });
+  }
+
+  if (typeof testDataFilePath === 'string') {
+    return Promise.resolve({ filePaths: [testDataFilePath] });
+  }
 }
 
 module.exports = {
