@@ -96,7 +96,7 @@ export const saveDataMapping = applyAsyncLoading(
 
         inputMap[inputMapKey].fulfilled = true;
       });
-
+debugger
       mapData.push({
         filesArray,
         directoryArray,
