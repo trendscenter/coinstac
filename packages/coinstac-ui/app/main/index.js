@@ -270,7 +270,8 @@ loadConfig()
             config,
             logger,
             userId,
-            appDirectory || config.get('coinstacHome'),
+            appDirectory,
+            config.get('singularityDir'),
             clientServerURL || config.get('clientServerURL'),
             token
           )
