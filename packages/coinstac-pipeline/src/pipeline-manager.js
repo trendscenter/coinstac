@@ -8,6 +8,7 @@ const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const { merge } = require('lodash');
+const coinstacManager = require('coinstac-manager');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -57,6 +58,10 @@ module.exports = {
     let clientPublish;
     let waitingOnForRun;
     const remoteClients = {};
+
+    // set coinstac-manager defaults
+    coinstacManager.setImageDirectory(imageDirectory);
+    coinstacManager.setLogger(logger);
 
     utils.init({ logger });
     debugProfileClient.log = l => utils.logger.info(`PROFILING: ${l}`);
@@ -380,6 +385,7 @@ module.exports = {
         };
       },
       waitingOnForRun,
+      coinstacManager,
     };
   },
 };

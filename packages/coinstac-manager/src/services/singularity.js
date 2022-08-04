@@ -117,9 +117,6 @@ const SingularityService = () => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);
             const serviceFunction = ServiceFunctionGenerator({ port });
-            // services[serviceId].state = 'running';
-            // fulfill to waiting consumers
-            // proxRes(services[serviceId].service);
             return { service: serviceFunction, container };
           });
       };
