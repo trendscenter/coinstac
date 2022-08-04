@@ -100,6 +100,8 @@ const typeDefs = `
     sharedUsers: [ID]
     status: String!
     delete: Boolean
+    shouldUploadAssets: Boolean
+    assetsUploaded: Boolean
   }
 
   type User {

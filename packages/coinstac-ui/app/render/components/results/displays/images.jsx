@@ -122,7 +122,7 @@ class Images extends Component {
   }
 
   render() {
-    const { resultsPath, plotData, classes } = this.props;
+    const { resultsPath, plotData, classes, filesExist } = this.props;
     const { generatingPdf } = this.state;
 
     let globalItems;
@@ -181,7 +181,7 @@ class Images extends Component {
                       <img
                         key={localStatImg}
                         alt={localStatImg}
-                        src={path.join(resultsPath, localStatImg)}
+                        src={filesExist ? path.join(resultsPath, localStatImg) : ''}
                         className={classes.image}
                       />
                       <Divider />
@@ -198,7 +198,7 @@ class Images extends Component {
                       <img
                         key={globalStatImg}
                         alt={globalStatImg}
-                        src={path.join(resultsPath, globalStatImg)}
+                        src={filesExist ? path.join(resultsPath, globalStatImg) : ''}
                         className={classes.image}
                       />
                       <Divider />

@@ -13,7 +13,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import moment from 'moment';
-import { shell } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
@@ -22,6 +22,8 @@ import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
+import { API_TOKEN_KEY } from '../../state/ducks/auth';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   paper: {
@@ -67,6 +69,8 @@ class Result extends Component {
     displayTypes: [],
     plotData: [],
     selectedTabIndex: 0,
+    downloading: false,
+    filesExist: false,
   };
 
   componentDidMount() {
@@ -118,6 +122,7 @@ class Result extends Component {
       run,
       plotData,
     });
+    this.doFilesExist(run.id);
   }
 
   handleOpenResult = () => {
@@ -132,11 +137,30 @@ class Result extends Component {
     this.setState({ selectedTabIndex: value });
   }
 
+  doFilesExist = async (runId) => {
+    const { auth: { user, appDirectory } } = this.props;
+    const directoryPath = path.join(appDirectory, 'output', user.id, runId);
+    const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
+    this.setState({ filesExist: exist });
+    return exist;
+  }
+
   render() {
     const {
-      run, selectedTabIndex, plotData, computationOutput,
+      run,
+      selectedTabIndex,
+      plotData,
+      computationOutput,
+      downloading,
+      filesExist,
+
     } = this.state;
-    const { consortia, classes, auth: { appDirectory, user } } = this.props;
+    const {
+      consortia,
+      classes,
+      auth: { appDirectory, user },
+      notifyError,
+      notifySuccess, } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let { displayTypes } = this.state;
     let stepsLength = -1;
@@ -213,7 +237,38 @@ class Result extends Component {
               Open Local Results
             </Button>
           </div>
-
+          <div className={classes.resultButton}>
+            {run.shouldUploadAssets && (
+              <Button
+                disabled={!run.assetsUploaded || downloading || filesExist}
+                variant="contained"
+                color="primary"
+                style={{ marginLeft: 10 }}
+                onClick={async () => {
+                  const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
+                  const clientId = user.id;
+                  const { apiServer } = window.config;
+                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
+                  this.setState({ downloading: true });
+                  try {
+                    await ipcRenderer.invoke('download-run-assets', {
+                      runId: run.id, authToken, clientId, apiServerUrl,
+                    });
+                    this.setState({ downloading: false });
+                    const filesExist = await this.doFilesExist(run.id);
+                    if (filesExist) {
+                      notifySuccess('Files Downloaded');
+                    }
+                  } catch (e) {
+                    notifyError(e.toString());
+                    this.setState({ downloading: false });
+                  }
+                }}
+              >
+                Download results
+              </Button>
+            )}
+          </div>
         </Paper>
 
         <Tabs
@@ -238,7 +293,7 @@ class Result extends Component {
                 && (
                   <String
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                   />
                 )
               }
@@ -257,7 +312,7 @@ class Result extends Component {
                     computationOutput={computationOutput}
                     plotData={plotData}
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                     clients={run.clients}
                   />
                 )
@@ -267,7 +322,7 @@ class Result extends Component {
                 && (
                   <Iframe
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                     value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
                     appDirectory={appDirectory}
                     user={user}
@@ -279,9 +334,10 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    filesExist={filesExist}
                     resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
                   />
                 )
               }
@@ -308,11 +364,11 @@ class Result extends Component {
                       && run.pipelineSnapshot.steps.map((step, index) => (
                         <PipelineStep
                           computationId={step.computations[0].id}
-                          deleteStep={() => {}}
+                          deleteStep={() => { }}
                           eventKey={step.id}
                           id={step.id}
                           key={step.id}
-                          moveStep={() => {}}
+                          moveStep={() => { }}
                           owner={false}
                           pipelineIndex={index}
                           previousComputationIds={
@@ -321,7 +377,7 @@ class Result extends Component {
                               .map(s => s.computations[0].id)
                           }
                           step={step}
-                          updateStep={() => {}}
+                          updateStep={() => { }}
                         />
                       ))
                     }
@@ -380,6 +436,8 @@ Result.propTypes = {
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs: { runs } }) => {
@@ -387,7 +445,7 @@ const mapStateToProps = ({ auth, runs: { runs } }) => {
 };
 
 const connectedComponent = compose(
-  connect(mapStateToProps),
+  connect(mapStateToProps, { notifySuccess, notifyError }),
   DragDropContext(HTML5Backend)
 )(Result);
 

@@ -671,6 +671,23 @@ const resolvers = {
         return Boom.notFound('Active pipeline not found on this consortium');
       }
 
+      const participatingVaults = await db.collection('headlessClients').find(
+        { _id: { $in: Object.keys(consortium.activeMembers).map((id) => ObjectID(id)) } },
+        { projection: { _id: 1 } },
+      ).toArray();
+      if (participatingVaults.length > 0) {
+        const onlineUsers = getOnlineUsers();
+
+        const isAnyVaultOffline = participatingVaults.reduce((hasOfflineVault, vault) =>
+          hasOfflineVault || !(vault._id in onlineUsers),
+          false
+        );
+
+        if (isAnyVaultOffline) {
+          return Boom.internal('One of the participating vaults is offline. Please contact TReNDS personnel.', { errorCode: 'VAULT_OFFLINE' })
+        }
+      }
+
       try {
         const runClients = { ...consortium.activeMembers };
 
@@ -999,7 +1016,7 @@ const resolvers = {
       };
 
       if (pipeline.headlessMembers) {
-        // Sets only the cloud users as the default active members
+        // Sets only the vault users as the default active members
         updateObj.$set.activeMembers = {
           ...pipeline.headlessMembers
         };
