@@ -63,6 +63,7 @@ const conf = convict({
     win32: path.join(process.env.HOME || process.env.TEMP, 'coinstac/'),
   },
   coinstacHome: path.join(home(), '.coinstac'),
+  singularityDir: path.join(home(), 'singularityImages'),
   clientServerURL: '',
   version: app.getVersion(),
 });

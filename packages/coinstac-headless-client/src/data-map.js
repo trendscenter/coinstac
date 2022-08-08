@@ -23,24 +23,22 @@ function mapData(pipeline, headlessClientConfig) {
 
       // has csv column mapping
       if (mappedData.type === 'csv') {
-        const value = { ...mappedData.parsedDataFile.data };
+        const value = {};
+        const csvData = { ...mappedData.parsedDataFile.data };
 
         filesArray.baseDirectory = dirname(mappedData.dataFilePath);
 
-        Object.keys(value).forEach((valueKey) => {
-          filesArray.files.push(valueKey);
+        Object.keys(csvData).forEach((subj) => {
+          value[subj] = {};
+          filesArray.files.push(subj);
 
-          inputMapVariables.forEach((variable) => {
+          inputMapVariables.forEach((mappedColumnName) => {
             const fieldMap = mappedData.dataMap.find(
-              fieldMap => fieldMap.variableName === variable
+              fieldMap => fieldMap.variableName === mappedColumnName
             );
 
             if (fieldMap) {
-              value[valueKey][variable] = value[valueKey][fieldMap.csvColumn];
-
-              if (fieldMap.csvColumn !== variable) {
-                delete value[valueKey][fieldMap.csvColumn];
-              }
+              value[subj][mappedColumnName] = csvData[subj][fieldMap.csvColumn];
             }
           });
         });

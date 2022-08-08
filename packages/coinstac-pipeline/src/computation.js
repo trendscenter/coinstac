@@ -3,7 +3,6 @@
 const _ = require('lodash');
 const Manager = require('coinstac-manager');
 const path = require('path');
-const utils = require('./utils');
 
 /**
  * Generates manager options per computation type
@@ -48,12 +47,10 @@ const managerOptions = ({
       }
       break;
     case 'singularity':
-      opts = [
-        '--contain',
-        '-B',
-        `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/cache:/cache:rw,${operatingDirectory}/transfer:/transfer:rw`,
-        path.join(imageDirectory, computation.image),
-      ];
+      opts = {
+        binds: `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/transfer:/transfer:rw`,
+        image: path.join(imageDirectory, computation.image),
+      };
       break;
     default:
       throw new Error('Invalid computation type');
@@ -78,7 +75,6 @@ module.exports = {
     runId,
     spec,
   }) {
-    Manager.setLogger = utils.setLogger;
     const computation = Object.assign(
       {},
       spec.computation,
@@ -125,7 +121,7 @@ module.exports = {
           }
         )
           .then((service) => {
-            return service(input, mode, computation.command);
+            return service({ input, mode, command: computation.command });
           });
       },
       /**

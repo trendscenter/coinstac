@@ -3,10 +3,11 @@
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const portscanner = require('portscanner');
-const http = require('http');
 const utils = require('./utils');
 const dockerService = require('./services/docker');
-const singularityService = require('./services/singularity');
+const SingularityService = require('./services/singularity');
+
+const singularityService = SingularityService();
 
 const serviceProviders = {
   docker: dockerService,
@@ -14,7 +15,6 @@ const serviceProviders = {
 };
 
 const { logger } = utils;
-
 
 let services = {};
 const portBlackList = new Set();
@@ -27,6 +27,14 @@ let portLock = false;
 const setLogger = (loggerInstance) => {
   utils.setLogger(loggerInstance);
   return loggerInstance;
+};
+
+/**
+ * Set the the singularity image directory
+ * @param {Object} imageDirectory the directory that singularity uses for images
+ */
+const setImageDirectory = (imageDirectory) => {
+  serviceProviders.singularity.setImageDirectory(imageDirectory);
 };
 
 /**
@@ -197,30 +205,12 @@ const pruneImages = (provider = 'docker') => {
  */
 const pullImage = (computation, provider = 'docker') => {
   return new Promise((resolve, reject) => {
-    if (process.platform === 'win32') {
-      // NOTE: this uses a fixed api version, while this should be respected in docker
-      // a better solution should be found
-      const options = {
-        socketPath: '//./pipe/docker_engine',
-        path: `/v1.37/images/create?fromImage=${encodeURIComponent(computation)}`,
-        method: 'POST',
-      };
-
-      const callback = (res) => {
-        res.setEncoding('utf8');
-        resolve(res);
-      };
-
-      const clientRequest = http.request(options, callback);
-      clientRequest.end();
-    } else {
-      serviceProviders[provider].pull(computation, (err, stream) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(stream);
-      });
-    }
+    serviceProviders[provider].pull(computation, (err, stream) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(stream);
+    });
   });
 };
 
@@ -345,4 +335,5 @@ module.exports = {
   stopAllServices,
   Docker,
   docker: dockerService.docker,
+  setImageDirectory,
 };

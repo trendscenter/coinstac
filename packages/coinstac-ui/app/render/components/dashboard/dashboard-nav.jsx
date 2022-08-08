@@ -62,7 +62,7 @@ const DashboardNav = ({
       {(isAdmin(user) || isOwnerOfAnyHeadlessClient(user)) && (
         <ListItem button component={Link} to="/dashboard/headlessClients">
           <ListItemIcon><CloudIcon /></ListItemIcon>
-          <ListItemText primary="Cloud Users" />
+          <ListItemText primary="Vault Users" />
         </ListItem>
       )}
       {isAdmin(user) && (

@@ -122,10 +122,25 @@ function CsvField({ editWhitelist, whitelistData }) {
     });
   };
 
+  const trimField = fieldName => (e) => {
+    editWhitelist({
+      ...whitelistData,
+      type: 'csv',
+      [fieldName]: e.target.value.trim(),
+    });
+  }
+
   const handleColumnsChange = (evt) => {
     const { value } = evt.target;
     setColumns(value);
     setColumnsError('');
+  };
+
+  const handleDeleteColumnMap = (index) => {
+    editWhitelist({
+      ...whitelistData,
+      dataMap: whitelistData.dataMap.filter((_, idx) => idx !== index),
+    });
   };
 
   return (
@@ -136,6 +151,7 @@ function CsvField({ editWhitelist, whitelistData }) {
           placeholder="Data File Path"
           value={whitelistData && whitelistData.dataFilePath ? whitelistData.dataFilePath : ''}
           onChange={editField('dataFilePath')}
+          onBlur={trimField('dataFilePath')}
           fullWidth
         />
       </Box>
@@ -179,6 +195,7 @@ function CsvField({ editWhitelist, whitelistData }) {
                 <TableCell>CSV Column</TableCell>
                 <TableCell>Pipeline Variable name</TableCell>
                 <TableCell>Type</TableCell>
+                <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
@@ -193,6 +210,11 @@ function CsvField({ editWhitelist, whitelistData }) {
                     </TableCell>
                     <TableCell>
                       <Input placeholder="Type" value={columnData.type || ''} onChange={editColumnMap('type', index)} />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="contained" color="secondary" onClick={() => handleDeleteColumnMap(index)}>
+                        Delete
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

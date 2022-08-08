@@ -64,8 +64,8 @@ import {
 } from '../../utils/helpers';
 import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
-const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
-  the available pipelines list will be filtered by the ones that the cloud users can run.`;
+const VAULT_USERS_TOOLTIP = `Vault users are persistent nodes that can run some pipelines. If you add one or more vault users,
+  the available pipelines list will be filtered by the ones that the vault users can run.`;
 
 const computationTarget = {
   drop() {
@@ -99,7 +99,7 @@ const styles = theme => ({
   headlessUserSelect: {
     marginRight: theme.spacing(4),
   },
-  cloudUserTitle: {
+  vaultUserTitle: {
     marginRight: theme.spacing(1),
   },
   buttonWrapper: {
@@ -861,10 +861,10 @@ class Pipeline extends Component {
             availableHeadlessClients && (
               <div>
                 <Box display="flex" alignItems="center">
-                  <Typography variant="h6" className={classes.cloudUserTitle}>Cloud Users:</Typography>
+                  <Typography variant="h6" className={classes.vaultUserTitle}>Vault Users:</Typography>
                   <Tooltip
                     title={
-                      <Typography variant="body1">{ CLOUD_USERS_TOOLTIP }</Typography>
+                      <Typography variant="body1">{ VAULT_USERS_TOOLTIP }</Typography>
                     }
                   >
                     <InfoIcon />
@@ -887,7 +887,7 @@ class Pipeline extends Component {
                     disabled={!selectedHeadlessMember}
                     onClick={this.addHeadlessMember}
                   >
-                    Add Cloud User
+                    Add Vault User
                   </Button>
                 </Box>
                 <Grid container>
