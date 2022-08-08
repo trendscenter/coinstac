@@ -119,16 +119,18 @@ class PipelineStep extends Component {
 
     if ((!compInputs || !compInputs.length) && compIO) {
       this.groupInputs(compIO);
+    }
 
+    if (step && (!step.inputMap || Object.keys(step.inputMap).length === 0) && compIO) {
       const inputMapDefaultValues = this.fillDefaultValues(compIO);
       const inputMapPrefill = this.prefillDataFromHeadlessClients();
+
+      const prefillData = { ...inputMapDefaultValues, ...inputMapPrefill };
 
       updateStep({
         ...step,
         inputMap: {
-          ...step.inputMap,
-          ...inputMapDefaultValues,
-          ...inputMapPrefill,
+          ...prefillData,
         },
       });
     }
