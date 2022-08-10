@@ -232,7 +232,7 @@ class Pipeline extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { computations } = this.props;
+    const { computations, availableHeadlessClients } = this.props;
     const { orderedComputations, pipeline } = this.state;
 
     if (!orderedComputations || (!prevProps.computations && computations)
@@ -240,9 +240,11 @@ class Pipeline extends Component {
       this.sortComputations();
     }
 
-    if (orderedComputations) {
-      if (!prevState.orderedComputations
-        || prevState.orderedComputations.length !== orderedComputations.length) {
+    if (orderedComputations && availableHeadlessClients) {
+      const changedComputations = !prevState.orderedComputations
+        || prevState.orderedComputations.length !== orderedComputations.length;
+
+      if (changedComputations && availableHeadlessClients.length) {
         this.filterAvailableComputations(pipeline.headlessMembers);
       }
     }
@@ -647,9 +649,11 @@ class Pipeline extends Component {
         const headlessClientConfig = availableHeadlessClients
           .find(client => client.id === headlessMemberId);
 
-        Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
-          cloudComputations[compId] = true;
-        });
+        if (headlessClientConfig) {
+          Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
+            cloudComputations[compId] = true;
+          });
+        }
 
         return cloudComputations;
       }, {});
