@@ -63,7 +63,7 @@ The user interface is an [Electron application](http://electron.atom.io/). To ru
 2. In the top level `coinstac` directory run `npm run devdata` to start and prime the database
 3. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
 4. Still in the top level directory run `npm run start` to run webpack, and the api services
-5. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-ui/_ directory.
+5. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-desktop-app/_ directory.
 6. Run `npm start` to start the UI
 
 **Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
@@ -82,7 +82,7 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
 
 ## Configuration
 
-* Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-ui/config/local-example.json`
+* Create a new file at `coinstac/packages/coinstac-desktop-app/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-desktop-app/config/local-example.json`
 * Create a new file at `/coinstac-server/config/local.json` and copy into it the contents of `/coinstac-server/config/default.json`
 
 ## Additional Suggested Software
@@ -104,8 +104,8 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
               "type": "node",
               "request": "launch",
               "cwd": "${workspaceRoot}",
-              "runtimeExecutable": "${workspaceRoot}/packages/coinstac-ui/node_modules/.bin/electron",
-              "program": "${workspaceRoot}/packages/coinstac-ui/app/main/index.js",
+              "runtimeExecutable": "${workspaceRoot}/packages/coinstac-desktop-app/node_modules/.bin/electron",
+              "program": "${workspaceRoot}/packages/coinstac-desktop-app/app/main/index.js",
               "env": {
                   "COINS_ENV": "development",
                   "NODE_ENV": "development"
@@ -150,7 +150,7 @@ Five services need to be run in the following order to start COINSTAC in develop
   ```
 5. **WEBPACK SERVER**:
   ```shell
-  NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && npm run watch
+  NODE_ENV=development && cd ~/coinstac/packages/coinstac-desktop-app && npm run watch
   ```
 6. **mosquitto**:
   ```shell
@@ -161,7 +161,7 @@ Five services need to be run in the following order to start COINSTAC in develop
 
 * **Command Line**:
   ```shell
-  cd ~/coinstac/packages/coinstac-ui && npm run start
+  cd ~/coinstac/packages/coinstac-desktop-app && npm run start
   ```
 * **VSCode**:
 Open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
