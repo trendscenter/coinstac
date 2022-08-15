@@ -1,7 +1,7 @@
 const path = require('path');
 const axios = require('axios');
 const PipelineManager = require('coinstac-pipeline');
-const { pullImagesFromList, removeImagesFromList } = require('coinstac-manager');
+const { pullImagesFromList, removeImagesFromList } = require('coinstac-container-manager');
 
 const Managers = {};
 
