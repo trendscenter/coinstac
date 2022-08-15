@@ -122,7 +122,7 @@ module.exports = [
       auth: false,
       pre: [{ method: helperFunctions.validateEmail }],
       handler: (req, h) => {
-        helperFunctions
+        return helperFunctions
           .savePasswordResetToken(req.payload.email)
           .then(() => h.response().code(204))
           .catch(() => h.response().code(400));
@@ -136,7 +136,7 @@ module.exports = [
       auth: false,
       pre: [{ method: helperFunctions.validateResetToken }],
       handler: (req, h) => {
-        helperFunctions
+        return helperFunctions
           .resetPassword(req.payload.token, req.payload.password)
           .then(() => h.response().code(204));
       },
