@@ -125,7 +125,7 @@ const helperFunctions = {
 
     const msg = {
       to: email,
-      from: 'no-reply@mrn.org',
+      from: 'no-reply@coinstac.org',
       subject: 'Password Reset Request',
       html: `We received your password reset request. <br/>
         Please use this token for password reset. <br/>
