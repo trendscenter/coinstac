@@ -53,7 +53,6 @@ export const startRun = (run, consortium) => (dispatch, getState) => {
     type: REMOVE_RUN_AWAITING_MAP,
     payload: run.id,
   });
-
   ipcRenderer.send('start-pipeline', {
     consortium,
     dataMappings: dataMap,

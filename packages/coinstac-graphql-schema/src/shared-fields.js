@@ -98,6 +98,8 @@ const sharedFields = {
     sharedUsers
     status
     delete
+    shouldUploadAssets
+    assetsUploaded
   `,
   userMetadata: `
     id

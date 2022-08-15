@@ -18,6 +18,7 @@ function LocalRunStatusListeners({
     });
 
     ipcRenderer.on('save-local-run', (event, arg) => {
+      localStorage.setItem('coinstac-debug', JSON.stringify({ lastRun: { steps: arg.steps, sim: arg.steps[0].inputMap } }));
       saveRunLocally({
         ...arg.run,
         status: 'started',

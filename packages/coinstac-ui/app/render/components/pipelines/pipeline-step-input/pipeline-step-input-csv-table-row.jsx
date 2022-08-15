@@ -12,8 +12,8 @@ import Tooltip from '@material-ui/core/Tooltip';
 import InfoIcon from '@material-ui/icons/Info';
 import update from 'immutability-helper';
 
-const CLOUD_USER_SUGGESTED_FIELD_TOOLTIP = `
-  This field is present on the cloud users with this name. If you delete this field, the cloud user won't be able to provide
+const VAULT_USER_SUGGESTED_FIELD_TOOLTIP = `
+  This field is present on the vault users with this name. If you delete this field, the vault user won't be able to provide
   data for it.
 `;
 
@@ -116,7 +116,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
                   obj.suggested && (
                     <Tooltip
                       title={
-                        <Typography variant="body1">{ CLOUD_USER_SUGGESTED_FIELD_TOOLTIP }</Typography>
+                        <Typography variant="body1">{ VAULT_USER_SUGGESTED_FIELD_TOOLTIP }</Typography>
                       }
                     >
                       <InfoIcon />

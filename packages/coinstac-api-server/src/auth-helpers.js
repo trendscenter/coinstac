@@ -125,7 +125,7 @@ const helperFunctions = {
 
     const msg = {
       to: email,
-      from: 'no-reply@mrn.org',
+      from: 'no-reply@coinstac.org',
       subject: 'Password Reset Request',
       html: `We received your password reset request. <br/>
         Please use this token for password reset. <br/>
@@ -424,6 +424,44 @@ const helperFunctions = {
         res(false);
       });
     });
+  },
+  async canUserUpload(req) {
+    // is user a part of the run
+    const userId = req.auth.artifacts.decoded.payload.id;
+    const { runId } = req.payload;
+    const db = database.getDbInstance();
+    try {
+      const run = await db.collection('runs').findOne({ [`clients.${userId}`]: { $exists: true }, _id: ObjectID(runId) });
+      if (run) {
+        return runId;
+      }
+      return Boom.badRequest('run not found');
+    } catch (e) {
+      return Boom.badRequest('invalid user/run combination');
+    }
+  },
+  async canUserDownload(req) {
+    const userId = req.auth.artifacts.decoded.payload.id;
+    const { runId } = req.payload;
+    // is this user a member of the consortium?
+    const db = database.getDbInstance();
+
+    try {
+      const run = await db.collection('runs').findOne({ _id: ObjectID(runId) });
+      const { consortiumId } = run;
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      const consortiaParticipantIds = [
+        ...Object.keys(consortium.owners),
+        ...Object.keys(consortium.members),
+        ...Object.keys(consortium.activeMembers),
+      ];
+      if (consortiaParticipantIds.includes(userId)) {
+        return runId;
+      }
+      return Boom.badRequest('run not found');
+    } catch (e) {
+      return Boom.badRequest('invalid user/run combination');
+    }
   },
   audience,
   issuer,

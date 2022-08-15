@@ -53,7 +53,7 @@ function HeadlessList({ auth }) {
     <div>
       <div className="page-header">
         <Typography variant="h4">
-          Cloud Users
+          Vault Users
         </Typography>
         <Fab
           color="primary"
@@ -77,7 +77,7 @@ function HeadlessList({ auth }) {
       <ListDeleteModal
         close={closeDeleteConfirmationModal}
         deleteItem={deleteHeadlessClient}
-        itemName="cloud user"
+        itemName="vault user"
         show={showDeleteConfirmationModal}
       />
     </div>

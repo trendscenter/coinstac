@@ -1,4 +1,4 @@
-/* eslint-disable react/no-find-dom-node */
+/* eslint-disable react/no-find-dom-node, no-unused-vars */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
@@ -6,8 +6,8 @@ import PropTypes from 'prop-types';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
-import CircularProgress from '@material-ui/core/CircularProgress';
+// import Button from '@material-ui/core/Button';
+// import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
@@ -122,7 +122,7 @@ class Images extends Component {
   }
 
   render() {
-    const { resultsPath, plotData, classes } = this.props;
+    const { resultsPath, plotData, classes, filesExist } = this.props;
     const { generatingPdf } = this.state;
 
     let globalItems;
@@ -181,7 +181,7 @@ class Images extends Component {
                       <img
                         key={localStatImg}
                         alt={localStatImg}
-                        src={path.join(resultsPath, localStatImg)}
+                        src={filesExist ? path.join(resultsPath, localStatImg) : ''}
                         className={classes.image}
                       />
                       <Divider />
@@ -198,7 +198,7 @@ class Images extends Component {
                       <img
                         key={globalStatImg}
                         alt={globalStatImg}
-                        src={path.join(resultsPath, globalStatImg)}
+                        src={filesExist ? path.join(resultsPath, globalStatImg) : ''}
                         className={classes.image}
                       />
                       <Divider />
