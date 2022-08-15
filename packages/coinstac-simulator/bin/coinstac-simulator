@@ -231,7 +231,7 @@ const promptGenerateAndPreprocess = async () => {
     }
 
     term('Select Covariates File to use for pipeline:');
-    const covariatesFileAnswer = term.singleColumnMenu(csvs.map((csv, index) => { return `${index}) ${csv}`; }));
+    const covariatesFileAnswer = await term.singleColumnMenu(csvs.map((csv, index) => { return `${index}) ${csv}`; })).promise;
 
     //  create an inputspec from the csv and the api results
     const baseInputSpec = JSON.parse(
@@ -242,10 +242,10 @@ const promptGenerateAndPreprocess = async () => {
     if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
     fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
 
-    term('pipelineSpec.json created');
-    term('If you dont want to use default options\nPlease edit pipelineSpec.json manually');
-    term('Proceed with pipeline? y,n');
-    const proceed = await term.yesOrNo({ yes: ['y'], no: ['n'] });
+    term('pipelineSpec.json created \n');
+    term('If you do not want to use default options -\nPlease edit pipelineSpec.json manually. \n');
+    term('Proceed with pipeline? y,n \n');
+    const proceed = await term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
 
     if (proceed) {
       return startPreprocessRun(generatedPipeSpec, baseDir);
@@ -273,8 +273,8 @@ const promptGenerateAndPreprocess = async () => {
       await genSpecAndProcess(pipelineSpec, baseDir);
     }
   } else {
-    term(`Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`);
-    const useExistingPipeline = term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
+    term(`Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}? y,n \n`);
+    const useExistingPipeline = await term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
     if (useExistingPipeline) {
       await startPreprocessRun(pipelineSpec, baseDir);
     } else {
