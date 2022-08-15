@@ -1,5 +1,5 @@
 {
-  "name": "coinstac-headless-client",
+  "name": "coinstac-vault-client",
   "version": "6.5.0",
   "description": "",
   "main": "src/index.js",

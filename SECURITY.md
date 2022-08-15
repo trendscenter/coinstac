@@ -32,7 +32,7 @@ Here is a 1000-ft view of COINSTAC security components before a detailed descrip
 To better understand COINSTAC's security surface let's take a quick look at a what happens during a typical pipeline run.
 
 ### COINSTAC has two main components
-* The client side of the pipeline, usually bundled in the Electron runtime or as a command-line tool in [coinstac-headless-client](packages/coinstac-headless-client/)
+* The client side of the pipeline, usually bundled in the Electron runtime or as a command-line tool in [coinstac-vault-client](packages/coinstac-vault-client/)
 * The backend API system, which includes an API server and a pipeline server that aggregates client computation responses for each pipeline step
 
 ### Pipeline communication
