@@ -93,6 +93,13 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
   });
   try {
     const simRun = await started;
+    // hook into the pipeline events
+    const { stateEmitter } = simRun.pipelines.locals[0].pipeline;
+    stateEmitter.on('update', (m) => {
+      term.clear();
+      term(JSON.stringify(m));
+    });
+
     const results = await simRun.allResults;
 
     logger.info('Simulator run finished');
