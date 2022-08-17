@@ -6,6 +6,7 @@ const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
 const parseJson = require('json-parse-even-better-errors');
+const termkit = require('terminal-kit');
 const term = require('terminal-kit').terminal;
 
 const pkg = require('../package.json');
@@ -94,13 +95,83 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
   try {
     const simRun = await started;
     // hook into the pipeline events
-    const { stateEmitter } = simRun.pipelines.locals[0].pipeline;
-    stateEmitter.on('update', (m) => {
-      term.clear();
-      term(JSON.stringify(m));
+    const document = term.createDocument({
+      palette: new termkit.Palette(),
     });
 
+    const textTable = new termkit.TextTable({
+      parent: document,
+      cellContents: [
+        ['', ''],
+        ['computation output', ''],
+        ['', ''],
+        ['', ''],
+      ],
+      contentHasMarkup: true,
+      fit: true,
+      borderAttr: { color: 'blue' },
+      textAttr: { bgColor: 'default' },
+      firstCellTextAttr: { bgColor: 'blue' },
+      firstRowTextAttr: { bgColor: 'gray' },
+      firstColumnTextAttr: { bgColor: 'red' },
+      selectedTextAttr: { bgColor: 'blue' },
+      selectable: 'cell',
+      width: 50,
+      height: 20,
+
+    });
+
+    const { stateEmitter } = simRun.pipelines.locals[0].pipeline;
+    stateEmitter.on('update', (m) => {
+      textTable.setCellContent(1, 1, JSON.stringify(m));
+    });
+
+
+    const containerStatsInterval = setInterval(async () => {
+      const cellContent = '';
+      const stats = await getContainerStats();
+
+      const formattedContainerStats = [];
+
+      stats.forEach((containerStatObject) => {
+        const { name } = containerStatObject;
+        const containerId = containerStatObject.id;
+        // const cpuPercent = containerStatObject
+        const memUsage = containerStatObject.memory_stats.usage;
+        const memLimit = containerStatObject.memory_stats.limit;
+        const memPercent = memUsage / memLimit;
+
+        function getCpuPercent(containerStatObject) {
+          const currentCpuUsage = containerStatObject.cpu_stats.cpu_usage.total_usage;
+          const preCpuUsage = containerStatObject.precpu_stats.cpu_usage.total_usage;
+          const cpuDelta = currentCpuUsage - preCpuUsage;
+          const systemUsage = containerStatObject.cpu_stats.system_cpu_usage;
+          const preSystemUsage = containerStatObject.precpu_stats.system_cpu_usage;
+          const systemDelta = systemUsage - preSystemUsage;
+          const cpuPercent = (cpuDelta / systemDelta) * containerStatObject.cpu_stats.cpu_usage.percpu_usage.length * 100.0;
+          return cpuPercent;
+        }
+
+        const cpuPercent = getCpuPercent(containerStatObject);
+
+        const formatted = {
+          containerId,
+          name,
+          memUsage,
+          memLimit,
+          memPercent,
+          cpuPercent,
+        };
+
+        formattedContainerStats.push(formatted);
+      });
+
+      textTable.setCellContent(1, 2, JSON.stringify(formattedContainerStats[0]));
+    }, 1000);
+
     const results = await simRun.allResults;
+    clearInterval(containerStatsInterval);
+
 
     logger.info('Simulator run finished');
     if (globalMode === 'decentralized') {
@@ -366,7 +437,6 @@ const pipelineSpecFulfillPipelineOption = async () => {
 };
 
 if (program.preprocess) {
-
   (async () => {
     try {
       const x = await getContainerStats();
