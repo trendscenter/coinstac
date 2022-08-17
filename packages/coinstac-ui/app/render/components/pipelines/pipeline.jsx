@@ -240,13 +240,10 @@ class Pipeline extends Component {
       this.sortComputations();
     }
 
-    if (orderedComputations && availableHeadlessClients) {
-      const changedComputations = !prevState.orderedComputations
-        || prevState.orderedComputations.length !== orderedComputations.length;
-
-      if (changedComputations && availableHeadlessClients.length) {
-        this.filterAvailableComputations(pipeline.headlessMembers);
-      }
+    const computationsChanged = prevState.orderedComputations !== orderedComputations;
+    const headlessClientsChanged = prevProps.availableHeadlessClients !== availableHeadlessClients;
+    if (computationsChanged || headlessClientsChanged) {
+      this.filterAvailableComputations(pipeline.headlessMembers);
     }
   }
 
@@ -639,7 +636,12 @@ class Pipeline extends Component {
     const { availableHeadlessClients } = this.props;
     const { orderedComputations } = this.state;
 
-    if (!headlessMembers || Object.keys(headlessMembers).length === 0) {
+    if (!orderedComputations) {
+      return;
+    }
+
+    if (!headlessMembers || Object.keys(headlessMembers).length === 0
+      || !availableHeadlessClients) {
       this.setState({ filteredComputations: [...orderedComputations] });
       return;
     }
