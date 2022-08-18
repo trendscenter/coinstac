@@ -1,117 +1,102 @@
-#!/usr/bin/env node
-/*
-  Terminal Kit
-
-  Copyright (c) 2009 - 2021 Cédric Ronvel
-
-  The MIT License (MIT)
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-  SOFTWARE.
-*/
-
-'use strict';
-
-
-// console.error( "\n\n\n\n\n\n\n\n" ) ;
 const termkit = require('terminal-kit');
+const term = require('terminal-kit').terminal;
 
-const term = termkit.terminal;
+const myTableContent = {
+  computationOutput: '',
+  containers: [],
+};
 
-term.clear();
+function generateComputationOutput() {
+  const states = ['running computation', 'stopped', 'waiting'];
+  const modes = ['local', 'remote'];
+
+  return {
+    currentIteration: Math.floor(Math.random() * 10),
+    controllerState: states[Math.floor(Math.random() * states.length)],
+    pipelineStep: Math.floor(Math.random() * 5),
+    mode: modes[Math.floor(Math.random() * modes.length)],
+    totalSteps: Math.floor(Math.random() * 10),
+  };
+}
+
+function generateContainerStats() {
+  const memUsage = Math.floor(Math.random() * 1000);
+  const memLimit = Math.floor(Math.random() * 1000);
+  const memPercent = memUsage / memLimit;
+  const cpuPercent = Math.floor(Math.random() * 1000);
+
+  return {
+    containerId: Math.floor(Math.random() * 1000),
+    name: Math.floor(Math.random() * 1000),
+    memUsage,
+    memLimit,
+    memPercent,
+    cpuPercent,
+  };
+}
 
 const document = term.createDocument({
   palette: new termkit.Palette(),
-  //	backgroundAttr: { bgColor: 'magenta' , dim: true } ,
 });
+
+const containerRowOffset = 5;
+const computationRowOffset = 2;
 
 const textTable = new termkit.TextTable({
   parent: document,
   cellContents: [
-    //* 
-    ['header #1', 'header #2', 'header #3'],
-    ['row #1', 'a much bigger cell '.repeat(10), 'cell'],
-    ['row #2', 'cell', 'a medium cell'],
-    ['row #3', 'with wide char', 'cell'],
-    ['row #4', 'cell\nwith\nnew\nlines', 'cell'],
-    //* /
-    /*
-    [ '1-1' , '2-1' , '3-1' ] ,
-    [ '1-2' , '2-2' , '3-2' ] ,
-    [ '1-3' , '2-3' , '3-3' ]
-    // */
+    ['computation output', '', '', '', '', ''],
+    ['currentIteration', 'controllerState', 'pipelineStep', 'mode', 'totalSteps', ''],
+    ['', '', '', '', '', ''],
+    ['containers', '', '', '', '', ''],
+    ['id', 'name', 'memUsage', 'memLimit', 'memPercent', 'cpuPercent'],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
   ],
+
   contentHasMarkup: true,
-  x: 0,
-  y: 2,
-  // hasBorder: false ,
-  // borderChars: 'double' ,
+  fit: true,
   borderAttr: { color: 'blue' },
-  textAttr: { bgColor: 'default' },
-  // textAttr: { bgColor: 'black' } ,
-  firstCellTextAttr: { bgColor: 'blue' },
-  firstRowTextAttr: { bgColor: 'gray' },
-  firstColumnTextAttr: { bgColor: 'red' },
-  // checkerEvenCellTextAttr: { bgColor: 'gray' } ,
-  // evenCellTextAttr: { bgColor: 'gray' } ,
-  // evenRowTextAttr: { bgColor: 'gray' } ,
-  // evenColumnTextAttr: { bgColor: 'gray' } ,
-  selectedTextAttr: { bgColor: 'blue' },
   selectable: 'cell',
-  width: 50,
-  // width: term.width ,
-  height: 20,
-  fit: true,	// Activate all expand/shrink + wordWrap
-  // expandToWidth: true , shrinkToWidth: true , expandToHeight: true , shrinkToHeight: true , wordWrap: true ,
-  // lineWrap: true ,
+  autoWidth: 1,
+  autoheight: 1,
+
 });
 
-//* 
-setInterval(() => {
-  // textTable.setCellContent( 2 , 3 , "New ^R^+content^:! And BTW... We have to force some line break and so on..." ) ;
-  textTable.setCellContent(2, 3, Math.random());
 
-}, 1000);
-//* /
+function updateContainerRow(table, rowNumber, containerData) {
+  Object.keys(containerData).forEach((key, index) => {
+    table.setCellContent(index, rowNumber, containerData[key]);
+  });
+}
 
-setInterval(() => {
-  // textTable.setCellAttr( 1 , 2 , { bgColor: 'cyan' } ) ;
-  textTable.setRowAttr(2, { bgColor: Math.floor(Math.random() * 255) });
-  // textTable.setColumnAttr( 1 , { bgColor: 'cyan' } ) ;
-  // textTable.setTableAttr( { bgColor: 'cyan' } ) ;
-}, 500);
+function updateComputationRow(table, computationData) {
+  Object.keys(computationData).forEach((key, index) => {
+    table.setCellContent(index, computationRowOffset, computationData[key]);
+  });
+}
 
-setTimeout(() => {
-  // textTable.resetCellAttr( 1 , 2 ) ;
-  textTable.resetRowAttr(2);
-  // textTable.resetColumnAttr( 1 ) ;
-  // textTable.resetTableAttr() ;
-}, 1500);
-
-
-term.on('key', (key) => {
-  switch (key) {
-    case 'CTRL_C':
-      term.grabInput(false);
-      term.hideCursor(false);
-      term.styleReset();
-      term.clear();
-      process.exit();
-      break;
+const containerStatsInterval = setInterval(async () => {
+  const numberOfContainers = Math.floor(Math.random() * 4);
+  myTableContent.container = [];
+  // clear all container cells
+  for (i = 0; i < 10; i++) {
+    if (i < numberOfContainers) {
+      updateContainerRow(textTable, i + containerRowOffset, generateContainerStats());
+    } else {
+      updateComputationRow(textTable, i + containerRowOffset, '');
+    }
   }
-});
+}, 1000);
+
+const computationOutputInterval = setInterval(async () => {
+  updateComputationRow(textTable, generateComputationOutput());
+}, 1300);
