@@ -174,9 +174,21 @@ export const VAULT_TUTORIAL_STEPS = {
       placementBeacon: 'right',
     },
     {
+      id: 'p-select-vault-user',
+      target: '#select-vault-user',
+      content: 'Please select a vault dataset to use',
+      placementBeacon: 'right',
+    },
+    {
+      id: 'p-add-vault-user',
+      target: '#add-vault-user',
+      content: 'Click this button to add vault dataset',
+      placementBeacon: 'right',
+    },
+    {
       id: 'p-add-computation-steps',
       target: '#computation-dropdown',
-      content: 'Click this button to add computation steps',
+      content: 'Please choose a computation to run, note that this is list restricted by what is available for the chosen vault dataset. By default only the vault user will participate in a vault pipeline run, use the "Set Active Members" button on the Consortia view to change this and add your own data to Maps.',
       placementBeacon: 'right',
     },
     {
