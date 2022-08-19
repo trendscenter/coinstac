@@ -71,11 +71,23 @@ const textTable = new termkit.TextTable({
 
 });
 
+textTable.setRowAttr(0, { bgColor: "blue" });
+textTable.setRowAttr(1, { bgColor: "blue" });
+textTable.setRowAttr(3, { bgColor: "blue" });
+textTable.setRowAttr(4, { bgColor: "blue" });
+
 
 function updateContainerRow(table, rowNumber, containerData) {
+  if (!containerData) {
+    for (let i = 0; i < 6; i++) {
+      table.setCellContent(i, rowNumber, '')
+    }
+  }
+
   Object.keys(containerData).forEach((key, index) => {
     table.setCellContent(index, rowNumber, containerData[key]);
   });
+
 }
 
 function updateComputationRow(table, computationData) {
@@ -85,14 +97,14 @@ function updateComputationRow(table, computationData) {
 }
 
 const containerStatsInterval = setInterval(async () => {
-  const numberOfContainers = Math.floor(Math.random() * 4);
+  const numberOfContainers = Math.floor(Math.random() * 4) + 1;
   myTableContent.container = [];
   // clear all container cells
   for (i = 0; i < 10; i++) {
     if (i < numberOfContainers) {
       updateContainerRow(textTable, i + containerRowOffset, generateContainerStats());
     } else {
-      updateComputationRow(textTable, i + containerRowOffset, '');
+      updateContainerRow(textTable, i + containerRowOffset, '');
     }
   }
 }, 1000);
