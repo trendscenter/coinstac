@@ -44,7 +44,7 @@ const ServiceFunctionGenerator = ({
               if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                 ws.terminate();
                 if (count > 10) {
-                  proxRj(new Error('Cointainer websocket server timeout exceeded'));
+                  proxRj(new Error('Container websocket server timeout exceeded'));
                 } else {
                   count += 1;
                   setTimeout(testConnection, 200 * count);
@@ -64,7 +64,7 @@ const ServiceFunctionGenerator = ({
             ws.send(null);
           });
           ws.on('close', (code, reason) => {
-            if (code !== 1000) proxRj(new Error(`Abnormal Cointainer websocket close: ${reason}`));
+            if (code !== 1000) proxRj(new Error(`Abnormal Container websocket close: ${reason}`));
           });
           ws.on('error', (e) => {
             proxRj(e);
@@ -126,7 +126,7 @@ const ServiceFunctionGenerator = ({
               }
             });
           }).then((output) => {
-            utils.logger.debug('Cointainer service call finished');
+            utils.logger.debug('Container service call finished');
             if (output.code !== 0) {
               throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
             }
@@ -169,7 +169,7 @@ const ServiceFunctionGenerator = ({
               if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                 ws.terminate();
                 if (count > 10) {
-                  proxRj(new Error('Cointainer websocket server timeout exceeded'));
+                  proxRj(new Error('Container websocket server timeout exceeded'));
                 } else {
                   count += 1;
                   setTimeout(testConnection, 200 * count);
@@ -183,16 +183,17 @@ const ServiceFunctionGenerator = ({
         }).then(() => {
           const ws = new WS(`ws://${host}:${port}`);
           ws.on('open', () => {
+            // this object is coupled to the coinstac language utilities lib
             ws.send(JSON.stringify({
               mode,
-              input,
+              data: input,
             }));
           });
           ws.on('error', (e) => {
             proxRj(e);
           });
           ws.on('close', (code, reason) => {
-            if (code !== 1000) proxRj(new Error(`Abnormal Cointainer websocket close: ${reason}`));
+            if (code !== 1000) proxRj(new Error(`Abnormal Container websocket close: ${reason}`));
           });
           return new Promise((resolve, reject) => {
             let stdout = '';
@@ -251,7 +252,7 @@ const ServiceFunctionGenerator = ({
               }
             });
           }).then((output) => {
-            utils.logger.debug('Cointainer service call finished');
+            utils.logger.debug('Container service call finished');
             if (output.code !== 0) {
               throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
             }

@@ -190,7 +190,7 @@ describe('e2e run computation with 1 member', () => {
   });
 
   it('map data to consortium', async () => {
-    await appWindow.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
+    await appWindow.click('a:has-text("Map")', { timeout: EXIST_TIMEOUT });
 
     await appWindow.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
 
