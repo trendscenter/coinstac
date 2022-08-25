@@ -15,15 +15,26 @@ const INITIAL_STATE = {
 };
 
 const castData = {
-  number: d => parseFloat(d),
+  number: (d) => {
+    try {
+      return parseFloat(d);
+    } catch (e) {
+      throw new Error(`Could not convert ${d} to a number: ${e}`);
+    }
+  },
   boolean: (d) => {
-    if (['false', '0'].indexOf(d.toLowerCase()) > -1) {
-      return false;
+    try {
+      if (d === true || d === false) return d;
+      if (['false', '0'].indexOf(d.toLowerCase()) > -1) {
+        return false;
+      }
+      if (['true', '1'].indexOf(d.toLowerCase()) > -1) {
+        return true;
+      }
+      throw new Error(`Could not convert ${d} to a boolean`);
+    } catch (e) {
+      throw new Error(`Could not convert ${d} to a boolean: ${e}`);
     }
-    if (['true', '1'].indexOf(d.toLowerCase()) > -1) {
-      return true;
-    }
-    throw new Error(`Could not convert ${d} to a boolean`);
   },
   string: d => d,
 };
