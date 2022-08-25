@@ -627,18 +627,27 @@ class Pipeline extends Component {
     const { availableHeadlessClients } = this.props;
     const { orderedComputations, pipeline } = this.state;
 
-    if (!pipeline.headlessMembers || Object.keys(pipeline.headlessMembers).length === 0) {
+    if (!orderedComputations) {
+      return [];
+    }
+
+    const { headlessMembers } = pipeline;
+
+    if (!headlessMembers || Object.keys(headlessMembers).length === 0
+      || !availableHeadlessClients) {
       return orderedComputations;
     }
 
-    const cloudComputations = Object.keys(pipeline.headlessMembers)
+    const cloudComputations = Object.keys(headlessMembers)
       .reduce((cloudComputations, headlessMemberId) => {
         const headlessClientConfig = availableHeadlessClients
           .find(client => client.id === headlessMemberId);
 
-        Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
-          cloudComputations[compId] = true;
-        });
+        if (headlessClientConfig) {
+          Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
+            cloudComputations[compId] = true;
+          });
+        }
 
         return cloudComputations;
       }, {});

@@ -49,7 +49,7 @@ function MapsEdit({
     }
   }
 
-  function commitSaveDataMap(e) {
+  async function commitSaveDataMap(e) {
     e.preventDefault();
 
     const unfulfilledArr = Object.keys(pipeline.steps[0].inputMap).reduce((memo, item) => {
@@ -72,11 +72,17 @@ function MapsEdit({
         setError(true);
       });
     } else {
-      saveDataMapping(consortium, pipeline, dataMap);
-      updateConsortiumMappedUsers(consortium.id, true);
-      setSaved(true);
-      setAlertMsg(false);
-      setError(false);
+      try {
+        await saveDataMapping(consortium, pipeline, dataMap);
+        updateConsortiumMappedUsers(consortium.id, true);
+        setSaved(true);
+        setAlertMsg(false);
+        setError(false);
+      } catch (error) {
+        setSaved(false);
+        setAlertMsg(`${error}`);
+        setError(true);
+      }
     }
   }
 

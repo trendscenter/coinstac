@@ -1,13 +1,9 @@
 /* eslint-disable no-case-declarations */
 import { dirname, basename } from 'path';
 import isEqual from 'lodash/isEqual';
-
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
 import { getAllUnfulfilledPipelineInputs } from '../../utils/helpers';
-
-const fs = require('fs');
-const path = require('path');
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
@@ -18,23 +14,19 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
-const getAllFiles = ((dirPath, arrayOfFiles) => {
-  const files = fs.readdirSync(dirPath);
-
-  arrayOfFiles = arrayOfFiles || [];
-
-  files.forEach((file) => {
-    if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
-      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
-    } else {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
+const castData = {
+  number: d => parseFloat(d),
+  boolean: (d) => {
+    if (['false', '0'].indexOf(d.toLowerCase()) > -1) {
+      return false;
     }
-  });
-
-  return arrayOfFiles;
-});
-
+    if (['true', '1'].indexOf(d.toLowerCase()) > -1) {
+      return true;
+    }
+    throw new Error(`Could not convert ${d} to a boolean`);
+  },
+  string: d => d,
+};
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
@@ -57,24 +49,26 @@ export const saveDataMapping = applyAsyncLoading(
         if (mappedData) {
           // has csv column mapping
           if (mappedData.fieldType === 'csv') {
+            const value = {};
             const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
-
-            const value = { ...mappedData.fileData[0].data };
+            const csvData = { ...mappedData.fileData[0].data };
 
             baseDirectory = dirname(mappedData.files[0]);
 
-            Object.keys(value).forEach((valueKey) => {
-              filesArray.push(valueKey);
+            Object.keys(csvData).forEach((subj) => {
+              value[subj] = {};
+              filesArray.push(subj);
 
-              inputMapVariables.forEach((variable) => {
-                const columnName = mappedData.maps[variable];
-
-                if (columnName) {
-                  value[valueKey][variable] = value[valueKey][columnName];
-
-                  if (columnName !== variable) {
-                    delete value[valueKey][columnName];
-                  }
+              inputMapVariables.forEach((mappedColumnName) => {
+                const covarType = inputMap[inputMapKey].value
+                  .find(c => c.name === mappedData.maps[mappedColumnName]);
+                const csvColumn = mappedData.maps[mappedColumnName];
+                try {
+                  value[subj][mappedColumnName] = castData[covarType.type](
+                    csvData[subj][csvColumn]
+                  );
+                } catch (e) {
+                  throw new Error(`Issue converting column ${csvColumn}: ${e}`);
                 }
               });
             });
