@@ -18,17 +18,19 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
-const getAllFiles = ((dirPath, arrayOfFiles) => {
+const getAllFiles = ((dirPath, arrayOfFiles, type) => {
   const files = fs.readdirSync(dirPath);
 
   arrayOfFiles = arrayOfFiles || [];
 
   files.forEach((file) => {
     if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
-      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles);
-    } else {
-      arrayOfFiles.push(path.join(__dirname, dirPath, file));
+      if (type === 'dirs') {
+        arrayOfFiles.push(path.join(dirPath, file));
+      }
+      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles, type);
+    } else if (type === 'all') {
+      arrayOfFiles.push(path.join(dirPath, file));
     }
   });
 
@@ -86,7 +88,20 @@ export const saveDataMapping = applyAsyncLoading(
 
             inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
           } else if (mappedData.fieldType === 'directory') {
-            directoryArray.push(mapData.directory);
+            // Get and store the initial mapped directory
+            baseDirectory = mappedData.directory;
+            directoryArray.push(mappedData.directory);
+            // Recursively get and store all the subdirectories
+            directoryArray.push(...getAllFiles(mappedData.directory, null, 'dirs'));
+            // Recursively get and store all the files
+            const files = [];
+            files.push(...getAllFiles(mappedData.directory, null, 'all'));
+            const newfilesArray = files.filter((value) => {
+              if (!value.includes('.DS_Store')) {
+                return value;
+              }
+            });
+            filesArray.push(...newfilesArray);
             inputMap[inputMapKey].value = mappedData.directory;
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
@@ -96,6 +111,8 @@ export const saveDataMapping = applyAsyncLoading(
 
         inputMap[inputMapKey].fulfilled = true;
       });
+
+      console.log(filesArray,directoryArray,baseDirectory,inputMap);
 
       mapData.push({
         filesArray,

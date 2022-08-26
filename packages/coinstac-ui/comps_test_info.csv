@@ -1,0 +1,3 @@
+name,alias,repo,number_sites,data_type,timeout,covariates
+Ridge Regression (Singleshot) - FreeSurfer Volumes,ssr-fsl,https://github.com/trendscenter/coinstac-ssr-fsl,2,fsl,1500000,{"0":{"name":"isControl","type":"boolean"},"1":{"name":"age","type":"number"}}
+Regression (Multishot) - FreeSurfer Volumes,msr-fsl,https://github.com/trendscenter/coinstac-msr-fsl,2,fsl,1500000,{"0":{"name":"isControl","type":"boolean"},"1":{"name":"age","type":"number"}}

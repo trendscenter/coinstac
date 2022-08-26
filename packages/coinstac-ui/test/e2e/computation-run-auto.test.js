@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-empty */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
@@ -6,20 +6,29 @@ const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
 const { exec } = require('child_process');
 
+const COMP_NAME = process.env.npm_config_comp_name;
+const COMP_ALIAS = process.env.npm_config_comp_alias;
+const COMP_SITES = process.env.npm_config_comp_sites;
+const COMP_DATA_TYPE = process.env.npm_config_comp_data_type;
+const COMP_TIMEOUT = parseInt(process.env.npm_config_comp_timeout);
+const COMP_COVARIATES = process.env.npm_config_comp_covariates;
+
+console.log(COMP_NAME, COMP_ALIAS, COMP_SITES, COMP_DATA_TYPE, COMP_TIMEOUT,COMP_COVARIATES);
+
 const appPath = path.join(__dirname, '../..');
 
 const EXIST_TIMEOUT = 30000;
 const LOGIN_TIMEOUT = 30000;
-const COMPUTATION_TIMEOUT = 10800000;
+const COMPUTATION_TIMEOUT = COMP_TIMEOUT;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium-ddfnc';
-const CONS_DESC = 'e2e-description-ddfnc';
-const PIPE_NAME = 'e2e-pipeline-ddfnc';
-const PIPE_DESC = 'e2e-pipeline-description-local';
-const COMPUTATION_NAME = 'Decentralized Dynamic Functional Connectivity (DDFNC) Pipeline';
+const CONS_NAME = `${COMP_ALIAS}-consortium-${COMP_SITES}-member`;
+const CONS_DESC = ' ';
+const PIPE_NAME = `${COMP_ALIAS}-pipeline`;
+const PIPE_DESC = ' ';
+const COMPUTATION_NAME = COMP_NAME;
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,7 +39,7 @@ let appWindow1;
 let appWindow2;
 const _deviceId1 = 'test1';
 const _deviceId2 = 'test2';
-describe('Run ddfnc computation with 2 members', () => {
+describe(`e2e run computation with ${COMP_SITES} members`, () => {
   afterEach(async function screenshot() {
     if (process.env.CI && this.currentTest.state === 'failed') {
       await fs.mkdir('/tmp/screenshots', { recursive: true });
@@ -103,12 +112,20 @@ describe('Run ddfnc computation with 2 members', () => {
     ]);
   });
 
+  it('displays the correct title', async () => {
+    return appWindow1.title().should.eventually.equal('COINSTAC');
+  });
+
   it('authenticates demo user on first instance', async () => {
     await appWindow1.click('#login-username', { timeout: EXIST_TIMEOUT });
     await appWindow1.fill('#login-username', USER_ID_1);
     await appWindow1.fill('#login-password', PASS);
 
     await appWindow1.click('button:has-text("Log In")');
+
+    try {
+      await appWindow1.click('button:has-text("Never Show Again")', { timeout: 5000 });
+    } catch {}
 
     // Assert
     return appWindow1.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_1);
@@ -124,12 +141,12 @@ describe('Run ddfnc computation with 2 members', () => {
     try {
       await appWindow2.click('button:has-text("Never Show Again")', { timeout: 5000 });
     } catch {}
+
     // Assert
     return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
   });
 
   it('accesses the Add Consortium page', async () => {
-
     await appWindow1.click('a:has-text("Consortia")');
 
     await appWindow1.click('a[name="create-consortium-button"]', { timeout: EXIST_TIMEOUT });
@@ -185,10 +202,40 @@ describe('Run ddfnc computation with 2 members', () => {
 
     await appWindow1.click('.pipeline-step', { timeout: EXIST_TIMEOUT });
 
+    const addCovariate = async (name, type, index) => {
+      await appWindow1.click('button:has-text("Add Covariates")', { timeout: EXIST_TIMEOUT });
+
+      await appWindow1.click(`#covariates-${index}-data-dropdown`, { timeout: EXIST_TIMEOUT });
+      await appWindow1.click(`#covariates-${index}-data-dropdown-menu li:has-text("${type}")`, { timeout: EXIST_TIMEOUT });
+
+      await appWindow1.fill(`#covariates-${index}-input-name`, name);
+
+      //await appWindow1.waitForSelector(`#covariates-${index}-input-name:has-text("${name}")`, { timeout: EXIST_TIMEOUT });
+    };
+
+    if (COMP_COVARIATES) {
+      let covariates = COMP_COVARIATES;
+      if (typeof covariates === 'string') {
+        try {
+          covariates = JSON.parse(covariates);
+        } catch {}
+      }
+      if (typeof covariates === 'object') {
+        return Promise.all(Object.keys(covariates).map(async (key, index) => {
+          await addCovariate(covariates[index].name, covariates[index].type, index);
+        }));
+      }
+    }
+
     await appWindow1.click('button:has-text("Add Data")', { timeout: EXIST_TIMEOUT });
 
-    await appWindow1.click(`#data-0-data-dropdown`, { timeout: EXIST_TIMEOUT });
-    await appWindow1.click(`#data-0-data-dropdown-menu li:has-text("NiFTI")`, { timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-data-dropdown', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-data-dropdown-menu li:has-text("FreeSurfer")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click('#data-0-area', { timeout: EXIST_TIMEOUT });
+    await appWindow1.click('#data-0-area .react-select-dropdown-menu div:has-text("5th-Ventricle")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.fill('[name="step-lambda"]', '0');
 
     await appWindow1.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
 
@@ -222,24 +269,6 @@ describe('Run ddfnc computation with 2 members', () => {
     ]);
   });
 
-  it('map data to consortium on site 1', async () => {
-    await appWindow1.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
-
-    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
-
-    await appWindow1.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
-
-    await appWindow1.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
-
-    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
-
-    // Assert
-    return appWindow1.waitForSelector('button:has-text("Start Pipeline")', {
-      state: 'visible',
-      timeout: EXIST_TIMEOUT,
-    }).should.eventually.not.equal(null);
-  });
-
   it('joins a consortium', async () => {
     await appWindow2.click('a:has-text("Consortia")');
 
@@ -258,6 +287,26 @@ describe('Run ddfnc computation with 2 members', () => {
     ]);
   });
 
+  it('map data to consortium on site 1', async () => {
+    await appWindow1.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click(`a[name="${CONS_NAME}"]`, { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click('button:has-text("Auto Map")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
+
+    await appWindow1.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
+
+    // Assert
+    return appWindow1.waitForSelector('button:has-text("Start Pipeline")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null);
+  });
+
   it('map data to consortium on site 2', async () => {
     await appWindow2.click('a:has-text("Maps")', { timeout: EXIST_TIMEOUT });
 
@@ -265,39 +314,36 @@ describe('Run ddfnc computation with 2 members', () => {
 
     await appWindow2.click('button:has-text("Select File(s)")', { timeout: EXIST_TIMEOUT });
 
+    await appWindow2.click('button:has-text("Auto Map")', { timeout: EXIST_TIMEOUT });
+
     await appWindow2.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
 
     await appWindow2.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return appWindow2.waitForSelector('button:has-text("Leave Consortium")', {
+    return appWindow2.waitForSelector('button:has-text("Map Local Data")', {
+      state: 'hidden',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(null);
+  });
+
+  it('runs a computation', async () => {
+    await appWindow1.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
+
+    // Assert
+    return appWindow1.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
   });
 
-  it('runs a computation', async () => {
-    try {
-
-      await appWindow1.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
-
-      // Assert
-      return appWindow1.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
-        state: 'visible',
-        timeout: COMPUTATION_TIMEOUT,
-      }).should.eventually.not.equal(null);
-    } catch (e) {
-      console.log(`-----------------------------------------${e}`);
-    }
-  });
-
   it('displays computation progress', async () => {
-    await appWindow1.click('a:has-text("Home")', { timeout: COMPUTATION_TIMEOUT });
+    await appWindow1.click('a:has-text("Home")', { timeout: EXIST_TIMEOUT });
 
     // Assert
     return appWindow1.waitForSelector('div.run-item-paper:first-child span:has-text("In Progress")', {
       state: 'visible',
-      timeout: COMPUTATION_TIMEOUT,
+      timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
   });
 
@@ -307,7 +353,11 @@ describe('Run ddfnc computation with 2 members', () => {
 
     // Assert
     return Promise.all([
-      appWindow1.waitForSelector(`h6:has-text("Results: ${CONS_NAME}")`, {
+      appWindow1.waitForSelector('h3:has-text("Regressions")', {
+        state: 'visible',
+        timeout: EXIST_TIMEOUT,
+      }).should.eventually.not.equal(null),
+      appWindow1.waitForSelector(`h6:has-text("Results: ${CONS_NAME} | ${PIPE_NAME}")`, {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
