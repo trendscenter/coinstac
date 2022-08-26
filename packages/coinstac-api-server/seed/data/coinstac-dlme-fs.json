@@ -250,7 +250,7 @@
     },
     "display": [
     {
-      "type": "simple-table"
+      "type": "string"
     }
   ]
  }
