@@ -12,6 +12,7 @@ const listenForUpdates = (logger) => {
     console.error('Auto update error', error && (error.stack || error).toString());
     window.webContents.send('auto-update-log', `An error has occurred while searching for updates: ${error && (error.message || error).toString()}`);
   });
+
   autoUpdater.on('checking-for-update', () => {
     console.log('Checking for updates...');
     window.webContents.send('auto-update-log', 'Checking for updates...');

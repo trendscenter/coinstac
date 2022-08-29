@@ -3,17 +3,22 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import Typography from '@material-ui/core/Typography';
+import { styled } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
+
+const StyledLinearProgress = styled(LinearProgress)(() => ({
+  height: 10,
+}));
 
 function LinearProgressWithLabel(props) {
   const { value } = props;
   return (
     <Box sx={{ display: 'flex', 'flex-flow': 'column', 'justify-content': 'center' }}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body1" color="text.secondary">
         {`Downloading update ${Math.round(value)}%....`}
       </Typography>
-      <Box sx={{ width: '100%', mr: 1, 'margin-bottom': '8px' }}>
-        <LinearProgress sx={{ 'flex-flow': 'row ' }} variant="determinate" {...props} />
+      <Box sx={{ width: '100%' }}>
+        <StyledLinearProgress sx={{ 'flex-flow': 'row ' }} variant="determinate" {...props} />
       </Box>
     </Box>
   );
