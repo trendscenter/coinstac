@@ -72,7 +72,7 @@ export const saveDataMapping = applyAsyncLoading(
 
               inputMapVariables.forEach((mappedColumnName) => {
                 const covarType = inputMap[inputMapKey].value
-                  .find(c => c.name === mappedData.maps[mappedColumnName]);
+                  .find(c => c.name === mappedColumnName);
                 const csvColumn = mappedData.maps[mappedColumnName];
                 try {
                   value[subj][mappedColumnName] = castData[covarType.type](
