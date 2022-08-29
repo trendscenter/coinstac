@@ -216,6 +216,7 @@ const ServiceFunctionGenerator = ({
                 case 'stderr':
                   errfin = res.end;
                   stderr += res.data || '';
+                  code = res.code || code;
                   if (res.code !== undefined && errfin) {
                     ws.close(1000, 'Normal Client disconnect');
                     resolve({
@@ -238,7 +239,7 @@ const ServiceFunctionGenerator = ({
                   }
                   break;
                 case 'close':
-                  ({ code } = res);
+                  code = res.code || code;
                   if (outfin && errfin) {
                     ws.close(1000, 'Normal Client disconnect');
                     resolve({

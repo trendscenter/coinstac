@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "6.5.2",
+  "version": "6.5.1",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
