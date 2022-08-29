@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import CoinstacAbbr from './coinstac-abbr';
+import AutoUpdateListener from './auto-update-listener';
 
 const styles = theme => ({
   navButtonsContainer: {
@@ -47,6 +48,7 @@ function LayoutNoAuth({ children, classes }) {
           </Button>
         </div>
         {children}
+        <AutoUpdateListener />
       </div>
     </div>
   );
