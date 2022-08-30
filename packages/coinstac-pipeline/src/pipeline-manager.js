@@ -384,6 +384,9 @@ module.exports = {
           activePipelines,
         };
       },
+      async getPipelineStats(runId, userId) {
+        await coinstacManager.getStats(runId, userId);
+      },
       waitingOnForRun,
       coinstacManager,
     };

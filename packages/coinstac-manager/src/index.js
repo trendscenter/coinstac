@@ -81,6 +81,14 @@ const getStatus = (provider = 'docker') => {
 };
 
 /**
+ * Retrieve Docker status
+ * @return {Object} Docker stats object
+ */
+const getStats = (runId, userId) => {
+  return services[`${runId}-${userId}`].getStats();
+};
+
+/**
  * start or use an already started docker service based on serviceId
  * @param  {string} serviceId     unique ID to describe the service
  * @param  {string} serviceUserId unique user ID for use of this service
@@ -321,6 +329,7 @@ const getServices = () => {
 
 module.exports = {
   getImages,
+  getStats,
   getStatus,
   getServices,
   pullImages,
