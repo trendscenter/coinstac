@@ -76,7 +76,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages, getContainerStats } = require('coinstac-manager'); // eslint-disable-line import/order
+const { pullImages, getContainerStats, getStats } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -102,41 +102,61 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     const textTable = new termkit.TextTable({
       parent: document,
       cellContents: [
-        ['', ''],
-        ['computation output', ''],
-        ['', ''],
-        ['', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+        ['', '', '', ''],
+
       ],
       contentHasMarkup: true,
       fit: true,
       borderAttr: { color: 'blue' },
-      // textAttr: { bgColor: 'default' },
-      // firstCellTextAttr: { bgColor: 'blue' },
-      // firstRowTextAttr: { bgColor: 'gray' },
-      // firstColumnTextAttr: { bgColor: 'red' },
-      // selectedTextAttr: { bgColor: 'blue' },
       selectable: 'cell',
       width: 50,
       height: 20,
 
     });
 
-    const { stateEmitter } = simRun.pipelines.locals[0].pipeline;
-    stateEmitter.on('update', (m) => {
-      textTable.setCellContent(1, 1, JSON.stringify(m));
+    // get the runId and userId for each ?pipeline?
+    // attach the stateEmitter listener to each and add set an interval to getStats for each
+
+    const localPipelines = simRun.pipelines.locals;
+    const remotePipeline = simRun.pipelines.remote;
+
+    localPipelines.forEach((pipeline, index) => {
+      const { stateEmitter } = pipeline.pipeline;
+      stateEmitter.on('update', (m) => {
+        textTable.setCellContent(0, index + 1, JSON.stringify(m));
+      });
+    });
+
+    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
+    remoteStateEmitter.on('update', (m) => {
+      textTable.setCellContent(0, 1, JSON.stringify(m));
     });
 
 
     const containerStatsInterval = setInterval(async () => {
-      const cellContent = '';
-      const stats = await getContainerStats();
+      const statsPromises = [];
+      // statsPromises.push(getStats('simulatorRun', 'remote'));
+      localPipelines.forEach((pipeline, index) => {
+        statsPromises.push(getStats('simulatorRun', `local${index}`));
+      });
+
+      const stats = await Promise.all(statsPromises);
 
       const formattedContainerStats = [];
 
       stats.forEach((containerStatObject) => {
         const { name } = containerStatObject;
         const containerId = containerStatObject.id;
-        // const cpuPercent = containerStatObject
         const memUsage = containerStatObject.memory_stats.usage;
         const memLimit = containerStatObject.memory_stats.limit;
         const memPercent = memUsage / memLimit;
@@ -166,12 +186,13 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         formattedContainerStats.push(formatted);
       });
 
-      textTable.setCellContent(1, 2, JSON.stringify(formattedContainerStats[0]));
+      formattedContainerStats.forEach((formattedContainerStat, index) => {
+        textTable.setCellContent(1, index, JSON.stringify(formattedContainerStat));
+      });
     }, 1000);
 
     const results = await simRun.allResults;
     clearInterval(containerStatsInterval);
-
 
     logger.info('Simulator run finished');
     if (globalMode === 'decentralized') {
