@@ -94,7 +94,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
   });
   try {
     const simRun = await started;
-    // hook into the pipeline events
+
     const rowKeys = [
       'pipelineName',
       'currentIteration',
@@ -137,9 +137,6 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       autoHeight: 1,
     });
 
-    textTable.setCellContent(0, 0, '');
-    // get the runId and userId for each ?pipeline?
-    // attach the stateEmitter listener to each and add set an interval to getStats for each
     const writeValuesToRow = (rowNumber, valuesToWrite) => {
       Object.keys(valuesToWrite).forEach((rowKey) => {
         textTable.setCellContent(rowKeys.indexOf(rowKey), rowNumber, valuesToWrite[rowKey]);
@@ -149,16 +146,17 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     const localPipelines = simRun.pipelines.locals;
     const remotePipeline = simRun.pipelines.remote;
 
+    // hook into the pipeline events
+    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
+    remoteStateEmitter.on('update', (m) => {
+      writeValuesToRow(1, m);
+    });
+
     localPipelines.forEach((pipeline, index) => {
       const { stateEmitter } = pipeline.pipeline;
       stateEmitter.on('update', (m) => {
         writeValuesToRow(index + 2, m);
       });
-    });
-
-    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
-    remoteStateEmitter.on('update', (m) => {
-      writeValuesToRow(1, m);
     });
 
     const containerStatsInterval = setInterval(async () => {
