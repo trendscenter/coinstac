@@ -84,8 +84,13 @@ const getStatus = (provider = 'docker') => {
  * Retrieve Docker status
  * @return {Object} Docker stats object
  */
-const getStats = (runId, userId) => {
-  return services[`${runId}-${userId}`].getStats();
+const getStats = async (runId, userId) => {
+  if (!services[`${runId}-${userId}`]) {
+    return null;
+  }
+  await services[`${runId}-${userId}`].service;
+  return services[`${runId}-${userId}`].container.stats({ stream: false });
+  // return services[`${runId}-${userId}`].getStats();
 };
 
 /**

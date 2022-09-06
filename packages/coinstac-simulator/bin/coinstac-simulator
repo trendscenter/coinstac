@@ -95,6 +95,21 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
   try {
     const simRun = await started;
     // hook into the pipeline events
+    const rowKeys = [
+      'pipelineName',
+      'currentIteration',
+      'controllerState',
+      'pipelineStep',
+      'mode',
+      'totalSteps',
+      'waitingOn',
+      'containerId',
+      'name',
+      'memUsage',
+      'memLimit',
+      'memPercent',
+      'cpuPercent',
+    ];
     const document = term.createDocument({
       palette: new termkit.Palette(),
     });
@@ -102,30 +117,34 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     const textTable = new termkit.TextTable({
       parent: document,
       cellContents: [
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-        ['', '', '', ''],
-
+        rowKeys,
+        ['remote', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local0', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local1', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local2', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local3', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local4', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local5', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local6', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local7', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['local8', '', '', '', '', '', '', '', '', '', '', '', ''],
       ],
       contentHasMarkup: true,
       fit: true,
       borderAttr: { color: 'blue' },
       selectable: 'cell',
-      width: 50,
-      height: 20,
-
+      autoWidth: 1,
+      autoHeight: 1,
     });
 
+    textTable.setCellContent(0, 0, '');
     // get the runId and userId for each ?pipeline?
     // attach the stateEmitter listener to each and add set an interval to getStats for each
+    const writeValuesToRow = (rowNumber, valuesToWrite) => {
+      Object.keys(valuesToWrite).forEach((rowKey) => {
+        textTable.setCellContent(rowKeys.indexOf(rowKey), rowNumber, valuesToWrite[rowKey]);
+      });
+    };
 
     const localPipelines = simRun.pipelines.locals;
     const remotePipeline = simRun.pipelines.remote;
@@ -133,33 +152,34 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     localPipelines.forEach((pipeline, index) => {
       const { stateEmitter } = pipeline.pipeline;
       stateEmitter.on('update', (m) => {
-        textTable.setCellContent(0, index + 1, JSON.stringify(m));
+        writeValuesToRow(index + 2, m);
       });
     });
 
     const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
     remoteStateEmitter.on('update', (m) => {
-      textTable.setCellContent(0, 1, JSON.stringify(m));
+      writeValuesToRow(1, m);
     });
 
-
     const containerStatsInterval = setInterval(async () => {
-      const statsPromises = [];
-      // statsPromises.push(getStats('simulatorRun', 'remote'));
-      localPipelines.forEach((pipeline, index) => {
-        statsPromises.push(getStats('simulatorRun', `local${index}`));
-      });
-
-      const stats = await Promise.all(statsPromises);
-
-      const formattedContainerStats = [];
-
-      stats.forEach((containerStatObject) => {
+      const formatContainerStats = (containerStatObject) => {
+        if (!containerStatObject) {
+          return {
+            containerId: null,
+            name: null,
+            memUsage: null,
+            memLimit: null,
+            memPercent: null,
+            cpuPercent: null,
+          };
+        }
         const { name } = containerStatObject;
-        const containerId = containerStatObject.id;
+        // truncate this to the last 12 characters of the id
+        const containerId = containerStatObject.id.substring(containerStatObject.id.length - 12);
         const memUsage = containerStatObject.memory_stats.usage;
         const memLimit = containerStatObject.memory_stats.limit;
-        const memPercent = memUsage / memLimit;
+        // truncate this to a few decimal places
+        const memPercent = (memUsage / memLimit).toFixed(3);
 
         function getCpuPercent(containerStatObject) {
           const currentCpuUsage = containerStatObject.cpu_stats.cpu_usage.total_usage;
@@ -168,8 +188,14 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
           const systemUsage = containerStatObject.cpu_stats.system_cpu_usage;
           const preSystemUsage = containerStatObject.precpu_stats.system_cpu_usage;
           const systemDelta = systemUsage - preSystemUsage;
-          const cpuPercent = (cpuDelta / systemDelta) * containerStatObject.cpu_stats.cpu_usage.percpu_usage.length * 100.0;
-          return cpuPercent;
+
+          try {
+            const cpuPercent = (cpuDelta / systemDelta) * containerStatObject.cpu_stats.cpu_usage.percpu_usage.length * 100.0;
+            // truncate this to a few decmial places
+            return (cpuPercent).toFixed(3);
+          } catch (e) {
+            return null;
+          }
         }
 
         const cpuPercent = getCpuPercent(containerStatObject);
@@ -183,11 +209,30 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
           cpuPercent,
         };
 
-        formattedContainerStats.push(formatted);
+        return formatted;
+      };
+
+      const remotePipelineStats = await getStats('simulatorRun', 'remote');
+      const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
+      writeValuesToRow(1, formattedRemotePipelineStats);
+
+      const localPipelineStatsPromises = [];
+
+      localPipelines.forEach((pipeline, index) => {
+        localPipelineStatsPromises.push(getStats('simulatorRun', `local${index}`));
       });
 
-      formattedContainerStats.forEach((formattedContainerStat, index) => {
-        textTable.setCellContent(1, index, JSON.stringify(formattedContainerStat));
+      const localPipelinesStats = await Promise.all(localPipelineStatsPromises);
+
+      const formattedLocalPipelinesStats = [];
+
+      localPipelinesStats.forEach((containerStatObject) => {
+        const formatted = formatContainerStats(containerStatObject);
+        formattedLocalPipelinesStats.push(formatted);
+      });
+
+      formattedLocalPipelinesStats.forEach((formattedContainerStat, index) => {
+        writeValuesToRow(index + 2, formattedContainerStat);
       });
     }, 1000);
 

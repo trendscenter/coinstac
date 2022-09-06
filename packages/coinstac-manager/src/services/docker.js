@@ -122,7 +122,11 @@ module.exports = {
           utils.logger.silly(`Returning service access function for ${serviceId}`);
           const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
           const serviceFunction = ServiceFunctionGenerator({ host, port, version });
-          return { service: serviceFunction, container };
+
+          return {
+            service: serviceFunction,
+            container,
+          };
         });
     };
     return tryStartService();
