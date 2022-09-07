@@ -18,18 +18,16 @@ import {
 } from '../../state/ducks/auth';
 
 const styles = theme => ({
-  formControl: {
-    flex: '1 0 auto',
-    marginBottom: theme.spacing(2),
-  },
   paper: {
     maxWidth: 320,
   },
-  submitButtonWrapper: {
-    textAlign: 'right',
-  },
   tabPanel: {
     padding: theme.spacing(2),
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: theme.spacing(2),
   },
 });
 
@@ -132,7 +130,6 @@ class FormPasswordController extends Component {
     const { selectedTab, sendingEmail, resettingPassword } = this.state;
 
     const commonProps = {
-      className: classes.formControl,
       fullWidth: true,
       withRequiredValidator: true,
       required: true,
@@ -159,6 +156,7 @@ class FormPasswordController extends Component {
               square
             >
               <ValidatorForm
+                className={classes.form}
                 instantValidate
                 noValidate
                 onSubmit={this.handleSendEmail}
@@ -193,6 +191,7 @@ class FormPasswordController extends Component {
               square
             >
               <ValidatorForm
+                className={classes.form}
                 instantValidate
                 noValidate
                 onSubmit={this.handleResetPassword}

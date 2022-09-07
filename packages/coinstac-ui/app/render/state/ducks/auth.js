@@ -231,8 +231,8 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
     dispatch(notifySuccess('Sent password reset email successfully'));
   })
   .catch((err) => {
-    const { statusCode, message } = getErrorDetail(err);
-    dispatch(notifyError(statusCode === 400 ? message : 'Failed to send password reset email'));
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Failed to send password reset email'));
     throw err;
   }));
 
@@ -241,8 +241,9 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
     dispatch(notifySuccess('Reset password successfully'));
   })
   .catch((err) => {
-    const { statusCode, message } = getErrorDetail(err);
-    dispatch(notifyError(statusCode === 400 ? message : 'Provided password reset token is not valid. It could be expired'));
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Provided password reset token is not valid. It could be expired'));
+    throw err;
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {

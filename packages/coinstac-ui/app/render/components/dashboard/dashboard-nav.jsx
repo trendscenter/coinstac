@@ -41,7 +41,7 @@ const DashboardNav = ({
       </ListItem>
       <ListItem button component="a" href="#/dashboard/maps">
         <ListItemIcon><ListAltIcon /></ListItemIcon>
-        <ListItemText primary="Maps local data" id="maps-menu" />
+        <ListItemText primary="Map local data" id="maps-menu" />
       </ListItem>
       <ListItem button component="a" href="#/dashboard/results">
         <ListItemIcon><EqualizerIcon /></ListItemIcon>
