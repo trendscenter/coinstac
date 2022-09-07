@@ -331,3 +331,10 @@ ul#loading_list {
     background-color: #2196f3 !important;
   }
 }
+.update-download-progress {
+  width: 100%;
+  position: fixed;
+  bottom: 1em;
+  left: 0em;
+  z-index: 10;
+}

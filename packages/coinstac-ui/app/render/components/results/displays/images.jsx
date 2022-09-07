@@ -61,23 +61,23 @@ class Images extends Component {
   }
 
   renderCanvas = async () => {
-    const { plotData } = this.props;
-    const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
-    const globalResults = ReactDOM.findDOMNode(this.globalPage);
+    //
+    // old render code, remove?
+    //
+    // const { plotData } = this.props;
+    // const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
 
-    RasterizeHTML.drawHTML(globalResults.innerHTML, globalCanvas);
+    // const renderCanvasPromises = Object.entries(plotData.local_stats).map(async ([key]) => {
+    //   const canvasId = `local-canvas-${key}`;
+    //   const pageId = `page-${key}`;
+    //
+    //   const localCanvas = document.getElementById(canvasId);
+    //   const keyResults = document.getElementById(pageId);
+    //
+    //   return RasterizeHTML.drawHTML(keyResults.innerHTML, localCanvas);
+    // });
 
-    const renderCanvasPromises = Object.entries(plotData.local_stats).map(async ([key]) => {
-      const canvasId = `local-canvas-${key}`;
-      const pageId = `page-${key}`;
-
-      const localCanvas = document.getElementById(canvasId);
-      const keyResults = document.getElementById(pageId);
-
-      return RasterizeHTML.drawHTML(keyResults.innerHTML, localCanvas);
-    });
-
-    await Promise.all(renderCanvasPromises);
+    // await Promise.all(renderCanvasPromises);
   }
 
   componentDidMount = () => {
@@ -123,7 +123,10 @@ class Images extends Component {
 
   render() {
     const {
-      resultsPath, plotData, classes, filesExist,
+      resultsPath,
+      plotData,
+      classes,
+      filesExist,
     } = this.props;
     const { generatingPdf } = this.state; // eslint-disable-line no-unused-vars
 

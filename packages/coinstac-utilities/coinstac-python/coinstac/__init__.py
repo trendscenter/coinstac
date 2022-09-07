@@ -26,7 +26,7 @@ def _run(local, remote):
             except Exception as e:
                 print('### Remote data: ', msg['data'])
                 _tb.print_exc()
-                await websocket.send(_json.dumps({'type': 'stderr', 'data': str(e), 'code': 1, 'end': True}))
+                await websocket.send(_json.dumps({'type': 'stderr', 'data': str(_tb.format_exc()), 'code': 1, 'end': True}))
 
         elif msg['mode'] == 'local':
             try:
@@ -38,7 +38,7 @@ def _run(local, remote):
             except Exception as e:
                 print('### Local data: ', msg['data'])
                 _tb.print_exc()
-                await websocket.send(_json.dumps({'type': 'stderr', 'data': str(e), 'code': 1, 'end': True}))
+                await websocket.send(_json.dumps({'type': 'stderr', 'data': str(_tb .format_exc()), 'code': 1, 'end': True}))
 
         else:
             await websocket.close()

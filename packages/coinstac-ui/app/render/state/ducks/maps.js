@@ -14,6 +14,30 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
+const castData = {
+  number: (d) => {
+    try {
+      return parseFloat(d);
+    } catch (e) {
+      throw new Error(`Could not convert ${d} to a number: ${e}`);
+    }
+  },
+  boolean: (d) => {
+    try {
+      if (d === true || d === false) return d;
+      if (['false', '0'].indexOf(d.toLowerCase()) > -1) {
+        return false;
+      }
+      if (['true', '1'].indexOf(d.toLowerCase()) > -1) {
+        return true;
+      }
+      throw new Error(`Could not convert ${d} to a boolean`);
+    } catch (e) {
+      throw new Error(`Could not convert ${d} to a boolean: ${e}`);
+    }
+  },
+  string: d => d,
+};
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
@@ -47,8 +71,16 @@ export const saveDataMapping = applyAsyncLoading(
               filesArray.push(subj);
 
               inputMapVariables.forEach((mappedColumnName) => {
+                const covarType = inputMap[inputMapKey].value
+                  .find(c => c.name === mappedColumnName);
                 const csvColumn = mappedData.maps[mappedColumnName];
-                value[subj][mappedColumnName] = csvData[subj][csvColumn];
+                try {
+                  value[subj][mappedColumnName] = castData[covarType.type](
+                    csvData[subj][csvColumn]
+                  );
+                } catch (e) {
+                  throw new Error(`Issue converting column ${csvColumn}: ${e}`);
+                }
               });
             });
 

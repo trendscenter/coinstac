@@ -125,7 +125,7 @@ const helperFunctions = {
 
     const msg = {
       to: email,
-      from: 'no-reply@mrn.org',
+      from: 'no-reply@coinstac.org',
       subject: 'Password Reset Request',
       html: `We received your password reset request. <br/>
         Please use this token for password reset. <br/>
@@ -450,7 +450,11 @@ const helperFunctions = {
       const run = await db.collection('runs').findOne({ _id: ObjectID(runId) });
       const { consortiumId } = run;
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
-      const consortiaParticipantIds = [...Object.keys(consortium.owners), ...Object.keys(consortium.members), ...Object.keys(consortium.activeMembers)];
+      const consortiaParticipantIds = [
+        ...Object.keys(consortium.owners),
+        ...Object.keys(consortium.members),
+        ...Object.keys(consortium.activeMembers),
+      ];
       if (consortiaParticipantIds.includes(userId)) {
         return runId;
       }
