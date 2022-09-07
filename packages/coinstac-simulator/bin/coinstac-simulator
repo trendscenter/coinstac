@@ -101,12 +101,10 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       'controllerState',
       'pipelineStep',
       'mode',
-      'totalSteps',
       'waitingOn',
       'containerId',
       'name',
-      'memUsage',
-      'memLimit',
+      'memUsageLimit',
       'memPercent',
       'cpuPercent',
     ];
@@ -118,16 +116,16 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       parent: document,
       cellContents: [
         rowKeys,
-        ['remote', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local0', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local1', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local2', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local3', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local4', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local5', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local6', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local7', '', '', '', '', '', '', '', '', '', '', '', ''],
-        ['local8', '', '', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '', '', '', ''],
       ],
       contentHasMarkup: true,
       fit: true,
@@ -146,16 +144,33 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     const localPipelines = simRun.pipelines.locals;
     const remotePipeline = simRun.pipelines.remote;
 
+    const formatUpdateEvent = (data) => {
+      const {
+        currentIteration,
+        controllerState,
+        pipelineStep,
+        mode,
+        totalSteps,
+        waitingOn,
+      } = data;
+      return {
+        currentIteration,
+        controllerState,
+        pipelineStep: `${pipelineStep}/${totalSteps}`,
+        mode,
+        waitingOn,
+      };
+    };
     // hook into the pipeline events
     const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
     remoteStateEmitter.on('update', (m) => {
-      writeValuesToRow(1, m);
+      writeValuesToRow(1, formatUpdateEvent(m));
     });
 
     localPipelines.forEach((pipeline, index) => {
       const { stateEmitter } = pipeline.pipeline;
       stateEmitter.on('update', (m) => {
-        writeValuesToRow(index + 2, m);
+        writeValuesToRow(index + 2, formatUpdateEvent(m));
       });
     });
 
@@ -174,10 +189,9 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         const { name } = containerStatObject;
         // truncate this to the last 12 characters of the id
         const containerId = containerStatObject.id.substring(containerStatObject.id.length - 12);
-        const memUsage = containerStatObject.memory_stats.usage;
-        const memLimit = containerStatObject.memory_stats.limit;
+        const memUsageLimit = `${((containerStatObject.memory_stats.usage) / 1000000).toFixed(3)}MB/${(containerStatObject.memory_stats.limit / 1000000).toFixed(3)}MB`
         // truncate this to a few decimal places
-        const memPercent = (memUsage / memLimit).toFixed(3);
+        const memPercent = (containerStatObject.memory_stats.usage / containerStatObject.memory_stats.limit).toFixed(3);
 
         function getCpuPercent(containerStatObject) {
           const currentCpuUsage = containerStatObject.cpu_stats.cpu_usage.total_usage;
@@ -201,8 +215,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         const formatted = {
           containerId,
           name,
-          memUsage,
-          memLimit,
+          memUsageLimit,
           memPercent,
           cpuPercent,
         };
@@ -212,7 +225,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
 
       const remotePipelineStats = await getStats('simulatorRun', 'remote');
       const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
-      writeValuesToRow(1, formattedRemotePipelineStats);
+      writeValuesToRow(1, { pipelineName: `remote`, ...formattedRemotePipelineStats });
 
       const localPipelineStatsPromises = [];
 
@@ -230,7 +243,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       });
 
       formattedLocalPipelinesStats.forEach((formattedContainerStat, index) => {
-        writeValuesToRow(index + 2, formattedContainerStat);
+        writeValuesToRow(index + 2, { pipelineName: `local${index}`, ...formattedContainerStat });
       });
     }, 1000);
 
