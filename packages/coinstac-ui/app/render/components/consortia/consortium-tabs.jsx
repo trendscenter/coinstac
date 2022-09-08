@@ -18,6 +18,7 @@ import {
   getAllAndSubProp,
   saveDocumentProp,
   userRolesProp,
+  consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
 import {
   ADD_USER_ROLE_MUTATION,
@@ -25,6 +26,7 @@ import {
   REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
@@ -63,6 +65,7 @@ class ConsortiumTabs extends Component {
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
     this.toggleCurrentActiveMember = this.toggleCurrentActiveMember.bind(this);
+    this.saveActivePipeline = this.saveActivePipeline.bind(this);
   }
 
   componentDidMount() {
@@ -227,6 +230,20 @@ class ConsortiumTabs extends Component {
     });
   }
 
+  async saveActivePipeline(pipelineId) {
+    const { saveActivePipeline } = this.props;
+    const { consortium } = this.state;
+
+    await saveActivePipeline(consortium.id, pipelineId);
+
+    this.setState(prevState => ({
+      ...prevState,
+      consortium: {
+        ...prevState.consortium,
+        activePipelineId: pipelineId,
+      },
+    }));
+  }
 
   render() {
     const {
@@ -275,37 +292,32 @@ class ConsortiumTabs extends Component {
           {isEditingConsortium && isOwner && <Tab label="Active Members" />}
           {isEditingConsortium && isOwner && <Tab label="Runs" />}
         </Tabs>
-        {
-          selectedTabIndex === 0
-          && (
-            <ConsortiumAbout
-              addUserRole={addUserRole}
-              removeUserRole={removeUserRole}
-              consortium={consortium}
-              consortiumUsers={consortiumUsers}
-              saveConsortium={this.saveConsortium}
-              updateConsortium={this.updateConsortium}
-              owner={isOwner}
-              user={user}
-              users={users}
-              savingStatus={savingStatus}
-              isTutorialHidden={isTutorialHidden || isEditingConsortium}
-              tutorialChange={tutorialChange}
-            />
-          )
-        }
-        {
-          selectedTabIndex === 1
-          && (
-            <ConsortiumPipeline
-              consortium={consortium}
-              owner={isOwner}
-              pipelines={pipelines}
-              isTutorialHidden={isTutorialHidden}
-              tutorialChange={tutorialChange}
-            />
-          )
-        }
+        {selectedTabIndex === 0 && (
+          <ConsortiumAbout
+            addUserRole={addUserRole}
+            removeUserRole={removeUserRole}
+            consortium={consortium}
+            consortiumUsers={consortiumUsers}
+            saveConsortium={this.saveConsortium}
+            updateConsortium={this.updateConsortium}
+            owner={isOwner}
+            user={user}
+            users={users}
+            savingStatus={savingStatus}
+            isTutorialHidden={isTutorialHidden || isEditingConsortium}
+            tutorialChange={tutorialChange}
+          />
+        )}
+        {selectedTabIndex === 1 && (
+          <ConsortiumPipeline
+            consortium={consortium}
+            owner={isOwner}
+            pipelines={pipelines}
+            isTutorialHidden={isTutorialHidden}
+            tutorialChange={tutorialChange}
+            saveActivePipeline={this.saveActivePipeline}
+          />
+        )}
         {selectedTabIndex === 2 && (
           <ConsortiumMembers
             consortium={consortium}
@@ -314,16 +326,13 @@ class ConsortiumTabs extends Component {
             toggleCurrentActiveMember={this.toggleCurrentActiveMember}
           />
         )}
-        {
-          selectedTabIndex === 3
-          && (
-            <ConsortiumRuns
-              runs={this.getConsortiumRuns()}
-              consortium={consortium}
-              owner={isOwner}
-            />
-          )
-        }
+        {selectedTabIndex === 3 && (
+          <ConsortiumRuns
+            runs={this.getConsortiumRuns()}
+            consortium={consortium}
+            owner={isOwner}
+          />
+        )}
       </div>
     );
   }
@@ -349,6 +358,7 @@ ConsortiumTabs.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func,
   tutorialChange: PropTypes.func.isRequired,
 };
@@ -367,7 +377,8 @@ const ConsortiumTabsWithData = compose(
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
+  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline'))
 )(ConsortiumTabs);
 
 const connectedComponent = connect(
