@@ -6,10 +6,13 @@ These instructions explain how to get COINSTAC up and running on your machine fo
 
 You’ll need some software installed:
 
-1. **Lerna,** a manager for the packages in the COINSTAC repository.
+2. **npm,** a package manager for Node.js
+* See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+
+2. **Lerna,** a manager for the packages in the COINSTAC repository.
   * With npm to be installed first (go to step 3), run `npm install --global lerna`
 
-2. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
+3. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
 
 4. To run computations and have the UI not complain, you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
 
