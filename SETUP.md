@@ -6,11 +6,22 @@ These instructions explain how to get COINSTAC up and running on your machine fo
 
 You’ll need some software installed:
 
-1. **npm,** a package manager for Node.js
+1. **Node and npm** COINSTAC only supports the latest LTS version of Node, and so using a Node version manager is strongly recommended
 * See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+* If you are running Windows, you need to set npm to use the Git Bash shell. Run the following command, replacing the path with the bath to whever your local 'git-bash.exe' is installed. 
+
+```shell
+npm config set script-shell "C:\Program Files\Git\git-bash.exe"
+```
+
+* You can verify that you have set this up correctly by running
+
+```shell
+npm config ls
+```
 
 2. **Lerna,** a manager for the packages in the COINSTAC repository.
-  * With npm to be installed first, run `npm install --global lerna`
+  * With npm installed, run `npm install --global lerna`
 
 3. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
 
