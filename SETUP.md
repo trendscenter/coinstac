@@ -10,7 +10,7 @@ You’ll need some software installed:
 * See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 
 2. **Lerna,** a manager for the packages in the COINSTAC repository.
-  * With npm to be installed first (go to step 3), run `npm install --global lerna`
+  * With npm to be installed first, run `npm install --global lerna`
 
 3. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
 
