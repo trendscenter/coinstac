@@ -6,7 +6,7 @@ These instructions explain how to get COINSTAC up and running on your machine fo
 
 You’ll need some software installed:
 
-2. **npm,** a package manager for Node.js
+1. **npm,** a package manager for Node.js
 * See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 
 2. **Lerna,** a manager for the packages in the COINSTAC repository.
