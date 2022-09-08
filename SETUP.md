@@ -8,7 +8,8 @@ You’ll need some software installed:
 
 1. **Node and npm** COINSTAC only supports the latest LTS version of Node, and so using a Node version manager is strongly recommended
 * See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-* If you are running Windows, you need to set npm to use the Git Bash shell. Run the following command, replacing the path with the bath to whever your local 'git-bash.exe' is installed. 
+* If you are running Windows, you will need to download and install Git Bash. You can do that here: https://git-scm.com/download/win
+* Windows users will then need to configure npm to use the Git Bash shell while working with COINSTAC. Run the following command, replacing the path with the bath to whever your local 'git-bash.exe' is installed. 
 
 ```shell
 npm config set script-shell "C:\Program Files\Git\git-bash.exe"
@@ -18,6 +19,11 @@ npm config set script-shell "C:\Program Files\Git\git-bash.exe"
 
 ```shell
 npm config ls
+```
+* You should see a configuration called 'script-shell' set to the directory you specified. If you have issues with the commands above, you can edit npm's configuration file directly with
+
+```shell
+npm config edit
 ```
 
 2. **Lerna,** a manager for the packages in the COINSTAC repository.
