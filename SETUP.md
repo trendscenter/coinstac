@@ -51,7 +51,7 @@ npm run switch:local
 3. relaunch your terminal/shell.
 4. `echo $env` to see if the environment variables are set.
 
-## Priming the database
+## Prime the database
 In the top level `coinstac` directory run `npm run devdata` to start and prime the database
 
 ## Run the UI
