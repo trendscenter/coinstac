@@ -29,7 +29,7 @@ git clone https://github.com/trendscenter/coinstac.git
 
 This will place COINSTAC into a new folder named “coinstac” and check out the “master” branch.
 
-## Installing Dependencies
+## Install Dependencies
 
 From the `coinstac` directory run the following commands:
 
@@ -42,7 +42,7 @@ npm run build
 
 This will install all dependencies including all `package.json` contents of each sub package
 
-## Setting environment variables
+## Set environment variables
 1. Find or create the `.*rc` file on your system
    * Mac uses zshell and the respective file is `.zshrc`.
    * Windows Git Bash uses `.bashrc`.
@@ -51,14 +51,14 @@ This will install all dependencies including all `package.json` contents of each
 3. relaunch your terminal/shell.
 4. `echo $env` to see if the environment variables are set.
 
-## Setting configuration files
+## Set configuration files
 * Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-ui/config/local-example.json`
 * Create a new file at `/coinstac-server/config/local.json` and copy into it the contents of `/coinstac-server/config/default.json`
 
 ## Priming the database
 In the top level `coinstac` directory run `npm run devdata` to start and prime the database
 
-## Running the UI
+## Run the UI
 
 The user interface is an [Electron application](http://electron.atom.io/). To run it:
 
