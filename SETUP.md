@@ -19,7 +19,7 @@ You can do this with the following command:
 `npm config set script-shell "C:\\Program Files\\Git\\git-bash.exe"` (or another path if your install location differs)
 
 
-## Downloading Source Code
+## Download Source Code
 
 Open a shell and navigate to the directory where you want to install COINSTAC. This can be anywhere, but if you're following the development instructions below, having it in your HOME directory is recommended. Then, use git to download the repository:
 
