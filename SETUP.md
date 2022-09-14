@@ -6,21 +6,32 @@ These instructions explain how to get COINSTAC up and running on your machine fo
 
 You’ll need some software installed:
 
-1. **Build tools,** namely g++/gcc.
-  * OS X: The easiest way to install Xcode through Apple’s App Store. (You can try [installing the command line tools](https://www.maketecheasier.com/install-command-line-tools-without-xcode/))
-  * Linux: `apt-get install build-essential` for Ubuntu-flavored versions. Check your distro for details.
-  * Windows: requires npm to be installed first (go to step 3) `npm install --global windows-build-tools`
-2. **Install git.** See https://git-scm.com/download. You may also try [GitHub’s desktop client](https://desktop.github.com/): see [their post for CLI instructions](https://github.com/blog/1510-installing-git-from-github-for-mac).
-3. **Install Node.js**. Coinstac only supports the latest LTS version of Nodejs. You can enter `node -v` to find out which version you have.
-   * Consider using a Node.js version manager if you already have a version of Node.js installed.
-     * Mac/Linux: [n](https://www.npmjs.com/package/n)
-     * Windows: [nvm-windows](https://github.com/coreybutler/nvm-windows)
-   * Download the latest LTS build from [nodejs.org](https://nodejs.org/)
-   * Windows: configure npm to use Git Bash for executing scripts 
-     * `npm config set script-shell "C:\\Program Files\\git\\bin\\bash.exe"`
+1. **Node and npm** COINSTAC only supports the latest LTS version of Node, and so using a Node version manager is strongly recommended
+* See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+* If you are running Windows, you will need to download and install Git Bash. You can do that here: https://git-scm.com/download/win
+* Windows users will then need to configure npm to use the Git Bash shell while working with COINSTAC. Run the following command, replacing the path with the bath to whever your local 'git-bash.exe' is installed. 
 
-4. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
-5. To run computations and have the UI not complain, you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
+```shell
+npm config set script-shell "C:\Program Files\Git\git-bash.exe"
+```
+
+* You can verify that you have set this up correctly by running
+
+```shell
+npm config ls
+```
+* You should see a configuration called 'script-shell' set to the directory you specified. If you have issues with the commands above, you can edit npm's configuration file directly with
+
+```shell
+npm config edit
+```
+
+2. **Lerna,** a manager for the packages in the COINSTAC repository.
+  * With npm installed, run `npm install --global lerna`
+
+3. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
+
+4. To run computations and have the UI not complain, you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
 
 
 
