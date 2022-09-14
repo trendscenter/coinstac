@@ -3,15 +3,15 @@
 These instructions explain how to get COINSTAC up and running on your machine for development or to run your own COINSTAC system:
 
 ## Install required software
-1. **NodeJS** COINSTAC only supports the latest LTS version of Node, if you require multiple versions of Node for other projects, a version manager is strongly recommended
+1. **NodeJS**
+COINSTAC only supports the latest LTS version of Node, if you require multiple versions of Node for other projects, a version manager is strongly recommended
 * See detailed instructions here: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
-2. **Lerna,** a manager for the packages in the COINSTAC repository.
-  * With npm installed, run `npm install --global lerna`
 
-3. **An MQTT client** MQTT client will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/). Mosquitto is available on `brew` and `apt`.
+2. **An MQTT client** Any MQTT client will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/). Mosquitto is available on `brew` and `apt`.
 
-4. **Docker** To run computations you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
-5. **Git** https://git-scm.com/download
+3. **Docker** To run computations you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
+4. **Git**
+https://git-scm.com/download
 
 ### Configuring NPM on Windows
 If you are developing on a Windows operating system you will need to configure NPM to use `Git-Bash` to execute npm scripts.
@@ -38,9 +38,9 @@ From the `coinstac` directory run the following commands:
 npm install
 # runs npm i in the sub packages, and links the packages together via lerna
 npm run build
+# sets local services configuration files for the ui
+npm run switch:local
 ```
-
-This will install all dependencies including all `package.json` contents of each sub package
 
 ## Set environment variables
 1. Find or create the `.*rc` file on your system
@@ -50,10 +50,6 @@ This will install all dependencies including all `package.json` contents of each
 2. Copy the contents of `config/.env-example.sh` into your `.*rc` file.
 3. relaunch your terminal/shell.
 4. `echo $env` to see if the environment variables are set.
-
-## Set configuration files
-* Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-ui/config/local-example.json`
-* Create a new file at `/coinstac-server/config/local.json` and copy into it the contents of `/coinstac-server/config/default.json`
 
 ## Priming the database
 In the top level `coinstac` directory run `npm run devdata` to start and prime the database
