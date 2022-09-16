@@ -56,7 +56,7 @@ In the top level `coinstac` directory run `npm run devdata` to start and prime t
 
 ## Run the UI
 
-The user interface is an [Electron application](http://electron.atom.io/). To run it:
+The user interface is an Electron application. To run it:
 
 1. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
 2. In the top level directory run `npm run start` to run webpack, and the api services
