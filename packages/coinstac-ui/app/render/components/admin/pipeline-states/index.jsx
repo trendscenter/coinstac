@@ -1,36 +1,27 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { get } from 'lodash';
+import { useLazyQuery, useMutation } from '@apollo/client';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
 import { Button, Card } from '@material-ui/core';
-import { useLazyQuery, useMutation } from '@apollo/client';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
 import ReactJson from 'react-json-view';
-import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../state/graphql/functions';
+import { connect } from 'react-redux';
+import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../../state/graphql/functions';
 
-const styles = theme => ({
-  pageTitle: {
-    marginBottom: theme.spacing(2),
-  },
+const styles = () => ({
   pipelineCard: {
-    padding: '10px',
+    padding: 10,
   },
   controlsCard: {
-    padding: '10px',
+    padding: 10,
   },
   jsonContainer: {
-    paddingTop: '10px',
+    paddingTop: 10,
   },
 });
 
-const PipelineStates = (
-  {
-    classes, user,
-  },
-  { router }
-) => {
+const PipelineStates = ({ classes, user }, { router }) => {
   useEffect(() => {
     if (!get(user, 'permissions.roles.admin')) {
       router.push('/');
@@ -50,13 +41,7 @@ const PipelineStates = (
 
 
   return (
-    <div>
-      <div className="page-header">
-        <Typography variant="h4" className={classes.pageTitle}>
-          Pipeline States
-        </Typography>
-      </div>
-      <Divider />
+    <>
       <Card className={classes.controlsCard}>
         <Button onClick={getPipelines} variant="contained">
           Get Pipeline States
@@ -96,7 +81,7 @@ const PipelineStates = (
           );
         })
       }
-    </div>
+    </>
   );
 };
 
