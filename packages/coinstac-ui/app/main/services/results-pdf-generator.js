@@ -26,7 +26,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
   doc.fontSize(24).text('Local Stats', 10, 10);
 
   doc.fontSize(20).text(`Local stats - ${humanize(firstLocalStat)}`, 10, 60);
-  doc.image('/home/rochaeb/projects/local.jpg', {
+  doc.image(path.join(resultsPath, firstLocalStat), {
     fit: [400, 300],
     align: 'center',
     valign: 'center',
@@ -37,7 +37,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
       .addPage()
       .fontSize(20)
       .text(`Local stats - ${humanize(localStatImg)}`, 10, 60)
-      .image('/home/rochaeb/projects/local.jpg', {
+      .image(path.join(resultsPath, localStatImg), {
         fit: [400, 300],
         align: 'center',
         valign: 'center',
@@ -46,8 +46,8 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
 
   doc.fontSize(24).text('Global Stats', 10, 10);
 
-  doc.fontSize(20).text(`Global stats - ${humanize(firstGlobalStat)}`, 10, 60, {  });
-  doc.image('/home/rochaeb/projects/global.jpg', {
+  doc.fontSize(20).text(`Global stats - ${humanize(firstGlobalStat)}`, 10, 60);
+  doc.image(path.join(resultsPath, firstGlobalStat), {
     fit: [400, 300],
     align: 'center',
     valign: 'center',
@@ -58,7 +58,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
       .addPage()
       .fontSize(20)
       .text(`Global stats - ${humanize(globalStatImg)}`, 10, 60)
-      .image('/home/rochaeb/projects/global.jpg', {
+      .image(path.join(resultsPath, globalStatImg), {
         fit: [400, 300],
         align: 'center',
         valign: 'center',
