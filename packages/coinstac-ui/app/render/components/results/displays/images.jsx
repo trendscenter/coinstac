@@ -1,20 +1,17 @@
 /* eslint-disable react/no-find-dom-node, no-unused-vars */
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import { ipcRenderer } from 'electron';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import RasterizeHTML from 'rasterizehtml';
-import jsPDF from 'jspdf';
 import Box from '@material-ui/core/Box';
-// import Button from '@material-ui/core/Button';
-// import CircularProgress from '@material-ui/core/CircularProgress';
+import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { kebabCase } from 'lodash';
 import path from 'path';
 
-import { notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
+import { notifySuccess, notifyError } from '../../../state/ducks/notifyAndLog';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
@@ -60,65 +57,35 @@ class Images extends Component {
     return string;
   }
 
-  renderCanvas = async () => {
-    //
-    // old render code, remove?
-    //
-    // const { plotData } = this.props;
-    // const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
-
-    // const renderCanvasPromises = Object.entries(plotData.local_stats).map(async ([key]) => {
-    //   const canvasId = `local-canvas-${key}`;
-    //   const pageId = `page-${key}`;
-    //
-    //   const localCanvas = document.getElementById(canvasId);
-    //   const keyResults = document.getElementById(pageId);
-    //
-    //   return RasterizeHTML.drawHTML(keyResults.innerHTML, localCanvas);
-    // });
-
-    // await Promise.all(renderCanvasPromises);
-  }
-
-  componentDidMount = () => {
-    setTimeout(this.renderCanvas, 1000);
-  }
-
-  savePDF = () => {
+  savePDF = async () => {
     const {
-      plotData, title, writeLog, notifyError,
+      title, resultsPath, plotData, notifySuccess, notifyError,
     } = this.props;
+
+    const localItems = plotData && plotData.local_stats ? plotData.local_stats : [];
+    const globalItems = plotData && plotData.global_stats ? plotData.global_stats : [];
 
     this.setState({ generatingPdf: true });
 
-    const canvas = ReactDOM.findDOMNode(this.globalCanvas);
+    const directories = await ipcRenderer.invoke('open-dialog', { properties: ['openDirectory'] });
 
-    try {
-      canvas.getContext('2d');
-      // eslint-disable-next-line new-cap
-      const doc = new jsPDF({ compress: true });
-      const globalImg = canvas.toDataURL('image/jpg', 1.0);
-      const globalItems = Object.keys(plotData.global_stats).length;
-      const height = globalItems * 20;
+    if (directories && directories.length) {
+      try {
+        await ipcRenderer.invoke('generate-results-pdf', {
+          localData: localItems,
+          globalData: globalItems,
+          resultsPath,
+          title,
+          saveDirectory: directories[0],
+        });
 
-      doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
-
-      const allLocalCanvas = ReactDOM.findDOMNode(this.localCanvasWrapper).getElementsByClassName('canvas');
-
-      [].forEach.call(allLocalCanvas, (localCanvas) => {
-        const canvasImg = localCanvas.toDataURL('image/jpg', 1.0);
-
-        doc.addPage();
-        doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
-      });
-
-      doc.save(`${kebabCase(title)}.pdf`);
-    } catch (err) {
-      writeLog({ type: 'error', message: err });
-      notifyError(err.message);
-    } finally {
-      this.setState({ generatingPdf: false });
+        notifySuccess('PDF file successfully generated');
+      } catch (error) {
+        notifyError(error.message);
+      }
     }
+
+    this.setState({ generatingPdf: false });
   }
 
   render() {
@@ -158,24 +125,26 @@ class Images extends Component {
       <div>
         {globalItems && localItems && (
           <div>
-            {/* <Box textAlign="right">
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={this.savePDF}
-                disabled={generatingPdf}
-              >
-                Download as pdf
-                {generatingPdf && (
-                  <CircularProgress
-                    disableShrink
-                    color="secondary"
-                    size={20}
-                    className={classes.pdfLoading}
-                  />
-                )}
-              </Button>
-            </Box> */}
+            {!filesExist && (
+              <Box textAlign="right">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={this.savePDF}
+                  disabled={generatingPdf}
+                >
+                  Download as pdf
+                  {generatingPdf && (
+                    <CircularProgress
+                      disableShrink
+                      color="secondary"
+                      size={20}
+                      className={classes.pdfLoading}
+                    />
+                  )}
+                </Button>
+              </Box>
+            )}
             <Box py={2}>
               {plotData && plotData.local_stats && (
                 <Box>
@@ -234,8 +203,8 @@ Images.propTypes = {
   resultsPath: PropTypes.string,
   plotData: PropTypes.object,
   title: PropTypes.string.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
-  writeLog: PropTypes.func.isRequired,
 };
 
 Images.defaultProps = {
@@ -248,7 +217,7 @@ const mapStateToProps = ({ auth }) => ({
 
 const connectedComponent = connect(mapStateToProps, {
   notifyError,
-  writeLog,
+  notifySuccess,
 })(Images);
 
 export default withStyles(styles)(connectedComponent);

@@ -69,6 +69,7 @@ const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
+const { generateResultsPdf } = require('./services/results-pdf-generator');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -539,6 +540,22 @@ loadConfig()
       ipcMain.handle('suspend-pipeline', async (e, { runId }) => {
         try {
           return initializedCore.pipelineManager.suspendPipeline(runId);
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('main-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      ipcMain.handle('generate-results-pdf', async (e, {
+        title, globalData, localData, resultsPath, saveDirectory,
+      }) => {
+        try {
+          return generateResultsPdf(title, localData, globalData, resultsPath, saveDirectory);
         } catch (err) {
           logger.error(err);
           mainWindow.webContents.send('main-error', {

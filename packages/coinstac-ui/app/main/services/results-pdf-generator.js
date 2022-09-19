@@ -1,0 +1,72 @@
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const kebabCase = require('lodash/kebabCase');
+const path = require('path');
+
+function humanize(str) {
+  const frags = str.split('_');
+  for (let i = 0; i < frags.length; i += 1) {
+    frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
+  }
+  let string = frags.join(' ');
+  string = string.replace('Beta', 'β ');
+  return string;
+}
+
+function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDirectory) {
+  const doc = new PDFDocument();
+
+  doc.pipe(fs.createWriteStream(`${saveDirectory}/${kebabCase(title)}.pdf`));
+
+  const [firstLocalStat, ...restLocalStats] = localItems;
+  const [firstGlobalStat, ...restGlobalStats] = globalItems;
+
+  doc.font(path.resolve('fonts/Roboto-Regular.ttf')); // Embed font that support UTF-8 encoding
+
+  doc.fontSize(24).text('Local Stats', 10, 10);
+
+  doc.fontSize(20).text(`Local stats - ${humanize(firstLocalStat)}`, 10, 60);
+  doc.image('/home/rochaeb/projects/local.jpg', {
+    fit: [400, 300],
+    align: 'center',
+    valign: 'center',
+  });
+
+  restLocalStats.forEach((localStatImg) => {
+    doc
+      .addPage()
+      .fontSize(20)
+      .text(`Local stats - ${humanize(localStatImg)}`, 10, 60)
+      .image('/home/rochaeb/projects/local.jpg', {
+        fit: [400, 300],
+        align: 'center',
+        valign: 'center',
+      });
+  });
+
+  doc.fontSize(24).text('Global Stats', 10, 10);
+
+  doc.fontSize(20).text(`Global stats - ${humanize(firstGlobalStat)}`, 10, 60, {  });
+  doc.image('/home/rochaeb/projects/global.jpg', {
+    fit: [400, 300],
+    align: 'center',
+    valign: 'center',
+  });
+
+  restGlobalStats.forEach((globalStatImg) => {
+    doc
+      .addPage()
+      .fontSize(20)
+      .text(`Global stats - ${humanize(globalStatImg)}`, 10, 60)
+      .image('/home/rochaeb/projects/global.jpg', {
+        fit: [400, 300],
+        align: 'center',
+        valign: 'center',
+      });
+  });
+
+  return doc.end();
+}
+module.exports = {
+  generateResultsPdf,
+};
