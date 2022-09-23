@@ -89,7 +89,11 @@ const helperFunctions = {
     const db = database.getDbInstance();
     const result = await db.collection('users').insertOne(userDetails);
 
-    return result.ops[0];
+    const createdUser = transformToClient(result.ops[0]);
+
+    eventEmitter.emit(USER_CHANGED, createdUser);
+
+    return createdUser;
   },
   async updateUser(user) {
     const db = database.getDbInstance();

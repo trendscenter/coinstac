@@ -214,7 +214,7 @@ export const update = applyAsyncLoading(user => dispatch => axios.post(`${API_UR
       ...data.user,
       username: user.username,
       photo: user.photo,
-      hotoID: user.photoID,
+      photoID: user.photoID,
       name: user.name,
     };
     dispatch(setUser(userNew));

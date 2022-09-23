@@ -1,15 +1,12 @@
 import { graphql, withApollo } from '@apollo/react-hoc';
 import Checkbox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import IconButton from '@material-ui/core/IconButton';
 import { withStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import DeleteIcon from '@material-ui/icons/Delete';
-import { useMutation } from '@apollo/client';
 import { flowRight as compose, get } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
@@ -22,14 +19,12 @@ import {
   USER_CHANGED_SUBSCRIPTION,
   ADD_USER_ROLE_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
-  DELETE_USER_MUTATION,
 } from '../../../state/graphql/functions';
 import {
   getAllAndSubProp,
   userRolesProp,
 } from '../../../state/graphql/props';
 import { getGraphQLErrorMessage } from '../../../utils/helpers';
-import ListDeleteModal from '../../common/list-delete-modal';
 
 const styles = () => ({
   avatarWrapper: {
@@ -46,16 +41,11 @@ function Permission(props, context) {
     currentUser,
     users,
     classes,
-    notifyError,
     subscribeToUsers,
   } = props;
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
-  const [userToDelete, setUserToDelete] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-
-  const [deleteUser] = useMutation(DELETE_USER_MUTATION);
 
   useEffect(() => {
     const { router } = context;
@@ -109,16 +99,6 @@ function Permission(props, context) {
       });
   };
 
-  const handleDeleteUser = () => {
-    deleteUser({
-      variables: { userId: userToDelete.id },
-    }).then(() => {
-      setShowModal(false);
-    }).catch((e) => {
-      notifyError(e.message);
-    });
-  };
-
   return (
     <>
       <Table id="permission-table">
@@ -128,7 +108,6 @@ function Permission(props, context) {
             <TableCell>Email</TableCell>
             <TableCell>Admin</TableCell>
             <TableCell>Author</TableCell>
-            <TableCell>Delete</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -180,22 +159,11 @@ function Permission(props, context) {
                     />
                   )}
                 </TableCell>
-                <TableCell>
-                  <IconButton onClick={() => { setShowModal(true); setUserToDelete(user); }}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
-      <ListDeleteModal
-        close={() => { setShowModal(false); }}
-        deleteItem={handleDeleteUser}
-        itemName={`user: "${(userToDelete && userToDelete.username)}"`}
-        show={showModal}
-      />
     </>
   );
 }

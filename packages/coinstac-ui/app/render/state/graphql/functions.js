@@ -329,11 +329,6 @@ export const RUN_STARTED_SUBSCRIPTION = gql`
     ${queries.runStarted}
 `;
 
-export const DELETE_USER_MUTATION = gql`
-  mutation deleteUser($userId: ID!)
-  ${mutations.deleteUser}
-`;
-
 export const STOP_RUN_MUTATION = gql`
   mutation stopRun($runId: ID!)
   ${mutations.stopRun}
@@ -342,4 +337,14 @@ export const STOP_RUN_MUTATION = gql`
 export const DELETE_RUN_MUTATION = gql`
   mutation deleteRun($runId: ID!)
   ${mutations.deleteRun}
+`;
+
+export const SAVE_USER_MUTATION = gql`
+  mutation saveUser($userId: ID, $data: UserInput!)
+  ${mutations.saveUser}
+`;
+
+export const DELETE_USER_MUTATION = gql`
+  mutation deleteUser($userId: ID!)
+  ${mutations.deleteUser}
 `;
