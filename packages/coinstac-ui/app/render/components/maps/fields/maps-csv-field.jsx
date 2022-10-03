@@ -233,8 +233,10 @@ class MapsCsvField extends React.Component {
         return acc;
       }, {});
 
+      const mapColumns = map.map(elem => elem.column);
+
       this.setState(prevState => ({
-        remainingHeader: prevState.remainingHeader.filter(column => map.includes(column)),
+        remainingHeader: prevState.remainingHeader.filter(column => !mapColumns.includes(column)),
       }));
 
       onChange(fieldName, {
