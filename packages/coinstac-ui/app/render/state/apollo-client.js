@@ -85,6 +85,8 @@ function getApolloClient() {
   };
 }
 
+
+// partial solution from https://gist.github.com/tehpsalmist/d440b873c7465751dd829b5716d7ca81
 const useApolloClient = () => {
   // store the initial client in State
   const [client, setClient] = useState(null);
@@ -93,7 +95,7 @@ const useApolloClient = () => {
   // for dynamically updating State with a new client
   return [client, () => {
     const newClient = getApolloClient();
-    // lock the new client into State for use throughout the app!
+    // lock the new client into State for use throughout the app
     return setClient(newClient);
   }];
 };
