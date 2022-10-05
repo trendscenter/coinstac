@@ -20,6 +20,7 @@ function MapsEdit({
   const [dataMap, setDataMap] = useState({});
   const [alertMsg, setAlertMsg] = useState(null);
   const [error, setError] = useState(false);
+  const [excludedSubjects, setExcludedSubjects] = useState(null);
 
   useEffect(() => {
     const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -32,10 +33,12 @@ function MapsEdit({
       m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId
     );
 
+
     if (consortiumDataMap) {
+      setExcludedSubjects(consortiumDataMap.map[0].excludedSubjectsArray);
       setDataMap(consortiumDataMap.dataMap);
     }
-  }, []);
+  }, [maps]);
 
   function onChange(fieldName, fieldData) {
     if (fieldData.required && !fieldData.value && fieldData.value !== 0) {
@@ -90,13 +93,21 @@ function MapsEdit({
     <div>
       <div className="page-header">
         <Typography variant="h4">
-          { `Map - ${consortium && consortium.name}` }
+          {`Map - ${consortium && consortium.name}`}
         </Typography>
         {alertMsg && (
           <Alert variant="outlined" severity="warning">
             {alertMsg}
           </Alert>
         )}
+      </div>
+      <div>
+        <div>
+          Excluded Subjects
+        </div>
+        <pre>
+          {JSON.stringify(excludedSubjects, null, 4)}
+        </pre>
       </div>
       <MapsEditForm
         consortiumId={consortium && consortium.id}
@@ -128,12 +139,12 @@ const mapStateToProps = ({ auth, maps }) => ({
 const ComponentWithData = compose(
   graphql(
     UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
-      props: ({ mutate }) => ({
-        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
-          variables: { consortiumId, isMapped },
-        }),
+    props: ({ mutate }) => ({
+      updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+        variables: { consortiumId, isMapped },
       }),
-    }
+    }),
+  }
   ),
   withApollo
 )(MapsEdit);

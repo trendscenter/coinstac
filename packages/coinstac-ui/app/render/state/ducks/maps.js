@@ -86,9 +86,8 @@ export const saveDataMapping = applyAsyncLoading(
                 });
                 filesArray.push(subj);
               } catch (e) {
-                excludedSubjectsArray.push(subj);
+                excludedSubjectsArray.push({ subj, error: e.message });
               }
-
             });
 
             inputMap[inputMapKey].value = value;
