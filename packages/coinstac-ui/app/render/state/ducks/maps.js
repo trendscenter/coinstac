@@ -46,6 +46,7 @@ export const saveDataMapping = applyAsyncLoading(
       const filesArray = [];
       const directoryArray = [];
       const inputMap = {};
+      const excludedSubjects = [];
       let baseDirectory = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
@@ -68,7 +69,6 @@ export const saveDataMapping = applyAsyncLoading(
 
             Object.keys(csvData).forEach((subj) => {
               value[subj] = {};
-              filesArray.push(subj);
 
               inputMapVariables.forEach((mappedColumnName) => {
                 const covarType = inputMap[inputMapKey].value
@@ -78,8 +78,10 @@ export const saveDataMapping = applyAsyncLoading(
                   value[subj][mappedColumnName] = castData[covarType.type](
                     csvData[subj][csvColumn]
                   );
+                  filesArray.push(subj);
                 } catch (e) {
-                  throw new Error(`Issue converting column ${csvColumn}: ${e}`);
+                  // throw new Error(`Issue converting column ${csvColumn}: ${e}`);
+                  excludedSubjects.push(subj);
                 }
               });
             });
