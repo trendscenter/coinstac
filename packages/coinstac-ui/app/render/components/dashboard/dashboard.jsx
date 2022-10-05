@@ -234,18 +234,6 @@ function ConnectedDashboard(props) {
     };
   }, [apolloClient]);
 
-  // const apolloClient = useRef(null);
-  //
-  // useEffect(() => {
-  //   return () => {
-  //     if (!apolloClient.current) return;
-  //
-  //     apolloClient.current.client.stop();
-  //     apolloClient.current.wsLink.subscriptionClient.close();
-  //     apolloClient.current = null;
-  //   };
-  // }, []);
-
   return (apolloClient
     && (
     <ApolloProvider client={apolloClient.client}>
