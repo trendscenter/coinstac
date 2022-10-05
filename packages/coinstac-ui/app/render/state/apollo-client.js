@@ -42,7 +42,6 @@ function getApolloClient() {
     if (!e.networkError || e.networkError.statusCode !== 401) {
       return;
     }
-debugger
     ipcRenderer.send(EXPIRED_TOKEN);
   });
 
