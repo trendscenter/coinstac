@@ -17,7 +17,11 @@ const INITIAL_STATE = {
 const castData = {
   number: (d) => {
     try {
-      return parseFloat(d);
+      const n = parseFloat(d);
+      if (isNaN(n)) {
+        throw new Error('NaN');
+      }
+      return n;
     } catch (e) {
       throw new Error(`Could not convert ${d} to a number: ${e}`);
     }
