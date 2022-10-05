@@ -117,6 +117,30 @@ export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
       dispatch(setClientServerURL(url));
     });
 });
+export const refreshToken = async () => {
+  let token = localStorage.getItem(API_TOKEN_KEY);
+
+  if (!token || token === 'null' || token === 'undefined') {
+    return;
+  }
+  token = JSON.parse(token);
+
+  try {
+    const auth = await axios.post(
+      `${API_URL}/authenticateByToken`,
+      null,
+      { headers: { Authorization: `Bearer ${token.token}` } }
+    );
+    const user = { ...auth.data.user, label: auth.data.user.id };
+    const tokenData = {
+      token: auth.data.id_token,
+      userId: user.id,
+    };
+    localStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
+  } catch (err) {
+    console.error(err); // eslint-disable-line no-console
+  }
+};
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   let token = localStorage.getItem(API_TOKEN_KEY);
