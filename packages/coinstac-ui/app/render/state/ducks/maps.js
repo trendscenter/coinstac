@@ -86,7 +86,7 @@ export const saveDataMapping = applyAsyncLoading(
                 });
                 filesArray.push(subj);
               } catch (e) {
-                excludedSubjectsArray.push({ subj, error: e.message });
+                excludedSubjectsArray.push({ name: subj, error: e.message });
               }
             });
 

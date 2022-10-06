@@ -10,6 +10,7 @@ import { saveDataMapping } from '../../state/ducks/maps';
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
+import MapsExcludedSubjects from './fields/maps-excluded-subjects';
 
 function MapsEdit({
   params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers,
@@ -101,14 +102,7 @@ function MapsEdit({
           </Alert>
         )}
       </div>
-      <div>
-        <div>
-          Excluded Subjects
-        </div>
-        <pre>
-          {JSON.stringify(excludedSubjects, null, 4)}
-        </pre>
-      </div>
+      <MapsExcludedSubjects excludedSubjects={excludedSubjects} />
       <MapsEditForm
         consortiumId={consortium && consortium.id}
         pipeline={pipeline}
@@ -118,6 +112,7 @@ function MapsEdit({
         onSubmit={commitSaveDataMap}
         error={error}
       />
+
     </div>
   );
 }
