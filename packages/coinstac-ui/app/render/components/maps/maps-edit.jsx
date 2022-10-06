@@ -36,7 +36,10 @@ function MapsEdit({
 
 
     if (consortiumDataMap) {
-      setExcludedSubjects(consortiumDataMap.map[0].excludedSubjectsArray);
+      const excluded = consortiumDataMap.map.reduce((prev, curr) => {
+        return prev.concat(curr.excludedSubjectsArray);
+      }, []);
+      setExcludedSubjects(excluded);
       setDataMap(consortiumDataMap.dataMap);
     }
   }, [maps]);
