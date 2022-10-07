@@ -56,12 +56,16 @@ function MapsCsvFieldPipelineVariable({
   return (
     <div>
       <div className={classNames('drop-panel', classes.rootPaper)}>
-        <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
-          {name}
-        </Typography>
-        <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
-          {`(${dataType})`}
-        </Typography>
+        <div>
+          <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+            {name}
+          </Typography>
+          <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
+            {`${dataType}`}
+          </Typography>
+        </div>
+
+
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
             <div
