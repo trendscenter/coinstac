@@ -315,6 +315,7 @@ class MapsCsvField extends React.Component {
                         <MapsCsvFieldPipelineVariable
                           key={pipelineVariable.name}
                           name={pipelineVariable.name}
+                          dataType={pipelineVariable.type}
                           mappedColumn={fieldDataMap && fieldDataMap.maps[pipelineVariable.name]}
                           registerDraggableContainer={container => drake.containers.push(container)}
                           unmapField={

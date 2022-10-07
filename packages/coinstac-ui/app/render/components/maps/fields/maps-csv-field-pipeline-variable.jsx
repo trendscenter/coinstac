@@ -45,7 +45,7 @@ const styles = theme => ({
 });
 
 function MapsCsvFieldPipelineVariable({
-  name, mappedColumn, unmapField, registerDraggableContainer, classes,
+  name, mappedColumn, unmapField, registerDraggableContainer, classes, dataType,
 }) {
   const ref = useRef(null);
 
@@ -57,7 +57,10 @@ function MapsCsvFieldPipelineVariable({
     <div>
       <div className={classNames('drop-panel', classes.rootPaper)}>
         <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
-          { name }
+          {name}
+        </Typography>
+        <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
+          {`(${dataType})`}
         </Typography>
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
@@ -71,7 +74,7 @@ function MapsCsvFieldPipelineVariable({
               mappedColumn && (
                 <div className="card-draggable">
                   <FileCopyIcon className={classes.fileIcon} />
-                  { mappedColumn }
+                  {mappedColumn}
                   <IconButton
                     className={classes.closeButton}
                     onClick={() => unmapField(name, mappedColumn)}
@@ -95,6 +98,7 @@ MapsCsvFieldPipelineVariable.defaultProps = {
 MapsCsvFieldPipelineVariable.propTypes = {
   classes: PropTypes.object.isRequired,
   name: PropTypes.string.isRequired,
+  dataType: PropTypes.string.isRequired,
   mappedColumn: PropTypes.any,
   unmapField: PropTypes.func.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
