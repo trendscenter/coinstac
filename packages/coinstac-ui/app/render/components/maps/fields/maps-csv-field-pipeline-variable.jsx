@@ -64,8 +64,6 @@ function MapsCsvFieldPipelineVariable({
             {`${dataType}`}
           </Typography>
         </div>
-
-
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
             <div
