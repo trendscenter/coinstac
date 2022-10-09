@@ -72,10 +72,15 @@ const { checkForUpdates } = require('./utils/auto-update');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
-  const files = dirents.map((dirent) => {
-    const res = path.resolve(directory, dirent.name);
-    return dirent.isDirectory() ? getAllFilesInDirectory(res) : res;
-  });
+  const files = [];
+  for (let i = 0; i < dirents.length; i += 1) {
+    const res = path.resolve(directory, dirents[i].name);
+    if (dirents[i].isDirectory()) {
+      files.push(...await getAllFilesInDirectory(res));
+    } else {
+      files.push(res);
+    }
+  }
   return Array.prototype.concat(...files);
 };
 
@@ -232,7 +237,6 @@ loadConfig()
 
             if (await exists(outputDirectory)) {
               const allFiles = await getAllFilesInDirectory(outputDirectory);
-
               allFiles.forEach(async (file) => {
                 const relativePath = path.relative(outputDirectory, file);
                 const symlinkPath = path.join(runDirectory, relativePath);
