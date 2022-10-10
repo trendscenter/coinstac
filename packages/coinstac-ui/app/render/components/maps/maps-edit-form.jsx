@@ -63,32 +63,33 @@ function MapsEditForm({
 
   return (
     <form onSubmit={onSubmit}>
-      {dataCount > 0 && !error && (
-      <div className={classes.saveButtonContainer}>
-        {saved && (
-          <span className={classes.successMessage}>
-            Data map saved
-            <CheckCircleIcon className={classes.successIcon} />
-          </span>
-        )}
-        <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-        >
-          Save
-        </Button>
-        {saved && (
+      {dataCount > 0 && (
+        <div className={classes.saveButtonContainer}>
+          {saved && !error && (
+            <span className={classes.successMessage}>
+              Data map saved
+              <CheckCircleIcon className={classes.successIcon} />
+            </span>
+          )}
           <Button
-            className={classes.backButton}
             variant="contained"
             color="primary"
-            onClick={handleGoBackToConsortium}
+            type="submit"
+            disabled={error}
           >
-            Back to Consortium
+            Save
           </Button>
-        )}
-      </div>
+          {saved && !error && (
+            <Button
+              className={classes.backButton}
+              variant="contained"
+              color="primary"
+              onClick={handleGoBackToConsortium}
+            >
+              Back to Consortium
+            </Button>
+          )}
+        </div>
       )}
       <div>
         {

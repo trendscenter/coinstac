@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { graphql } from '@apollo/react-hoc';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
@@ -11,12 +10,6 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
-import {
-  SAVE_ACTIVE_PIPELINE_MUTATION,
-} from '../../state/graphql/functions';
-import {
-  consortiumSaveActivePipelineProp,
-} from '../../state/graphql/props';
 import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
@@ -49,17 +42,17 @@ const styles = theme => ({
 });
 
 function ConsortiumPipeline({
-  consortium, owner, classes, pipelines, isTutorialHidden, tutorialChange,
+  consortium,
+  owner,
+  classes,
+  pipelines,
+  isTutorialHidden,
+  tutorialChange,
   saveActivePipeline,
 }) {
-  const [activePipeline, setActivePipeline] = useState(null);
-
-  useEffect(() => {
-    if (!consortium || !consortium.activePipelineId) return;
-
-    const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-    setActivePipeline(activePipeline);
-  }, []);
+  const activePipeline = useMemo(() => {
+    return pipelines.find(p => p.id === consortium.activePipelineId);
+  }, [pipelines, consortium]);
 
   const [ownedPipelines, sharedPipelines] = useMemo(() => {
     const owned = pipelines.filter(p => p.owningConsortium === consortium.id);
@@ -88,14 +81,9 @@ function ConsortiumPipeline({
     setSharedPipelinesAnchorEl(null);
   }
 
-  const selectPipeline = pipelineId => async () => {
+  const selectPipeline = (pipelineId) => {
     closeOwnedPipelinesMenu();
-
-    await saveActivePipeline(consortium.id, pipelineId);
-
-    const activePipeline = pipelines.find(p => p.id === pipelineId);
-
-    setActivePipeline(activePipeline);
+    saveActivePipeline(pipelineId);
   };
 
   return (
@@ -144,7 +132,7 @@ function ConsortiumPipeline({
                 {ownedPipelines && ownedPipelines.map(pipe => (
                   <MenuItem
                     key={`owned-${pipe.id}`}
-                    onClick={selectPipeline(pipe.id)}
+                    onClick={() => selectPipeline(pipe.id)}
                   >
                     {pipe.name}
                   </MenuItem>
@@ -169,7 +157,7 @@ function ConsortiumPipeline({
                 {sharedPipelines && sharedPipelines.map(pipe => (
                   <MenuItem
                     key={`shared-${pipe.id}`}
-                    onClick={selectPipeline(pipe.id)}
+                    onClick={() => selectPipeline(pipe.id)}
                   >
                     {pipe.name}
                   </MenuItem>
@@ -213,7 +201,4 @@ ConsortiumPipeline.propTypes = {
   tutorialChange: PropTypes.func.isRequired,
 };
 
-// TODO: Move this to shared props?
-const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline'))(ConsortiumPipeline);
-
-export default withStyles(styles)(ConsortiumPipelineWithData);
+export default withStyles(styles)(ConsortiumPipeline);
