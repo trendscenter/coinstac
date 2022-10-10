@@ -4,7 +4,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 
@@ -20,11 +19,6 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  successIcon: {
-    width: 40,
-    height: 40,
-    color: '#43a047',
   },
 });
 
@@ -49,17 +43,10 @@ function MapsBooleanField({
     }
   }
 
-  function isMapped() {
-    if (fieldDataMap) {
-      return true;
-    }
-  }
-
   return (
     <div>
       <Typography variant="h6" className={classes.header}>
         {fieldDescription.label}
-        {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
       <Switch
         onChange={e => changeHandler(e)}

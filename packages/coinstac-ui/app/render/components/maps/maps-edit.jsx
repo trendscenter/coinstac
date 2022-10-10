@@ -19,7 +19,6 @@ function MapsEdit({
   const [pipeline, setPipeline] = useState(null);
   const [dataMap, setDataMap] = useState({});
   const [alertMsg, setAlertMsg] = useState(null);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
     const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -40,12 +39,10 @@ function MapsEdit({
   function onChange(fieldName, fieldData) {
     if (fieldData.required && !fieldData.value && fieldData.value !== 0) {
       setAlertMsg(`Please set value for ${fieldName}`);
-      setError(true);
     } else {
       setDataMap({ ...dataMap, [fieldName]: fieldData });
       setSaved(false);
       setAlertMsg(false);
-      setError(false);
     }
   }
 
@@ -69,7 +66,6 @@ function MapsEdit({
     if (undef.length > 0) {
       undef.forEach((item) => {
         setAlertMsg(`Please set value for ${item}`);
-        setError(true);
       });
     } else {
       try {
@@ -77,11 +73,9 @@ function MapsEdit({
         updateConsortiumMappedUsers(consortium.id, true);
         setSaved(true);
         setAlertMsg(false);
-        setError(false);
       } catch (error) {
         setSaved(false);
         setAlertMsg(`${error}`);
-        setError(true);
       }
     }
   }
@@ -92,12 +86,12 @@ function MapsEdit({
         <Typography variant="h4">
           { `Map - ${consortium && consortium.name}` }
         </Typography>
-        {alertMsg && (
-          <Alert variant="outlined" severity="warning">
-            {alertMsg}
-          </Alert>
-        )}
       </div>
+      {alertMsg && (
+        <Alert variant="outlined" severity="warning">
+          {alertMsg}
+        </Alert>
+      )}
       <MapsEditForm
         consortiumId={consortium && consortium.id}
         pipeline={pipeline}
@@ -105,7 +99,7 @@ function MapsEdit({
         saved={saved}
         onChange={onChange}
         onSubmit={commitSaveDataMap}
-        error={error}
+        error={Boolean(alertMsg)}
       />
     </div>
   );
