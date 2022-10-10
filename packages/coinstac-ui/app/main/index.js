@@ -387,7 +387,9 @@ loadConfig()
               'Pipeline started',
               `Pipeline ${pipelineName} started on consortia ${consortiumName}`
             );
-
+            const authRefresh = setInterval(() => {
+              mainWindow.webContents.send('refresh-token');
+            }, 7200000); // every two hours
             return initializedCore.startPipeline(
               null,
               consortium.id,
@@ -406,6 +408,7 @@ loadConfig()
 
                 // Listen for results
                 return result.then((results) => {
+                  clearInterval(authRefresh);
                   logger.verbose('########### Client pipeline done');
 
                   ipcFunctions.sendNotification(
@@ -428,6 +431,7 @@ loadConfig()
                     });
                 })
                   .catch((error) => {
+                    clearInterval(authRefresh);
                     logger.verbose('########### Client pipeline error');
                     logger.verbose(error.message);
 
@@ -457,6 +461,7 @@ loadConfig()
                   });
               })
               .catch((error) => {
+                clearInterval(authRefresh);
                 logger.verbose('############ Client pipeline error');
                 logger.verbose(error);
 

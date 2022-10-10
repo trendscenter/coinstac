@@ -5,6 +5,7 @@ import {
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
+import { useState } from 'react';
 
 import { API_TOKEN_KEY } from './ducks/auth';
 import { EXPIRED_TOKEN } from '../utils/error-codes';
@@ -20,12 +21,12 @@ function getAuthToken() {
   return JSON.parse(token);
 }
 
-function getApolloClient({ apiServer, subApiServer }) {
+function getApolloClient() {
+  const { apiServer, subApiServer } = window.config;
   const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
   const httpLink = new HttpLink({ uri: `${API_URL}/graphql` });
 
   const token = getAuthToken();
-
   const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}${subApiServer.port ? `:${subApiServer.port}` : ''}${subApiServer.pathname}`;
   const wsLink = new WebSocketLink({
     uri: `${SUB_URL}/graphql`,
@@ -41,7 +42,6 @@ function getApolloClient({ apiServer, subApiServer }) {
     if (!e.networkError || e.networkError.statusCode !== 401) {
       return;
     }
-
     ipcRenderer.send(EXPIRED_TOKEN);
   });
 
@@ -85,4 +85,20 @@ function getApolloClient({ apiServer, subApiServer }) {
   };
 }
 
-export default getApolloClient;
+
+// partial solution from https://gist.github.com/tehpsalmist/d440b873c7465751dd829b5716d7ca81
+const useApolloClient = () => {
+  // store the initial client in State
+  const [client, setClient] = useState(null);
+
+  // return the current client from State and a function
+  // for dynamically updating State with a new client
+  return [client, () => {
+    const newClient = getApolloClient();
+    // lock the new client into State for use throughout the app
+    return setClient(newClient);
+  }];
+};
+
+
+export default useApolloClient;
