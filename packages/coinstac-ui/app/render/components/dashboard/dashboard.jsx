@@ -91,7 +91,7 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
     ipcRenderer.on('main-error', (event, arg) => {
-      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error || arg}`));
+      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error.message || arg}`));
     });
   }, []);
 

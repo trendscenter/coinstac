@@ -12,6 +12,8 @@ files:
   - "!scripts"
   - "!test"
   - "!webpack.config.js"
+extraResources:
+  - "resources/**"
 mac:
   icon: img/icons/coinstac.icns
   target: dmg

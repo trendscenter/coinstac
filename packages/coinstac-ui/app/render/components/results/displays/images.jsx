@@ -125,7 +125,7 @@ class Images extends Component {
       <div>
         {globalItems && localItems && (
           <div>
-            {!filesExist && (
+            {filesExist && (
               <Box textAlign="right">
                 <Button
                   variant="contained"
@@ -205,6 +205,7 @@ Images.propTypes = {
   title: PropTypes.string.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
+  filesExist: PropTypes.bool.isRequired,
 };
 
 Images.defaultProps = {

@@ -2,6 +2,7 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const kebabCase = require('lodash/kebabCase');
 const path = require('path');
+const { app } = require('electron');
 
 function humanize(str) {
   const frags = str.split('_');
@@ -21,7 +22,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
   const [firstLocalStat, ...restLocalStats] = localItems;
   const [firstGlobalStat, ...restGlobalStats] = globalItems;
 
-  doc.font(path.resolve('fonts/Roboto-Regular.ttf')); // Embed font that support UTF-8 encoding
+  doc.font(path.join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'resources/fonts/Roboto-Regular.ttf')); // Embed font that support UTF-8 encoding
 
   doc.fontSize(24).text('Local Stats', 10, 10);
 
@@ -43,7 +44,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
         valign: 'center',
       });
   });
-
+  doc.addPage();
   doc.fontSize(24).text('Global Stats', 10, 10);
 
   doc.fontSize(20).text(`Global stats - ${humanize(firstGlobalStat)}`, 10, 60);

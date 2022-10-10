@@ -174,7 +174,7 @@ loadConfig()
             .catch((err) => {
               logger.error(err);
               mainWindow.webContents.send('main-error', {
-                err: {
+                error: {
                   message: err.message,
                   stack: err.stack,
                 },
