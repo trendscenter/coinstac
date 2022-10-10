@@ -17,7 +17,7 @@
     "eslint-plugin-react": "^7.11.1",
     "fs-extra": "^0.30.0",
     "github-markdown-css": "^2.10.0",
-    "lerna": "^2.8.0",
+    "lerna": "^5.6.2",
     "marked": "^4.0.10",
     "minami": "^1.2.3",
     "minimist": "^1.2.5",
