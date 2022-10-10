@@ -38,6 +38,19 @@ const styles = theme => ({
   value: {
     display: 'inline-block',
   },
+  actions: {
+    display: 'flex',
+    flexDirection: 'column',
+    rowGap: 8,
+  },
+  primaryAction: {
+    display: 'flex',
+    alignItems: 'center',
+    columnGap: 8,
+  },
+  button: {
+    width: 'fit-content',
+  },
 });
 
 const MapsListItem = ({
@@ -63,9 +76,10 @@ const MapsListItem = ({
       </Typography>
       <Typography className={classes.value}>{ pipeline.name }</Typography>
     </div>
-    <div className="list-item__actions">
-      <div className="list-item__actions-primary">
+    <div className={classes.actions}>
+      <div className={classes.primaryAction}>
         <Button
+          className={classes.button}
           variant="contained"
           color={needsDataMapping ? 'secondary' : 'primary'}
           component={Link}
@@ -74,25 +88,23 @@ const MapsListItem = ({
         >
           { needsDataMapping ? 'Map Data to Consortium' : 'Edit Mapped Data' }
         </Button>
-      </div>
-      {
-        canDelete && (
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={onDelete(consortium.id)}
-            name={`${consortium.name}-delete`}
-          >
-            Clear Mapping
-            <DeleteIcon />
-          </Button>
-        )
-      }
-      {
-        (!needsDataMapping || dataMapIsComplete)
+        { (!needsDataMapping || dataMapIsComplete)
           ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
           : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
-      }
+        }
+      </div>
+      { canDelete && (
+        <Button
+          className={classes.button}
+          variant="contained"
+          color="secondary"
+          onClick={onDelete(consortium.id)}
+          name={`${consortium.name}-delete`}
+        >
+          Clear Mapping
+          <DeleteIcon />
+        </Button>
+      ) }
     </div>
   </Paper>
 );

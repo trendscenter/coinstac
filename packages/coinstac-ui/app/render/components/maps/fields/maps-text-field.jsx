@@ -4,7 +4,6 @@ import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 
@@ -20,11 +19,6 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  successIcon: {
-    width: 30,
-    height: 30,
-    color: '#43a047',
   },
   required: {
     fontWeight: 'normal',
@@ -68,16 +62,10 @@ function MapsTextField({
     }
   }
 
-  function isMapped() {
-    // test
-    return !!fieldDataMap;
-  }
-
   return (
     <div>
       <Typography variant="h6" className={classes.header}>
         {fieldDescription.label}
-        {val && isMapped() && <CheckCircleIcon className={classes.successIcon} />}
         {fieldDescription.required ? (
           <span className={classes.required}>
               (Input Required)
