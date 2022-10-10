@@ -10,6 +10,7 @@ import { saveDataMapping } from '../../state/ducks/maps';
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
+import MapsExcludedSubjects from './fields/maps-excluded-subjects';
 
 function MapsEdit({
   params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers,
@@ -19,6 +20,7 @@ function MapsEdit({
   const [pipeline, setPipeline] = useState(null);
   const [dataMap, setDataMap] = useState({});
   const [alertMsg, setAlertMsg] = useState(null);
+  const [excludedSubjects, setExcludedSubjects] = useState(null);
 
   useEffect(() => {
     const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -31,10 +33,15 @@ function MapsEdit({
       m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId
     );
 
+
     if (consortiumDataMap) {
+      const excluded = consortiumDataMap.map.reduce((prev, curr) => {
+        return prev.concat(curr.excludedSubjectsArray);
+      }, []);
+      setExcludedSubjects(excluded);
       setDataMap(consortiumDataMap.dataMap);
     }
-  }, []);
+  }, [maps]);
 
   function onChange(fieldName, fieldData) {
     if (fieldData.required && !fieldData.value && fieldData.value !== 0) {
@@ -84,9 +91,10 @@ function MapsEdit({
     <div>
       <div className="page-header">
         <Typography variant="h4">
-          { `Map - ${consortium && consortium.name}` }
+          {`Map - ${consortium && consortium.name}`}
         </Typography>
       </div>
+      <MapsExcludedSubjects excludedSubjects={excludedSubjects} />
       {alertMsg && (
         <Alert variant="outlined" severity="warning">
           {alertMsg}
@@ -101,6 +109,7 @@ function MapsEdit({
         onSubmit={commitSaveDataMap}
         error={Boolean(alertMsg)}
       />
+
     </div>
   );
 }
@@ -122,12 +131,12 @@ const mapStateToProps = ({ auth, maps }) => ({
 const ComponentWithData = compose(
   graphql(
     UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
-      props: ({ mutate }) => ({
-        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
-          variables: { consortiumId, isMapped },
-        }),
+    props: ({ mutate }) => ({
+      updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+        variables: { consortiumId, isMapped },
       }),
-    }
+    }),
+  }
   ),
   withApollo
 )(MapsEdit);

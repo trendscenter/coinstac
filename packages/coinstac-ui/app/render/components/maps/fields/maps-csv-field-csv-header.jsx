@@ -30,7 +30,7 @@ class MapsCsvFieldCsvHeader extends React.Component {
         <Typography variant="h6">
           CSV Columns
         </Typography>
-        <div className="card-deck" ref={(ref) => { this.container = ref; }}>
+        <div className="card-deck" style={{ flexWrap: 'wrap' }} ref={(ref) => { this.container = ref; }}>
           {
             remainingHeader.map(columnName => (
               <div

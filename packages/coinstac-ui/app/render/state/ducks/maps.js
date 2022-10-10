@@ -17,7 +17,11 @@ const INITIAL_STATE = {
 const castData = {
   number: (d) => {
     try {
-      return parseFloat(d);
+      const n = parseFloat(d);
+      if (isNaN(n)) {
+        throw new Error('NaN');
+      }
+      return n;
     } catch (e) {
       throw new Error(`Could not convert ${d} to a number: ${e}`);
     }
@@ -46,6 +50,7 @@ export const saveDataMapping = applyAsyncLoading(
       const filesArray = [];
       const directoryArray = [];
       const inputMap = {};
+      const excludedSubjectsArray = [];
       let baseDirectory = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
@@ -68,20 +73,21 @@ export const saveDataMapping = applyAsyncLoading(
 
             Object.keys(csvData).forEach((subj) => {
               value[subj] = {};
-              filesArray.push(subj);
 
-              inputMapVariables.forEach((mappedColumnName) => {
-                const covarType = inputMap[inputMapKey].value
-                  .find(c => c.name === mappedColumnName);
-                const csvColumn = mappedData.maps[mappedColumnName];
-                try {
+              try {
+                inputMapVariables.forEach((mappedColumnName) => {
+                  const covarType = inputMap[inputMapKey].value
+                    .find(c => c.name === mappedColumnName);
+                  const csvColumn = mappedData.maps[mappedColumnName];
+
                   value[subj][mappedColumnName] = castData[covarType.type](
                     csvData[subj][csvColumn]
                   );
-                } catch (e) {
-                  throw new Error(`Issue converting column ${csvColumn}: ${e}`);
-                }
-              });
+                });
+                filesArray.push(subj);
+              } catch (e) {
+                excludedSubjectsArray.push({ name: subj, error: e.message });
+              }
             });
 
             inputMap[inputMapKey].value = value;
@@ -104,6 +110,7 @@ export const saveDataMapping = applyAsyncLoading(
 
       mapData.push({
         filesArray,
+        excludedSubjectsArray,
         directoryArray,
         baseDirectory,
         inputMap,
