@@ -2,6 +2,7 @@
   "freesurferROIs":
   [
     "All Interests",
+    "3rd-Ventricle",
     "4th-Ventricle",
     "5th-Ventricle",
     "Brain-Stem",
@@ -498,7 +499,9 @@
     "rh_supramarginal_thickness",
     "rh_supramarginal_volume",
     "rh_temporalpole_thickness",
-    "rh_temporalpole_volume"
+    "rh_temporalpole_volume",
+    "rh_transversetemporal_thickness",
+    "rh_transversetemporal_volume"
   ],
   "operations": [
     "Log",
