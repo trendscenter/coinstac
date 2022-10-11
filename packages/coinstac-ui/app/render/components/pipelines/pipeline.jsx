@@ -878,6 +878,7 @@ class Pipeline extends Component {
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Select
+                    id="select-vault-user"
                     value={selectedHeadlessMember}
                     placeholder="Select an user"
                     options={headlessClientsOptions}
@@ -887,6 +888,7 @@ class Pipeline extends Component {
                     name="members-input"
                   />
                   <Button
+                    id="add-vault-user"
                     className={classes.addMemberButton}
                     variant="contained"
                     color="secondary"
