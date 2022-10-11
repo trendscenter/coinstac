@@ -97,7 +97,6 @@ class Images extends Component {
     } = this.props;
     const { generatingPdf } = this.state;
 
-
     let globalItems;
     let localItems;
     let height = 0;
