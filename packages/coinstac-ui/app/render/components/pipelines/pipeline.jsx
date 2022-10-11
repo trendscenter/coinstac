@@ -231,19 +231,13 @@ class Pipeline extends Component {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { computations, availableHeadlessClients } = this.props;
-    const { orderedComputations, pipeline } = this.state;
+  componentDidUpdate(prevProps) {
+    const { computations } = this.props;
+    const { orderedComputations } = this.state;
 
     if (!orderedComputations || (!prevProps.computations && computations)
       || prevProps.computations.length !== computations.length) {
       this.sortComputations();
-    }
-
-    const computationsChanged = prevState.orderedComputations !== orderedComputations;
-    const headlessClientsChanged = prevProps.availableHeadlessClients !== availableHeadlessClients;
-    if (computationsChanged || headlessClientsChanged) {
-      this.filterAvailableComputations(pipeline.headlessMembers);
     }
   }
 
@@ -615,8 +609,6 @@ class Pipeline extends Component {
     this.updatePipeline({ param: 'headlessMembers', value: headlessMembers });
 
     this.setState({ selectedHeadlessMember: null });
-
-    this.filterAvailableComputations(headlessMembers);
   }
 
   removeHeadlessMember = headlessMemberId => () => {
@@ -629,21 +621,21 @@ class Pipeline extends Component {
     const { [headlessMemberId]: removedMember, ...remainingMembers } = pipeline.headlessMembers;
 
     this.updatePipeline({ param: 'headlessMembers', value: remainingMembers });
-    this.filterAvailableComputations(remainingMembers);
   }
 
-  filterAvailableComputations = (headlessMembers) => {
+  getAvailableComputations = () => {
     const { availableHeadlessClients } = this.props;
-    const { orderedComputations } = this.state;
+    const { orderedComputations, pipeline } = this.state;
 
     if (!orderedComputations) {
-      return;
+      return [];
     }
+
+    const { headlessMembers } = pipeline;
 
     if (!headlessMembers || Object.keys(headlessMembers).length === 0
       || !availableHeadlessClients) {
-      this.setState({ filteredComputations: [...orderedComputations] });
-      return;
+      return orderedComputations;
     }
 
     const cloudComputations = Object.keys(headlessMembers)
@@ -663,7 +655,7 @@ class Pipeline extends Component {
     const filteredComputations = orderedComputations
       .filter(comp => comp.id in cloudComputations);
 
-    this.setState({ filteredComputations });
+    return filteredComputations;
   }
 
   handleGoBackToConsortium = () => {
@@ -700,12 +692,13 @@ class Pipeline extends Component {
       showModal,
       savingStatus,
       selectedHeadlessMember,
-      filteredComputations,
     } = this.state;
     const isEditing = !!pipeline.id;
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
     const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients, pipeline);
+
+    const availableComputations = this.getAvailableComputations();
 
     return connectDropTarget(
       <div>
@@ -940,7 +933,7 @@ class Pipeline extends Component {
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}
             >
-              {filteredComputations && filteredComputations.map(comp => (
+              {availableComputations && availableComputations.map(comp => (
                 <MenuItem
                   key={comp.id}
                   onClick={() => this.addStep(comp)}
