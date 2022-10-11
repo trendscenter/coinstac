@@ -11,7 +11,7 @@ const term = require('terminal-kit').terminal;
 
 const pkg = require('../package.json');
 
-term.on('key', (name, matches, data) => {
+term.on('key', (name) => {
   if (name === 'CTRL_C') { process.exit(); }
 });
 
@@ -76,7 +76,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages, getContainerStats, getStats } = require('coinstac-manager'); // eslint-disable-line import/order
+const { pullImages, getStats } = require('coinstac-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -96,10 +96,10 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
     const simRun = await started;
 
     const rowKeys = [
-      'pipelineName',
-      'currentIteration',
+      'pipeline\nName',
+      'current\nIteration',
       'controllerState',
-      'pipelineStep',
+      'pipeline\nStep',
       'mode',
       'waitingOn',
       'containerId',
@@ -154,9 +154,9 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         waitingOn,
       } = data;
       return {
-        currentIteration,
+        'current\nIteration': currentIteration,
         controllerState,
-        pipelineStep: `${pipelineStep}/${totalSteps}`,
+        'pipeline\nStep': `${pipelineStep}/${totalSteps}`,
         mode,
         waitingOn,
       };
@@ -189,9 +189,11 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         const { name } = containerStatObject;
         // truncate this to the last 12 characters of the id
         const containerId = containerStatObject.id.substring(containerStatObject.id.length - 12);
-        const memUsageLimit = `${((containerStatObject.memory_stats.usage) / 1000000).toFixed(3)}MB/${(containerStatObject.memory_stats.limit / 1000000).toFixed(3)}MB`
+        const memUsageLimit = `${((containerStatObject.memory_stats.usage) / 1000000).toFixed(3)}MB/${(containerStatObject.memory_stats.limit / 1000000).toFixed(3)}MB`;
         // truncate this to a few decimal places
-        const memPercent = (containerStatObject.memory_stats.usage / containerStatObject.memory_stats.limit).toFixed(3);
+        const memPercent = (
+          containerStatObject.memory_stats.usage / containerStatObject.memory_stats.limit
+        ).toFixed(3);
 
         function getCpuPercent(containerStatObject) {
           const currentCpuUsage = containerStatObject.cpu_stats.cpu_usage.total_usage;
@@ -202,7 +204,13 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
           const systemDelta = systemUsage - preSystemUsage;
 
           try {
-            const cpuPercent = (cpuDelta / systemDelta) * containerStatObject.cpu_stats.cpu_usage.percpu_usage.length * 100.0;
+            // console.log('EEEEEEE2');
+            // console.log(containerStatObject);
+
+            const cpuPercent = (cpuDelta / systemDelta)
+              * (containerStatObject.cpu_stats.cpu_usage.percpu_usage
+                ? containerStatObject.cpu_stats.cpu_usage.percpu_usage.length
+                : containerStatObject.cpu_stats.online_cpus) * 100.0;
             // truncate this to a few decmial places
             return (cpuPercent).toFixed(3);
           } catch (e) {
@@ -225,7 +233,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
 
       const remotePipelineStats = await getStats('simulatorRun', 'remote');
       const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
-      writeValuesToRow(1, { pipelineName: `remote`, ...formattedRemotePipelineStats });
+      writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
 
       const localPipelineStatsPromises = [];
 
@@ -243,7 +251,7 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       });
 
       formattedLocalPipelinesStats.forEach((formattedContainerStat, index) => {
-        writeValuesToRow(index + 2, { pipelineName: `local${index}`, ...formattedContainerStat });
+        writeValuesToRow(index + 2, { 'pipeline\nName': `local${index}`, ...formattedContainerStat });
       });
     }, 1000);
 
@@ -336,7 +344,7 @@ const promptGenerateAndPreprocess = async () => {
     }
 
     term('Select a preprocessing computation: ');
-    pipelineSpec && term('\n\n*** Note: this will rename your current pipelineSpec and create a new one ***');
+    if (pipelineSpec) term('\n\n*** Note: this will rename your current pipelineSpec and create a new one ***');
     const selectComputationAnswer = await term.singleColumnMenu(
       computations.map((computation, index) => { return `${index}) ${computation.meta.id}`; }), {}
     ).promise;
@@ -392,7 +400,9 @@ const promptGenerateAndPreprocess = async () => {
     const baseInputSpec = JSON.parse(
       JSON.stringify(selectedComputation.computation.input)
     );
-    const fulfilledInputMap = createInputMap(baseInputSpec, csvs[covariatesFileAnswer.selectedIndex]);
+    const fulfilledInputMap = createInputMap(
+      baseInputSpec, csvs[covariatesFileAnswer.selectedIndex]
+    );
     const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
     if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
     fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
@@ -440,7 +450,9 @@ const promptGenerateAndPreprocess = async () => {
 
 const pipelineSpecFulfill = async () => {
   const compspec = JSON.parse(await readFile(program.compspec ? program.compspec : 'compspec.json'));
-  const inputSpec = JSON.parse(await readFile(program.inputspec ? program.inputspec : inputSpecPath));
+  const inputSpec = JSON.parse(
+    await readFile(program.inputspec ? program.inputspec : inputSpecPath)
+  );
   globalMode = compspec.computation.remote ? 'decentralized' : 'local';
   const mode = new Array(2).fill(globalMode);
 
@@ -516,7 +528,6 @@ const pipelineSpecFulfillPipelineOption = async () => {
 if (program.preprocess) {
   (async () => {
     try {
-      const x = await getContainerStats();
       await promptGenerateAndPreprocess();
       process.exit();
     } catch (error) {
