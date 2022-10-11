@@ -204,9 +204,6 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
           const systemDelta = systemUsage - preSystemUsage;
 
           try {
-            // console.log('EEEEEEE2');
-            // console.log(containerStatObject);
-
             const cpuPercent = (cpuDelta / systemDelta)
               * (containerStatObject.cpu_stats.cpu_usage.percpu_usage
                 ? containerStatObject.cpu_stats.cpu_usage.percpu_usage.length
