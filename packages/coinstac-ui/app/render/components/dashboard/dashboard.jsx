@@ -13,8 +13,8 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
-import getApolloClient from '../../state/apollo-client';
-import { togglePipelineTutorial, pipelineTutorialChange } from '../../state/ducks/auth';
+import useApolloClient from '../../state/apollo-client';
+import { togglePipelineTutorial, pipelineTutorialChange, refreshToken } from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
@@ -91,7 +91,7 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
     ipcRenderer.on('main-error', (event, arg) => {
-      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error || arg}`));
+      dispatch(notifyError(`Unexpected error: ${arg.message || arg.error.message || arg}`));
     });
   }, []);
 
@@ -212,31 +212,36 @@ Dashboard.propTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const { apiServer, subApiServer } = window.config;
-
 function ConnectedDashboard(props) {
-  const apolloClient = useRef(null);
+  const [apolloClient, setApolloClient] = useApolloClient();
 
   useEffect(() => {
+    ipcRenderer.on('refresh-token', () => {
+      refreshToken();
+      apolloClient.client.stop();
+      apolloClient.wsLink.subscriptionClient.close();
+      setApolloClient();
+    });
+    // client is initialy null, get a new client w the proper token
+    if (!apolloClient) {
+      setApolloClient();
+    }
     return () => {
-      if (!apolloClient.current) return;
-
-      apolloClient.current.client.stop();
-      apolloClient.current.wsLink.subscriptionClient.close();
-      apolloClient.current = null;
+      ipcRenderer.removeAllListeners('refresh-token');
+      if (!apolloClient) return;
+      apolloClient.client.stop();
+      apolloClient.wsLink.subscriptionClient.close();
     };
-  }, []);
+  }, [apolloClient]);
 
-  if (!apolloClient.current) {
-    apolloClient.current = getApolloClient({ apiServer, subApiServer });
-  }
-
-  return (
-    <ApolloProvider client={apolloClient.current.client}>
-      <ApolloHOCProvider client={apolloClient.current.client}>
+  return (apolloClient
+    && (
+    <ApolloProvider client={apolloClient.client}>
+      <ApolloHOCProvider client={apolloClient.client}>
         <Dashboard {...props} />
       </ApolloHOCProvider>
     </ApolloProvider>
+    )
   );
 }
 

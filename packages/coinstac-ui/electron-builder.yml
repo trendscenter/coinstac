@@ -12,6 +12,8 @@ files:
   - "!scripts"
   - "!test"
   - "!webpack.config.js"
+extraResources:
+  - "resources/**"
 mac:
   icon: img/icons/coinstac.icns
   target: dmg
@@ -32,5 +34,5 @@ nsis:
 linux:
   target: AppImage
   category: Science
-  artifactName: COINSTAC-${version}-linux.zip
+  artifactName: COINSTAC-${version}-linux.AppImage
   icon: img/icons/coinstac.png

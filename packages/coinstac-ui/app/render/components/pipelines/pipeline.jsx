@@ -232,7 +232,7 @@ class Pipeline extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { computations } = this.props;
+    const { computations, availableHeadlessClients } = this.props;
     const { orderedComputations, pipeline } = this.state;
 
     if (!orderedComputations || (!prevProps.computations && computations)
@@ -240,11 +240,10 @@ class Pipeline extends Component {
       this.sortComputations();
     }
 
-    if (orderedComputations) {
-      if (!prevState.orderedComputations
-        || prevState.orderedComputations.length !== orderedComputations.length) {
-        this.filterAvailableComputations(pipeline.headlessMembers);
-      }
+    const computationsChanged = prevState.orderedComputations !== orderedComputations;
+    const headlessClientsChanged = prevProps.availableHeadlessClients !== availableHeadlessClients;
+    if (computationsChanged || headlessClientsChanged) {
+      this.filterAvailableComputations(pipeline.headlessMembers);
     }
   }
 
@@ -637,7 +636,12 @@ class Pipeline extends Component {
     const { availableHeadlessClients } = this.props;
     const { orderedComputations } = this.state;
 
-    if (!headlessMembers || Object.keys(headlessMembers).length === 0) {
+    if (!orderedComputations) {
+      return;
+    }
+
+    if (!headlessMembers || Object.keys(headlessMembers).length === 0
+      || !availableHeadlessClients) {
       this.setState({ filteredComputations: [...orderedComputations] });
       return;
     }
@@ -647,9 +651,11 @@ class Pipeline extends Component {
         const headlessClientConfig = availableHeadlessClients
           .find(client => client.id === headlessMemberId);
 
-        Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
-          cloudComputations[compId] = true;
-        });
+        if (headlessClientConfig) {
+          Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
+            cloudComputations[compId] = true;
+          });
+        }
 
         return cloudComputations;
       }, {});

@@ -160,7 +160,8 @@ class Result extends Component {
       classes,
       auth: { appDirectory, user },
       notifyError,
-      notifySuccess, } = this.props;
+      notifySuccess,
+    } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let { displayTypes } = this.state;
     let stepsLength = -1;
@@ -183,7 +184,6 @@ class Result extends Component {
 
     const selectedDisplayType = run && run.results
       && displayTypes && displayTypes[selectedTabIndex];
-
     return (
       <div>
         <Paper className={classes.paper}>
@@ -248,7 +248,7 @@ class Result extends Component {
                   const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
                   const clientId = user.id;
                   const { apiServer } = window.config;
-                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}`;
+                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}/${apiServer.pathname}${apiServer.port ? `:${apiServer.port}` : ''}`;
                   this.setState({ downloading: true });
                   try {
                     await ipcRenderer.invoke('download-run-assets', {

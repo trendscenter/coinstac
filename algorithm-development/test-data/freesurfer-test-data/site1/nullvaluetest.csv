@@ -1,0 +1,10 @@
+freesurferfile,isControl,age,test1,test2,test3
+subject0_aseg_stats.txt,False,22.0,123456,789789,6874
+subject1_aseg_stats.txt,True,47.0,123456,789789,6874
+subject2_aseg_stats.txt,False,56.0,123456,789789,6874
+subject3_aseg_stats.txt,True,73.0,,789789,6874
+subject4_aseg_stats.txt,False,58.0,123456,789789,6874
+subject5_aseg_stats.txt,False,67.0,,789789,6874
+subject6_aseg_stats.txt,False,40.0,,789789,6874
+subject7_aseg_stats.txt,True,25.0,123456,789789,6874
+subject8_aseg_stats.txt,True,51.0,123456,4,6874

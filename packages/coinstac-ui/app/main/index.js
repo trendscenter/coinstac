@@ -69,13 +69,19 @@ const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
+const { generateResultsPdf } = require('./services/results-pdf-generator');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
-  const files = dirents.map((dirent) => {
-    const res = path.resolve(directory, dirent.name);
-    return dirent.isDirectory() ? getAllFilesInDirectory(res) : res;
-  });
+  const files = [];
+  for (let i = 0; i < dirents.length; i += 1) {
+    const res = path.resolve(directory, dirents[i].name);
+    if (dirents[i].isDirectory()) {
+      files.push(...await getAllFilesInDirectory(res));
+    } else {
+      files.push(res);
+    }
+  }
   return Array.prototype.concat(...files);
 };
 
@@ -168,7 +174,7 @@ loadConfig()
             .catch((err) => {
               logger.error(err);
               mainWindow.webContents.send('main-error', {
-                err: {
+                error: {
                   message: err.message,
                   stack: err.stack,
                 },
@@ -232,7 +238,6 @@ loadConfig()
 
             if (await exists(outputDirectory)) {
               const allFiles = await getAllFilesInDirectory(outputDirectory);
-
               allFiles.forEach(async (file) => {
                 const relativePath = path.relative(outputDirectory, file);
                 const symlinkPath = path.join(runDirectory, relativePath);
@@ -383,7 +388,9 @@ loadConfig()
               'Pipeline started',
               `Pipeline ${pipelineName} started on consortia ${consortiumName}`
             );
-
+            const authRefresh = setInterval(() => {
+              mainWindow.webContents.send('refresh-token');
+            }, 7200000); // every two hours
             return initializedCore.startPipeline(
               null,
               consortium.id,
@@ -402,6 +409,7 @@ loadConfig()
 
                 // Listen for results
                 return result.then((results) => {
+                  clearInterval(authRefresh);
                   logger.verbose('########### Client pipeline done');
 
                   ipcFunctions.sendNotification(
@@ -424,6 +432,7 @@ loadConfig()
                     });
                 })
                   .catch((error) => {
+                    clearInterval(authRefresh);
                     logger.verbose('########### Client pipeline error');
                     logger.verbose(error.message);
 
@@ -453,6 +462,7 @@ loadConfig()
                   });
               })
               .catch((error) => {
+                clearInterval(authRefresh);
                 logger.verbose('############ Client pipeline error');
                 logger.verbose(error);
 
@@ -539,6 +549,22 @@ loadConfig()
       ipcMain.handle('suspend-pipeline', async (e, { runId }) => {
         try {
           return initializedCore.pipelineManager.suspendPipeline(runId);
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('main-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      ipcMain.handle('generate-results-pdf', async (e, {
+        title, globalData, localData, resultsPath, saveDirectory,
+      }) => {
+        try {
+          return generateResultsPdf(title, localData, globalData, resultsPath, saveDirectory);
         } catch (err) {
           logger.error(err);
           mainWindow.webContents.send('main-error', {
@@ -733,52 +759,55 @@ loadConfig()
         const formData = new FormData();
         formData.append('runId', runId);
         // axios post to the url
+        try {
+          const response = await axios.post(
+            `${apiServerUrl}/downloadFiles`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                ...formData.getHeaders(),
 
-        const response = await axios.post(
-          `${apiServerUrl}/downloadFiles`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-              ...formData.getHeaders(),
-
-            },
-            responseType: 'stream',
-          }
-        );
-
-        // stream to the correct output directory
-        await new Promise((resolve, reject) => {
-          response.data.pipe(writer);
-          let error = null;
-          writer.on('error', (err) => {
-            error = err;
-            writer.close();
-            reject(err);
-          });
-          writer.on('close', () => {
-            if (!error) {
-              resolve(true);
+              },
+              responseType: 'stream',
             }
-          });
-        });
+          );
 
-        // extract the tar
-        const readStream = fs.createReadStream(outputFilePath);
-        const writeStream = tar.extract(runOutputDirectory);
-        readStream.pipe(gunzip()).pipe(writeStream);
-
-        await new Promise((resolve, reject) => {
-          writeStream.on('finish', () => {
-            logger.verbose('writeStream finished');
-            resolve();
-          });
-          readStream.on('error',
-            (e) => {
-              reject(e);
+          // stream to the correct output directory
+          await new Promise((resolve, reject) => {
+            response.data.pipe(writer);
+            let error = null;
+            writer.on('error', (err) => {
+              error = err;
+              writer.close();
+              reject(err);
             });
-        });
+            writer.on('close', () => {
+              if (!error) {
+                resolve(true);
+              }
+            });
+          });
 
+          // extract the tar
+          const readStream = fs.createReadStream(outputFilePath);
+          const writeStream = tar.extract(runOutputDirectory);
+          readStream.pipe(gunzip()).pipe(writeStream);
+
+          await new Promise((resolve, reject) => {
+            writeStream.on('finish', () => {
+              logger.verbose('writeStream finished');
+              resolve();
+            });
+            readStream.on('error',
+              (e) => {
+                reject(e);
+              });
+          });
+        } catch (e) {
+          await fs.promises.unlink(outputFilePath);
+          throw e;
+        }
         // delete the tar.gz
         await fs.promises.unlink(outputFilePath);
 

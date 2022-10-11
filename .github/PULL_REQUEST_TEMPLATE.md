@@ -2,6 +2,7 @@
 
 * **Please check if the PR fulfills these requirements**
 - [] The commit message follows our [guidelines](../CONTRIBUTING.md)
+- [] If your PR contains DB doc changes have you made an API migration and a localDB migration if necessary?
 - [] Have you checked to ensure there aren't other open [Pull Requests](../../../pulls) for the same update/change?
 - [] Tests for the changes have been added (for bug fixes / features)
 - [] Passes e2e testing
@@ -9,21 +10,13 @@
 - [] Docs have been added / updated if necessary (for bug fixes / features)
 
 
-* **What kind of change does this PR introduce?** (Bug fix, feature, docs update, ...)
+* **What kind of change does this PR introduce?**
 
 
 
-* **What is the current behavior?** (You can also link to an open issue here)
+* **What is the current behavior?** 
 closes _issue #_
 
 
 
-* **What is the new behavior (if this is a feature change)?**
-
-
-
-* **Does this PR introduce a breaking change?** (What changes might users need to make in their application due to this PR?)
-
-
-
-* **Other information**:
+* **Does this PR introduce a breaking change?**
