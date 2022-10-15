@@ -122,7 +122,11 @@ module.exports = {
           utils.logger.silly(`Returning service access function for ${serviceId}`);
           const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
           const serviceFunction = ServiceFunctionGenerator({ host, port, version });
-          return { service: serviceFunction, container };
+
+          return {
+            service: serviceFunction,
+            container,
+          };
         });
     };
     return tryStartService();
@@ -151,5 +155,12 @@ module.exports = {
     } else {
       return docker.pull(id, cb);
     }
+  },
+  getContainerStats: async () => {
+    const containers = await docker.listContainers();
+    const result = Promise.all(containers.map((container) => {
+      return docker.getContainer(container.Id).stats({ id: container.id, stream: false });
+    }));
+    return result;
   },
 };
