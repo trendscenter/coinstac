@@ -84,6 +84,7 @@ const getStatus = (provider = 'docker') => {
  * Retrieve Docker status
  * @return {Object} Docker stats object
  */
+<<<<<<< Updated upstream
 const getStats = async (runId, userId) => {
   if (!services[`${runId}-${userId}`]) {
     return null;
@@ -91,6 +92,10 @@ const getStats = async (runId, userId) => {
   await services[`${runId}-${userId}`].service;
   return services[`${runId}-${userId}`].container.stats({ stream: false });
   // return services[`${runId}-${userId}`].getStats();
+=======
+const getStats = (runId, userId) => {
+  return services[`${runId}-${userId}`].getStats();
+>>>>>>> Stashed changes
 };
 
 /**

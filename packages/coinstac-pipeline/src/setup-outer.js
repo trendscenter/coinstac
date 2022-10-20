@@ -311,7 +311,7 @@ async function setupOuter({
   }
 
 
-  async function mqqttSetup() {
+  async function mqttSetup() {
     let clientInit = false;
     logger.silly('Starting local pipeline manager');
     const getMqttConn = () => {
@@ -442,6 +442,7 @@ async function setupOuter({
 
           break;
         case `${mqttSubChannel}${clientId}-register`:
+          if (data.error) throw new Error(data.error.message);
           if (activePipelines[data.runId]) {
             if (activePipelines[data.runId].registered) break;
             activePipelines[data.runId].registered = true;
@@ -462,7 +463,7 @@ async function setupOuter({
   }
 
 
-  mqttClient = await mqqttSetup();
+  mqttClient = await mqttSetup();
 
   return {
     mqttClient,
