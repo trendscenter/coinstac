@@ -108,34 +108,36 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       'memPercent',
       'cpuPercent',
     ];
-    const document = term.createDocument({
-      palette: new termkit.Palette(),
-    });
-
-    const textTable = new termkit.TextTable({
-      parent: document,
-      cellContents: [
-        rowKeys,
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', '', '', '', ''],
-      ],
-      contentHasMarkup: true,
-      fit: true,
-      borderAttr: { color: 'blue' },
-      selectable: 'cell',
-      autoWidth: 1,
-      autoHeight: 1,
-    });
-
+    let textTable;
+    if (!DEBUG_MODE) {
+      const document = term.createDocument({
+        palette: new termkit.Palette(),
+      });
+      textTable = new termkit.TextTable({
+        parent: document,
+        cellContents: [
+          rowKeys,
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+        ],
+        contentHasMarkup: true,
+        fit: true,
+        borderAttr: { color: 'blue' },
+        selectable: 'cell',
+        autoWidth: 1,
+        autoHeight: 1,
+      });
+    }
     const writeValuesToRow = (rowNumber, valuesToWrite) => {
+      if (DEBUG_MODE) return;
       Object.keys(valuesToWrite).forEach((rowKey) => {
         textTable.setCellContent(rowKeys.indexOf(rowKey), rowNumber, valuesToWrite[rowKey]);
       });
