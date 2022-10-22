@@ -9,7 +9,7 @@ from os.path import splitext
 
 setup(
     name='coinstac',
-    version='0.3.3',
+    version='0.3.3b',
     description='Python utility library for coinstac',
     url='https://github.com/trendscenter/coinstac/coinstac-utilities/coinstac-python',
     author='Ross Kelly',

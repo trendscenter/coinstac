@@ -18,7 +18,7 @@ const castData = {
   number: (d) => {
     try {
       const n = parseFloat(d);
-      if (isNaN(n)) {
+      if (isNaN(n)) { // eslint-disable-line no-restricted-globals
         throw new Error('NaN');
       }
       return n;
@@ -40,7 +40,10 @@ const castData = {
       throw new Error(`Could not convert ${d} to a boolean: ${e}`);
     }
   },
-  string: d => d,
+  string: (d) => {
+    if (d !== '') return d;
+    throw new Error('Invalid empty string');
+  },
 };
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {

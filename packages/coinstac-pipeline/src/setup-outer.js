@@ -268,7 +268,7 @@ async function setupOuter({
                   publishData('run', {
                     id: clientId,
                     runId: pipeline.id,
-                    error: { message: message.message, error: message.error, stack: message.stack },
+                    error: { message: e.message, error: e.error, stack: e.stack },
                     debug: { sent: Date.now() },
                   }, 1);
                 });
@@ -302,7 +302,7 @@ async function setupOuter({
           publishData('run', {
             id: clientId,
             runId: pipeline.id,
-            error: e,
+            error: { error: e.error, message: e.message, stack: e.stack },
             debug: { sent: Date.now() },
           }, 1);
           throw e;
@@ -419,7 +419,7 @@ async function setupOuter({
               publishData('run', {
                 id: clientId,
                 runId: data.runId,
-                error: { stack: error.stack, message: error.message },
+                error: { error: error.error, stack: error.stack, message: error.message },
               }, 1);
               activePipelines[data.runId].remote.reject(error);
             } else {

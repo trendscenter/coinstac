@@ -18,6 +18,7 @@ def _run(local, remote):
 
         if msg['mode'] == 'remote':
             try:
+                print('### remote data: ', msg['data'])
                 start = _dt.now()
                 output = await _asyncio.get_event_loop().run_in_executor(None, remote, msg['data'])
                 print('Remote exec time:', (_dt.now() - start).total_seconds())
@@ -30,6 +31,7 @@ def _run(local, remote):
 
         elif msg['mode'] == 'local':
             try:
+                print('### Local data: ', msg['data'])
                 start = _dt.now()
                 output = await _asyncio.get_event_loop().run_in_executor(None, local, msg['data'])
                 print('Local exec time:', (_dt.now() - start).total_seconds())

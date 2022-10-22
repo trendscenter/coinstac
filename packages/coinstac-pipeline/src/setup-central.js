@@ -84,7 +84,6 @@ async function setupCentral({
     const message = store.getAndRemove(pipeline.id, clientId);
     if (message instanceof Error) {
       const runError = Object.assign(
-        message,
         {
           error: `Pipeline error from central node\n Error details: ${message.error}`,
           message: `Pipeline error from central node\n Error details: ${message.message}`,
@@ -187,10 +186,11 @@ async function setupCentral({
           );
         }).catch((e) => {
           logger.error(e);
+
           clientPublish('run', {
             id: clientId,
             runId: pipeline.id,
-            error: `Error from central node ${e}`,
+            error: { message: `Error from central node ${e}`, error: `Error from central node ${e}`, stack: e.stack },
             debug: { sent: Date.now() },
           });
         });
