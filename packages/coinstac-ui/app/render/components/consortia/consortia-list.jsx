@@ -195,7 +195,7 @@ class ConsortiaList extends Component {
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
         >
-          { pipeline ? pipeline.name : 'None' }
+          {pipeline ? pipeline.name : 'None'}
         </Typography>
       </div>
     );
@@ -224,7 +224,7 @@ class ConsortiaList extends Component {
           width={40}
           ready={
             usersOnlineStatus[user.id] && pipeline
-            && (!needsDataMapping || (consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1)) // eslint-disable-line max-len
+            && ((consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1)) // eslint-disable-line max-len
           }
         />
       ));
