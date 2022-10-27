@@ -320,7 +320,10 @@ async function setupCentral({
               remoteClients[id]
             );
           } else {
-            if (!remoteClients[id]) return mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ error: { message: 'no such run' } }));
+            if (!remoteClients[id]) {
+              logger.silly(`Supposed clientID: ${id} for client list: ${JSON.stringify(remoteClients, null, 2)}`);
+              return mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ error: { message: 'no such run' } }));
+            }
             remoteClients[id].state = 'registered';
             mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ runId }));
             logger.silly(`MQTT registered: ${id}`);
