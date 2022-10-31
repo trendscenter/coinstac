@@ -1,7 +1,6 @@
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import crypto from 'crypto';
 import axios from 'axios';
 import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
 import { update } from '../../state/ducks/auth';
@@ -109,25 +108,25 @@ class UserAccountController extends Component {
 
   // *********** Delete Cloudinary Image File ******************** //
   async destroyImage(file) {
-    const date = new Date();
-    const timestamp = date.getTime();
-    const hash = crypto.createHash('sha1');
-    const sign = hash.update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
-
-    const fd = new FormData();
-    fd.append('public_id', file);
-    fd.append('api_key', CLOUDINARY_API_KEY);
-    fd.append('timestamp', timestamp);
-    fd.append('signature', sign);
-
-    try {
-      await axios.post(
-        CLOUDINARY_DELETE_URL,
-        fd
-      );
-    } catch (error) {
-      this.handleUpdateError(error);
-    }
+    // const date = new Date();
+    // const timestamp = date.getTime();
+    // const hash = crypto.createHash('sha1');
+    // const sign = hash.update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
+    //
+    // const fd = new FormData();
+    // fd.append('public_id', file);
+    // fd.append('api_key', CLOUDINARY_API_KEY);
+    // fd.append('timestamp', timestamp);
+    // fd.append('signature', sign);
+    //
+    // try {
+    //   await axios.post(
+    //     CLOUDINARY_DELETE_URL,
+    //     fd
+    //   );
+    // } catch (error) {
+    //   this.handleUpdateError(error);
+    // }
   }
 
   // *********** Upload file to Cloudinary ******************** //
