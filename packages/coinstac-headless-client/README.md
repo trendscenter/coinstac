@@ -68,3 +68,18 @@ export MQTT_WS_SERVER_PATHNAME=""
 export MQTT_WS_SERVER_PORT=9001
 export MQTT_WS_SERVER_PROTOCOL="ws:"
 ```
+A config file is needed for each site the headless client is server
+```
+[
+  {
+    "id":"8de09890908a0980e9",
+    "name": "Vault 1",
+    "apiKey": "098908d-d089-d980-09e8-908e098b9e"
+  },
+  {
+    "id": "87ac879e878979ae98798",
+    "name": "Vault 2",
+    "apiKey": "3c3e33ec-a655-a5656-876a-765a7657a"
+  },
+]
+```
