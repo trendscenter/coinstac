@@ -41,7 +41,7 @@ const castData = {
     }
   },
   string: (d) => {
-    if (d !== '') return d;
+    if (d !== '') return d.toString();
     throw new Error('Invalid empty string');
   },
 };
