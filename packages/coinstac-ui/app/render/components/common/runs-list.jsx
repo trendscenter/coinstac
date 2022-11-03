@@ -17,13 +17,15 @@ const RunsList = ({
       {runs.map((run) => {
         const consortium = consortia.find(con => con.id === run.consortiumId);
 
+        if (!consortium) {
+          return null;
+        }
+
         return (
           <RunItem
             key={`${run.id}-list-item`}
             runObject={run}
-            consortiumName={
-              consortium && consortium.name ? consortium.name : ''
-            }
+            consortium={consortium}
             stopPipeline={stopPipeline(run.id)}
             suspendPipeline={suspendPipeline(run.id)}
             resumePipeline={resumePipeline(run)}
