@@ -39,7 +39,7 @@
     "timeout": "20s"
   },
   "devDependencies": {
-    "ava": "^3.8.1",
+    "ava": "^4.3.3",
     "cross-env": "^7.0.2",
     "graphql-tag": "^2.10.3",
     "nyc": "^15.1.0",
