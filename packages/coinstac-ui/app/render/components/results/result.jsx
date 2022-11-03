@@ -421,7 +421,9 @@ class Result extends Component {
           run && run.error
           && (
             <Paper className={classNames(classes.paper, classes.error)}>
-              {JSON.stringify(run.error.message, null, 2)}
+              {run.error.message}
+              <br />
+              {run.error.stack}
             </Paper>
           )
         }

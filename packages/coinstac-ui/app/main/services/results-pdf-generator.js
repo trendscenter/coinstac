@@ -34,15 +34,17 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
   });
 
   restLocalStats.forEach((localStatImg) => {
-    doc
-      .addPage()
-      .fontSize(20)
-      .text(`Local stats - ${humanize(localStatImg)}`, 10, 60)
-      .image(path.join(resultsPath, localStatImg), {
-        fit: [400, 300],
-        align: 'center',
-        valign: 'center',
-      });
+    if (fs.statSync(path.join(resultsPath, localStatImg), { throwIfNoEntry: false })) {
+      doc
+        .addPage()
+        .fontSize(20)
+        .text(`Local stats - ${humanize(localStatImg)}`, 10, 60)
+        .image(path.join(resultsPath, localStatImg), {
+          fit: [400, 300],
+          align: 'center',
+          valign: 'center',
+        });
+    }
   });
   doc.addPage();
   doc.fontSize(24).text('Global Stats', 10, 10);
