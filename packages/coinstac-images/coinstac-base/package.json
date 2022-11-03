@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "ava": "^3.6.0",
+    "ava": "^5.0.1",
     "get-stdin": "^6.0.0",
     "nyc": "^14.1.1",
     "request-stream": "^1.2.2",
