@@ -29,6 +29,7 @@ const styles = theme => ({
   labelInline: {
     fontWeight: 'bold',
     marginRight: theme.spacing(1),
+    
     display: 'inline-block',
   },
   value: {
@@ -78,7 +79,7 @@ const MapsListItem = ({
         </>
       ) : (
         <Typography className={classes.labelInline}>
-          No active pipelines
+          No active pipeline
         </Typography>
       ) }
     </div>
