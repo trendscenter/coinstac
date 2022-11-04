@@ -30,10 +30,23 @@ class MapsList extends Component {
       maps,
     } = this.props;
 
+    if (!isUserInGroup(auth.user.id, consortium.members)) {
+      return null;
+    }
+
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
 
-    if (!pipeline || !isUserInGroup(auth.user.id, consortium.members)) {
-      return null;
+    if (!pipeline) {
+      return (
+        <Grid item xs={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
+          <MapsListItem
+            consortium={consortium}
+            canDelete={false}
+            dataMapIsComplete={false}
+            needsDataMapping={false}
+          />
+        </Grid>
+      );
     }
 
     const hasDataMapping = maps.findIndex(m => m.consortiumId === consortium.id
@@ -45,7 +58,7 @@ class MapsList extends Component {
     const needsDataMapping = !hasDataMapping && pipelineNeedsDataMapping(pipeline);
 
     return (
-      <Grid item xs={12} sm={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
+      <Grid item xs={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
         <MapsListItem
           consortium={consortium}
           pipeline={pipeline}
