@@ -338,6 +338,7 @@ class Result extends Component {
                     resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name} `}
+                    user={user}
                   />
                 )
               }
