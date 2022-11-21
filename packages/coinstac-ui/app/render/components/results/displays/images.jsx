@@ -59,10 +59,11 @@ class Images extends Component {
 
   savePDF = async () => {
     const {
-      title, resultsPath, plotData, notifySuccess, notifyError,
+      title, resultsPath, plotData, notifySuccess, notifyError, user,
     } = this.props;
 
-    const localItems = plotData && plotData.local_stats ? plotData.local_stats : [];
+    const localItems = plotData && plotData.local_stats
+      && plotData.local_stats[user.id] ? plotData.local_stats[user.id] : [];
     const globalItems = plotData && plotData.global_stats ? plotData.global_stats : [];
 
     this.setState({ generatingPdf: true });
@@ -94,6 +95,7 @@ class Images extends Component {
       plotData,
       classes,
       filesExist,
+      user,
     } = this.props;
     const { generatingPdf } = this.state;
 
@@ -109,7 +111,7 @@ class Images extends Component {
       height = globalItems * 180;
 
       // eslint-disable-next-line no-unused-vars
-      Object.entries(plotData.local_stats).forEach(([key, value]) => {
+      Object.entries(plotData.local_stats[user.id]).forEach(([key, value]) => {
         localCanvas.push(
           <canvas
             id={`local-canvas-${key}`}
@@ -146,10 +148,10 @@ class Images extends Component {
               </Box>
             )}
             <Box py={2}>
-              {plotData && plotData.local_stats && (
+              {plotData && plotData.local_stats && plotData.local_stats[user.id] && (
                 <Box>
                   <Typography variant="h4">Local stats</Typography>
-                  {plotData.local_stats.map(localStatImg => (
+                  {plotData.local_stats[user.id].map(localStatImg => (
                     <Box paddingY={1}>
                       <Typography variant="h5">{`Local stats - ${this.humanize(localStatImg)}`}</Typography>
                       <img
@@ -206,6 +208,7 @@ Images.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   filesExist: PropTypes.bool.isRequired,
+  user: PropTypes.object.isRequired,
 };
 
 Images.defaultProps = {
