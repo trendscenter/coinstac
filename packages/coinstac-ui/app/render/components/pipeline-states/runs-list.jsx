@@ -9,22 +9,20 @@ const RunsList = ({
 }) => (
   <div>
     {runs && runs.map((run) => {
-      const consortium = consortia.filter(con => con.id === run.consortiumId)[0];
+      const consortium = consortia.find(con => con.id === run.consortiumId);
 
-      if (consortium) {
-        return (
-          <RunItem
-            key={`${run.id}-list-item`}
-            runObject={run}
-            consortiumName={
-              consortium && consortium.name ? consortium.name : ''
-            }
-            stopPipeline={stopPipeline(run.pipelineSnapshot.id, run.id)}
-          />
-        );
+      if (!consortium) {
+        return null;
       }
 
-      return null;
+      return (
+        <RunItem
+          key={`${run.id}-list-item`}
+          runObject={run}
+          consortium={consortium}
+          stopPipeline={stopPipeline(run.pipelineSnapshot.id, run.id)}
+        />
+      );
     })}
   </div>
 );
