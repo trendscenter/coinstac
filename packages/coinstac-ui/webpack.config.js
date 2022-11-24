@@ -109,7 +109,6 @@ const config = {
     publicPath: '../../build/render/',
   },
   plugins: [
-    new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.DefinePlugin({
       'process.env.CLOUDINARY_UPLOAD_PRESET': JSON.stringify(process.env.CLOUDINARY_UPLOAD_PRESET),
@@ -131,8 +130,7 @@ if (process.env.NODE_ENV === 'development') {
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(
-    new webpack.HotModuleReplacementPlugin(),
-    new webpack.NamedModulesPlugin()
+    new webpack.HotModuleReplacementPlugin()
   );
 
   /**

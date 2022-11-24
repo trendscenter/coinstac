@@ -1,5 +1,4 @@
 import axios from 'axios';
-import crypto from 'crypto';
 import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
@@ -9,8 +8,10 @@ import { clearUserState, loadUserState } from './statePersist';
 
 const { apiServer } = window.config;
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
-
-export const API_TOKEN_KEY = `id_token_${crypto.randomBytes(16).toString('base64')}`;
+const byteArray = new Uint8Array(16);
+window.crypto.getRandomValues(byteArray);
+const base64String = btoa(String.fromCharCode(...new Uint8Array(byteArray)));
+export const API_TOKEN_KEY = `id_token_${base64String}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
