@@ -23,7 +23,7 @@
     "convict": "^6.2.1",
     "core-js": "^3.19.1",
     "csv-reader": "^1.0.6",
-    "d3": "^4.13.0",
+    "d3": "^7.6.1",
     "deep-parse-json": "^1.0.1",
     "electron-default-menu": "^1.0.1",
     "electron-store": "^8.0.1",
