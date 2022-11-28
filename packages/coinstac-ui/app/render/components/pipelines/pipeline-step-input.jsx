@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -460,13 +459,11 @@ class PipelineStepInput extends Component {
           }
         </div>
         <div className={classes.pipelineStepActions}>
-          <Button
-            id={`input-source-${objKey}-dropdown`}
-            disabled={!owner || !objParams.type || isValue}
-            onClick={this.openInputSourceMenu}
-          >
-            {(!isValue && !isFromCache) ? 'Data Source' : (sourceDropDownLabel || 'Owner Defined Value')}
-          </Button>
+          {(isValue || isFromCache) && (
+            <Typography variant="subtitle1" color="textSecondary">
+              {(sourceDropDownLabel || 'Owner Defined Value')}
+            </Typography>
+          )}
           <Menu
             anchorEl={this.inputSourceButtonElement}
             open={openInputSourceMenu}
