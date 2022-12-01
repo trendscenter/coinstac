@@ -1,3 +1,6 @@
+---
+sidebar_position: 1
+---
 # Setting up a Coinstac Development Environment
 
 These instructions explain how to get COINSTAC up and running on your machine for development or to run your own COINSTAC system:

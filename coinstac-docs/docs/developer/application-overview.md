@@ -1,6 +1,8 @@
+---
+sidebar_position: 2
+---
+
 # Application overview
-
-
 # Main components and their packages
 
 ## GUI
