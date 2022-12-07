@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Suspense } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
@@ -15,8 +15,6 @@ import classNames from 'classnames';
 import moment from 'moment';
 import { ipcRenderer, shell } from 'electron';
 import path from 'path';
-import Box from './displays/box-plot';
-import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
 import Images from './displays/images';
 import String from './displays/string';
@@ -24,6 +22,9 @@ import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
 import { API_TOKEN_KEY } from '../../state/ducks/auth';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+
+const Box = React.lazy(() => import('./displays/box-plot'));
+const Scatter = React.lazy(() => import('./displays/scatter-plot'));
 
 const styles = theme => ({
   paper: {
@@ -299,11 +300,19 @@ class Result extends Component {
               }
               {
                 selectedDisplayType.type === 'box_plot'
-                && <Box plotData={plotData.testData} />
+                && (
+                <Suspense fallback={<span>Loading...</span>}>
+                  <Box plotData={plotData.testData} />
+                </Suspense>
+                )
               }
               {
                 selectedDisplayType.type === 'scatter_plot'
-                && <Scatter plotData={plotData.testData} />
+                && (
+                <Suspense fallback={<span>Loading...</span>}>
+                  <Scatter plotData={plotData.testData} />
+                </Suspense>
+                )
               }
               {
                 selectedDisplayType.type === 'table'
