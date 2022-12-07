@@ -111,16 +111,18 @@ class Images extends Component {
       height = globalItems * 180;
 
       // eslint-disable-next-line no-unused-vars
-      Object.entries(plotData.local_stats[user.id]).forEach(([key, value]) => {
-        localCanvas.push(
-          <canvas
-            id={`local-canvas-${key}`}
-            className="canvas"
-            width="1600"
-            height={height}
-          />
-        );
-      });
+      if (plotData.local_stats[user.id]) {
+        Object.entries(plotData.local_stats[user.id]).forEach(([key, value]) => {
+          localCanvas.push(
+            <canvas
+              id={`local-canvas-${key}`}
+              className="canvas"
+              width="1600"
+              height={height}
+            />
+          );
+        });
+      }
     }
 
     return (

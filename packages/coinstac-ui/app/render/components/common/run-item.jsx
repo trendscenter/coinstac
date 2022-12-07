@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { compose } from 'redux';
@@ -20,6 +20,7 @@ import TimeAgo from './time-ago';
 import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
 import { deleteRun } from '../../state/ducks/runs';
 import ListDeleteModal from './list-delete-modal';
+import { isUserInGroup } from '../../utils/helpers';
 
 const styles = theme => ({
   rootPaper: {
@@ -143,8 +144,16 @@ function getStateWell(runObject, classes) {
 }
 
 function RunItem(props) {
+  const {
+    user, consortium, runObject, classes,
+  } = props;
+
   const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
+
+  const isOwner = useMemo(() => {
+    return isUserInGroup(user.id, consortium.owners);
+  }, [user, consortium]);
 
   const handleStopPipeline = () => {
     const { stopPipeline } = props;
@@ -162,7 +171,7 @@ function RunItem(props) {
   };
 
   const handleOpenResult = () => {
-    const { runObject, appDirectory, user } = props;
+    const { runObject, appDirectory } = props;
     const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
 
     shell.openPath(resultDir);
@@ -179,10 +188,6 @@ function RunItem(props) {
   };
 
   const {
-    consortiumName, runObject, classes,
-  } = props;
-
-  const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
     clients, pipelineSnapshot, results, error,
   } = runObject;
@@ -195,7 +200,7 @@ function RunItem(props) {
     >
       <div className={classes.titleContainer}>
         <Typography variant="h5">
-          {consortiumName}
+          {consortium.name}
           {
             pipelineSnapshot
             && <span>{` | ${pipelineSnapshot.name}`}</span>
@@ -361,16 +366,18 @@ function RunItem(props) {
           status === 'started' && (localPipelineState || remotePipelineState)
           && (
             <React.Fragment>
-              <StatusButtonWrapper>
-                <Button
-                  variant="contained"
-                  component={Link}
-                  className={classes.button}
-                  onClick={handleStopPipeline}
-                >
-                  Stop Pipeline
-                </Button>
-              </StatusButtonWrapper>
+              {isOwner && (
+                <StatusButtonWrapper>
+                  <Button
+                    variant="contained"
+                    component={Link}
+                    className={classes.button}
+                    onClick={handleStopPipeline}
+                  >
+                    Stop Pipeline
+                  </Button>
+                </StatusButtonWrapper>
+              )}
               <Button
                 variant="contained"
                 component={Link}
@@ -423,7 +430,7 @@ RunItem.defaultProps = {
 RunItem.propTypes = {
   appDirectory: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
-  consortiumName: PropTypes.string.isRequired,
+  consortium: PropTypes.object.isRequired,
   runObject: PropTypes.object.isRequired,
   user: PropTypes.object.isRequired,
   stopPipeline: PropTypes.func,

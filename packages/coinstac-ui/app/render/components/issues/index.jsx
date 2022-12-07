@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose, trim } from 'lodash';
 import axios from 'axios';
-import crypto from 'crypto';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
@@ -250,28 +249,28 @@ class Issue extends Component {
       });
   }
 
-  removeImage = (imageId) => {
-    const date = new Date();
-    const timestamp = date.getTime();
-    const hash = crypto.createHash('sha1');
-    const sign = hash.update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
-
-    const fd = new FormData();
-    fd.append('public_id', imageId);
-    fd.append('api_key', CLOUDINARY_API_KEY);
-    fd.append('timestamp', timestamp);
-    fd.append('signature', sign);
-
-    axios.post(CLOUDINARY_DELETE_URL, fd)
-      .then(() => {
-        const { screenshots } = this.state;
-        this.setState({
-          screenshots: screenshots.filter(screenshot => screenshot.imageId !== imageId),
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+  removeImage = async (imageId) => {
+    // const date = new Date();
+    // const timestamp = date.getTime();
+    // const hash = crypto.createHash('sha1');
+    // const sign = hash.update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
+    //
+    // const fd = new FormData();
+    // fd.append('public_id', imageId);
+    // fd.append('api_key', CLOUDINARY_API_KEY);
+    // fd.append('timestamp', timestamp);
+    // fd.append('signature', sign);
+    //
+    // axios.post(CLOUDINARY_DELETE_URL, fd)
+    //   .then(() => {
+    //     const { screenshots } = this.state;
+    //     this.setState({
+    //       screenshots: screenshots.filter(screenshot => screenshot.imageId !== imageId),
+    //     });
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
   }
 
   render() {
@@ -361,7 +360,7 @@ class Issue extends Component {
                 <img className={classes.imagePreviewImg} src={screenshot.imageUrl} alt="user" />
                 <button
                   className={classes.imagePreviewDeleteButton}
-                  onClick={() => this.removeImage(screenshot.imageId)}
+                  onClick={async () => this.removeImage(screenshot.imageId)}
                   type="button"
                 >
                   <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
