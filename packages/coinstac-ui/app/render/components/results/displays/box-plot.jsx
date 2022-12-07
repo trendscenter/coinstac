@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-// import * as d3 from 'd3';
 import ReactFauxDOM from 'react-faux-dom';
 
 export default () => import('d3').then((d3) => {
