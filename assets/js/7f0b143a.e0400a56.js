@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkcoinstac_docs=self.webpackChunkcoinstac_docs||[]).push([[643],{3769:s=>{s.exports=JSON.parse('{"name":"docusaurus-plugin-content-docs","id":"default"}')}}]);
