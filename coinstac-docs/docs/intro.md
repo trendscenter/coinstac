@@ -14,9 +14,9 @@ Let's do research!
 
 Depending on how you plan to use COINSTAC you'll be looking for documentation in a few places:
 
-- [End User/Researcher docs](./tutorial-basics)
+- [End User/Researcher docs](/category/researcher-end-user-documentation)
   Documentation for users of the COINSTAC application. Contains useful tutorials on how to create consortia, create pipelines, run analyses, etc.
-- [Computation Author docs](./tutorial-basics)
+- [Computation Author docs](/category/computation-author-documentation)
   Tutorials for creating computations and the api documentation for the computation spec for designing a UI interface for your computation.
-- [Developer/Contributor docs](./tutorial-basics)
+- [Developer/Contributor docs](/category/developer-documentation)
   Getting started documentation for developers and contributors to COINSTAC.
