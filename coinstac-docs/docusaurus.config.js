@@ -9,7 +9,7 @@ const config = {
   title: 'Coinstac',
   tagline: 'Decentralized Analysis Made Easy',
   url: 'https://trenscenter.github.io',
-  baseUrl: '/',
+  baseUrl: '/coinstac',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
