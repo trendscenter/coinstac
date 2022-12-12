@@ -11,8 +11,9 @@ Install Docker https://www.docker.com/
 
 # Using COINSTAC
 - Launch the COINSTAC application
-- Create a user
+## Create a user
 
+## Log in
 
 ## Create a consortium
 
@@ -26,3 +27,5 @@ Install Docker https://www.docker.com/
 ## Map data
 
 ## Run a pipeline
+
+## View results
