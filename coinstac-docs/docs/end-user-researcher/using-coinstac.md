@@ -1,7 +1,5 @@
 # Using COINSTAC
 - Launch the COINSTAC application
-## Create a user
-
 ## Log in
 ![image](https://user-images.githubusercontent.com/7193853/207142269-9455fd80-1d6b-433c-8887-283e002f1bcc.png)
 
@@ -17,12 +15,11 @@
 ![image](https://user-images.githubusercontent.com/7193853/207143322-1073a1b2-f96b-45b8-a378-329d27ac6962.png)
 ![image](https://user-images.githubusercontent.com/7193853/207143404-4bf8f41d-5282-4969-9b57-e34a2c85fde2.png)
 
+### Add owning consortium 
+![image](https://user-images.githubusercontent.com/7193853/207143665-f17e4525-5d36-4081-b0c5-b8bfea6720a4.png)
 ### Add computation step
 ![image](https://user-images.githubusercontent.com/7193853/207143489-c259ea81-7d5c-46b9-af19-88ae99bd10a0.png)
 ![image](https://user-images.githubusercontent.com/7193853/207143595-93f15a08-8306-4606-a530-a2c8bdeb1dcc.png)
-
-### Add owning consortium 
-![image](https://user-images.githubusercontent.com/7193853/207143665-f17e4525-5d36-4081-b0c5-b8bfea6720a4.png)
 
 ### Specify inputs
 ![image](https://user-images.githubusercontent.com/7193853/207143714-234b1472-b8d2-41da-9873-6c386ad59181.png)
@@ -40,7 +37,6 @@
 ![image](https://user-images.githubusercontent.com/7193853/207144021-8ea4ecfc-1cbc-40ad-b0e6-04e29a30d9dd.png)
 ![image](https://user-images.githubusercontent.com/7193853/207144041-085cdabf-bb76-4bf4-bb34-55230142345b.png)
 ![image](https://user-images.githubusercontent.com/7193853/207144057-b4883954-1dd3-46dc-ba57-e1994822d378.png)
-
 
 ## Run a pipeline
 ![image](https://user-images.githubusercontent.com/7193853/207144083-389ac0bc-d86f-4de6-824f-67d0b6406b52.png)
