@@ -336,6 +336,21 @@ class ConsortiaList extends Component {
           </Menu>
         </Fragment>
       );
+    } else if (owner && consortium.activePipelineId) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-unset-active-pipeline-button`}
+          component={Link}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          onClick={event => this.handleUnsetActivePipelineOnConsortium(
+            event, consortium
+          )}
+        >
+          Unset Active Pipeline
+        </Button>
+      );
     } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
@@ -407,6 +422,11 @@ class ConsortiaList extends Component {
     } else {
       this.openConsortiumPipelinesMenu(event, consortium.id);
     }
+  }
+
+  handleUnsetActivePipelineOnConsortium = (event, consortium) => {
+    const { saveActivePipeline } = this.props;
+    saveActivePipeline(consortium.id, null);
   }
 
   closeConsortiumPipelinesMenu = () => {

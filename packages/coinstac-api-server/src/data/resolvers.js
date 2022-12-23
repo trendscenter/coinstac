@@ -1010,12 +1010,12 @@ const resolvers = {
 
       const updateObj = {
         $set: {
-          activePipelineId: ObjectID(args.activePipelineId),
+          activePipelineId: args.activePipelineId ? ObjectID(args.activePipelineId) : null,
           mappedForRun: []
         }
       };
 
-      if (pipeline.headlessMembers) {
+      if (pipeline && pipeline.headlessMembers) {
         // Sets only the vault users as the default active members
         updateObj.$set.activeMembers = {
           ...pipeline.headlessMembers
