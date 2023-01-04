@@ -8,8 +8,8 @@ The headless client allows a static dataset(s) to be made available to the large
  * [Docker](https://docs.docker.com/engine/install/)
 
 ### Installation
- * to install `npm i -g coinstac-headless-client`
- * to run `coinstac-headless-client`
+ * to install `npm i -g coinstac-vault-client`
+ * to run `coinstac-vault-client`
 
 ### Application Requirements
  * The headless client will need access to docker, best done by adding the user running the client to the `docker` group
