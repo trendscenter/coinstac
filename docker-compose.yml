@@ -24,7 +24,7 @@ services:
       - 'api'
       - 'server'
       - 'mqtt'
-    image: coinstacteam/coinstac-ui:ci
+    image: coinstacteam/coinstac-desktop-app:ci
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - local-volume:/root/.coinstac

@@ -8,8 +8,8 @@ The headless client allows a static dataset(s) to be made available to the large
  * [Docker](https://docs.docker.com/engine/install/)
 
 ### Installation
- * to install `npm i -g coinstac-headless-client`
- * to run `coinstac-headless-client`
+ * to install `npm i -g coinstac-vault-client`
+ * to run `coinstac-vault-client`
 
 ### Application Requirements
  * The headless client will need access to docker, best done by adding the user running the client to the `docker` group
@@ -21,7 +21,7 @@ The headless client allows a static dataset(s) to be made available to the large
 How the headless client is run will be system dependent, we recommend Upstart for systems that have that
 available
 
-To run the client you'll need to set the following environment variables. These will either reference a self managed COINSTAC system, or the TReNDs system found [here](../coinstac-ui/config/local-production.json).
+To run the client you'll need to set the following environment variables. These will either reference a self managed COINSTAC system, or the TReNDs system found [here](../coinstac-desktop-app/config/local-production.json).
 
 If running in the TReNDs system, contact the TReNDs team for an application username, api key, and to setup computation specific whitelists and compspec locations.
 
