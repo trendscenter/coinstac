@@ -1,5 +1,5 @@
 # Papers and Presentations
-[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-client/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
+[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-app/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 Below is a list of papers related to COINSTAC.
 
