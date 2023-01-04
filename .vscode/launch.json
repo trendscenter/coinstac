@@ -13,8 +13,8 @@
             "request": "launch",
             "protocol": "inspector",
             "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "${workspaceRoot}/packages/coinstac-desktop-client/node_modules/.bin/electron",
-            "program": "${workspaceRoot}/packages/coinstac-desktop-client/",
+            "runtimeExecutable": "${workspaceRoot}/packages/coinstac-desktop-app/node_modules/.bin/electron",
+            "program": "${workspaceRoot}/packages/coinstac-desktop-app/",
             "env": {
                 "COINS_ENV": "development",
                 "NODE_ENV": "development"

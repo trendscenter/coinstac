@@ -141,7 +141,7 @@ Reusable pieces of COINSTAC shared by both the client and server.
 ### [coinstac-client-core](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-client-core)
 
 * **Uses:** [coinstac-common](#coinstac-common)
-* **Used by:** [coinstac-desktop-client](#coinstac-desktop-client)
+* **Used by:** [coinstac-desktop-app](#coinstac-desktop-app)
 
 Core library for running local computations on a client.
 
@@ -162,7 +162,7 @@ Core library for running remote computations on a server. It has two modes:
 
 Authentication plugin for [hapi](http://hapijs.com/) server. This ensures COINSTAC’s CouchDB databases are secure.
 
-### [coinstac-desktop-client](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-desktop-client)
+### [coinstac-desktop-app](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-desktop-app)
 
 * **Uses:** [coinstac-client-core](#coinstac-client-core)
 * **Used by:**

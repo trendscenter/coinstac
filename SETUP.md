@@ -60,7 +60,7 @@ The user interface is an Electron application. To run it:
 
 1. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
 2. In the top level directory run `npm run start` to run webpack, and the api services
-3. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-desktop-client/_ directory.
+3. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-desktop-app/_ directory.
 4. Run `npm start` to start the UI
 
 **Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
