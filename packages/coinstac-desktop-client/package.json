@@ -1,5 +1,5 @@
 {
-  "name": "coinstac-ui",
+  "name": "coinstac-desktop-client",
   "version": "6.5.6",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",

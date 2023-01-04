@@ -1,5 +1,5 @@
 # Coinstac Algorithm Development Onboarding
-[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
+[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-client/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 In this guide we'll go through several examples that aim to teach the basics of computation creation in Coinstac
 

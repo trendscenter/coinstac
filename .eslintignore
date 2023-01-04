@@ -4,5 +4,5 @@
 .vscode
 coverage
 node_modules
-packages/coinstac-ui/build/
+packages/coinstac-desktop-client/build/
 papaya.js
