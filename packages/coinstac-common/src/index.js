@@ -1,6 +1,6 @@
 'use strict';
 
-const Manager = require('coinstac-manager');
+const Manager = require('coinstac-container-manager');
 const validator = require('./services/validator');
 
 

@@ -8,7 +8,7 @@ const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const { merge } = require('lodash');
-const coinstacManager = require('coinstac-manager');
+const coinstacManager = require('coinstac-container-manager');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -59,7 +59,7 @@ module.exports = {
     let waitingOnForRun;
     const remoteClients = {};
 
-    // set coinstac-manager defaults
+    // set coinstac-container-manager defaults
     coinstacManager.setImageDirectory(imageDirectory);
     coinstacManager.setLogger(logger);
 

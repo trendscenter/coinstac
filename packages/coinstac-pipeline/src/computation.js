@@ -1,7 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-const Manager = require('coinstac-manager');
+const Manager = require('coinstac-container-manager');
 const path = require('path');
 
 /**

@@ -23,7 +23,7 @@
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "dependencies": {
-    "coinstac-manager": "^6.5.5",
+    "coinstac-container-manager": "^6.5.5",
     "joi": "^17.3.0"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",
