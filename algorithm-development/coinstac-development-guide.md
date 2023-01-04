@@ -1,5 +1,5 @@
 # Coinstac Development Guide
-[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-client/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
+[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-app/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 Coinstac is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm for Coinstac.
 
