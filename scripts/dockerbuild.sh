@@ -1,1 +1,1 @@
-docker run -it -v $(pwd)/build:/usr/local/src/coinstac/packages/coinstac-ui/build/apps --rm coinstacteam/coinstac /bin/bash -c "cd packages/coinstac-ui && npm run build-${1}"
+docker run -it -v $(pwd)/build:/usr/local/src/coinstac/packages/coinstac-desktop-app/build/apps --rm coinstacteam/coinstac /bin/bash -c "cd packages/coinstac-desktop-app && npm run build-${1}"

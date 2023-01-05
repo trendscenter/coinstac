@@ -9,7 +9,7 @@ const paths = [
   path.join('node_modules', 'coinstac-common'),
   path.join('node_modules', 'coinstac-client-core'),
   path.join('node_modules', 'coinstac-graphql-schema'),
-  path.join('node_modules', 'coinstac-manager'),
+  path.join('node_modules', 'coinstac-container-manager'),
   path.join('node_modules', 'coinstac-pipeline'),
 ];
 rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema|docker-manager|pipeline)')
@@ -24,8 +24,8 @@ rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema|docker-manager
     ncp('../coinstac-client-core/src', './node_modules/coinstac-client-core/src'),
     ncp('../coinstac-client-core/config.js', './node_modules/coinstac-client-core/config.js'),
     ncp('../coinstac-client-core/package.json', './node_modules/coinstac-client-core/package.json'),
-    ncp('../coinstac-manager/package.json', './node_modules/coinstac-manager/package.json'),
-    ncp('../coinstac-manager/src', './node_modules/coinstac-manager/src'),
+    ncp('../coinstac-container-manager/package.json', './node_modules/coinstac-container-manager/package.json'),
+    ncp('../coinstac-container-manager/src', './node_modules/coinstac-container-manager/src'),
     ncp('../coinstac-pipeline/package.json', './node_modules/coinstac-pipeline/package.json'),
     ncp('../coinstac-pipeline/src', './node_modules/coinstac-pipeline/src'),
   ]))

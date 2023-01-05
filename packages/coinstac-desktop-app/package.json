@@ -1,5 +1,5 @@
 {
-  "name": "coinstac-ui",
+  "name": "coinstac-desktop-app",
   "version": "6.5.6",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
@@ -17,7 +17,7 @@
     "coinstac-client-core": "^6.5.5",
     "coinstac-common": "^6.5.5",
     "coinstac-graphql-schema": "^6.5.0",
-    "coinstac-manager": "^6.5.5",
+    "coinstac-container-manager": "^6.5.5",
     "coinstac-pipeline": "^6.5.5",
     "commander": "^2.15.1",
     "convict": "^6.2.1",
