@@ -7,8 +7,8 @@ const utils = require('./utils');
 const dockerService = require('./services/docker');
 const SingularityService = require('./services/singularity');
 
+let globalServiceProvider;
 const singularityService = SingularityService();
-
 const serviceProviders = {
   docker: dockerService,
   singularity: singularityService,
@@ -68,16 +68,16 @@ const generateServicePort = async (serviceId, start = 8101, thisLock = false) =>
  * Retrieve list of all local Docker images
  * @return {Object[]} Array of objects containing locally stored Docker images
  */
-const getImages = (provider = 'docker') => {
-  return serviceProviders[provider].listImages();
+const getImages = () => {
+  return serviceProviders[globalServiceProvider].listImages();
 };
 
 /**
  * Retrieve Docker status
  * @return {boolean} is Docker running?
  */
-const getStatus = (provider = 'docker') => {
-  return serviceProviders[provider].ping();
+const getStatus = () => {
+  return serviceProviders[globalServiceProvider].ping();
 };
 
 /**
@@ -179,9 +179,9 @@ const startService = ({
 * Finds dangling coinstac images and deletes them
 * @return {Promise} list of deleted images and tags
 */
-const pruneImages = (provider = 'docker') => {
+const pruneImages = () => {
   return new Promise((resolve, reject) => {
-    serviceProviders[provider].listImages({ filters: { dangling: { true: true } } }, (err, res) => {
+    serviceProviders[globalServiceProvider].listImages({ filters: { dangling: { true: true } } }, (err, res) => {
       if (err) {
         reject(err);
       }
@@ -198,7 +198,7 @@ const pruneImages = (provider = 'docker') => {
   }).then((images) => {
     return Promise.all(images.map((image) => {
       return new Promise((resolve) => {
-        serviceProviders[provider].getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
+        serviceProviders[globalServiceProvider].getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
           if (err) {
             // remove can fail for serveral benign reasons, just resolve with the reason
             resolve(err);
@@ -215,9 +215,9 @@ const pruneImages = (provider = 'docker') => {
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
  */
-const pullImage = (computation, provider = 'docker') => {
+const pullImage = (computation) => {
   return new Promise((resolve, reject) => {
-    serviceProviders[provider].pull(computation, (err, stream) => {
+    serviceProviders[globalServiceProvider].pull(computation, (err, stream) => {
       if (err) {
         reject(err);
       }
@@ -266,8 +266,8 @@ const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${
  * @param {string} imgId ID of image to remove
  * @return {Promise}
  */
-const removeImage = (imageId, provider = 'docker') => {
-  return serviceProviders[provider].getImage(imageId).remove();
+const removeImage = (imageId) => {
+  return serviceProviders[globalServiceProvider].getImage(imageId).remove();
 };
 
 const removeImagesFromList = comps => Promise.all(comps.map(image => removeImage(`${image}:latest`)))
@@ -331,6 +331,15 @@ const getServices = () => {
   return services;
 };
 
+/**
+ * Sets the default global serviceProvider for all container operations
+ */
+const setServiceProvider = (provider) => {
+  if (!Object.keys(serviceProviders).includes(provider)) throw new Error('invalid service provider');
+  globalServiceProvider = provider;
+};
+
+
 module.exports = {
   getImages,
   getStats,
@@ -343,6 +352,7 @@ module.exports = {
   removeImagesFromList,
   services,
   setLogger,
+  setServiceProvider,
   startService,
   stopService,
   stopAllServices,
