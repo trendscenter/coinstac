@@ -1,7 +1,7 @@
 'use strict';
 
 const _ = require('lodash');
-const Manager = require('coinstac-container-manager');
+const containerManager = require('coinstac-container-manager');
 const path = require('path');
 
 /**
@@ -112,7 +112,7 @@ module.exports = {
         });
         opts.version = meta.compspecVersion || 1;
 
-        return Manager.startService(
+        return containerManager.startService(
           {
             serviceId: `${this.runId}-${this.clientId}`,
             serviceUserId: `${this.runId}-${this.clientId}`,
@@ -129,7 +129,7 @@ module.exports = {
        * @return {Promise}   resolves on stop
        */
       stop() {
-        return Manager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
+        return containerManager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

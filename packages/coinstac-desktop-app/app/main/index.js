@@ -319,7 +319,7 @@ loadConfig()
             .map(comp => comp.computation.dockerImage))
           .reduce((acc, val) => acc.concat(val), []);
 
-        return initializedCore.Manager.pullImagesFromList(computationImageList)
+        return initializedCore.containerManager.pullImagesFromList(computationImageList)
           .then((compStreams) => {
             const streamProms = [];
 
@@ -377,7 +377,7 @@ loadConfig()
                 });
               });
           })
-          .then(() => initializedCore.Manager.pruneImages())
+          .then(() => initializedCore.containerManager.pruneImages())
           .then(() => {
             logger.verbose('############ Client starting pipeline');
 
@@ -581,7 +581,7 @@ loadConfig()
     * @return {Promise<String[]>} An array of all local Docker image names
     */
       ipcMain.handle('get-all-images', () => {
-        return initializedCore.Manager.getImages()
+        return initializedCore.containerManager.getImages()
           .then((data) => {
             return data;
           })
@@ -602,7 +602,7 @@ loadConfig()
     * @return {Promise<boolean[]>} Docker running?
     */
       ipcMain.handle('get-status', () => {
-        return initializedCore.Manager.getStatus()
+        return initializedCore.containerManager.getStatus()
           .then((result) => {
             return result;
           })
@@ -626,7 +626,7 @@ loadConfig()
     * @return {Promise}
     */
       ipcMain.handle('download-comps', (event, params) => { // eslint-disable-line no-unused-vars
-        return initializedCore.Manager
+        return initializedCore.containerManager
           .pullImages(params.computations)
           .then((compStreams) => {
             let streamsComplete = 0;
@@ -717,7 +717,7 @@ loadConfig()
      * @param {String} imgId ID of the image to remove
      */
       ipcMain.handle('remove-image', (event, { compId, imgId, imgName }) => {
-        return initializedCore.Manager.removeImage(imgId)
+        return initializedCore.containerManager.removeImage(imgId)
           .catch((err) => {
             const output = [{
               message: err.message, status: 'error', statusCode: err.statusCode, isErr: true,
