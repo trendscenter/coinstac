@@ -7,7 +7,7 @@ const utils = require('./utils');
 const dockerService = require('./services/docker');
 const SingularityService = require('./services/singularity');
 
-let globalServiceProvider;
+let globalServiceProvider = 'docker';
 const singularityService = SingularityService();
 const serviceProviders = {
   docker: dockerService,
@@ -181,20 +181,21 @@ const startService = ({
 */
 const pruneImages = () => {
   return new Promise((resolve, reject) => {
-    serviceProviders[globalServiceProvider].listImages({ filters: { dangling: { true: true } } }, (err, res) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(res.filter(((elem) => {
-        // TODO: find better way, make docker api 'reference' work?
-        if (elem.RepoTags) {
-          return elem.RepoTags[0].includes('coinstac');
-        } if (elem.RepoDigests) {
-          return elem.RepoDigests[0].includes('coinstac');
+    serviceProviders[globalServiceProvider]
+      .listImages({ filters: { dangling: { true: true } } }, (err, res) => {
+        if (err) {
+          reject(err);
         }
-        return false;
-      })));
-    });
+        resolve(res.filter(((elem) => {
+          // TODO: find better way, make docker api 'reference' work?
+          if (elem.RepoTags) {
+            return elem.RepoTags[0].includes('coinstac');
+          } if (elem.RepoDigests) {
+            return elem.RepoDigests[0].includes('coinstac');
+          }
+          return false;
+        })));
+      });
   }).then((images) => {
     return Promise.all(images.map((image) => {
       return new Promise((resolve) => {
