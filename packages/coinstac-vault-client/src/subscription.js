@@ -96,7 +96,7 @@ async function startPipelineRun(
       .map(comp => comp.computation.dockerImage))
     .reduce((acc, val) => acc.concat(val), []);
 
-  await coinstacClientCore.Manager.pullImagesFromList(computationImageList);
+  await coinstacClientCore.containerManager.pullImagesFromList(computationImageList);
   const { pipeline, result } = await coinstacClientCore.startPipeline(
     null,
     pipelineRun.pipelineSnapshot.owningConsortium,

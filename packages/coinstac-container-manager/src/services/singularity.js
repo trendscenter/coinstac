@@ -10,90 +10,113 @@ const { ServiceFunctionGenerator } = require('./serviceFunction');
  */
 const SingularityService = () => {
   let imageDirectory = './';
-  const Container = ({ opts, commandArgs, serviceId }) => {
+  const Container = (
+    commandArgs, serviceId,
+    { mounts, dockerImage }
+  ) => {
     let error;
     let stderr = '';
     // mimics docker api for compat
     const State = { Running: false };
-    const process = spawn(
+    const localImage = dockerImage.replaceAll('/', '_');
+    const conversionProcess = spawn(
+      path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
+      [
+        path.join(imageDirectory, localImage),
+        `docker://${dockerImage}`,
+      ]
+    );
+    const instaceProcess = spawn(
       'singularity',
       [
         'instance',
         'start',
         '--containall',
         '-B',
-        opts.binds,
-        opts.image,
+        mounts.join(','),
+        path.join(imageDirectory, localImage),
         serviceId,
         `${commandArgs}`,
       ]
     );
-
     return new Promise((resolve, reject) => {
-      process.stderr.on('data', (data) => { stderr += data; });
-      process.on('error', e => reject(e));
-      process.on('close', (code) => {
+      conversionProcess.stderr.on('data', (data) => { stderr += data; });
+      conversionProcess.on('error', e => reject(e));
+      conversionProcess.on('close', (code) => {
         if (code !== 0) {
           error = stderr;
           utils.logger.error(error);
-          State.Running = false;
           return reject(new Error(error));
         }
-        State.Running = true;
+        resolve();
+      });
+    }).then(() => {
+      return new Promise((resolve, reject) => {
+        instaceProcess.stderr.on('data', (data) => { stderr += data; });
+        instaceProcess.on('error', e => reject(e));
+        instaceProcess.on('close', (code) => {
+          if (code !== 0) {
+            error = stderr;
+            utils.logger.error(error);
+            State.Running = false;
+            return reject(new Error(error));
+          }
+          State.Running = true;
 
-        resolve({
-          error,
-          State,
-          inspect(cb) {
-            let stderr = '';
-            let stdout = '';
-            const process = spawn(
-              'singularity',
-              [
-                'instance',
-                'list',
-                '--json',
-                `${serviceId}`,
-              ]
-            );
-            process.stdout.on('data', (data) => { stdout += data; });
-            process.stderr.on('data', (data) => { stderr += data; });
-            process.on('error', e => reject(e));
-            process.on('close', (code) => {
-              if (code !== 0) {
-                utils.logger.error(stderr);
-                return cb(new Error(stderr));
-              }
-              const output = JSON.parse(stdout);
-              if (output.instances.length > 0) {
-                cb(null, { State });
-              } else {
-                return cb(new Error('Singularity container not running'));
-              }
-            });
-          },
-          stop() {
-            return new Promise((resolve, reject) => {
+          resolve({
+            error,
+            State,
+            inspect(cb) {
               let stderr = '';
+              let stdout = '';
               const process = spawn(
                 'singularity',
                 [
                   'instance',
-                  'stop',
+                  'list',
+                  '--json',
                   `${serviceId}`,
                 ]
               );
+              process.stdout.on('data', (data) => { stdout += data; });
               process.stderr.on('data', (data) => { stderr += data; });
               process.on('error', e => reject(e));
               process.on('close', (code) => {
                 if (code !== 0) {
                   utils.logger.error(stderr);
-                  return reject(new Error(stderr));
+                  return cb(new Error(stderr));
                 }
-                resolve(true);
+                const output = JSON.parse(stdout);
+                if (output.instances.length > 0) {
+                  cb(null, { State });
+                } else {
+                  return cb(new Error('Singularity container not running'));
+                }
               });
-            });
-          },
+            },
+            stop() {
+              return new Promise((resolve, reject) => {
+                let stderr = '';
+                const process = spawn(
+                  'singularity',
+                  [
+                    'instance',
+                    'stop',
+                    `${serviceId}`,
+                  ]
+                );
+                process.stderr.on('data', (data) => { stderr += data; });
+                process.on('error', e => reject(e));
+                process.on('close', (code) => {
+                  if (code !== 0) {
+                    utils.logger.error(stderr);
+                    return reject(new Error(stderr));
+                  }
+                  resolve(true);
+                });
+              });
+            },
+          });
         });
       });
     });
@@ -112,7 +135,7 @@ const SingularityService = () => {
       });
       const tryStartService = () => {
         utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
-        return startContainer({ opts, commandArgs, serviceId })
+        return startContainer(commandArgs, serviceId, opts)
           .then((container) => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);
