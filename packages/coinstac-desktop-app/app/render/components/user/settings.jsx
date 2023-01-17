@@ -18,6 +18,7 @@ import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerSe
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
+import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
@@ -187,7 +188,7 @@ class Settings extends Component {
 
   handleSelectContainerService = (event) => {
     const { setContainerService } = this.props;
-    setContainerService()
+    setContainerService(event.target);
   }
 
   render() {
@@ -358,7 +359,7 @@ class Settings extends Component {
             {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
           </div>
         </ValidatorForm>
-        <Typography variant="h5" className={classes.topMargin}>
+        <Typography variant="h5">
           Container Service
         </Typography>
         <FormControl fullWidth>
@@ -368,10 +369,10 @@ class Settings extends Component {
             id="container-service-select"
             value={containerService}
             label="Container Service"
-            onChange={handleSelectContainerService}
+            onChange={this.handleSelectContainerService}
           >
-            <MenuItem value={'Docker'}>Docker</MenuItem>
-            <MenuItem value={'Singularity'}>Singularity</MenuItem>
+            <MenuItem value="docker">Docker</MenuItem>
+            <MenuItem value="singularity">Singularity</MenuItem>
           </Select>
         </FormControl>
 
@@ -393,7 +394,8 @@ Settings.propTypes = {
   updatePassword: PropTypes.func.isRequired,
   setNetworkVolume: PropTypes.func.isRequired,
   toggleTutorial: PropTypes.func.isRequired,
-  containerService: PropTypes.string.isRequired
+  containerService: PropTypes.string.isRequired,
+  setContainerService: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
@@ -412,7 +414,7 @@ const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
   networkVolume: auth.networkVolume,
   isTutorialHidden: auth.isTutorialHidden,
-  containerService: auth.containerService
+  containerService: auth.containerService,
 });
 
 const connectedComponent = connect(mapStateToProps, {
