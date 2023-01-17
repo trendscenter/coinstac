@@ -66,6 +66,7 @@ const conf = convict({
   singularityDir: path.join(home(), 'singularityImages'),
   clientServerURL: '',
   version: app.getVersion(),
+  containerService: 'docker'
 });
 
 module.exports = function loadConfig() {

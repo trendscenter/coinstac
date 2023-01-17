@@ -35,6 +35,7 @@ const INITIAL_STATE = {
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
+  containerService: localStorage.getItem('containerService') || window.config.containerService,
 };
 
 const EXCLUDE_PATHS = ['login', 'signup'];
@@ -51,6 +52,7 @@ const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
 const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
 const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
+const SET_CONTAINER_SERVICE = "SET_CONTAINER_SERVICE";
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -77,6 +79,8 @@ export const toggleTutorial = () => ({
 export const tutorialChange = payload => ({
   type: TUTORIAL_CHANGE, payload,
 });
+
+
 
 // Helpers
 const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL, dispatch) => {
@@ -112,12 +116,14 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 });
 
 export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
+  //the next line is probably not necessary
   localStorage.setItem('clientServerURL', url);
   return ipcRenderer.invoke('set-client-server-url', url)
     .then(() => {
       dispatch(setClientServerURL(url));
     });
 });
+
 export const refreshToken = async () => {
   let token = localStorage.getItem(API_TOKEN_KEY);
 
@@ -271,6 +277,17 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
     throw err;
   }));
 
+
+export const setContainerService = applyAsyncLoading(containerService => (dispatch) => {
+  return ipcRenderer.invoke('set-container-service', containerService)
+    .then(() => {
+      dispatch({
+        type: SET_CONTAINER_SERVICE,
+        payload: containerService
+      });
+    });
+});
+
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
   const { locationStacks, isTutorialHidden, tutorialSteps } = state;
   const { pathname } = payload || {};
@@ -341,6 +358,10 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         tutorialSteps: newTutorialSteps,
         isTutorialHidden: newTutorialSteps.length > 15,
       };
+    }
+    case SET_CONTAINER_SERVICE: {
+      localStorage.setItem('containerService', payload);
+      return { ...state, containerService: payload };
     }
     default:
       return state;
