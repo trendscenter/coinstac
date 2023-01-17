@@ -70,6 +70,7 @@ const fileFunctions = require('./services/files');
 
 const { checkForUpdates } = require('./utils/auto-update');
 const { generateResultsPdf } = require('./services/results-pdf-generator');
+const { resolve } = require('path');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -310,6 +311,10 @@ loadConfig()
         initializedCore.setClientServerURL(url);
         resolve();
       }));
+
+      ipcMain.handle('set-container-service', (event, containerService) => {
+        initializedCore.containerManager.setServiceProvider(containerService);
+      });
 
       function startPipelineRun(run, filesArray, consortium, networkVolume, runState) {
         const pipeline = run.pipelineSnapshot;

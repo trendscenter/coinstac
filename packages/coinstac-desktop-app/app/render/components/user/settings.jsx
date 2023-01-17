@@ -188,7 +188,7 @@ class Settings extends Component {
 
   handleSelectContainerService = (event) => {
     const { setContainerService } = this.props;
-    setContainerService(event.target);
+    setContainerService(event.target.value);
   }
 
   render() {

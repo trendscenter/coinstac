@@ -283,7 +283,7 @@ export const setContainerService = applyAsyncLoading(containerService => (dispat
     .then(() => {
       dispatch({
         type: SET_CONTAINER_SERVICE,
-        payload: containerService
+        payload: containerService,
       });
     });
 });
