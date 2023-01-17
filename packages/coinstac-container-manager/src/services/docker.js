@@ -2,7 +2,6 @@
 
 const Docker = require('dockerode');
 const _ = require('lodash');
-const request = require('request-stream');
 const http = require('http');
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
@@ -11,32 +10,52 @@ const docker = new Docker();
 
 module.exports = {
   // id, port
-  createService(serviceId, port, opts) {
+  createService(serviceId, port, {
+    version, mounts, dockerImage, containerOptions, ciDirectory,
+  }) {
+    const dockerOptions = {
+      docker: _.merge({
+        Image: dockerImage,
+        HostConfig: {
+          Binds: [...mounts],
+        },
+      }, containerOptions),
+    };
+    /*
+    In order for circle CI containers to see the mounts in the docker binds above
+    the directory from which those mounts originate needs to be exposed as a volume
+     */
+    if (process.env.CI) {
+      dockerOptions.docker.HostConfig = {
+        Binds: [
+          `${process.env.CI_VOLUME}:${ciDirectory}`,
+        ],
+        Volumes: {
+          [ciDirectory]: {},
+        },
+        NetworkMode: process.env.CI_DOCKER_NETWORK,
+      };
+    }
     utils.logger.silly(`Request to start service ${serviceId}`);
-    let serviceStartedRecurseLimit = 0;
-    const version = opts.version || 1;
+    const compspecVersion = version || 1;
     // better way than global?
     if (process.LOGLEVEL) {
-      if (opts.docker.CMD) {
-        opts.docker.CMD.push(process.LOGLEVEL);
-      } else {
-        switch (version) {
-          case 1:
-            opts.docker.CMD = [
-              'node',
-              '/server/index.js',
-              JSON.stringify({
-                level: process.LOGLEVEL,
-                server: opts.http ? 'http' : 'ws',
-                port: process.env.CI ? port : 8881,
-              }),
-            ];
-            break;
-          case 2:
-            break;
-          default:
-            throw new Error('Invalid compspecVersion');
-        }
+      switch (compspecVersion) {
+        case 1:
+          dockerOptions.docker.CMD = [
+            'node',
+            '/server/index.js',
+            JSON.stringify({
+              level: process.LOGLEVEL,
+              server: 'ws',
+              port: process.env.CI ? port : 8881,
+            }),
+          ];
+          break;
+        case 2:
+          break;
+        default:
+          throw new Error('Invalid compspecVersion');
       }
     }
 
@@ -62,7 +81,7 @@ module.exports = {
       };
 
       const jobOpts = _.merge(
-        opts.docker,
+        dockerOptions.docker,
         defaultOpts,
         {}
       );
@@ -73,55 +92,11 @@ module.exports = {
           return container.start()
             .then(async container => ({ container, inspect: await container.inspect() }));
         })
-        // is the container service ready?
         .then(({ container, inspect }) => {
-          const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
           utils.logger.silly(`Cointainer started: ${serviceId}`);
-          const checkServicePort = () => {
-            if (opts.http) {
-              return new Promise((resolve, reject) => {
-                const req = request(`http://${host}:${port}/run`, { method: 'POST' }, (err, res) => {
-                  let buf = '';
-                  if (err) {
-                    return reject(err);
-                  }
-
-                  res.on('data', (chunk) => {
-                    buf += chunk;
-                  });
-                  res.on('end', () => resolve(buf));
-                  res.on('error', e => reject(e));
-                });
-
-                const control = {
-                  command: 'echo',
-                  args: ['test'],
-                };
-                req.end(JSON.stringify(control));
-              }).catch((status) => {
-                if (status.message === 'socket hang up' || status.message === 'read ECONNRESET') {
-                  serviceStartedRecurseLimit += 1;
-                  if (serviceStartedRecurseLimit < 500) {
-                    return utils.setTimeoutPromise(100)
-                      .then(() => checkServicePort());
-                  }
-                  // met limit, fallback to timeout
-                  utils.logger.silly(`Container timeout for ${serviceId}`);
-                  return utils.setTimeoutPromise(5000);
-                }
-                // not a socket error, throw
-                throw status;
-              });
-            }
-            return Promise.resolve();
-          };
-
-          return checkServicePort().then(() => ({ container, inspect }));
-        })
-        .then(({ container, inspect }) => {
           utils.logger.silly(`Returning service access function for ${serviceId}`);
           const host = process.env.CI ? inspect.Config.Hostname : '127.0.0.1';
-          const serviceFunction = ServiceFunctionGenerator({ host, port, version });
+          const serviceFunction = ServiceFunctionGenerator({ host, port, compspecVersion });
 
           return {
             service: serviceFunction,
