@@ -2,6 +2,7 @@
 
 const { spawn } = require('child_process');
 const path = require('path');
+const { readdir } = require('fs').promises;
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
@@ -19,42 +20,27 @@ const SingularityService = () => {
     // mimics docker api for compat
     const State = { Running: false };
     const localImage = dockerImage.replaceAll('/', '_');
-    const conversionProcess = spawn(
-      path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
-      [
-        path.join(imageDirectory, localImage),
-        `docker://${dockerImage}`,
-      ]
-    );
-    const instaceProcess = spawn(
-      'singularity',
-      [
-        'instance',
-        'start',
-        '--containall',
-        '-B',
-        mounts.join(','),
-        path.join(imageDirectory, localImage),
-        serviceId,
-        `${commandArgs}`,
-      ]
-    );
-    return new Promise((resolve, reject) => {
-      conversionProcess.stderr.on('data', (data) => { stderr += data; });
-      conversionProcess.on('error', e => reject(e));
-      conversionProcess.on('close', (code) => {
-        if (code !== 0) {
-          error = stderr;
-          utils.logger.error(error);
-          return reject(new Error(error));
-        }
-        resolve();
-      });
-    }).then(() => {
+
+    return readdir(imageDirectory).then((files) => {
+      const savedImage = files.find(file => file.includes(localImage));
+      if (!savedImage) throw new Error(`No singularity ${localImage} image found in ${imageDirectory}`);
+      const instanceProcess = spawn(
+        'singularity',
+        [
+          'instance',
+          'start',
+          '--containall',
+          '-B',
+          mounts.join(','),
+          path.join(imageDirectory, savedImage),
+          serviceId,
+          `${commandArgs}`,
+        ]
+      );
       return new Promise((resolve, reject) => {
-        instaceProcess.stderr.on('data', (data) => { stderr += data; });
-        instaceProcess.on('error', e => reject(e));
-        instaceProcess.on('close', (code) => {
+        instanceProcess.stderr.on('data', (data) => { stderr += data; });
+        instanceProcess.on('error', e => reject(e));
+        instanceProcess.on('close', (code) => {
           if (code !== 0) {
             error = stderr;
             utils.logger.error(error);
@@ -145,11 +131,38 @@ const SingularityService = () => {
       };
       return tryStartService();
     },
-    pull: (imageName, callback) => {
+    pull: (dockerImage, callback) => {
       try {
-        const pullProcess = spawn('singularity', ['pull', path.join(imageDirectory, imageName), `library://${imageName}:latest`]);
-        callback(null, pullProcess.stdout);
+        const localImage = dockerImage.replaceAll('/', '_');
+        const latestDigest = spawn(
+          path.join(__dirname, 'utils', 'get-docker-digest.sh'),
+          dockerImage
+        );
+        let error = '';
+        let stderr = '';
+        let digest = '';
+        latestDigest.stderr.on('data', (data) => { stderr += data; });
+        latestDigest.stdout.on('data', (data) => { digest += data; });
+        latestDigest.on('error', e => callback(e));
+        latestDigest.on('close', async (code) => {
+          if (code !== 0) {
+            error = stderr;
+            utils.logger.error(error);
+            callback(new Error(error));
+          }
+          const files = await readdir(imageDirectory);
+          const savedImage = files.find(file => file.includes(localImage));
+          if (savedImage && savedImage.inludes(`${localImage}-${digest.split(':')[1]}`)) return callback(null, 'Image already downloaded');
+          const conversionProcess = spawn(
+            path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
+            [
+              path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
+              `docker://${dockerImage}`,
+            ]
+          );
 
+          callback(null, conversionProcess.stdout);
+        });
         // if the command fails internally this catch won't catch
       } catch (err) {
         callback(err);
