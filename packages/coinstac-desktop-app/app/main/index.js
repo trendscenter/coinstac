@@ -268,19 +268,20 @@ loadConfig()
 
 
       ipcMain.handle('login-init', (event, {
-        userId, appDirectory, clientServerURL, token,
+        userId, appDirectory, clientServerURL, token, containerService
       }) => {
         return initializedCore
           ? Promise.resolve()
-          : configureCore(
+          : configureCore({
             config,
             logger,
             userId,
             appDirectory,
-            config.get('singularityDir'),
-            clientServerURL || config.get('clientServerURL'),
+            imageDirectory: config.get('singularityDir'),
+            containerService,
+            clientServerURL: clientServerURL || config.get('clientServerURL'),
             token
-          )
+          })
             .then((c) => {
               initializedCore = c;
               return upsertCoinstacUserDir(c);

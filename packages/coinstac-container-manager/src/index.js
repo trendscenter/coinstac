@@ -215,6 +215,14 @@ const pruneImages = () => {
  * Pull individual image from Docker hub
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
+ * TODO: define the api of the returned object itself
+ * Returns {err, stream}
+ * Stream events from the docker api {
+ *   message: Error message for issues with the docker api
+ *   on('data': Docker image pull progress and status as an output stream
+ *   on('error': Error message for issues with the image pull
+ *   on('end': Emitted on pull completion 
+ * }
  */
 const pullImage = (computation) => {
   return new Promise((resolve, reject) => {

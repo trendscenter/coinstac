@@ -108,8 +108,8 @@ const SingularityService = () => {
     });
   };
 
-  const startContainer = (args) => {
-    return Container(args);
+  const startContainer = (...args) => {
+    return Container(...args);
   };
   return {
     createService(serviceId, port, opts) {
@@ -136,7 +136,7 @@ const SingularityService = () => {
         const localImage = dockerImage.replaceAll('/', '_');
         const latestDigest = spawn(
           path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          dockerImage
+          [dockerImage]
         );
         let error = '';
         let stderr = '';
