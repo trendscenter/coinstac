@@ -1,8 +1,28 @@
-set -e
+#!/usr/bin/env bash
 
 REPOSITORY=$1
 
-TOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$REPOSITORY:pull" | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')
+JSONTOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$REPOSITORY:pull")
 
-curl -s -H "Authorization: Bearer ${TOKEN}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" https://index.docker.io/v2/$REPOSITORY/manifests/latest | python3 -c 'import json,sys;print(json.load(sys.stdin)["config"]["digest"])'
-~
+PARSEDTOKEN=$(echo $JSONTOKEN | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')
+
+code=$?
+if [ $code != 0 ]; then
+  >&2 echo $PARSEDTOKEN
+  >&2 echo $JSONTOKEN
+  exit $code
+fi
+
+DIGEST=$(curl -s -H "Authorization: Bearer ${PARSEDTOKEN}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" https://index.docker.io/v2/$REPOSITORY/manifests/latest)
+PARSEDDIGEST=$(echo $DIGEST | python3 -c 'import json,sys;print(json.load(sys.stdin)["config"]["digest"])')
+
+code=$?
+if [ $code != 0 ]; then
+  >&2 echo $REPOSITORY
+  >&2 echo $DIGEST
+  >&2 echo $PARSEDTOKEN
+  >&2 echo $PARSEDDIGEST
+  exit $code
+fi
+
+echo $PARSEDDIGEST

@@ -256,12 +256,11 @@ class ConsortiaList extends Component {
       }).length > 0;
 
       const computations = get(pipeline, 'steps.0.computations', []);
-      const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
-
+   
       if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
         if (auth.user.id in consortium.activeMembers
-          && hasDockerComputation
+          && !auth.containerService === "singularity"
           && !dockerStatus) {
           actions.push(
             <Tooltip title="Docker is not running" placement="top">

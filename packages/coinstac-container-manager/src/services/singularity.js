@@ -136,19 +136,23 @@ const SingularityService = () => {
         const localImage = dockerImage.replaceAll('/', '_');
         const latestDigest = spawn(
           path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          [dockerImage]
+          [dockerImage.replace(":latest", '')]
         );
         let error = '';
         let stderr = '';
         let digest = '';
         latestDigest.stderr.on('data', (data) => { stderr += data; });
         latestDigest.stdout.on('data', (data) => { digest += data; });
-        latestDigest.on('error', e => callback(e));
+        latestDigest.on('error', (e) => {
+          error = e;
+      });
         latestDigest.on('close', async (code) => {
+          if(error){
+            return callback(error);
+          }
           if (code !== 0) {
-            error = stderr;
-            utils.logger.error(error);
-            callback(new Error(error));
+            utils.logger.error(stderr);
+            callback(new Error(stderr));
           }
           const files = await readdir(imageDirectory);
           const savedImage = files.find(file => file.includes(localImage));
