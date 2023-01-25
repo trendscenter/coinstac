@@ -11,7 +11,7 @@ const utils = require('../utils');
 const ServiceFunctionGenerator = ({
   host = '127.0.0.1',
   port,
-  version = 1,
+  compspecVersion = 1,
 }) => {
   return ({
     input,
@@ -25,7 +25,7 @@ const ServiceFunctionGenerator = ({
       proxR = resolve;
       proxRj = reject;
     });
-    switch (version) {
+    switch (compspecVersion) {
       case 1: {
         const serviceCommand = JSON.stringify({
           command: command[0],
@@ -162,7 +162,7 @@ const ServiceFunctionGenerator = ({
           const testConnection = () => {
             const ws = new WS(`ws://${host}:${port}`);
             ws.on('open', () => {
-              // ws.close(1000, 'Test Connection');
+              ws.close(1000, 'Test Connection');
               resolve();
             });
             ws.on('error', (e) => {
@@ -264,7 +264,7 @@ const ServiceFunctionGenerator = ({
         });
         break;
       default:
-        proxRj(new Error('Invalid compspecVersion'));
+        proxRj(new Error('Invalid compspeccompspecVersion'));
     }
     // promise fullfilled by container output
     return wsProm.then(() => prox);
