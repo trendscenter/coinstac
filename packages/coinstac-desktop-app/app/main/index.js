@@ -67,10 +67,8 @@ const { configureLogger, readInitialLogContents } = require('./utils/boot/config
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir');
 const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
-
 const { checkForUpdates } = require('./utils/auto-update');
 const { generateResultsPdf } = require('./services/results-pdf-generator');
-const { resolve } = require('path');
 
 const getAllFilesInDirectory = async (directory) => {
   const dirents = await fs.promises.readdir(directory, { withFileTypes: true });
@@ -268,7 +266,7 @@ loadConfig()
 
 
       ipcMain.handle('login-init', (event, {
-        userId, appDirectory, clientServerURL, token, containerService
+        userId, appDirectory, clientServerURL, token, containerService,
       }) => {
         return initializedCore
           ? Promise.resolve()
@@ -280,7 +278,7 @@ loadConfig()
             imageDirectory: config.get('singularityDir'),
             containerService,
             clientServerURL: clientServerURL || config.get('clientServerURL'),
-            token
+            token,
           })
             .then((c) => {
               initializedCore = c;

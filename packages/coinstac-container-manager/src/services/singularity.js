@@ -136,7 +136,7 @@ const SingularityService = () => {
         const localImage = dockerImage.replaceAll('/', '_');
         const latestDigest = spawn(
           path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          [dockerImage.replace(":latest", '')]
+          [dockerImage.replace(':latest', '')]
         );
         let error = '';
         let stderr = '';
@@ -145,13 +145,12 @@ const SingularityService = () => {
         latestDigest.stdout.on('data', (data) => { digest += data; });
         latestDigest.on('error', (e) => {
           error = e;
-      });
+        });
         latestDigest.on('close', async (code) => {
-          if(error){
+          if (error) {
             return callback(error);
           }
           if (code !== 0) {
-            utils.logger.error(stderr);
             callback(new Error(stderr));
           }
           const files = await readdir(imageDirectory);
@@ -164,8 +163,23 @@ const SingularityService = () => {
               `docker://${dockerImage}`,
             ]
           );
-
-          callback(null, conversionProcess.stdout);
+          /*
+            in order to maintain api parity with the docker service, we have to wrap
+            the conversion process spawn events to mimic the docker pull's returned stream
+           */
+          let error = '';
+          let stderr = '';
+          conversionProcess.stderr.on('data', (data) => { digest += data; });
+          conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
+          // we're ignoring the .on('error') event as its handled by the caller in the docker api
+          // but we need to wrap and emit cases from the script itself erroring
+          conversionProcess.on('close', async (code) => {
+            if (code !== 0) {
+              return conversionProcess.emit('error', new Error(stderr));
+            }
+            conversionProcess.emit('end');
+          });
+          callback(null, conversionProcess);
         });
         // if the command fails internally this catch won't catch
       } catch (err) {
