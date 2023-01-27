@@ -215,7 +215,7 @@ const SingularityService = () => {
           .then(async (digest) => {
             const latest = await checkIfSingularityImageIsLatest(digest, localImage);
             if (latest) {
-              return { message: 'Image already at latest' };
+              return { message: 'Image is already at latest' };
             }
             return pullAndConvertDockerToSingularity(digest, localImage);
           }).then(pullStream => callback(null, pullStream))
