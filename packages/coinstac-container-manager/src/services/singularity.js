@@ -167,15 +167,14 @@ const SingularityService = () => {
             in order to maintain api parity with the docker service, we have to wrap
             the conversion process spawn events to mimic the docker pull's returned stream
            */
-          let error = '';
-          let stderr = '';
-          conversionProcess.stderr.on('data', (data) => { digest += data; });
+          let convStderr = '';
+          conversionProcess.stderr.on('data', (data) => { convStderr += data; });
           conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
           // we're ignoring the .on('error') event as its handled by the caller in the docker api
           // but we need to wrap and emit cases from the script itself erroring
           conversionProcess.on('close', async (code) => {
             if (code !== 0) {
-              return conversionProcess.emit('error', new Error(stderr));
+              return conversionProcess.emit('error', new Error(convStderr));
             }
             conversionProcess.emit('end');
           });
