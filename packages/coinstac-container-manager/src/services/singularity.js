@@ -135,7 +135,9 @@ const SingularityService = () => {
       try {
         const dockerImageName = dockerImage.replace(':latest', '');
         const localImage = dockerImageName.replaceAll('/', '_');
-
+        /*
+          get the the docker digest from the dockerhub image passed in
+         */
         const getLatestDockerDigest = async (dockerImageName) => {
           return new Promise(((resolve, reject) => {
             const latestDigest = spawn(
@@ -161,12 +163,25 @@ const SingularityService = () => {
             });
           }));
         };
-        const checkLocalDigestAndPull = async (digest, localImage) => {
+
+        /*
+          check local singularity image digest against latest docker image
+         */
+        const checkIfSingularityImageIsLatest = async (digest, localImage) => {
+          const files = await readdir(imageDirectory);
+          const savedImage = files.find(file => file.includes(localImage));
+          if (savedImage && savedImage.includes(`${localImage}-${digest.split(':')[1]}`)) {
+            return true;
+          }
+          return false;
+        };
+
+        /*
+          pull latest docker image and convert to local singularity image
+         */
+        const pullAndConvertDockerToSingularity = async (digest, localImage) => {
           return new Promise((async (resolve, reject) => {
             try {
-              const files = await readdir(imageDirectory);
-              const savedImage = files.find(file => file.includes(localImage));
-              if (savedImage && savedImage.inludes(`${localImage}-${digest.split(':')[1]}`)) return callback(null, 'Image already downloaded');
               const conversionProcess = spawn(
                 path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
                 [
@@ -197,8 +212,12 @@ const SingularityService = () => {
           }));
         };
         getLatestDockerDigest(dockerImageName)
-          .then((digest) => {
-            return checkLocalDigestAndPull(digest, localImage);
+          .then(async (digest) => {
+            const latest = await checkIfSingularityImageIsLatest(digest, localImage);
+            if (latest) {
+              return { message: 'Image already at latest' };
+            }
+            return pullAndConvertDockerToSingularity(digest, localImage);
           }).then(pullStream => callback(null, pullStream))
           .catch(e => callback(e));
       } catch (err) {
