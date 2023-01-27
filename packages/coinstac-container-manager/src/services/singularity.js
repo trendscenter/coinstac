@@ -135,53 +135,72 @@ const SingularityService = () => {
       try {
         const dockerImageName = dockerImage.replace(':latest', '');
         const localImage = dockerImageName.replaceAll('/', '_');
-        const latestDigest = spawn(
-          path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          [dockerImageName]
-        );
-        let error = '';
-        let stderr = '';
-        let digest = '';
-        latestDigest.stderr.on('data', (data) => { stderr += data; });
-        latestDigest.stdout.on('data', (data) => { digest += data; });
-        latestDigest.on('error', (e) => {
-          error = e;
-        });
-        latestDigest.on('close', async (code) => {
-          if (error) {
-            return callback(error);
-          }
-          if (code !== 0) {
-            callback(new Error(stderr));
-          }
-          const files = await readdir(imageDirectory);
-          const savedImage = files.find(file => file.includes(localImage));
-          if (savedImage && savedImage.inludes(`${localImage}-${digest.split(':')[1]}`)) return callback(null, 'Image already downloaded');
-          const conversionProcess = spawn(
-            path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
-            [
-              path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
-              `docker://${dockerImageName}`,
-            ]
-          );
-          /*
-            in order to maintain api parity with the docker service, we have to wrap
-            the conversion process spawn events to mimic the docker pull's returned stream
-           */
-          let convStderr = '';
-          conversionProcess.stderr.on('data', (data) => { convStderr += data; });
-          conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
-          // we're ignoring the .on('error') event as its handled by the caller of the manager api
-          // but we need to wrap and emit cases from the script itself erroring
-          conversionProcess.on('close', async (code) => {
-            if (code !== 0) {
-              return conversionProcess.emit('error', new Error(convStderr));
+
+        const getLatestDockerDigest = async (dockerImageName) => {
+          return new Promise(((resolve, reject) => {
+            const latestDigest = spawn(
+              path.join(__dirname, 'utils', 'get-docker-digest.sh'),
+              [dockerImageName]
+            );
+            let error = '';
+            let stderr = '';
+            let digest = '';
+            latestDigest.stderr.on('data', (data) => { stderr += data; });
+            latestDigest.stdout.on('data', (data) => { digest += data; });
+            latestDigest.on('error', (e) => {
+              error = e;
+            });
+            latestDigest.on('close', async (code) => {
+              if (error) {
+                return reject(error);
+              }
+              if (code !== 0) {
+                reject(new Error(stderr));
+              }
+              resolve(digest);
+            });
+          }));
+        };
+        const checkLocalDigestAndPull = async (digest, localImage) => {
+          return new Promise((async (resolve, reject) => {
+            try {
+              const files = await readdir(imageDirectory);
+              const savedImage = files.find(file => file.includes(localImage));
+              if (savedImage && savedImage.inludes(`${localImage}-${digest.split(':')[1]}`)) return callback(null, 'Image already downloaded');
+              const conversionProcess = spawn(
+                path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
+                [
+                  path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
+                  `docker://${dockerImageName}`,
+                ]
+              );
+              /*
+                in order to maintain api parity with the docker service, we have to wrap
+                the conversion process spawn events to mimic the docker pull's returned stream
+               */
+              let convStderr = '';
+              conversionProcess.stderr.on('data', (data) => { convStderr += data; });
+              conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
+              // we're ignoring the .on('error') event as its handled
+              // by the caller of the manager api
+              // but we need to wrap and emit cases from the script itself erroring
+              conversionProcess.on('close', async (code) => {
+                if (code !== 0) {
+                  return conversionProcess.emit('error', new Error(convStderr));
+                }
+                conversionProcess.emit('end');
+              });
+              resolve(conversionProcess);
+            } catch (e) {
+              reject(e);
             }
-            conversionProcess.emit('end');
-          });
-          callback(null, conversionProcess);
-        });
-        // if the command fails internally this catch won't catch
+          }));
+        };
+        getLatestDockerDigest(dockerImageName)
+          .then((digest) => {
+            return checkLocalDigestAndPull(digest, localImage);
+          }).then(pullStream => callback(null, pullStream))
+          .catch(e => callback(e));
       } catch (err) {
         callback(err);
       }
