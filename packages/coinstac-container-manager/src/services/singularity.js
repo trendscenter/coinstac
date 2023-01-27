@@ -133,10 +133,11 @@ const SingularityService = () => {
     },
     pull: (dockerImage, callback) => {
       try {
-        const localImage = dockerImage.replaceAll('/', '_');
+        const dockerImageName = dockerImage.replace(':latest', '');
+        const localImage = dockerImageName.replaceAll('/', '_');
         const latestDigest = spawn(
           path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          [dockerImage.replace(':latest', '')]
+          [dockerImageName]
         );
         let error = '';
         let stderr = '';
@@ -160,7 +161,7 @@ const SingularityService = () => {
             path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
             [
               path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
-              `docker://${dockerImage}`,
+              `docker://${dockerImageName}`,
             ]
           );
           /*
@@ -170,7 +171,7 @@ const SingularityService = () => {
           let convStderr = '';
           conversionProcess.stderr.on('data', (data) => { convStderr += data; });
           conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
-          // we're ignoring the .on('error') event as its handled by the caller in the docker api
+          // we're ignoring the .on('error') event as its handled by the caller of the manager api
           // but we need to wrap and emit cases from the script itself erroring
           conversionProcess.on('close', async (code) => {
             if (code !== 0) {

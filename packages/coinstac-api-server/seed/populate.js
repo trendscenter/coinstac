@@ -1298,6 +1298,15 @@ async function updateComputations(closeConnection = true) {
   }
 }
 
+async function clearRuns(){
+  await database.connect();
+  const db = database.getDbInstance();
+  await db.collection('runs').deleteMany({})
+  const results = await db.collection('runs').find({}).toArray();
+  console.log(results);
+  await database.close();
+}
+
 
 module.exports = {
   CONSORTIA_IDS,
@@ -1307,4 +1316,5 @@ module.exports = {
   RUN_IDS,
   populate,
   updateComputations,
+  clearRuns,
 };
