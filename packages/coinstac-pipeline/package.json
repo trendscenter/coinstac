@@ -13,7 +13,7 @@
   ],
   "dependencies": {
     "archiver": "^3.1.1",
-    "coinstac-manager": "^6.5.0",
+    "coinstac-container-manager": "^6.5.5",
     "debug": "^4.2.0",
     "decompress": "^4.2.0",
     "express": "^4.17.1",
@@ -31,7 +31,7 @@
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
-    "ava": "^3.15.0",
+    "ava": "^4.3.3",
     "clarify": "^2.1.0",
     "nyc": "^15.1.0",
     "trace": "^3.1.0"
@@ -50,5 +50,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "6.5.0"
+  "version": "6.5.5"
 }

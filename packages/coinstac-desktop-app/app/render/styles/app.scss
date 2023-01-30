@@ -1,0 +1,340 @@
+@import "./variables";
+@import "./mixins";
+@import "./classes";
+@import "./alert";
+@import "./computation-field";
+@import "./computation-select";
+@import "./consortium-computation-selector";
+@import "./consortium-single";
+@import "./consortium-result";
+@import "./consortium-result-list";
+@import "./consortium-result-table";
+@import "./dragula";
+@import "./maps-collection";
+@import "./page-header";
+@import "./project-card";
+@import "./project-covariates-mapper";
+@import "./project-file";
+@import "./project-form";
+@import "./react-mde";
+@import "./table.scss";
+@import "./user-list";
+
+body {
+  margin: 0;
+  width: 100%;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.screen {
+  min-height: 100vh;
+
+  &__content {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+/**
+ * Logo
+ */
+.logo {
+  margin: 3rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+.logo::before {
+  background: url(../../../img/icons/coinstac-logo.png) no-repeat;
+  background-size: contain;
+  content: "";
+  height: 10rem;
+  width: 20rem;
+  vertical-align: top;
+  position: absolute;
+}
+
+.mainnav svg {
+  color: #003c52 !important;
+}
+
+/**
+ * Account
+ *
+ * @todo  Refactor styles into modules
+ */
+.account {
+  background: $gray-lighter;
+
+  .nav-pills {
+    margin: 0 0 2rem;
+  }
+}
+
+/**
+ * Navigation
+ */
+.main {
+  position: relative;
+}
+
+.dashboard {
+  background: $gray-lighter;
+  min-height: 100vh;
+
+  &-nav {
+    position: fixed;
+    left: 0;
+    width: 325px;
+    height: 100%;
+    background-color: #eee;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
+
+    @media (max-width: $screen-sm) {
+      width: 100%;
+      border-right-width: 0;
+      position: static;
+      left: initial;
+      height: auto;
+    }
+
+    .logo {
+      margin: 3rem 0;
+      padding: 2.5rem 0 0;
+    }
+
+    .logo::before {
+      height: 8rem;
+      width: 18rem;
+    }
+
+  }
+
+  &-content {
+    position: fixed;
+    left: 325px;
+    right: 0;
+    height: 100%;
+    background-color: #fff;
+    overflow: auto;
+
+    @media (max-width: $screen-sm) {
+      position: static;
+      left: initial;
+      right: initial;
+      height: auto;
+    }
+  }
+}
+
+.navigation {
+  > nav .glyphicon {
+    display: inline-block;
+    margin-right: 1rem;
+  }
+  @media (min-width: $screen-sm) {
+    padding: $grid-gutter-width / 2 0;
+
+    .logo {
+      margin-bottom: 2rem;
+    }
+    > nav {
+      flex-grow: 1;
+    }
+  }
+}
+
+.nav-item-page-title {
+  display: inline-block;
+}
+
+/**
+ * Content pane
+ */
+.content-pane {
+  background: white;
+  min-height: 100vh;
+  position: relative;
+  padding: $grid-gutter-width / 2;
+
+  .back-button {
+    position: fixed;
+    top: 0;
+    left: calc(50% - 80px);
+    margin: 0 auto;
+    width: 80px;
+    height: 40px;
+    background-color: #eee;
+    border-bottom-left-radius: 110px;
+    border-bottom-right-radius: 110px;
+    border: 0;
+    outline: none;
+    z-index: 5;
+    cursor: pointer;
+
+    &:hover {
+      .arrow-icon {
+        color: #999;
+      }
+    }
+  }
+
+  .arrow-icon {
+    font-size: 19px;
+    color: #ccc;
+  }
+}
+
+/** Settings */
+
+.settings {
+  .logs-wrapper {
+    height: calc(100vh - 105px);
+    background-color: whitesmoke;
+    position: relative;
+  }
+
+  .logs-wrapper:hover {
+    .scroll-to-bottom,
+    .scroll-to-top {
+      opacity: 1;
+    }
+  }
+
+  .scroll-to-bottom,
+  .scroll-to-top {
+    position: absolute;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #eee;
+    border-radius: 100%;
+    border-color: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: 0.1s ease-in-out opacity;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .scroll-to-bottom {
+    bottom: 15px;
+  }
+
+  .scroll-to-top {
+    top: 15px;
+  }
+}
+
+/** File items */
+.file-item {
+  margin: 2rem 0;
+
+  ul {
+    margin-bottom: 0;
+  }
+}
+.file-item__name {
+  margin-top: 0;
+}
+
+/** Consortia */
+.dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
+  clear: both;
+}
+.consortium .btn-toolbar {
+  .glyphicon {
+    margin-right: 0.5rem;
+  }
+}
+.consortium__tags .label {
+  margin: 0 0.5rem 0.5rem 0;
+}
+
+/** Page header with button */
+.page-header .btn {
+  margin-top: 2.5rem;
+}
+.page-header .btn strong {
+  margin-right: 0.5rem;
+}
+
+ul#loading_list {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  margin-bottom: 0px;
+  list-style: none;
+  font-style: italic;
+  font-size: x-small;
+  background: cornflowerblue;
+}
+
+#loading_list li {
+  padding: 2px 5px 2px 0;
+}
+
+#add_project {
+  margin-top: -5em;
+}
+
+#papaya-viewer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+
+.react-json-view {
+  padding: 15px;
+}
+
+.react-joyride__beacon:focus {
+  outline: none;
+}
+
+/** Notifications */
+.notistack-notification {
+  color: #fff !important;
+
+  &-success {
+    background-color: #43a047 !important;
+  }
+
+  &-error {
+    background-color: #d32f2f !important;
+  }
+
+  &-warning {
+    background-color: #ff9800 !important;
+  }
+
+  &-info {
+    background-color: #2196f3 !important;
+  }
+}
+.update-download-progress {
+  width: 100%;
+  position: fixed;
+  bottom: 1em;
+  left: 0em;
+  z-index: 10;
+}

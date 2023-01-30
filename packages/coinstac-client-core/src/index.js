@@ -123,7 +123,7 @@ class CoinstacClient {
       imageDirectory: this.imageDirectory,
     }).then((pipelineManager) => {
       this.pipelineManager = pipelineManager;
-      this.Manager = pipelineManager.coinstacManager;
+      this.containerManager = pipelineManager.containerManager;
       return pipelineManager;
     });
   }
