@@ -209,6 +209,7 @@ const SingularityService = () => {
         const createImageIsLatestStream = ()=>{
           // What does this stream need to do?
           // What code will consume this stream when it is returned?
+          // should this stream just emit an 'end' event?
         }
 
         digest = await getLatestDockerDigest(dockerImageName);
