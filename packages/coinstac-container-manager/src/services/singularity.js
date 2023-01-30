@@ -1,5 +1,5 @@
 'use strict';
-
+const stream = require('stream');
 const { spawn } = require('child_process');
 const path = require('path');
 const { readdir } = require('fs').promises;
@@ -131,6 +131,9 @@ const SingularityService = () => {
       };
       return tryStartService();
     },
+    /*
+    @return Promise<stream>
+    */
     pull: async (dockerImage) => {
         const dockerImageName = dockerImage.replace(':latest', '');
         const localImage = dockerImageName.replaceAll('/', '_');
@@ -207,12 +210,16 @@ const SingularityService = () => {
           };
 
         const createImageIsLatestStream = ()=>{
-          // What does this stream need to do?
-          // What code will consume this stream when it is returned?
-          // should this stream just emit an 'end' event?
+          // This stream is here to mimic the behavior of the docker api completing a download stream
+          const myStream = stream.Readable({
+            read(){
+              this.push(null);
+            }
+          })
+          return myStream;
         }
 
-        digest = await getLatestDockerDigest(dockerImageName);
+        const digest = await getLatestDockerDigest(dockerImageName);
         if(await isSingularityImageLatest(digest, localImage)){
           return createImageIsLatestStream();         
         } else{
