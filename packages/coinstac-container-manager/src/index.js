@@ -216,7 +216,7 @@ const pruneImages = () => {
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
  * TODO: define the api of the returned object itself
- * Returns {err, stream}
+ * Returns Promise<stream>
  * Stream events from the docker api {
  *   message: Error message for issues with the docker api
  *   on('data': Docker image pull progress and status as an output stream
@@ -225,14 +225,7 @@ const pruneImages = () => {
  * }
  */
 const pullImage = (computation) => {
-  return new Promise((resolve, reject) => {
-    serviceProviders[globalServiceProvider].pull(computation, (err, stream) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(stream);
-    });
-  });
+    return serviceProviders[globalServiceProvider].pull(computation)
 };
 
 /**

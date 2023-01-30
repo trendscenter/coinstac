@@ -645,7 +645,7 @@ loadConfig()
                 stream.on('data', (data) => {
                   let output = compact(data.toString().split('\r\n'));
                   output = output.map(JSON.parse);
-
+                  // these events can be renamed to not refer to docker specifically since we are now supporting Singularity
                   mainWindow.webContents.send('docker-out', { output, compId, compName });
                 });
 
