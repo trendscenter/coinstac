@@ -364,12 +364,22 @@ async function setupCentral({
   });
   mqttServer = await mqttSetup();
 
+  const shutdown = async () => {
+    if (mqttServer) {
+      return new Promise((resolve) => {
+        mqttServer.end(true, () => {
+          resolve();
+        });
+      });
+    }
+  };
 
   return {
     mqttServer,
     communicate,
     waitingOnForRun,
     clientPublish,
+    shutdown,
   };
 }
 

@@ -287,23 +287,16 @@ loadConfig()
       });
 
       /**
-       * [initializedCore description]
-       * @type {[type]}
+       * Main logout clean, remove the current client core so it can
+       * be reintialized for next login user
        */
-      ipcMain.handle('logout', () => {
-        // TODO: hacky way to not get a mqtt reconnn loop
-        // a better way would be to make an actual shutdown fn for pipeline
-        return new Promise((resolve) => {
-          if (!initializedCore) {
-            resolve();
-            return;
-          }
+      ipcMain.handle('logout', async () => {
+        if (!initializedCore) {
+          return;
+        }
 
-          initializedCore.pipelineManager.mqttClient.end(true, () => {
-            initializedCore = undefined;
-            resolve();
-          });
-        });
+        await initializedCore.pipelineManager.shutdown();
+        initializedCore = undefined;
       });
 
       ipcMain.handle('set-client-server-url', (event, url) => new Promise((resolve) => {

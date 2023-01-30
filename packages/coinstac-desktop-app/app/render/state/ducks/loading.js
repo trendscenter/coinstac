@@ -39,6 +39,7 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
         })
         .catch((err) => {
           dispatchComplete();
+          console.error(err); // eslint-disable-line no-console
           throw err;
         });
     };

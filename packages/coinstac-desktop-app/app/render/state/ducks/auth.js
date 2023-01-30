@@ -105,6 +105,7 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 
   const { auth: { user } } = getState();
 
+  await ipcRenderer.invoke('logout');
   await axios.post(`${API_URL}/logout`, { username: user.username });
 
   dispatch(clearUserState());

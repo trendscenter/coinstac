@@ -57,6 +57,7 @@ module.exports = {
     let publishData;
     let clientPublish;
     let waitingOnForRun;
+    let shutdown;
     const remoteClients = {};
 
     // set coinstac-container-manager defaults
@@ -94,6 +95,7 @@ module.exports = {
         communicate,
         waitingOnForRun,
         clientPublish,
+        shutdown,
       } = await setupCentral({
         cleanupPipeline,
         logger: utils.logger,
@@ -112,6 +114,7 @@ module.exports = {
       ({
         communicate,
         publishData,
+        shutdown,
       } = await setupOuter({
         logger: utils.logger,
         mqttRemoteProtocol,
@@ -389,6 +392,11 @@ module.exports = {
       },
       waitingOnForRun,
       containerManager,
+      // close the mqtt connection nicely to
+      // prevent server issues TODO: perhaps other cleanup?
+      async shutdown() {
+        await shutdown();
+      },
     };
   },
 };

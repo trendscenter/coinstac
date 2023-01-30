@@ -465,10 +465,21 @@ async function setupOuter({
 
   mqttClient = await mqttSetup();
 
+  const shutdown = async () => {
+    if (mqttClient) {
+      return new Promise((resolve) => {
+        mqttClient.end(true, () => {
+          resolve();
+        });
+      });
+    }
+  };
+
   return {
     mqttClient,
     communicate,
     publishData,
+    shutdown,
   };
 }
 
