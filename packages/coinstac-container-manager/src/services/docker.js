@@ -19,7 +19,23 @@ module.exports = {
         HostConfig: {
           Binds: [...mounts],
         },
-      }, containerOptions),
+      },
+      {
+        HostConfig: {
+          DeviceRequests: [
+            {
+              Drivers: 'nvidia',
+              Capabilities: [
+                [
+                  'gpu',
+                ],
+              ],
+            },
+          ],
+          ShmSize: 8589934592,
+        },
+      },
+      containerOptions),
     };
     /*
     In order for circle CI containers to see the mounts in the docker binds above
