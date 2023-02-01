@@ -18,21 +18,13 @@ module.exports = {
         Image: dockerImage,
         HostConfig: {
           Binds: [...mounts],
-        },
-      },
-      {
-        HostConfig: {
           DeviceRequests: [
             {
-              Drivers: 'nvidia',
-              Capabilities: [
-                [
-                  'gpu',
-                ],
-              ],
+              Count: -1,
+              Driver: 'nvidia',
+              Capabilities: [['gpu']],
             },
           ],
-          ShmSize: 8589934592,
         },
       },
       containerOptions),
