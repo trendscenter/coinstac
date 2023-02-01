@@ -12,8 +12,8 @@ const paths = [
   path.join('node_modules', 'coinstac-container-manager'),
   path.join('node_modules', 'coinstac-pipeline'),
 ];
-rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema|docker-manager|pipeline)')
-  .then(() => rmrf('./node_modules/.bin/coinstac-*(common|graphql-schema|docker-manager|pipeline)'))
+rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema|container-manager|pipeline)')
+  .then(() => rmrf('./node_modules/.bin/coinstac-*(common|graphql-schema|container-manager|pipeline)'))
   .then(() => rmrf('./config/local.json'))
   .then(() => Promise.all(paths.map(p => mkdirp(p))))
   .then(() => Promise.all([
