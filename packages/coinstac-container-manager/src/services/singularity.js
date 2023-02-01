@@ -213,6 +213,7 @@ const SingularityService = () => {
           // This stream is here to mimic the behavior of the docker api completing a download stream
           const myStream = stream.Readable({
             read(){
+              // verify that this stread triggers an 'end' event that gets consumed by main
               this.push(null);
             }
           })
