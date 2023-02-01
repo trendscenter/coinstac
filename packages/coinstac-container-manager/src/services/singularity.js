@@ -187,7 +187,7 @@ const SingularityService = () => {
                 path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
                 [
                   path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
-                  `docker://${dockerImageName}`,
+                  dockerImageName,
                 ]
               );
               /*

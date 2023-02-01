@@ -25,4 +25,4 @@ if [ $code != 0 ]; then
   exit $code
 fi
 
-echo $PARSEDDIGEST
+echo -n $PARSEDDIGEST
