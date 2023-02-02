@@ -8,6 +8,7 @@ const mv = pify(require('mv'));
 const http = require('http');
 const https = require('https');
 const FormData = require('form-data');
+const crypto = require('crypto');
 const { splitFilesFromStream, extractTar, getFilesAndDirs } = require('./pipeline-manager-helpers');
 
 const {
@@ -74,37 +75,53 @@ async function setupOuter({
             }
           );
         } else if (method === 'post') {
-          logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
-          const form = new FormData();
-          form.append('filename', file);
-          form.append('compressed', compressed.toString());
-          form.append('files', JSON.stringify(files));
-          form.append('clientId', clientId);
-          form.append('runId', runId);
-          form.append('file', fs.createReadStream(
-            path.join(directory, file),
-            {
-              headers: { 'transfer-encoding': 'chunked' },
-              knownSize: NaN,
-            }
-          ));
-          form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
-            (err, res) => {
-              if (err) return reject(err);
-              res.resume();
-              res.on('end', () => {
-                if (!res.complete) {
-                  return reject(new Error('File post connection broken'));
+          const fileToSend = path.join(directory, file);
+          let fileSize = 0;
+          const md5Sum = crypto.createHash('md5');
+          const stream = fs.createReadStream(fileToSend);
+          stream.on('data', (chunk) => {
+            fileSize += chunk.length;
+            md5Sum.update(chunk);
+          });
+          logger.silly(`############# ZIPPED FILE SIZE: ${fileSize / 1048576}MB`);
+          stream.on('end', () => {
+            const form = new FormData();
+            form.append('filename', file);
+            form.append('compressed', compressed.toString());
+            form.append('files', JSON.stringify(files));
+            form.append('clientId', clientId);
+            form.append('md5', md5Sum.digest('hex'));
+            form.append('runId', runId);
+            form.append('file', fs.createReadStream(
+              path.join(directory, file),
+              {
+                headers: { 'transfer-encoding': 'chunked' },
+                knownSize: fileSize,
+              }
+            ));
+            form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
+              (err, res) => {
+                let body = '';
+                if (err) {
+                  return reject(err);
                 }
-                if (res.statusCode !== 200) {
-                  return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
-                }
-                resolve();
+                res.resume();
+                res.on('data', (data) => { body += data.toString(); });
+                res.on('end', () => {
+                  if (!res.complete) {
+                    return reject(new Error('File post connection broken'));
+                  }
+                  if (res.statusCode !== 200) {
+                    return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage} ${body}`));
+                  }
+                  resolve();
+                });
+                res.on('error', (e) => {
+                  reject(e);
+                });
               });
-              res.on('error', (e) => {
-                reject(e);
-              });
-            });
+          });
+          stream.on('error', e => reject(e));
         }
       }, 5000 * factor);
     });
@@ -128,7 +145,7 @@ async function setupOuter({
         let retryLimit = 0;
         let success = false;
         let partFile;
-        // retry 1000 times w/ backout
+        // retry _limit_ times w/ exponential backout
         while (retryLimit < limit) {
           try {
             partFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
@@ -144,21 +161,22 @@ async function setupOuter({
             break;
           } catch (e) {
             logger.silly(JSON.stringify(e));
-            if ((e.code
-              && (
-                e.code === 'ECONNREFUSED'
-                || e.code === 'EPIPE'
-                || e.code === 'ECONNRESET'
-                || e.code === 'EAGAIN'
-              ))
-              || (e.message && e.message.includes('EPIPE'))
-            ) {
+            // if ((e.code
+            //   && (
+            //     e.code === 'ECONNREFUSED'
+            //     || e.code === 'EPIPE'
+            //     || e.code === 'ECONNRESET'
+            //     || e.code === 'EAGAIN'
+            //   ))
+            //   || (e.message && e.message.includes('EPIPE'))
+            // ) {
               retryLimit += 1;
-              logger.silly(`Retrying file request: ${file}`);
               logger.silly(`File request failed with: ${e.message}`);
-            } else {
-              throw e;
-            }
+              logger.silly(`Retrying file request: ${file}`);
+            debugger
+            // } else {
+            //   throw e;
+            // }
           }
         }
         if (!success) throw new Error('Service down, file retry limit reached');

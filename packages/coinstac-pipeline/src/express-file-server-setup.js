@@ -6,6 +6,7 @@ const mkdirp = promisify(require('mkdirp'));
 const fs = require('fs');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
+const crypto = require('crypto');
 const { extractTar } = require('./pipeline-manager-helpers');
 
 const {
@@ -33,6 +34,7 @@ async function expressFileServerSetup({
             );
           });
       } catch (e) {
+        debugger
         cb(e);
       }
     },
@@ -40,82 +42,111 @@ async function expressFileServerSetup({
       try {
         cb(null, req.body.filename);
       } catch (e) {
+        debugger
         cb(e);
       }
     },
   });
 
-  const upload = multer({ storage });
+  const upload = multer({ storage }).single('file');
   const app = express();
-  app.use(express.json({ limit: '100mb' }));
-  app.use(express.urlencoded({ limit: '100mb' }));
+  app.use(express.json({ limit: '1000mb' }));
+  app.use(express.urlencoded({ limit: '1000mb' }));
 
-  app.post('/transfer', upload.single('file'), (req, res) => {
-    const received = Date.now();
-    res.end();
-    const { clientId, runId } = req.body;
-    const client = remoteClients[clientId][runId];
-
-    Promise.resolve().then(() => {
-      // is this file the last?
-      if (client.files.expected.length !== 0
-        && client.files.expected
-          .every(e => [req.body.filename, ...client.files.received].includes(e))) {
-        remoteClients[clientId][runId].debug.received = Date.now();
-        const workDir = path.join(
-          activePipelines[runId].baseDirectory,
-          clientId
-        );
-        const tars = client.files.expected
-          .map(file => path.join(workDir, file))
-          .sort((a, b) => parseInt(path.extname(a), 10) > parseInt(path.extname(b), 10));
-        return extractTar(tars, workDir)
-          .then(() => Promise.all(tars.map(tar => unlink(tar))));
+  app.post('/transfer', (req, res) => {
+    upload(req, res, (err) => {
+      if (err) {
+        debugger
+        return res.status(500).send(err.stack);
+        // An unknown error occurred when uploading.
       }
-    }).then(() => {
-      // we add the file here, otherwise there can be a race condition
-      // with multiple clients untaring
-      client.files.received
-        .push(req.body.filename);
-      const waitingOn = waitingOnForRun(runId);
-      activePipelines[runId].currentState.waitingOn = waitingOn;
-      const stateUpdate = Object.assign(
-        {},
-        activePipelines[runId].pipeline.currentState,
-        activePipelines[runId].currentState
+      const received = Date.now();
+      res.end();
+      const {
+        clientId, runId, filename, md5,
+      } = req.body;
+      const client = remoteClients[clientId][runId];
+      const workDir = path.join(
+        activePipelines[runId].baseDirectory,
+        clientId
       );
-      activePipelines[runId].stateEmitter
-        .emit('update', stateUpdate);
-      logger.silly(JSON.stringify(stateUpdate));
-      if (waitingOn.length === 0) {
-        activePipelines[runId].stateStatus = 'Received all nodes data and files';
-        logger.silly('Received all nodes data and files');
-        // clear transfer and start run
-        clearClientFileList(runId);
-        rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
-          .then(() => {
-            printClientTimeProfiling(runId, 'Transmission with files');
-            activePipelines[runId].remote
-              .resolve({ debug: { received }, success: false });
+      const transferedFile = path.join(workDir, filename);
+
+      const md5Sum = crypto.createHash('md5');
+      const stream = fs.createReadStream(transferedFile);
+      stream.on('data', (chunk) => {
+        md5Sum.update(chunk);
+      });
+      stream.on('end', () => {
+        if (md5 !== md5Sum.digest('hex')) {
+          return fs.unlink(transferedFile, (err) => {
+            debugger
+            if (err) logger.error(`Error deleting malformed file: ${err}`);
+            res.status(400).send('MD5 check failed, malformed file data');
           });
-      }
-    }).catch((error) => {
-      if (!activePipelines[runId]) return logger.error(`File Transmission attempt on invalid runId ${runId} error: ${error} `);
-      const runError = Object.assign(
-        error,
-        {
-          error: `Pipeline error from pipeline central node, Error details: ${error.error}`,
-          message: `Pipeline error from pipeline central node, Error details: ${error.message}`,
         }
-      );
-      activePipelines[runId].state = 'error';
-      activePipelines[runId].stateStatus = 'Received node error';
-      activePipelines[runId].error = runError;
-      clientPublish(
-        activePipelines[runId].clients,
-        { runId, error: runError }
-      );
-      activePipelines[runId].remote.reject(runError);
+        res.end();
+        Promise.resolve().then(() => {
+          // is this file the last?
+          if (client.files.expected.length !== 0
+            && client.files.expected
+              .every(e => [filename, ...client.files.received].includes(e))) {
+            remoteClients[clientId][runId].debug.received = received;
+
+            const tars = client.files.expected
+              .map(file => path.join(workDir, file))
+              .sort((a, b) => parseInt(path.extname(a), 10) > parseInt(path.extname(b), 10));
+
+            return extractTar(tars, workDir)
+              .then(() => Promise.all(tars.map(tar => unlink(tar))));
+          }
+        }).then(() => {
+          // we add the file here, otherwise there can be a race condition
+          // with multiple clients untaring
+          client.files.received
+            .push(filename);
+          const waitingOn = waitingOnForRun(runId);
+          activePipelines[runId].currentState.waitingOn = waitingOn;
+          const stateUpdate = Object.assign(
+            {},
+            activePipelines[runId].pipeline.currentState,
+            activePipelines[runId].currentState
+          );
+          activePipelines[runId].stateEmitter
+            .emit('update', stateUpdate);
+          logger.silly(JSON.stringify(stateUpdate));
+          if (waitingOn.length === 0) {
+            activePipelines[runId].stateStatus = 'Received all nodes data and files';
+            logger.silly('Received all nodes data and files');
+            // clear past iteration remote transfered files (if any) and start run
+            clearClientFileList(runId);
+            rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
+              .then(() => {
+                printClientTimeProfiling(runId, 'Transmission with files');
+                activePipelines[runId].remote
+                  .resolve({ debug: { received }, success: false });
+              });
+          }
+        }).catch((error) => {
+          debugger
+          if (!activePipelines[runId]) return logger.error(`File Transmission attempt on invalid runId ${runId} error: ${error} `);
+          const runError = Object.assign(
+            error,
+            {
+              error: `Pipeline error from pipeline central node, Error details: ${error.error}`,
+              message: `Pipeline error from pipeline central node, Error details: ${error.message}`,
+            }
+          );
+          activePipelines[runId].state = 'error';
+          activePipelines[runId].stateStatus = 'Received node error';
+          activePipelines[runId].error = runError;
+          clientPublish(
+            activePipelines[runId].clients,
+            { runId, error: runError }
+          );
+          activePipelines[runId].remote.reject(runError);
+        });
+      });
     });
   });
 
@@ -138,6 +169,7 @@ async function expressFileServerSetup({
       resolve();
     });
     server.on('error', (e) => {
+      debugger
       logger.error(`File server error: ${e}`);
     });
   });
