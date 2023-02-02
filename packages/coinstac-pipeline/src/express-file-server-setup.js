@@ -32,7 +32,8 @@ async function expressFileServerSetup({
               null,
               fp
             );
-          });
+          })
+          .catch(e => cb(e));
       } catch (e) {
         debugger
         cb(e);
@@ -79,10 +80,10 @@ async function expressFileServerSetup({
       });
       stream.on('end', () => {
         if (md5 !== md5Sum.digest('hex')) {
+          res.status(400).send('MD5 check failed, malformed file data');
           return fs.unlink(transferedFile, (err) => {
             debugger
             if (err) logger.error(`Error deleting malformed file: ${err}`);
-            res.status(400).send('MD5 check failed, malformed file data');
           });
         }
         res.end();
