@@ -200,6 +200,7 @@ const SingularityService = () => {
 
     const digest = await getLatestDockerDigest(dockerImageName);
     if(await isSingularityImageLatest(digest, localImage)){
+      // we should delete old images
       return createImageIsLatestStream();         
     } else{
       return pullAndConvertDockerToSingularity(digest, localImage);
