@@ -179,37 +179,6 @@ const startService = ({
 * Finds dangling coinstac images and deletes them
 * @return {Promise} list of deleted images and tags
 */
-const pruneImages = () => {
-  return new Promise((resolve, reject) => {
-    serviceProviders[globalServiceProvider]
-      .listImages({ filters: { dangling: { true: true } } }, (err, res) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(res.filter(((elem) => {
-          // TODO: find better way, make docker api 'reference' work?
-          if (elem.RepoTags) {
-            return elem.RepoTags[0].includes('coinstac');
-          } if (elem.RepoDigests) {
-            return elem.RepoDigests[0].includes('coinstac');
-          }
-          return false;
-        })));
-      });
-  }).then((images) => {
-    return Promise.all(images.map((image) => {
-      return new Promise((resolve) => {
-        serviceProviders[globalServiceProvider].getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
-          if (err) {
-            // remove can fail for serveral benign reasons, just resolve with the reason
-            resolve(err);
-          }
-          resolve(res);
-        });
-      });
-    }));
-  });
-};
 
 /**
  * Pull individual image from Docker hub
@@ -233,7 +202,7 @@ const pullImage = (computation) => {
  * TODO: this function should be depricated for pullImagesFromList,
  *  as it couples too closely w/ the UI
  * @param {Object[]} comps array of computation objects to download
- * @param {String} comps.img Docker image name
+ * @param {String} comp.img Docker image name
  * @param {String} comp.compId Computation ID from app DB
  * @param {String} comp.compName Computation name from DB
  * @return {Object} Returns array of objects containing stream and computation parameters
@@ -252,7 +221,7 @@ const pullImages = (comps) => {
         compId: val.compId,
         compName: val.compName,
       }));
-    });
+    })
 };
 
 /**
@@ -260,8 +229,9 @@ const pullImages = (comps) => {
  * @param {Object[]} comps array of computation id's to download
  * @return {Object} Returns array of objects containing stream and computation parameters
  */
-const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${image}:latest`)))
-  .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
+const pullImagesFromList = (comps) => {
+  return serviceProviders[globalServiceProvider].pullImagesFromList(comps)
+}
 
 /**
  * Remove the Docker image associated with the image id
@@ -349,7 +319,6 @@ module.exports = {
   getServices,
   pullImages,
   pullImagesFromList,
-  pruneImages,
   removeImage,
   removeImagesFromList,
   services,

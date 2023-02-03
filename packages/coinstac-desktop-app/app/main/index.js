@@ -381,7 +381,6 @@ loadConfig()
                 });
               });
           })
-          .then(() => initializedCore.containerManager.pruneImages())
           .then(() => {
             logger.verbose('############ Client starting pipeline');
 
