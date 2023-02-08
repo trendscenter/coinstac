@@ -110,10 +110,23 @@ const SingularityService = () => {
   const startContainer = (...args) => {
     return Container(...args);
   };
+  /*
+  @param {string} imageDirectory
+  @return {Promise<Array<string>>} image names
+  */
   const getImages = async (imageDirectory) => {
-    const files = await readdir(imageDirectory);
-    return files.find(file => file.includes(localImage));
+    return await readdir(imageDirectory);
   }
+
+  const unlinkOldImages = async (imageNameWithHash)=> {
+    const images = await getImages(imageDirectory);
+    const oldImages = images.filter(image => image !== imageNameWithHash);
+    const unlinkPromises = oldImages.map(image=>{
+      return unlink(image);
+    })
+    return Promise.all(unlinkPromises);
+  }
+
   const pull = async (dockerImage) => {
     const dockerImageName = dockerImage.replace(':latest', '');
     const localImage = dockerImageName.replaceAll('/', '_');
@@ -150,10 +163,10 @@ const SingularityService = () => {
       check local singularity image digest against latest docker image
       @return {boolean}
      */
-    const isSingularityImageLatest = async (digest, localImage) => {
+    const isSingularityImageLatest = async (imageNameWithHash) => {
       const images = await getImages(imageDirectory);
       const savedImage = images.find(image => image.includes(localImage));
-      if (savedImage && savedImage.includes(`${localImage}-${digest.split(':')[1]}`)) {
+      if (savedImage && savedImage.includes(imageNameWithHash)) {
         return true;
       }
       return false;
@@ -162,11 +175,11 @@ const SingularityService = () => {
       pull latest docker image and convert to local singularity image
       @return {stream}
      */
-    const pullAndConvertDockerToSingularity = (digest, localImage) => {
+    const pullAndConvertDockerToSingularity = (imageNameWithHash) => {
       const conversionProcess = spawn(
         path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
         [
-          path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
+          path.join(imageDirectory, imageNameWithHash),
           dockerImageName,
         ]
       );
@@ -184,10 +197,7 @@ const SingularityService = () => {
         if (code !== 0) {
           return conversionProcess.emit('error', new Error(convStderr));
         }
-        const images = await getImages(imageDirectory);
-        const oldImage = images.filter(image => image !== `${localImage}-${digest.split(':')[1]}`);
-
-        await unlink(oldImage);
+        await unlinkOldImages(imageNameWithHash);
         conversionProcess.emit('end');
       });
       return conversionProcess;
@@ -206,10 +216,11 @@ const SingularityService = () => {
     };
 
     const digest = await getLatestDockerDigest(dockerImageName);
-    if (await isSingularityImageLatest(digest, localImage)) {
+    const imageNameWithHash = `${localImage}-${digest.split(':')[1]}`
+    if (await isSingularityImageLatest(imageNameWithHash)) {
       return createImageIsLatestStream();
     }
-    return pullAndConvertDockerToSingularity(digest, localImage, oldImage);
+    return pullAndConvertDockerToSingularity(imageNameWithHash);
   };
 
   const pullImagesFromList = async (comps) => {

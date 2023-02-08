@@ -11,7 +11,8 @@ const listImages = (opts, cb) => docker.listImages(opts, cb);
 const ping = () => docker.ping()
 const getImage = id => docker.getImage(id)
 const pruneImages = () => {
-  return docker.pruneImages({filters: {label: {repository: 'coinstacteam' }}});
+  //TODO fix arguments to pruneImages
+  return docker.pruneImages();
 };
 const pull = (id) => {
   if (process.platform === 'win32') {
