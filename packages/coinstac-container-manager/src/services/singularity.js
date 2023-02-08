@@ -1,8 +1,7 @@
-'use strict';
 const stream = require('stream');
 const { spawn } = require('child_process');
 const path = require('path');
-const { readdir } = require('fs').promises;
+const { readdir, unlink } = require('fs').promises;
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
@@ -111,6 +110,10 @@ const SingularityService = () => {
   const startContainer = (...args) => {
     return Container(...args);
   };
+  const getImages = async (imageDirectory) => {
+    const files = await readdir(imageDirectory);
+    return files.find(file => file.includes(localImage));
+  }
   const pull = async (dockerImage) => {
     const dockerImageName = dockerImage.replace(':latest', '');
     const localImage = dockerImageName.replaceAll('/', '_');
@@ -119,37 +122,37 @@ const SingularityService = () => {
       @return {Promise<string>}
      */
     const getLatestDockerDigest = (dockerImageName) => {
-      return new Promise((resolve, reject)=>{
-          const latestDigest = spawn(
-            path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-            [dockerImageName]
-          );
-          let error = '';
-          let stderr = '';
-          let digest = '';
-          latestDigest.stderr.on('data', (data) => { stderr += data; });
-          latestDigest.stdout.on('data', (data) => { digest += data; });
-          latestDigest.on('error', (e) => {
-            error = e;
-          });
-          latestDigest.on('close', (code) => {
-            if (error) {
-              reject(new Error(error));
-            }
-            if (code !== 0) {
-              reject(new Error(stderr));
-            }
-            resolve(digest);
-          });
+      return new Promise((resolve, reject) => {
+        const latestDigest = spawn(
+          path.join(__dirname, 'utils', 'get-docker-digest.sh'),
+          [dockerImageName]
+        );
+        let error = '';
+        let stderr = '';
+        let digest = '';
+        latestDigest.stderr.on('data', (data) => { stderr += data; });
+        latestDigest.stdout.on('data', (data) => { digest += data; });
+        latestDigest.on('error', (e) => {
+          error = e;
+        });
+        latestDigest.on('close', (code) => {
+          if (error) {
+            reject(new Error(error));
+          }
+          if (code !== 0) {
+            reject(new Error(stderr));
+          }
+          resolve(digest);
+        });
       });
-    }
+    };
     /*
       check local singularity image digest against latest docker image
       @return {boolean}
      */
     const isSingularityImageLatest = async (digest, localImage) => {
-      const files = await readdir(imageDirectory);
-      const savedImage = files.find(file => file.includes(localImage));
+      const images = await getImages(imageDirectory);
+      const savedImage = images.find(image => image.includes(localImage));
       if (savedImage && savedImage.includes(`${localImage}-${digest.split(':')[1]}`)) {
         return true;
       }
@@ -159,60 +162,62 @@ const SingularityService = () => {
       pull latest docker image and convert to local singularity image
       @return {stream}
      */
-    const pullAndConvertDockerToSingularity =  (digest, localImage) => {
-          const conversionProcess = spawn(
-            path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
-            [
-              path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
-              dockerImageName,
-            ]
-          );
-          /*
-            in order to maintain api parity with the docker service, we have to wrap
-            the conversion process spawn events to mimic the docker pull's returned stream
-           */
-          let convStderr = '';
-          conversionProcess.stderr.on('data', (data) => { convStderr += data; });
-          conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
-          // we're ignoring the .on('error') event as its handled
-          // by the caller of the manager api
-          // but we need to wrap and emit cases from the script itself erroring
-          conversionProcess.on('close', async (code) => {
-            if (code !== 0) {
-              return conversionProcess.emit('error', new Error(convStderr));
-            }
-            conversionProcess.emit('end');
-          });
-          return conversionProcess;
-      };
+    const pullAndConvertDockerToSingularity = (digest, localImage) => {
+      const conversionProcess = spawn(
+        path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
+        [
+          path.join(imageDirectory, `${localImage}-${digest.split(':')[1]}`),
+          dockerImageName,
+        ]
+      );
+      /*
+      in order to maintain api parity with the docker service, we have to wrap
+      the conversion process spawn events to mimic the docker pull's returned stream
+      */
+      let convStderr = '';
+      conversionProcess.stderr.on('data', (data) => { convStderr += data; });
+      conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
+      // we're ignoring the .on('error') event as its handled
+      // by the caller of the manager api
+      // but we need to wrap and emit cases from the script itself erroring
+      conversionProcess.on('close', async (code) => {
+        if (code !== 0) {
+          return conversionProcess.emit('error', new Error(convStderr));
+        }
+        const images = await getImages(imageDirectory);
+        const oldImage = images.filter(image => image !== `${localImage}-${digest.split(':')[1]}`);
 
-    const createImageIsLatestStream = ()=>{
+        await unlink(oldImage);
+        conversionProcess.emit('end');
+      });
+      return conversionProcess;
+    };
+
+    const createImageIsLatestStream = () => {
       // This stream is here to mimic the behavior of the docker api completing a download stream
       const myStream = stream.Readable({
-        read(){
+        read() {
           // verify that this stread triggers an 'end' event that gets consumed by main
           this.push('Image already downloaded');
           this.push(null);
-        }
-      })
+        },
+      });
       return myStream;
-    }
+    };
 
     const digest = await getLatestDockerDigest(dockerImageName);
-    if(await isSingularityImageLatest(digest, localImage)){
-      // we should delete old images
-      return createImageIsLatestStream();         
-    } else{
-      return pullAndConvertDockerToSingularity(digest, localImage);
+    if (await isSingularityImageLatest(digest, localImage)) {
+      return createImageIsLatestStream();
     }
-  }
+    return pullAndConvertDockerToSingularity(digest, localImage, oldImage);
+  };
 
   const pullImagesFromList = async (comps) => {
     const streams = await Promise.all(
-      comps.map((image) => {return pull(`${image}:latest`)})
-    )
-    return streams.map((stream, index) => ({ stream, compId: comps[index] }))
-  }
+      comps.map((image) => { return pull(`${image}:latest`); })
+    );
+    return streams.map((stream, index) => ({ stream, compId: comps[index] }));
+  };
 
   return {
     createService(serviceId, port, opts) {
@@ -237,7 +242,7 @@ const SingularityService = () => {
     /*
     @return Promise<stream>
     */
-    pull, 
+    pull,
     pullImagesFromList,
     setImageDirectory(imageDir) {
       imageDirectory = imageDir;
