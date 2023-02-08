@@ -1,7 +1,7 @@
 const stream = require('stream');
 const { spawn } = require('child_process');
 const path = require('path');
-const { readdir, unlink } = require('fs').promises;
+const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
@@ -114,15 +114,15 @@ const SingularityService = () => {
   @param {string} imageDirectory
   @return {Promise<Array<string>>} image names
   */
-  const getImages = async (imageDirectory) => {
+  const listImages = async (imageDirectory) => {
     return await readdir(imageDirectory);
   }
 
-  const unlinkOldImages = async (imageNameWithHash)=> {
-    const images = await getImages(imageDirectory);
+  const removeOldImages = async (imageNameWithHash)=> {
+    const images = await listImages(imageDirectory);
     const oldImages = images.filter(image => image !== imageNameWithHash);
     const unlinkPromises = oldImages.map(image=>{
-      return unlink(image);
+      return rm(path.join(imageDirectory, image), { recursive: true, force: true });
     })
     return Promise.all(unlinkPromises);
   }
@@ -164,7 +164,7 @@ const SingularityService = () => {
       @return {boolean}
      */
     const isSingularityImageLatest = async (imageNameWithHash) => {
-      const images = await getImages(imageDirectory);
+      const images = await listImages(imageDirectory);
       const savedImage = images.find(image => image.includes(localImage));
       if (savedImage && savedImage.includes(imageNameWithHash)) {
         return true;
@@ -181,6 +181,7 @@ const SingularityService = () => {
         [
           path.join(imageDirectory, imageNameWithHash),
           dockerImageName,
+          imageNameWithHash,
         ]
       );
       /*
@@ -197,7 +198,7 @@ const SingularityService = () => {
         if (code !== 0) {
           return conversionProcess.emit('error', new Error(convStderr));
         }
-        await unlinkOldImages(imageNameWithHash);
+        await removeOldImages(imageNameWithHash);
         conversionProcess.emit('end');
       });
       return conversionProcess;
