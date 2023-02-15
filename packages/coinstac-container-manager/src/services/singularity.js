@@ -115,17 +115,17 @@ const SingularityService = () => {
   @return {Promise<Array<string>>} image names
   */
   const listImages = async (imageDirectory) => {
-    return await readdir(imageDirectory);
-  }
+    return readdir(imageDirectory);
+  };
 
-  const removeOldImages = async (imageNameWithHash)=> {
+  const removeOldImages = async (imageNameWithHash) => {
     const images = await listImages(imageDirectory);
     const oldImages = images.filter(image => image !== imageNameWithHash);
-    const unlinkPromises = oldImages.map(image=>{
+    const unlinkPromises = oldImages.map((image) => {
       return rm(path.join(imageDirectory, image), { recursive: true, force: true });
-    })
+    });
     return Promise.all(unlinkPromises);
-  }
+  };
 
   const pull = async (dockerImage) => {
     const dockerImageName = dockerImage.replace(':latest', '');
@@ -217,7 +217,7 @@ const SingularityService = () => {
     };
 
     const digest = await getLatestDockerDigest(dockerImageName);
-    const imageNameWithHash = `${localImage}-${digest.split(':')[1]}`
+    const imageNameWithHash = `${localImage}-${digest.split(':')[1]}`;
     if (await isSingularityImageLatest(imageNameWithHash)) {
       return createImageIsLatestStream();
     }

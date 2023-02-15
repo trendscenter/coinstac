@@ -8,10 +8,10 @@ const { ServiceFunctionGenerator } = require('./serviceFunction');
 
 const docker = new Docker();
 const listImages = (opts, cb) => docker.listImages(opts, cb);
-const ping = () => docker.ping()
-const getImage = id => docker.getImage(id)
+const ping = () => docker.ping();
+const getImage = id => docker.getImage(id);
 const pruneImages = () => {
-  //TODO fix arguments to pruneImages
+  // TODO fix arguments to pruneImages
   return docker.pruneImages();
 };
 const pull = (id) => {
@@ -24,26 +24,25 @@ const pull = (id) => {
       method: 'POST',
     };
 
-    return new Promise((resolve, reject)=>{
+    return new Promise((resolve) => {
       const callback = (res) => {
-          res.setEncoding('utf8');
-          resolve(res);
-        }
+        res.setEncoding('utf8');
+        resolve(res);
+      };
       const clientRequest = http.request(options, callback);
       clientRequest.end();
-    })
-  } else {
-    return docker.pull(id);
+    });
   }
-}
+  return docker.pull(id);
+};
 
 const pullImagesFromList = async (comps) => {
   const streams = await Promise.all(
-    comps.map((image) => {return pull(`${image}:latest`)})
-  )
-  await pruneImages()
-  return streams.map((stream, index) => ({ stream, compId: comps[index] }))
-}
+    comps.map((image) => { return pull(`${image}:latest`); })
+  );
+  await pruneImages();
+  return streams.map((stream, index) => ({ stream, compId: comps[index] }));
+};
 
 module.exports = {
   // id, port
@@ -95,7 +94,7 @@ module.exports = {
           throw new Error('Invalid compspecVersion');
       }
     }
-    
+
     const tryStartService = () => {
       utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
       // for debug mode just grab the last port # to try to not have containers collide
@@ -149,7 +148,7 @@ module.exports = {
   pullImagesFromList,
   ping,
   getImage,
-  pull, 
+  pull,
   getContainerStats: async () => {
     const containers = await docker.listContainers();
     const result = Promise.all(containers.map((container) => {
