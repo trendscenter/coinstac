@@ -335,8 +335,6 @@ class CoinstacClient {
             let stageFiles = process.env.CI ? fs.copyFile : fs.link;
             if (
               networkVolume
-              || (filePaths.directories
-                && filePaths.directories.length > 0)
             ) {
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {
@@ -345,28 +343,55 @@ class CoinstacClient {
               };
             }
 
-            for (let i = 0; i < filePaths.files.length; i += 1) {
-              const mkdir = path.normalize(filePaths.files[i])
-                === path.basename(filePaths.files[i])
-                ? Promise.resolve()
-                : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+            if (filePaths.directories && filePaths.directories.length > 0) {
+              const dirPromises = [];
+              const dirs = filePaths.directories.splice(1);
+              for (let i = 0; i < dirs.length; i += 1) {
+                const mkdir = new Promise((resolve, reject) => {
+                  const dir = dirs[i].toString().replace(filePaths.baseDirectory, '');
+                  mkdirp(path.join(fp, dir));
+                });
+                dirPromises.push(mkdir);
+              }
+              Promise.all(dirPromises);
+              setTimeout(() => {
+                for (let i = 0; i < filePaths.files.length; i += 1) {
+                  const file = filePaths.files[i].toString().replace(filePaths.baseDirectory, '');
+                  const stage = new Promise((resolve, reject) => {
+                    stageFiles(
+                      (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
+                        : path.resolve(filePaths.files[i])
+                      ),
+                      path.resolve(path.join(fp, file))
+                    );
+                  });
+                  linkPromises.push(stage);
+                }
+              }, 1000);
+            } else {
+              for (let i = 0; i < filePaths.files.length; i += 1) {
+                const mkdir = path.normalize(filePaths.files[i])
+                  === path.basename(filePaths.files[i])
+                  ? Promise.resolve()
+                  : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
 
-              linkPromises.push( // eslint-disable-next-line no-loop-func
-                mkdir.then(async () => {
-                  await stageFiles(
-                    (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
-                      : path.resolve(filePaths.baseDirectory, filePaths.files[i])
-                    ),
-                    path.resolve(fp, path.basename(filePaths.files[i]))
-                  );
-                })
-                  .catch((e) => {
-                    // permit dupes
-                    if (e.code && e.code !== 'EEXIST') {
-                      throw e;
-                    }
+                linkPromises.push( // eslint-disable-next-line no-loop-func
+                  mkdir.then(async () => {
+                    await stageFiles(
+                      (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
+                        : path.resolve(filePaths.baseDirectory, filePaths.files[i])
+                      ),
+                      path.resolve(fp, path.basename(filePaths.files[i]))
+                    );
                   })
-              );
+                    .catch((e) => {
+                      // permit dupes
+                      if (e.code && e.code !== 'EEXIST') {
+                        throw e;
+                      }
+                    })
+                );
+              }
             }
           }
 
