@@ -104,11 +104,9 @@ const styles = theme => ({
   },
   buttonWrapper: {
     display: 'flex',
+    columnGap: theme.spacing(1),
     justifyContent: 'flex-end',
     marginBottom: theme.spacing(2),
-  },
-  button: {
-    marginRight: theme.spacing(1),
   },
 });
 
@@ -228,6 +226,16 @@ class Pipeline extends Component {
           }
         }
       );
+    }
+
+    if (nextProps.consortia.length > 0 && consortium && consortium.id) {
+      const newConsortium = nextProps.consortia.find(con => con.id === consortium.id);
+
+      if (newConsortium && newConsortium.activePipelineId !== consortium.activePipelineId) {
+        this.setState({
+          consortium: { ...consortium, activePipelineId: newConsortium.activePipelineId },
+        });
+      }
     }
   }
 
@@ -811,11 +819,11 @@ class Pipeline extends Component {
             </Menu>
           </div>
           <Box textAlign="right" className={classes.buttonWrapper}>
-            {consortium && consortium.activePipelineId === pipeline.id && (
+            {consortium && consortium.activePipelineId
+              && consortium.activePipelineId === pipeline.id && (
               <Button
                 variant="contained"
                 color="primary"
-                className={classes.button}
                 onClick={this.handleGoToMap}
               >
                 Map Local Data
@@ -825,7 +833,6 @@ class Pipeline extends Component {
               <Button
                 variant="contained"
                 color="primary"
-                className={classes.button}
                 onClick={this.handleGoBackToConsortium}
               >
                 Go to Consortium
