@@ -4,6 +4,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Alert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Tooltip from '@material-ui/core/Tooltip';
 import InfoIcon from '@material-ui/icons/Info';
@@ -292,7 +293,7 @@ class MapsCsvField extends React.Component {
         />
         {
           selectedFiles.length > 0 && (
-            <React.Fragment>
+            <>
               <Typography variant="h5" className={classes.subtitle}>
                 Map CSV columns to pipeline variables
               </Typography>
@@ -329,8 +330,14 @@ class MapsCsvField extends React.Component {
                 </Alert>
               )}
               <Grid container spacing={6}>
-                <Grid item xs={12} md={6}>
-                  <div>
+                <Grid item xs={12}>
+                  <MapsCsvFieldCsvHeader
+                    remainingHeader={remainingHeader}
+                    registerDraggableContainer={container => drake.containers.push(container)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Box display="flex" flexDirection="column" gridGap={16}>
                     <Typography variant="h6" className={classes.capitalize}>
                       { `Pipeline ${fieldName}` }
                     </Typography>
@@ -351,16 +358,10 @@ class MapsCsvField extends React.Component {
                         />
                       ))
                     }
-                  </div>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <MapsCsvFieldCsvHeader
-                    remainingHeader={remainingHeader}
-                    registerDraggableContainer={container => drake.containers.push(container)}
-                  />
+                  </Box>
                 </Grid>
               </Grid>
-            </React.Fragment>
+            </>
           )
         }
       </div>

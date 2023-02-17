@@ -9,9 +9,7 @@ import classNames from 'classnames';
 
 const styles = theme => ({
   rootPaper: {
-    marginTop: theme.spacing(1.5),
-    minWidth: '250px',
-    display: 'inline-flex',
+    display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -19,9 +17,10 @@ const styles = theme => ({
     paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
-    flex: '1 0 auto',
+    // flex: '1 0 auto',
     marginLeft: theme.spacing(0.5),
-    maxWidth: '80px',
+    minWidth: '80px',
+    width: 'fit-content',
   },
   dropZone: {
     flex: '1 0 auto',
