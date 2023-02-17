@@ -57,10 +57,24 @@ function MapsCsvFieldPipelineVariable({
     <div>
       <div className={classNames('drop-panel', classes.rootPaper)}>
         <div>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: mappedColumn ? 'black' : 'red',
+            }}
+            className={classes.title}
+          >
             {name}
           </Typography>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: 'green',
+            }}
+            className={classes.title}
+          >
             {`${dataType}`}
           </Typography>
         </div>

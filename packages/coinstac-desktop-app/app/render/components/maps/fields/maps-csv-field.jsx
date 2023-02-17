@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import Alert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
@@ -49,6 +50,9 @@ const styles = theme => ({
   },
   errorMessage: {
     color: red[400],
+  },
+  alert: {
+    marginBottom: theme.spacing(1),
   },
 });
 
@@ -152,6 +156,37 @@ class MapsCsvField extends React.Component {
     readFiles();
   }
 
+  getUnmappedFieldsWarningMessage = () => {
+    const { field, fieldDataMap } = this.props;
+
+    if (!fieldDataMap) {
+      return 'All fields are unmapped.';
+    }
+
+    const unmappedFields = field.value
+      .map(pipelineVariable => pipelineVariable.name)
+      .filter(name => !fieldDataMap.maps[name]);
+
+    if (unmappedFields.length === 0) {
+      return null;
+    }
+
+    if (unmappedFields.length === field.value.length) {
+      return 'All fields are unmapped.';
+    }
+
+    if (unmappedFields.length === 1) {
+      return `${unmappedFields[0]} is unmapped.`;
+    }
+
+    if (unmappedFields.length === 2) {
+      return `${unmappedFields.join(', ')} are unmapped.`;
+    }
+
+    return `${unmappedFields.slice(0, unmappedFields.length - 1).join(', ')}
+      and ${unmappedFields[unmappedFields.length - 1]} are unmapped.`;
+  }
+
   setInitialState(fieldDataMap) {
     if (fieldDataMap.files) {
       this.setSelectedFiles(fieldDataMap.files);
@@ -239,6 +274,8 @@ class MapsCsvField extends React.Component {
 
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
 
+    const unmappedFieldsWarningMessage = this.getUnmappedFieldsWarningMessage();
+
     return (
       <div>
         <Typography variant="h4" className={classes.header}>
@@ -286,6 +323,11 @@ class MapsCsvField extends React.Component {
                   </Typography>
                 )
               }
+              {unmappedFieldsWarningMessage && (
+                <Alert severity="error" className={classes.alert}>
+                  { unmappedFieldsWarningMessage }
+                </Alert>
+              )}
               <Grid container spacing={6}>
                 <Grid item xs={12} md={6}>
                   <div>
