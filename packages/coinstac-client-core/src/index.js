@@ -320,6 +320,7 @@ class CoinstacClient {
       timeout: clientPipeline.timeout,
       saveState: runSaveState,
     };
+    let softLink = false;
 
     if (clients) {
       runObj.clients = clients;
@@ -332,32 +333,36 @@ class CoinstacClient {
           // TODO: validate runPipeline against clientPipeline
           const linkPromises = [];
           if (filePaths) {
+            let baseDirectory = filePaths.baseDirectory;
+            let stagingFilesAndDirs = [...filePaths.files];
             let stageFiles = process.env.CI ? fs.copyFile : fs.link;
             if (
               networkVolume
               || (filePaths.directories
                 && filePaths.directories.length > 0)
             ) {
+              softLink = true;
+              stagingFilesAndDirs = [...stagingFilesAndDirs, ...filePaths.directories];
               stageFiles = fs.symlink;
               runObj.alternateInputDirectory = {
-                in: filePaths.baseDirectory,
+                in: baseDirectory,
                 out: '/c/user/data/input/',
               };
             }
 
-            for (let i = 0; i < filePaths.files.length; i += 1) {
-              const mkdir = path.normalize(filePaths.files[i])
-                === path.basename(filePaths.files[i])
+            for (let i = 0; i < stagingFilesAndDirs.length; i += 1) {
+              const mkdir = path.normalize(stagingFilesAndDirs[i])
+                === path.basename(stagingFilesAndDirs[i])
                 ? Promise.resolve()
-                : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+                : mkdirp(path.resolve(fp, path.dirname(stagingFilesAndDirs[i])));
 
               linkPromises.push( // eslint-disable-next-line no-loop-func
                 mkdir.then(async () => {
                   await stageFiles(
-                    (networkVolume ? `../../../${runObj.alternateInputDirectory.out}${filePaths.files[i]}`
-                      : path.resolve(filePaths.baseDirectory, filePaths.files[i])
+                    (softLink ? `../../../${runObj.alternateInputDirectory.out}${stagingFilesAndDirs[i]}`
+                      : path.resolve(baseDirectory, stagingFilesAndDirs[i])
                     ),
-                    path.resolve(fp, path.basename(filePaths.files[i]))
+                    path.resolve(fp, path.basename(stagingFilesAndDirs[i]))
                   );
                 })
                   .catch((e) => {

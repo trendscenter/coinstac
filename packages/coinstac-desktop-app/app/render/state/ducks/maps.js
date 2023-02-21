@@ -1,5 +1,5 @@
 /* eslint-disable no-case-declarations */
-import { dirname, basename } from 'path';
+import { dirname, basename, relative } from 'path';
 import isEqual from 'lodash/isEqual';
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
@@ -71,7 +71,7 @@ export const saveDataMapping = applyAsyncLoading(
             const value = {};
             const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
             const csvData = { ...mappedData.fileData[0].data };
-
+            // grab the csv for the base directory
             baseDirectory = dirname(mappedData.files[0]);
 
             Object.keys(csvData).forEach((subj) => {
@@ -100,7 +100,8 @@ export const saveDataMapping = applyAsyncLoading(
 
             inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
           } else if (mappedData.fieldType === 'directory') {
-            directoryArray.push(mapData.directory);
+            baseDirectory = baseDirectory || dirname(mappedData.directory);
+            directoryArray.push(relative(baseDirectory, mappedData.directory));
             inputMap[inputMapKey].value = mappedData.directory;
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
