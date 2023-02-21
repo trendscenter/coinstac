@@ -118,10 +118,13 @@ const SingularityService = () => {
     return readdir(imageDirectory);
   };
 
-  const removeOldImages = async (imageNameWithHash) => {
+  const removeOldImages = async (baseImageName, imageNameWithHash) => {
     const images = await listImages(imageDirectory);
-    const oldImages = images.filter(image => image !== imageNameWithHash);
-    const unlinkPromises = oldImages.map((image) => {
+    const imagesToRemove = images.filter((image) => {
+      return image.includes(baseImageName) && !image.includes(imageNameWithHash)
+    }
+   );
+    const unlinkPromises = imagesToRemove.map((image) => {
       return rm(path.join(imageDirectory, image), { recursive: true, force: true });
     });
     return Promise.all(unlinkPromises);
@@ -198,7 +201,8 @@ const SingularityService = () => {
         if (code !== 0) {
           return conversionProcess.emit('error', new Error(convStderr));
         }
-        await removeOldImages(imageNameWithHash);
+        await removeOldImages(dockerImageName, imageNameWithHash);
+        
         conversionProcess.emit('end');
       });
       return conversionProcess;
