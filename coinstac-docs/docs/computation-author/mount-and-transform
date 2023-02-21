@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Mounting and transforming data for computation on local machine/outer COINSTAC node
 
-When running computations on data that is stored on your local computer, it is necessary to mount the relevant files into a container in a format that the computation can understand and use.
+When running computations on data that is stored the local machine, it is necessary to mount the relevant files into the computation container in a format that the computation can consume and that the data is configured for the particular pipeline it is a part of.
 
 ## The COINSTAC CSV format
 In the COINSTAC system, the preferred format for input data is a CSV file that follows a specific format.
