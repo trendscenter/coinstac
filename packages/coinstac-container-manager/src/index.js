@@ -104,7 +104,6 @@ const getStats = async (runId, userId) => {
 const startService = ({
   serviceId,
   serviceUserId,
-  serviceType,
   opts,
 }) => {
   const createAndAssignService = () => {
@@ -113,7 +112,7 @@ const startService = ({
     const tryService = () => {
       return generateServicePort(serviceId, process.env.CI_PORT_START || 8101)
         .then((port) => {
-          return serviceProviders[serviceType].createService(serviceId, port, opts);
+          return serviceProviders[globalServiceProvider].createService(serviceId, port, opts);
         }).catch((e) => {
           if (e.message.includes('port') && depth < 20) {
             depth += 1;
@@ -190,7 +189,7 @@ const startService = ({
  *   message: Error message for issues with the docker api
  *   on('data': Docker image pull progress and status as an output stream
  *   on('error': Error message for issues with the image pull
- *   on('end': Emitted on pull completion 
+ *   on('end': Emitted on pull completion
  * }
  */
 const pullImage = (computation) => {
