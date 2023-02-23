@@ -102,7 +102,7 @@ export const saveDataMapping = applyAsyncLoading(
           } else if (mappedData.fieldType === 'directory') {
             baseDirectory = baseDirectory || dirname(mappedData.directory);
             directoryArray.push(relative(baseDirectory, mappedData.directory));
-            inputMap[inputMapKey].value = mappedData.directory;
+            inputMap[inputMapKey].value = relative(baseDirectory, mappedData.directory);
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
             inputMap[inputMapKey].value = mappedData.value;
