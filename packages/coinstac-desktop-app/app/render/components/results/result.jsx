@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { compose } from 'redux';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
+import MBox from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
@@ -55,7 +56,14 @@ const styles = theme => ({
     marginBottom: theme.spacing(2),
   },
   error: {
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(2),
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
     color: 'red',
+    whiteSpace: 'pre-wrap',
   },
   errorSmall: {
     color: 'red',
@@ -144,6 +152,10 @@ class Result extends Component {
     const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
     this.setState({ filesExist: exist });
     return exist;
+  }
+
+  renderError = (errors) => {
+    return errors.split('\n').map(elem => <div key={elem}>{elem}</div>);
   }
 
   render() {
@@ -430,10 +442,17 @@ class Result extends Component {
         {
           run && run.error
           && (
-            <Paper className={classNames(classes.paper, classes.error)}>
-              {run.error.message}
-              <br />
-              {run.error.stack}
+            <Paper className={classes.error}>
+              {run.error.message && (
+                <MBox>
+                  {this.renderError(run.error.message)}
+                </MBox>
+              )}
+              {run.error.stack && (
+                <MBox mt={2}>
+                  {this.renderError(run.error.stack)}
+                </MBox>
+              )}
             </Paper>
           )
         }
