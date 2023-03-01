@@ -1301,9 +1301,10 @@ async function updateComputations(closeConnection = true) {
 async function clearRuns(){
   await database.connect();
   const db = database.getDbInstance();
-  await db.collection('runs').deleteMany({})
-  const results = await db.collection('runs').find({}).toArray();
-  console.log(results);
+  const {deletedCount} = await db.collection('runs').deleteMany({})
+  console.log({deletedCount})
+  const remainingRuns = await db.collection('runs').find({}).toArray();
+  console.log({remainingRuns});
   await database.close();
 }
 

@@ -10,6 +10,7 @@ const promisifiedMkdirp = pify(mkdirp);
  *
  * @returns {Promise}
  */
-module.exports = function upsertCoinstacUserDir(core) {
-  return promisifiedMkdirp(core.appDirectory);
+module.exports = async function upsertCoinstacUserDir(core) {
+  await promisifiedMkdirp(core.appDirectory)
+  await promisifiedMkdirp(core.imageDirectory)
 };
