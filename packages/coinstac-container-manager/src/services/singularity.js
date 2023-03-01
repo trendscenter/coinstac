@@ -184,7 +184,6 @@ const SingularityService = () => {
         [
           path.join(imageDirectory, imageNameWithHash),
           dockerImageName,
-          imageNameWithHash,
         ]
       );
       /*

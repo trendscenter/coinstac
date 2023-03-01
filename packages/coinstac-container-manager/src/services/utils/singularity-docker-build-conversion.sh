@@ -1,35 +1,33 @@
 #!/usr/bin/env bash
-SANDBOX_IMAGE_DIRECTORY=$1
+IMAGE_PATH=$1
 DOCKER_IMAGE_NAME=$2
-SINGULARITY_IMAGE_NAME_WITH_HASH=$3
 
-singularity build -F --fix-perms --sandbox $SANDBOX_IMAGE_DIRECTORY docker://$DOCKER_IMAGE_NAME
+singularity build -F --fix-perms --sandbox $IMAGE_PATH docker://$DOCKER_IMAGE_NAME
 code=$?
 if [ $code != 0 ]; then
   >&2 echo "After build 1"
-  >&2 echo "SANDBOX_IMAGE_DIRECTORY = ${SANDBOX_IMAGE_DIRECTORY}"
+  >&2 echo "IMAGE_PATH = ${IMAGE_PATH}"
   >&2 echo "DOCKER_IMAGE_NAME = ${DOCKER_IMAGE_NAME}"
-  >&2 echo "SINGULARITY_IMAGE_NAME_WITH_HASH = ${SINGULARITY_IMAGE_NAME_WITH_HASH}"
   exit $code
 fi
 
-cp --preserve=links "$SANDBOX_IMAGE_DIRECTORY/.singularity.d/runscript" "$SANDBOX_IMAGE_DIRECTORY/.singularity.d/startscript"
+cp --preserve=links "$IMAGE_PATH/.singularity.d/runscript" "$IMAGE_PATH/.singularity.d/startscript"
 code=$?
 if [ $code != 0 ]; then
   >&2 echo "After cp"
-  >&2 echo "SANDBOX_IMAGE_DIRECTORY = ${SANDBOX_IMAGE_DIRECTORY}"
+  >&2 echo "IMAGE_PATH = ${IMAGE_PATH}"
   >&2 echo "DOCKER_IMAGE_NAME = ${DOCKER_IMAGE_NAME}"
-  >&2 echo "SINGULARITY_IMAGE_NAME_WITH_HASH = ${SINGULARITY_IMAGE_NAME_WITH_HASH}"
   exit $code
 fi
 
-singularity build -F --fix-perms $SINGULARITY_IMAGE_NAME_WITH_HASH.sif $SANDBOX_IMAGE_DIRECTORY
+singularity build -F --fix-perms $IMAGE_PATH.sif $IMAGE_PATH
+
+#rm -rf $IMAGE_PATH
 
 code=$?
 if [ $code != 0 ]; then
   >&2 echo "After build 2"
-  >&2 echo "SANDBOX_IMAGE_DIRECTORY = ${SANDBOX_IMAGE_DIRECTORY}"
+  >&2 echo "IMAGE_PATH = ${IMAGE_PATH}"
   >&2 echo "DOCKER_IMAGE_NAME = ${DOCKER_IMAGE_NAME}"
-  >&2 echo "SINGULARITY_IMAGE_NAME_WITH_HASH = ${SINGULARITY_IMAGE_NAME_WITH_HASH}"
   exit $code
 fi
