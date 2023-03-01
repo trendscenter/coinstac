@@ -1,32 +1,36 @@
 /**
  * GraphQL schema fields that can be used by multiple queries or mutations
  */
-
+ const computationMetadata = `
+ id
+ computation {
+   dockerImage
+   remote {
+     type
+     dockerImage
+     command
+   }
+   input
+   output
+   display
+ }
+ meta {
+  repository
+  description
+  name
+  id
+  tags
+  version
+  compspecVersion
+  controller
+  preprocess
+  testData
+ }
+ delete
+ submittedBy
+`
 const sharedFields = {
-  computationMetadata: `
-    id
-    computation {
-      dockerImage
-      remote {
-        type
-        dockerImage
-        command
-      }
-      input
-    }
-    meta {
-      name
-      description
-      version
-      id
-      compspecVersion
-      preprocess
-      repository
-      testData
-    }
-    delete
-    submittedBy
-  `,
+  computationMetadata: computationMetadata,
   consortiaFields: `
     id
     activePipelineId
@@ -54,29 +58,7 @@ const sharedFields = {
     limitOutputToOwner
     steps {
       id
-      computations {
-        id
-        meta {
-          name
-          description
-          version
-          id
-          compspecVersion
-        }
-        computation {
-          type
-          dockerImage
-          command
-          remote {
-            type
-            dockerImage
-            command
-          }
-          input
-          output
-          display
-        }
-      }
+      computations {${computationMetadata}}
       controller
       inputMap
       dataMeta
