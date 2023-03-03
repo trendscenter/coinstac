@@ -209,10 +209,10 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
     if (err.response) {
-      const { statusCode } = getErrorDetail(err);
+      const { statusCode, message } = getErrorDetail(err);
 
       if (statusCode === 401) {
-        dispatch(setError('Username and/or Password Incorrect'));
+        dispatch(setError(message));
       } else {
         dispatch(setError('An unexpected error has occurred'));
       }

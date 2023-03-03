@@ -9,6 +9,8 @@ const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const passwordLifeTime = 180;
+
 const audience = 'coinstac';
 const issuer = 'coinstac';
 const subject = 'coinstac';
@@ -84,6 +86,7 @@ const helperFunctions = {
         pipelines: {},
       },
       consortiaStatuses: user.consortiaStatuses || {},
+      passwordChangedAt: new Date(),
     };
 
     const db = database.getDbInstance();
@@ -305,11 +308,21 @@ const helperFunctions = {
       req.payload.password, user.passwordHash
     );
 
-    if (passwordMatch) {
-      return h.response(transformToClient(user));
+    if (!passwordMatch) {
+      return Boom.unauthorized('Incorrect username or password');
     }
 
-    return Boom.unauthorized('Incorrect username or password');
+    const { passwordChangedAt } = user;
+    const currentDate = new Date();
+    const difference = Math.ceil(
+      (currentDate.getTime() - passwordChangedAt.getTime()) / (1000 * 3600 * 24)
+    );
+
+    if (difference >= passwordLifeTime) {
+      return Boom.unauthorized('Password is expired');
+    }
+
+    return h.response(transformToClient(user));
   },
   /**
    * Validate api key used by headless client
@@ -462,6 +475,10 @@ const helperFunctions = {
     } catch (e) {
       return Boom.badRequest('invalid user/run combination');
     }
+  },
+  validatePassword(password) {
+    const PASSWORD_PATTERN = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[#?!@$%^&*-]).{8,}$/g;
+    return PASSWORD_PATTERN.test(password);
   },
   audience,
   issuer,

@@ -69,6 +69,10 @@ module.exports = [
         { method: helperFunctions.validateUniqueUser },
       ],
       handler: async (req, h) => {
+        const isPasswordValid = helperFunctions.validatePassword(req.payload.password);
+        if (!isPasswordValid) {
+          return h.response('Invalid password').code(400);
+        }
         const passwordHash = await helperFunctions.hashPassword(req.payload.password);
         const user = await helperFunctions.createUser(req.payload, passwordHash);
         const {
