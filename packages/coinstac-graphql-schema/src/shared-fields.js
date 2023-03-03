@@ -4,9 +4,9 @@
  const computationMetadata = `
  id
  computation {
-   dockerImage
+  command
+  dockerImage
    remote {
-     type
      dockerImage
      command
    }
