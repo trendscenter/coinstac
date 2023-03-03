@@ -19,7 +19,7 @@ import SecurityIcon from '@material-ui/icons/Security';
 import LanguageIcon from '@material-ui/icons/Language';
 
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 
 const DashboardNav = ({
   user, hasRunOfInterestInProgress, isTutorialHidden, tutorialChange,
@@ -80,7 +80,7 @@ const DashboardNav = ({
     </List>
     {!isTutorialHidden && router.location.pathname === '/dashboard' && (
       <Joyride
-        steps={STEPS.dashboardNav}
+        steps={TUTORIAL_STEPS.dashboardNav}
         disableScrollParentFix
         callback={tutorialChange}
       />

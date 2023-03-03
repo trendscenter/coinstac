@@ -62,7 +62,7 @@ import {
   getGraphQLErrorMessage,
   isUserInGroup,
 } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 
 const VAULT_USERS_TOOLTIP = `Vault users are persistent nodes that can run some pipelines. If you add one or more vault users,
   the available pipelines list will be filtered by the ones that the vault users can run.`;
@@ -989,7 +989,7 @@ class Pipeline extends Component {
         </ValidatorForm>
         {!auth.isTutorialHidden && (
           <Joyride
-            steps={STEPS.pipeline}
+            steps={TUTORIAL_STEPS.pipeline}
             continuous
             disableScrollParentFix
             callback={tutorialChange}

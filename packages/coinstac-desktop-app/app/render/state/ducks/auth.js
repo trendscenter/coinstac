@@ -271,6 +271,16 @@ export const resetForgotPassword = applyAsyncLoading(payload => dispatch => axio
     throw err;
   }));
 
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Reset password successfully'));
+  })
+  .catch((err) => {
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Failed to reset password'));
+    throw err;
+  }));
+
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
   const { locationStacks, isTutorialHidden, tutorialSteps } = state;
   const { pathname } = payload || {};

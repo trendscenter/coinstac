@@ -8,11 +8,12 @@ import * as Yup from 'yup';
 import { PASSWORD_PATTERN } from '../../constants';
 
 const validationSchema = Yup.object().shape({
-  token: Yup.string().required('Required'),
-  password: Yup.string().required('Required').matches(PASSWORD_PATTERN, {
+  username: Yup.string().required('Required'),
+  currentPassword: Yup.string().required('Required'),
+  newPassword: Yup.string().required('Required').matches(PASSWORD_PATTERN, {
     message: 'Passwords should be 8 character minimum with a mix of uppercase, lowercase and special character',
   }),
-  confirmPassword: Yup.string().required('Required').oneOf([Yup.ref('password')], 'Your passwords do not match.'),
+  confirmPassword: Yup.string().required('Required').oneOf([Yup.ref('newPassword')], 'Your passwords do not match.'),
 });
 
 const useStyles = makeStyles(theme => ({
@@ -26,7 +27,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const FormForgotPassword = ({
+const FormResetPassword = ({
   loading,
   onSubmit,
 }) => {
@@ -34,15 +35,17 @@ const FormForgotPassword = ({
 
   const formik = useFormik({
     initialValues: {
-      token: '',
-      password: '',
+      username: '',
+      currentPassword: '',
+      newPassword: '',
       confirmPassword: '',
     },
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
-        token: values.token.trim(),
-        password: values.password.trim(),
+        username: values.username.trim(),
+        currentPassword: values.currentPassword.trim(),
+        newPassword: values.newPassword.trim(),
       });
     },
   });
@@ -50,29 +53,42 @@ const FormForgotPassword = ({
   return (
     <form onSubmit={formik.handleSubmit}>
       <TextField
-        id="token"
-        name="token"
-        label="Password Reset Token"
+        id="username"
+        name="username"
+        label="Username"
         fullWidth
         className={classes.formControl}
-        value={formik.values.token}
+        value={formik.values.username}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.touched.token && Boolean(formik.errors.token)}
-        helperText={formik.touched.token && formik.errors.token}
+        error={formik.touched.username && Boolean(formik.errors.username)}
+        helperText={formik.touched.username && formik.errors.username}
       />
       <TextField
-        id="password"
-        name="password"
+        id="currentPassword"
+        name="currentPassword"
+        label="Current Password"
+        type="password"
+        fullWidth
+        className={classes.formControl}
+        value={formik.values.currentPassword}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        error={formik.touched.currentPassword && Boolean(formik.errors.currentPassword)}
+        helperText={formik.touched.currentPassword && formik.errors.currentPassword}
+      />
+      <TextField
+        id="newPassword"
+        name="newPassword"
         label="New Password"
         type="password"
         fullWidth
         className={classes.formControl}
-        value={formik.values.password}
+        value={formik.values.newPassword}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.touched.password && Boolean(formik.errors.password)}
-        helperText={formik.touched.password && formik.errors.password}
+        error={formik.touched.newPassword && Boolean(formik.errors.newPassword)}
+        helperText={formik.touched.newPassword && formik.errors.newPassword}
       />
       <TextField
         id="confirmPassword"
@@ -100,13 +116,13 @@ const FormForgotPassword = ({
   );
 };
 
-FormForgotPassword.propTypes = {
+FormResetPassword.propTypes = {
   loading: PropTypes.object,
   onSubmit: PropTypes.func.isRequired,
 };
 
-FormForgotPassword.defaultProps = {
+FormResetPassword.defaultProps = {
   loading: null,
 };
 
-export default FormForgotPassword;
+export default FormResetPassword;

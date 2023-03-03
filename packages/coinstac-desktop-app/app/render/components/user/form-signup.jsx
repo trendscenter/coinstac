@@ -7,8 +7,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import classNames from 'classnames';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-
-const PASSWORD_PATTERN = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[#?!@$%^&*-]).{8,}$/g;
+import { PASSWORD_PATTERN } from '../../constants';
 
 const validationSchema = Yup.object().shape({
   name: Yup.string().required('Required'),

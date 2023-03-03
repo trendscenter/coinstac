@@ -146,4 +146,17 @@ module.exports = [
       },
     },
   },
+  {
+    method: 'POST',
+    path: '/resetPassword',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateResetPassword }],
+      handler: (req, h) => {
+        return helperFunctions
+          .resetPassword(req.payload.username, req.payload.newPassword)
+          .then(() => h.response().code(204));
+      },
+    },
+  },
 ];

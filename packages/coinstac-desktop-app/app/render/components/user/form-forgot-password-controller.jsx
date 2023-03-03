@@ -28,7 +28,7 @@ const styles = theme => ({
   },
 });
 
-class FormPasswordController extends Component {
+class FormForgotPasswordController extends Component {
   constructor(props) {
     super(props);
 
@@ -123,17 +123,17 @@ class FormPasswordController extends Component {
   }
 }
 
-FormPasswordController.contextTypes = {
+FormForgotPasswordController.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-FormPasswordController.propTypes = {
+FormForgotPasswordController.propTypes = {
   classes: PropTypes.object.isRequired,
   sendPasswordResetEmail: PropTypes.func.isRequired,
   resetForgotPassword: PropTypes.func.isRequired,
 };
 
-FormPasswordController.displayName = 'FormPasswordController';
+FormForgotPasswordController.displayName = 'FormForgotPasswordController';
 
 const mapStateToProps = ({ auth, loading }) => ({
   auth,
@@ -143,6 +143,6 @@ const mapStateToProps = ({ auth, loading }) => ({
 const connectedComponent = connect(mapStateToProps, {
   sendPasswordResetEmail,
   resetForgotPassword,
-})(FormPasswordController);
+})(FormForgotPasswordController);
 
 export default withStyles(styles)(connectedComponent);

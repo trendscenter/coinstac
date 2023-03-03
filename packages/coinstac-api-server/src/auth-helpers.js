@@ -384,8 +384,38 @@ const helperFunctions = {
     }
   },
   /**
-   * Reset password
-   * @param {object} password token for resetting password
+   * Confirms that submitted token is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  async validateResetPassword(req, h) {
+    const db = database.getDbInstance();
+    const user = await db.collection('users').findOne({ username: req.payload.username });
+
+    if (!user) {
+      return Boom.badRequest('Invalid user');
+    }
+
+    const passwordMatch = await helperFunctions.verifyPassword(
+      req.payload.currentPassword, user.passwordHash
+    );
+
+    if (!passwordMatch) {
+      return Boom.badRequest('Current Password is not correct');
+    }
+
+    const isPasswordValid = helperFunctions.validatePasswordWithRegEx(req.payload.newPassword);
+
+    if (!isPasswordValid) {
+      return Boom.badRequest('New Password is not valid');
+    }
+
+    return h.response();
+  },
+  /**
+   * Reset forgot password
+   * @param {object} token token for resetting password
    * @param {object} password new password
    * @return {object}
    */
@@ -400,6 +430,28 @@ const helperFunctions = {
       $set: {
         passwordHash: newPassword,
         passwordResetToken: '',
+        passwordChangedAt: new Date(),
+      },
+    }, {
+      returnOriginal: false,
+    });
+  },
+  /**
+   * Reset password
+   * @param {object} username username
+   * @param {object} password new password
+   * @return {object}
+   */
+  async resetPassword(username, password) {
+    const db = database.getDbInstance();
+
+    const newPassword = await helperFunctions.hashPassword(password);
+
+    return db.collection('users').updateOne({
+      username,
+    }, {
+      $set: {
+        passwordHash: newPassword,
         passwordChangedAt: new Date(),
       },
     }, {
@@ -477,7 +529,7 @@ const helperFunctions = {
       return Boom.badRequest('invalid user/run combination');
     }
   },
-  validatePassword(password) {
+  validatePasswordWithRegEx(password) {
     const PASSWORD_PATTERN = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[#?!@$%^&*-]).{8,}$/g;
     return PASSWORD_PATTERN.test(password);
   },

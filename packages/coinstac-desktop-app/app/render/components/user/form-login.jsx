@@ -168,6 +168,14 @@ const FormLogin = ({
       </Button>
 
       <Button
+        component={Link}
+        to="/reset-password"
+        color={window.location.href.includes('/reset-password') ? 'primary' : 'default'}
+      >
+        Reset Password
+      </Button>
+
+      <Button
         onClick={toggleStartupDirectoryDialog}
         disabled={!auth.isApiVersionCompatible}
       >
