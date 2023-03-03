@@ -261,7 +261,7 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
     throw err;
   }));
 
-export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+export const resetForgotPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetForgotPassword`, payload)
   .then(() => {
     dispatch(notifySuccess('Reset password successfully'));
   })

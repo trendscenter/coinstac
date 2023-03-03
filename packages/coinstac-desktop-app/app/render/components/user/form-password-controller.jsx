@@ -1,12 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import {
-  ValidatorForm,
-  TextValidator,
-} from 'react-material-ui-form-validator';
 import AppBar from '@material-ui/core/AppBar';
-import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -14,12 +9,14 @@ import { withStyles } from '@material-ui/core/styles';
 import LayoutNoauth from '../layout-noauth';
 import {
   sendPasswordResetEmail,
-  resetPassword,
+  resetForgotPassword,
 } from '../../state/ducks/auth';
+import FormSendEmail from './form-send-email';
+import FormForgotPassword from './form-forgot-password';
 
 const styles = theme => ({
   paper: {
-    maxWidth: 320,
+    maxWidth: 367,
   },
   tabPanel: {
     padding: theme.spacing(2),
@@ -37,103 +34,50 @@ class FormPasswordController extends Component {
 
     this.state = {
       selectedTab: 'sendEmail',
-      sendingEmail: {
-        loading: false,
-        email: '',
-      },
-      resettingPassword: {
-        loading: false,
-        token: '',
-        newPassword: '',
-        confirmPassword: '',
-      },
+      sendingEmail: false,
+      resettingPassword: false,
     };
-  }
-
-  componentDidMount() {
-    ValidatorForm.addValidationRule(
-      'isPasswordMatch',
-      // eslint-disable-next-line react/destructuring-assignment
-      value => value === this.state.resettingPassword.newPassword
-    );
-  }
-
-  componentWillUnmount() {
-    ValidatorForm.removeValidationRule('isPasswordMatch');
-  }
-
-  handleSendingEmailStateChange = (key, value) => {
-    const { sendingEmail } = this.state;
-
-    this.setState({
-      sendingEmail: {
-        ...sendingEmail,
-        [key]: value,
-      },
-    });
-  }
-
-  handleResettingPasswordStateChange = (key, value) => {
-    const { resettingPassword } = this.state;
-
-    this.setState({
-      resettingPassword: {
-        ...resettingPassword,
-        [key]: value,
-      },
-    });
   }
 
   handleTabChange = (selectedTab) => {
     const { sendingEmail, resettingPassword } = this.state;
 
-    if (!sendingEmail.loading && !resettingPassword.loading) {
+    if (!sendingEmail && !resettingPassword) {
       this.setState({ selectedTab });
     }
   }
 
-  handleSendEmail = () => {
+  handleSendEmail = (values) => {
     const { sendPasswordResetEmail } = this.props;
-    const { sendingEmail } = this.state;
 
-    this.handleSendingEmailStateChange('loading', true);
+    this.setState({ sendingEmail: true });
 
-    sendPasswordResetEmail({ email: sendingEmail.email })
+    sendPasswordResetEmail(values)
       .then(() => {
-        this.handleSendingEmailStateChange('loading', false);
-        this.handleTabChange('passwordReset');
+        this.setState({ sendingEmail: false });
+        this.handleTabChange('resetForgotPassword');
       })
       .catch(() => {
-        this.handleSendingEmailStateChange('loading', false);
+        this.setState({ sendingEmail: false });
       });
   }
 
-  handleResetPassword = () => {
+  handleResetForgotPassword = (values) => {
     const { router } = this.context;
-    const { resetPassword } = this.props;
-    const { resettingPassword } = this.state;
+    const { resetForgotPassword } = this.props;
 
-    this.handleResettingPasswordStateChange('loading', true);
+    this.setState({ resettingPassword: true });
 
-    resetPassword({
-      token: resettingPassword.token,
-      password: resettingPassword.newPassword,
-    })
+    resetForgotPassword(values)
       .then(() => router.push('/login'))
       .finally(() => {
-        this.handleResettingPasswordStateChange('loading', false);
+        this.setState({ resettingPassword: false });
       });
   }
 
   render() {
     const { classes } = this.props;
     const { selectedTab, sendingEmail, resettingPassword } = this.state;
-
-    const commonProps = {
-      fullWidth: true,
-      withRequiredValidator: true,
-      required: true,
-    };
 
     return (
       <LayoutNoauth>
@@ -146,7 +90,7 @@ class FormPasswordController extends Component {
               }
             >
               <Tab label="Send Reset Email" value="sendEmail" />
-              <Tab label="Password Reset" value="passwordReset" />
+              <Tab label="Reset Forgot Password" value="resetForgotPassword" />
             </Tabs>
           </AppBar>
 
@@ -155,92 +99,22 @@ class FormPasswordController extends Component {
               className={classes.tabPanel}
               square
             >
-              <ValidatorForm
-                className={classes.form}
-                instantValidate
-                noValidate
+              <FormSendEmail
+                loading={sendingEmail}
                 onSubmit={this.handleSendEmail}
-              >
-                <TextValidator
-                  label="Email"
-                  value={sendingEmail.email}
-                  disabled={sendingEmail.loading}
-                  validators={['required']}
-                  errorMessages={['Email is required']}
-                  onChange={
-                    evt => this.handleSendingEmailStateChange('email', evt.target.value)
-                  }
-                  {...commonProps}
-                />
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  type="submit"
-                  fullWidth
-                  disabled={sendingEmail.loading}
-                >
-                  Send
-                </Button>
-              </ValidatorForm>
+              />
             </Paper>
           )}
 
-          {selectedTab === 'passwordReset' && (
+          {selectedTab === 'resetForgotPassword' && (
             <Paper
               className={classes.tabPanel}
               square
             >
-              <ValidatorForm
-                className={classes.form}
-                instantValidate
-                noValidate
-                onSubmit={this.handleResetPassword}
-              >
-                <TextValidator
-                  label="Password Reset Token"
-                  value={resettingPassword.token}
-                  disabled={resettingPassword.loading}
-                  validators={['required']}
-                  errorMessages={['Password reset token is required']}
-                  onChange={
-                    evt => this.handleResettingPasswordStateChange('token', evt.target.value)
-                  }
-                  {...commonProps}
-                />
-                <TextValidator
-                  type="password"
-                  label="New Password"
-                  value={resettingPassword.newPassword}
-                  disabled={resettingPassword.loading}
-                  validators={['required']}
-                  errorMessages={['New password is required']}
-                  onChange={
-                    evt => this.handleResettingPasswordStateChange('newPassword', evt.target.value)
-                  }
-                  {...commonProps}
-                />
-                <TextValidator
-                  type="password"
-                  label="Confirm Password"
-                  value={resettingPassword.confirmPassword}
-                  validators={['isPasswordMatch', 'required']}
-                  errorMessages={['Password mismatch', 'Confirm password is required']}
-                  disabled={resettingPassword.loading}
-                  onChange={
-                    evt => this.handleResettingPasswordStateChange('confirmPassword', evt.target.value)
-                  }
-                  {...commonProps}
-                />
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  type="submit"
-                  fullWidth
-                  disabled={resettingPassword.loading}
-                >
-                  Reset
-                </Button>
-              </ValidatorForm>
+              <FormForgotPassword
+                loading={resettingPassword}
+                onSubmit={this.handleResetForgotPassword}
+              />
             </Paper>
           )}
         </Paper>
@@ -253,6 +127,12 @@ FormPasswordController.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
+FormPasswordController.propTypes = {
+  classes: PropTypes.object.isRequired,
+  sendPasswordResetEmail: PropTypes.func.isRequired,
+  resetForgotPassword: PropTypes.func.isRequired,
+};
+
 FormPasswordController.displayName = 'FormPasswordController';
 
 const mapStateToProps = ({ auth, loading }) => ({
@@ -262,7 +142,7 @@ const mapStateToProps = ({ auth, loading }) => ({
 
 const connectedComponent = connect(mapStateToProps, {
   sendPasswordResetEmail,
-  resetPassword,
+  resetForgotPassword,
 })(FormPasswordController);
 
 export default withStyles(styles)(connectedComponent);

@@ -135,13 +135,13 @@ module.exports = [
   },
   {
     method: 'POST',
-    path: '/resetPassword',
+    path: '/resetForgotPassword',
     config: {
       auth: false,
       pre: [{ method: helperFunctions.validateResetToken }],
       handler: (req, h) => {
         return helperFunctions
-          .resetPassword(req.payload.token, req.payload.password)
+          .resetForgotPassword(req.payload.token, req.payload.password)
           .then(() => h.response().code(204));
       },
     },

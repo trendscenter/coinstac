@@ -389,7 +389,7 @@ const helperFunctions = {
    * @param {object} password new password
    * @return {object}
    */
-  async resetPassword(token, password) {
+  async resetForgotPassword(token, password) {
     const db = database.getDbInstance();
 
     const newPassword = await helperFunctions.hashPassword(password);
@@ -400,6 +400,7 @@ const helperFunctions = {
       $set: {
         passwordHash: newPassword,
         passwordResetToken: '',
+        passwordChangedAt: new Date(),
       },
     }, {
       returnOriginal: false,

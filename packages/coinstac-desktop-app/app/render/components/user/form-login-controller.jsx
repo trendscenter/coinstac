@@ -53,7 +53,7 @@ class FormLoginController extends Component {
         <FormLogin
           auth={auth}
           loading={loading}
-          submit={this.submit}
+          onSubmit={this.submit}
           changeAppDirectory={this.changeAppDirectory}
           changeClientServerURL={this.changeClientServerURL}
         />
