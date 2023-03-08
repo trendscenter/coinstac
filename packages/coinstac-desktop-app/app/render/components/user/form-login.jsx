@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import classNames from 'classnames';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import FormStartupDirectory from './form-startup-directory';
@@ -29,15 +29,13 @@ const useStyles = makeStyles(theme => ({
     maxWidth: 300,
     marginBottom: theme.spacing(2),
   },
-  bottomMargin: {
-    marginBottom: 10,
-  },
   formControl: {
     marginBottom: theme.spacing(2),
   },
   error: {
     textAlign: 'center',
     color: 'red',
+    marginBottom: 10,
   },
 }));
 
@@ -79,37 +77,47 @@ const FormLogin = ({
     setIsStartupDirectoryDialogOpen(false);
   };
 
-  const renderError = () => {
-    const errorMessage = auth.error === EXPIRED_TOKEN
-      ? (
-        <>
+  const error = useMemo(() => {
+    if (!auth.error) {
+      return null;
+    }
+
+    if (auth.error === EXPIRED_TOKEN) {
+      return (
+        <p className={classes.error}>
           Your login session has expired,
           <br />
           please re-login
-        </>
-      )
-      : auth.error;
+        </p>
+      );
+    }
 
     return (
-      <p className={classNames(classes.bottomMargin, classes.error)}>
-        {errorMessage}
-      </p>
+      <>
+        <p className={classes.error}>
+          {auth.error}
+        </p>
+        <Box display="flex" justifyContent="center" mb={2}>
+          {auth.error === 'Password is expired' && (
+          <Link to="/reset-password">
+            Reset Password
+          </Link>
+          )}
+        </Box>
+      </>
     );
-  };
+  }, [auth.error, classes]);
 
   return (
     <div className={classes.loginFormContainer}>
       <Paper className={classes.paper}>
         <form onSubmit={formik.handleSubmit}>
-          { auth.error && renderError() }
-          {
-            !auth.isApiVersionCompatible
-            && (
-              <p className={classNames(classes.bottomMargin, classes.error)}>
-                This Coinstac version is not compatible with the API.
-              </p>
-            )
-          }
+          { error }
+          { !auth.isApiVersionCompatible && (
+            <p className={classes.error}>
+              This Coinstac version is not compatible with the API.
+            </p>
+          ) }
           <TextField
             id="username"
             name="username"
