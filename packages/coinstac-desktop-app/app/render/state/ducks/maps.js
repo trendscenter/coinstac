@@ -91,7 +91,7 @@ export const saveDataMapping = applyAsyncLoading(
         if (mappedData) {
           // has csv column mapping
           if (mappedData.fieldType === 'csv') {
-            const value = {};
+            let value = {};
             const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
             const csvData = { ...mappedData.fileData[0].data };
 
@@ -112,6 +112,9 @@ export const saveDataMapping = applyAsyncLoading(
                 });
                 filesArray.push(subj);
               } catch (e) {
+                // remove excluded subj
+                const { [subj]: _, ...temp } = value;
+                value = temp;
                 excludedSubjectsArray.push({ name: subj, error: e.message });
               }
             });
