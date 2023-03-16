@@ -98,7 +98,10 @@ export const saveDataMapping = applyAsyncLoading(
             baseDirectory = dirname(mappedData.files[0]);
 
             Object.keys(csvData).forEach((subjFile) => {
-              const subjRelPath = path.relative(baseDirectory, subjFile);
+              const subjRelPath = path.relative(
+                baseDirectory,
+                path.resolve(baseDirectory, subjFile)
+              );
               value[subjRelPath] = {};
 
               try {
