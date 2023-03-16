@@ -97,8 +97,9 @@ export const saveDataMapping = applyAsyncLoading(
 
             baseDirectory = dirname(mappedData.files[0]);
 
-            Object.keys(csvData).forEach((subj) => {
-              value[subj] = {};
+            Object.keys(csvData).forEach((subjFile) => {
+              const subjRelPath = path.relative(baseDirectory, subjFile);
+              value[subjRelPath] = {};
 
               try {
                 inputMapVariables.forEach((mappedColumnName) => {
@@ -106,16 +107,16 @@ export const saveDataMapping = applyAsyncLoading(
                     .find(c => c.name === mappedColumnName);
                   const csvColumn = mappedData.maps[mappedColumnName];
 
-                  value[subj][mappedColumnName] = castData[covarType.type](
-                    csvData[subj][csvColumn]
+                  value[subjRelPath][mappedColumnName] = castData[covarType.type](
+                    csvData[subjFile][csvColumn]
                   );
                 });
-                filesArray.push(subj);
+                filesArray.push(subjFile);
               } catch (e) {
                 // remove excluded subj
-                const { [subj]: _, ...temp } = value;
+                const { [subjRelPath]: _, ...temp } = value;
                 value = temp;
-                excludedSubjectsArray.push({ name: subj, error: e.message });
+                excludedSubjectsArray.push({ name: subjFile, error: e.message });
               }
             });
 
