@@ -5,6 +5,7 @@ import { compose } from 'redux';
 import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
@@ -40,9 +41,10 @@ const styles = theme => ({
     display: 'flex',
     'flex-direction': 'column',
   },
-  resultButton: {
+  resultActions: {
     display: 'flex',
-    'flex-direction': 'column-reverse',
+    alignItems: 'flex-end',
+    gap: 8,
   },
   timestamp: {
     display: 'flex',
@@ -61,6 +63,10 @@ const styles = theme => ({
     color: 'red',
     fontSize: '0.8rem',
   },
+  spinner: {
+    color: theme.palette.grey[500],
+    marginLeft: theme.spacing(2),
+  },
 });
 
 class Result extends Component {
@@ -74,8 +80,17 @@ class Result extends Component {
     filesExist: false,
   };
 
+  // eslint-disable-next-line
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    this.initializeState(nextProps);
+  }
+
   componentDidMount() {
-    const { params: { resultId }, runs } = this.props;
+    this.initializeState(this.props);
+  }
+
+  initializeState = (props) => {
+    const { params: { resultId }, runs } = props;
 
     const run = runs.find(run => run.id === resultId);
 
@@ -138,6 +153,34 @@ class Result extends Component {
     this.setState({ selectedTabIndex: value });
   }
 
+  handleDownload = async () => {
+    const { run } = this.state;
+    const {
+      auth: { user },
+      notifyError,
+      notifySuccess,
+    } = this.props;
+
+    const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
+    const clientId = user.id;
+    const { apiServer } = window.config;
+    const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}/${apiServer.pathname}${apiServer.port ? `:${apiServer.port}` : ''}`;
+    this.setState({ downloading: true });
+    try {
+      await ipcRenderer.invoke('download-run-assets', {
+        runId: run.id, authToken, clientId, apiServerUrl,
+      });
+      this.setState({ downloading: false });
+      const filesExist = await this.doFilesExist(run.id);
+      if (filesExist) {
+        notifySuccess('Files Downloaded');
+      }
+    } catch (e) {
+      notifyError(e.toString());
+      this.setState({ downloading: false });
+    }
+  }
+
   doFilesExist = async (runId) => {
     const { auth: { user, appDirectory } } = this.props;
     const directoryPath = path.join(appDirectory, 'output', user.id, runId);
@@ -154,14 +197,11 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
-
     } = this.state;
     const {
       consortia,
       classes,
       auth: { appDirectory, user },
-      notifyError,
-      notifySuccess,
     } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let { displayTypes } = this.state;
@@ -185,88 +225,61 @@ class Result extends Component {
 
     const selectedDisplayType = run && run.results
       && displayTypes && displayTypes[selectedTabIndex];
+
     return (
       <div>
         <Paper className={classes.paper}>
           <div className={classes.resultsInfo}>
-            {
-              consortium && run.pipelineSnapshot
-              && (
-                <Typography variant="h6">
-                  {`Results: ${consortium.name} | ${run.pipelineSnapshot.name}`}
+            {consortium && run.pipelineSnapshot && (
+              <Typography variant="h6">
+                {`Results: ${consortium.name} | ${run.pipelineSnapshot.name}`}
+              </Typography>
+            )}
+            {run.startDate && (
+              <div className={classes.timestamp}>
+                <Typography className={classes.label}>Start date:</Typography>
+                <Typography>
+                  {moment.unix(run.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                 </Typography>
-              )
-            }
-            {
-              run.startDate
-              && (
-                <div className={classes.timestamp}>
-                  <Typography className={classes.label}>Start date:</Typography>
-                  <Typography>
-                    {moment.unix(run.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
-                  </Typography>
-                </div>
-              )
-            }
-            {
-              run.endDate
-              && (
-                <div className={classes.timestamp}>
-                  <Typography className={classes.label}>End date:</Typography>
-                  <Typography>
-                    {moment.unix(run.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
-                  </Typography>
-                </div>
-              )
-            }
-            {
-              stepsLength > -1 && covariates.length > 0 && (
-                <div>
-                  <span className="bold">Covariates: </span>
-                  {covariates.join(', ')}
-                </div>
-              )
-            }
+              </div>
+            )}
+            {run.endDate && (
+              <div className={classes.timestamp}>
+                <Typography className={classes.label}>End date:</Typography>
+                <Typography>
+                  {moment.unix(run.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
+                </Typography>
+              </div>
+            )}
+            {stepsLength > -1 && covariates.length > 0 && (
+              <div>
+                <span className="bold">Covariates: </span>
+                {covariates.join(', ')}
+              </div>
+            )}
           </div>
-          <div className={classes.resultButton}>
+          <div className={classes.resultActions}>
             <Button
               variant="contained"
               color="primary"
+              disabled={!filesExist}
               style={{ marginLeft: 10 }}
               onClick={this.handleOpenResult}
             >
               Open Local Results
             </Button>
-          </div>
-          <div className={classes.resultButton}>
-            {run.shouldUploadAssets && (
+            {run.shouldUploadAssets && !filesExist && (
               <Button
-                disabled={!run.assetsUploaded || downloading || filesExist}
+                disabled={!run.assetsUploaded || downloading}
                 variant="contained"
                 color="primary"
                 style={{ marginLeft: 10 }}
-                onClick={async () => {
-                  const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
-                  const clientId = user.id;
-                  const { apiServer } = window.config;
-                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}/${apiServer.pathname}${apiServer.port ? `:${apiServer.port}` : ''}`;
-                  this.setState({ downloading: true });
-                  try {
-                    await ipcRenderer.invoke('download-run-assets', {
-                      runId: run.id, authToken, clientId, apiServerUrl,
-                    });
-                    this.setState({ downloading: false });
-                    const filesExist = await this.doFilesExist(run.id);
-                    if (filesExist) {
-                      notifySuccess('Files Downloaded');
-                    }
-                  } catch (e) {
-                    notifyError(e.toString());
-                    this.setState({ downloading: false });
-                  }
-                }}
+                onClick={this.handleDownload}
               >
                 Download results
+                {downloading && (
+                  <CircularProgress size={20} className={classes.spinner} />
+                )}
               </Button>
             )}
           </div>
@@ -276,167 +289,133 @@ class Result extends Component {
           value={selectedTabIndex}
           onChange={this.handleSelect}
         >
-          {
-            run && run.results && displayTypes && displayTypes.map((disp) => {
-              const title = disp.type.replace('_', ' ')
-                .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+          {run && run.results && displayTypes && displayTypes.map((disp) => {
+            const title = disp.type.replace('_', ' ')
+              .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 
-              return <Tab key={disp.type} label={`${title} View`} />;
-            })
-          }
+            return <Tab key={disp.type} label={`${title} View`} />;
+          })}
         </Tabs>
-        {
-          selectedDisplayType
-          && (
-            <div>
-              {
-                selectedDisplayType.type === 'string'
-                && (
-                  <String
-                    plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
-                  />
-                )
-              }
-              {
-                selectedDisplayType.type === 'box_plot'
-                && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Box plotData={plotData.testData} />
-                </Suspense>
-                )
-              }
-              {
-                selectedDisplayType.type === 'scatter_plot'
-                && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Scatter plotData={plotData.testData} />
-                </Suspense>
-                )
-              }
-              {
-                selectedDisplayType.type === 'table'
-                && (
-                  <Table
-                    computationOutput={computationOutput}
-                    plotData={plotData}
-                    tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
-                    clients={run.clients}
-                  />
-                )
-              }
-              {
-                selectedDisplayType.type === 'iframe'
-                && (
-                  <Iframe
-                    plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
-                    value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
-                    appDirectory={appDirectory}
-                    user={user}
-                    run={run}
-                  />
-                )
-              }
-              {
-                selectedDisplayType.type === 'images'
-                && (
-                  <Images
-                    filesExist={filesExist}
-                    resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
-                    plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name} `}
-                    user={user}
-                  />
-                )
-              }
-              {
-                selectedDisplayType.type === 'pipeline' && run.pipelineSnapshot
-                && (
-                  <div>
-                    <TextField
-                      fullWidth
-                      disabled
-                      value={run.pipelineSnapshot.name || ''}
-                      className={classes.formControl}
-                      label="Name"
+        {selectedDisplayType && (
+          <div>
+            {selectedDisplayType.type === 'string' && (
+              <String
+                plotData={plotData}
+                title={`${consortium.name}_${run.pipelineSnapshot.name} `}
+              />
+            )}
+            {selectedDisplayType.type === 'box_plot' && (
+              <Suspense fallback={<span>Loading...</span>}>
+                <Box plotData={plotData.testData} />
+              </Suspense>
+            )}
+            {selectedDisplayType.type === 'scatter_plot' && (
+              <Suspense fallback={<span>Loading...</span>}>
+                <Scatter plotData={plotData.testData} />
+              </Suspense>
+            )}
+            {selectedDisplayType.type === 'table' && (
+              <Table
+                computationOutput={computationOutput}
+                plotData={plotData}
+                tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
+                title={`${consortium.name}_${run.pipelineSnapshot.name} `}
+                clients={run.clients}
+              />
+            )}
+            {selectedDisplayType.type === 'iframe' && filesExist && (
+              <Iframe
+                plotData={plotData}
+                title={`${consortium.name}_${run.pipelineSnapshot.name} `}
+                value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
+                appDirectory={appDirectory}
+                user={user}
+                run={run}
+              />
+            ) }
+            {selectedDisplayType.type === 'images' && (
+              <Images
+                filesExist={filesExist}
+                resultsPath={path.join(appDirectory, 'output', user.id, run.id)}
+                plotData={plotData}
+                title={`${consortium.name}_${run.pipelineSnapshot.name} `}
+                user={user}
+              />
+            )}
+            {selectedDisplayType.type === 'pipeline' && run.pipelineSnapshot && (
+              <div>
+                <TextField
+                  fullWidth
+                  disabled
+                  value={run.pipelineSnapshot.name || ''}
+                  className={classes.formControl}
+                  label="Name"
+                />
+                <TextField
+                  fullWidth
+                  disabled
+                  value={run.pipelineSnapshot.description || ''}
+                  className={classes.formControl}
+                  label="Description"
+                />
+                {run.pipelineSnapshot.steps.length > 0
+                  && run.pipelineSnapshot.steps.map((step, index) => (
+                    <PipelineStep
+                      computationId={step.computations[0].id}
+                      deleteStep={() => { }}
+                      eventKey={step.id}
+                      id={step.id}
+                      key={step.id}
+                      moveStep={() => { }}
+                      owner={false}
+                      pipelineIndex={index}
+                      previousComputationIds={
+                        run.pipelineSnapshot.steps
+                          .filter((s, i) => i < index)
+                          .map(s => s.computations[0].id)
+                      }
+                      step={step}
+                      updateStep={() => {}}
                     />
-                    <TextField
-                      fullWidth
-                      disabled
-                      value={run.pipelineSnapshot.description || ''}
-                      className={classes.formControl}
-                      label="Description"
-                    />
-                    {
-                      run.pipelineSnapshot.steps.length > 0
-                      && run.pipelineSnapshot.steps.map((step, index) => (
-                        <PipelineStep
-                          computationId={step.computations[0].id}
-                          deleteStep={() => { }}
-                          eventKey={step.id}
-                          id={step.id}
-                          key={step.id}
-                          moveStep={() => { }}
-                          owner={false}
-                          pipelineIndex={index}
-                          previousComputationIds={
-                            run.pipelineSnapshot.steps
-                              .filter((s, i) => i < index)
-                              .map(s => s.computations[0].id)
-                          }
-                          step={step}
-                          updateStep={() => { }}
-                        />
-                      ))
-                    }
-                  </div>
-                )
-              }
-            </div>
-          )
-        }
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        {
-          (!selectedDisplayType || selectedDisplayType.type === '')
-          && (
-            <Paper className={classNames(classes.paper)}>
-              <table>
-                <tbody>
-                  <tr>
-                    <td>
-                      <strong>Results Object:</strong>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      {JSON.stringify(run.results)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <span className={classNames(classes.errorSmall)}>
-                        *Output Type not defined in Compspec.
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </Paper>
-          )
-        }
+        {(!selectedDisplayType || selectedDisplayType.type === '') && (
+          <Paper className={classNames(classes.paper)}>
+            <table>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>Results Object:</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    {JSON.stringify(run.results)}
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <span className={classNames(classes.errorSmall)}>
+                      *Output Type not defined in Compspec.
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </Paper>
+        )}
 
-        {
-          run && run.error
-          && (
-            <Paper className={classNames(classes.paper, classes.error)}>
-              {run.error.message}
-              <br />
-              {run.error.stack}
-            </Paper>
-          )
-        }
+        {run && run.error && (
+          <Paper className={classNames(classes.paper, classes.error)}>
+            {run.error.message}
+            <br />
+            {run.error.stack}
+          </Paper>
+        )}
       </div>
     );
   }
@@ -446,8 +425,6 @@ Result.propTypes = {
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  runs: PropTypes.array.isRequired,
-  params: PropTypes.object.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
 };

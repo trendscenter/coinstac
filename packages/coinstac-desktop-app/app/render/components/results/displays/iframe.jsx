@@ -1,50 +1,55 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import path from 'path';
+import PropTypes from 'prop-types';
 
 const Iframe = ({
   appDirectory, run, value, user,
 }) => {
   const iFrameHeight = '600px';
-  let url = '';
+
   if (typeof value === 'string') {
-    url = path.join(appDirectory, 'output', user.id, run.id, value);
     return (
       <div>
         <div>
           <iframe
-            style={{ width: '100%', height: iFrameHeight }}
-            src={url}
+            style={{ width: '100%', height: iFrameHeight, border: 0 }}
+            src={path.join(appDirectory, 'output', user.id, run.id, value)}
             title="iframe"
             width="100%"
             height={iFrameHeight}
-            frameBorder="0"
           />
         </div>
       </div>
     );
   }
+
   if (typeof value === 'object') {
-    const result = value.map((v) => {
-      url = path.join(appDirectory, 'output', user.id, run.id, v.path);
-      return (
+    const result = value.map(v => (
+      <div key={v.path}>
         <div>
-          <div>
-            <h2>{v.title}</h2>
-            <iframe
-              style={{ width: '100%', height: iFrameHeight }}
-              src={url}
-              title="iframe"
-              width="100%"
-              height={iFrameHeight}
-              frameBorder="0"
-            />
-          </div>
+          <h2>{v.title}</h2>
+          <iframe
+            style={{ width: '100%', height: iFrameHeight, border: 0 }}
+            src={path.join(appDirectory, 'output', user.id, run.id, v.path)}
+            title="iframe"
+            width="100%"
+            height={iFrameHeight}
+          />
         </div>
-      );
-    });
+      </div>
+    ));
     return result;
   }
+
+  return null;
+};
+
+Iframe.propTypes = {
+  appDirectory: PropTypes.string.isRequired,
+  run: PropTypes.object.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
+  user: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
