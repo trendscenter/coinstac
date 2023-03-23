@@ -124,10 +124,9 @@ module.exports = [
     path: '/sendPasswordResetEmail',
     config: {
       auth: false,
-      pre: [{ method: helperFunctions.validateEmail }],
       handler: (req, h) => {
         return helperFunctions
-          .savePasswordResetToken(req.payload.email)
+          .savePasswordResetToken(req.payload.emailOrUsername)
           .then(() => h.response().code(204))
           .catch(() => h.response().code(400));
       },

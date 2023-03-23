@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 const validationSchema = Yup.object().shape({
-  email: Yup.string().required('Required').email('Invalid email'),
+  emailOrUsername: Yup.string().required('Required'),
 });
 
 const useStyles = makeStyles(theme => ({
@@ -29,12 +29,12 @@ const FormSendEmail = ({
 
   const formik = useFormik({
     initialValues: {
-      email: '',
+      emailOrUsername: '',
     },
     validationSchema,
     onSubmit: (values) => {
       onSubmit({
-        email: values.email.trim(),
+        emailOrUsername: values.emailOrUsername.trim(),
       });
     },
   });
@@ -42,16 +42,16 @@ const FormSendEmail = ({
   return (
     <form onSubmit={formik.handleSubmit}>
       <TextField
-        id="email"
-        name="email"
-        label="Email"
+        id="emailOrUsername"
+        name="emailOrUsername"
+        label="Email or Username"
         fullWidth
         className={classes.formControl}
-        value={formik.values.email}
+        value={formik.values.emailOrUsername}
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
-        error={formik.touched.email && Boolean(formik.errors.email)}
-        helperText={formik.touched.email && formik.errors.email}
+        error={formik.touched.emailOrUsername && Boolean(formik.errors.emailOrUsername)}
+        helperText={formik.touched.emailOrUsername && formik.errors.emailOrUsername}
       />
       <Button
         variant="contained"
@@ -60,19 +60,19 @@ const FormSendEmail = ({
         fullWidth
         disabled={loading}
       >
-          Send
+        Send
       </Button>
     </form>
   );
 };
 
 FormSendEmail.propTypes = {
-  loading: PropTypes.object,
+  loading: PropTypes.bool,
   onSubmit: PropTypes.func.isRequired,
 };
 
 FormSendEmail.defaultProps = {
-  loading: null,
+  loading: false,
 };
 
 export default FormSendEmail;

@@ -123,7 +123,23 @@ const helperFunctions = {
    * @param {string} email email to send password reset token
    * @return {object}
    */
-  async savePasswordResetToken(email) {
+  async savePasswordResetToken(emailOrUsername) {
+    const db = database.getDbInstance();
+    const user = await db.collection('users').findOne(
+      {
+        $or: [
+          { email: emailOrUsername },
+          { username: emailOrUsername },
+        ],
+      }
+    );
+
+    if (!user) {
+      return Boom.badRequest('Invalid user');
+    }
+
+    const { email } = user;
+
     const resetToken = helperFunctions.createPasswordResetToken(email);
 
     const msg = {
@@ -135,9 +151,11 @@ const helperFunctions = {
         Token: <strong>${resetToken}</strong>`,
     };
 
-    const db = database.getDbInstance();
-
-    await sgMail.send(msg);
+    try {
+      await sgMail.send(msg);
+    } catch (error) {
+      return Boom.badRequest('Failed to send email');
+    }
 
     return db.collection('users').updateOne({ email }, {
       $set: {

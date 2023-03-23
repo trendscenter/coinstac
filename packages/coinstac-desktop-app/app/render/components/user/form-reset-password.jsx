@@ -117,12 +117,12 @@ const FormResetPassword = ({
 };
 
 FormResetPassword.propTypes = {
-  loading: PropTypes.object,
+  loading: PropTypes.bool,
   onSubmit: PropTypes.func.isRequired,
 };
 
 FormResetPassword.defaultProps = {
-  loading: null,
+  loading: false,
 };
 
 export default FormResetPassword;

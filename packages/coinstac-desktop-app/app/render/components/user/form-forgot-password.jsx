@@ -101,12 +101,12 @@ const FormForgotPassword = ({
 };
 
 FormForgotPassword.propTypes = {
-  loading: PropTypes.object,
+  loading: PropTypes.bool,
   onSubmit: PropTypes.func.isRequired,
 };
 
 FormForgotPassword.defaultProps = {
-  loading: null,
+  loading: false,
 };
 
 export default FormForgotPassword;
