@@ -11,7 +11,9 @@ const { ServiceFunctionGenerator } = require('./serviceFunction');
 const SingularityService = () => {
   let imageDirectory = './';
   const Container = (
-    commandArgs, serviceId,
+    commandArgs,
+    serviceId,
+    port,
     { mounts, dockerImage }
   ) => {
     let error;
@@ -29,6 +31,8 @@ const SingularityService = () => {
           'instance',
           'start',
           '--containall',
+          '--env',
+          `COINSTAC_PORT=${port}`,
           '-B',
           mounts.join(','),
           path.join(imageDirectory, savedImage),
@@ -121,9 +125,8 @@ const SingularityService = () => {
   const removeOldImages = async (baseImageName, imageNameWithHash) => {
     const images = await listImages(imageDirectory);
     const imagesToRemove = images.filter((image) => {
-      return image.includes(baseImageName) && !image.includes(imageNameWithHash)
-    }
-   );
+      return image.includes(baseImageName) && !image.includes(imageNameWithHash);
+    });
     const unlinkPromises = imagesToRemove.map((image) => {
       return rm(path.join(imageDirectory, image), { recursive: true, force: true });
     });
@@ -201,7 +204,7 @@ const SingularityService = () => {
           return conversionProcess.emit('error', new Error(convStderr));
         }
         await removeOldImages(dockerImageName, imageNameWithHash);
-        
+
         conversionProcess.emit('end');
       });
       return conversionProcess;
@@ -237,14 +240,17 @@ const SingularityService = () => {
   return {
     createService(serviceId, port, opts) {
       utils.logger.silly(`Request to start service ${serviceId}`);
-      const commandArgs = JSON.stringify({
-        level: process.LOGLEVEL,
-        server: 'ws',
-        port,
-      });
+      let commandArgs = '';
+      if (opts.version === 1) {
+        commandArgs = JSON.stringify({
+          level: process.LOGLEVEL,
+          server: 'ws',
+          port,
+        });
+      }
       const tryStartService = () => {
         utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
-        return startContainer(commandArgs, serviceId, opts)
+        return startContainer(commandArgs, serviceId, port, opts)
           .then((container) => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);

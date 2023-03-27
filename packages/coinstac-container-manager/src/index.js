@@ -193,7 +193,7 @@ const startService = ({
  * }
  */
 const pullImage = (computation) => {
-    return serviceProviders[globalServiceProvider].pull(computation)
+  return serviceProviders[globalServiceProvider].pull(computation);
 };
 
 /**
@@ -220,7 +220,7 @@ const pullImages = (comps) => {
         compId: val.compId,
         compName: val.compName,
       }));
-    })
+    });
 };
 
 /**
@@ -229,8 +229,8 @@ const pullImages = (comps) => {
  * @return {Object} Returns array of objects containing stream and computation parameters
  */
 const pullImagesFromList = (comps) => {
-  return serviceProviders[globalServiceProvider].pullImagesFromList(comps)
-}
+  return serviceProviders[globalServiceProvider].pullImagesFromList(comps);
+};
 
 /**
  * Remove the Docker image associated with the image id
