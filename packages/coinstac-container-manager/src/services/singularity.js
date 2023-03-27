@@ -32,12 +32,13 @@ const SingularityService = () => {
           'start',
           '--containall',
           '--env',
+          'PYTHONUNBUFFERED=1',
           `COINSTAC_PORT=${port}`,
           '-B',
           mounts.join(','),
           path.join(imageDirectory, savedImage),
           serviceId,
-          `${commandArgs}`,
+          ...(commandArgs ? [`${commandArgs}`] : [])
         ]
       );
       return new Promise((resolve, reject) => {
