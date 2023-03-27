@@ -24,9 +24,10 @@
       ]
     },
     "input": {
-      "size": {
-        "type": "number",
-        "label": "file size to test"
+      "start": {
+          "label": "File size in bytes",
+          "type": "number",
+          "source": "owner"
       }
     },
     "output": {
