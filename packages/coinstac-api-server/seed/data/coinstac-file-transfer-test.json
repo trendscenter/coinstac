@@ -24,9 +24,14 @@
       ]
     },
     "input": {
-      "size": {
+      "start": {
+        "default": 10000,
+        "label": "File size in bytes",
+        "max": 1000000000000,
+        "min": 1,
+        "step": 1,
         "type": "number",
-        "label": "file size to test"
+        "source": "owner"
       }
     },
     "output": {
