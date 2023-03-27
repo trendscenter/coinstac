@@ -29,8 +29,8 @@ const fmri = require('./data/coinstac-fmri.json');
 const pLink = require('./data/coinstac-plink.json');
 
 const decentralized = require('./data/coinstac-decentralized-test.json');
-// const transfer = require('./data/coinstac-file-transfer-test');
-// const stress = require('./data/coinstac-file-stress-test');
+const transfer = require('./data/coinstac-file-transfer-test');
+const stress = require('./data/coinstac-file-stress-test');
 const decentralizedError = require('./data/coinstac-decentralized-error.json');
 const enigmaSans = require('./data/coinstac-enigma-sans.json');
 const local = require('./data/coinstac-local-test.json');
