@@ -75,6 +75,8 @@ const COMPUTATION_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
 ];
 
 const USER_IDS = [
@@ -122,8 +124,8 @@ async function populateComputations() {
     { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
     { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
     { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
-    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
-    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
+    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
+    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
