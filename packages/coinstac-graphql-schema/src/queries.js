@@ -134,6 +134,7 @@ const queries = {
           name
           id
           version
+          compspecVersion
           repository
           description
         }
