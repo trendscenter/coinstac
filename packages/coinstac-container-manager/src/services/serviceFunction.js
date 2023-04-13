@@ -262,7 +262,6 @@ const ServiceFunctionGenerator = ({
     }
     
     // promise fullfilled by container output
-    // proxRj(new Error('eeeeeeeee'))
     return wsProm;
   };
 };
