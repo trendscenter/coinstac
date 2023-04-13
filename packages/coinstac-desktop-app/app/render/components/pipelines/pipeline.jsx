@@ -629,6 +629,13 @@ class Pipeline extends Component {
     const { [headlessMemberId]: removedMember, ...remainingMembers } = pipeline.headlessMembers;
 
     this.updatePipeline({ param: 'headlessMembers', value: remainingMembers });
+    
+    this.setState(prevState => ({
+      pipeline: {
+        ...prevState.pipeline,
+        steps: {},
+      },
+    }));
   }
 
   getAvailableComputations = () => {
