@@ -114,7 +114,7 @@ const startService = ({
         .then((port) => {
           return serviceProviders[globalServiceProvider].createService(serviceId, port, opts);
         }).catch((e) => {
-          if (e.message.includes('port') && depth < 20) {
+          if (e.message.includes('Bind') && depth < 20) {
             depth += 1;
             return tryService();
           }

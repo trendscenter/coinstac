@@ -22,7 +22,7 @@ fi
 
 singularity build -F --fix-perms $IMAGE_PATH.sif $IMAGE_PATH
 
-#rm -rf $IMAGE_PATH
+rm -rf $IMAGE_PATH
 
 code=$?
 if [ $code != 0 ]; then

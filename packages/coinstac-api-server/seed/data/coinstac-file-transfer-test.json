@@ -24,7 +24,7 @@
       ]
     },
     "input": {
-      "start": {
+      "size": {
         "default": 10000,
         "label": "File size in bytes",
         "max": 1000000000000,

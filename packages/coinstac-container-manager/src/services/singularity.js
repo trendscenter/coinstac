@@ -4,6 +4,7 @@ const path = require('path');
 const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
+const local = require('../../../coinstac-pipeline/src/control-boxes/local');
 
 /**
  * returns an instance of the singularity service for usage
@@ -18,6 +19,8 @@ const SingularityService = () => {
   ) => {
     let error;
     let stderr = '';
+    let stdout = '';
+
     // mimics docker api for compat
     const State = { Running: false };
     const localImage = dockerImage.replaceAll('/', '_');
@@ -31,22 +34,25 @@ const SingularityService = () => {
           'instance',
           'start',
           '--containall',
+          '-e',
           '--env',
-          'PYTHONUNBUFFERED=1',
-          `COINSTAC_PORT=${port}`,
+          `PYTHONUNBUFFERED=1,COINSTAC_PORT=${port}`,
           '-B',
           mounts.join(','),
           path.join(imageDirectory, savedImage),
           serviceId,
-          ...(commandArgs ? [`${commandArgs}`] : [])
+          ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : [])
         ]
       );
       return new Promise((resolve, reject) => {
         instanceProcess.stderr.on('data', (data) => { stderr += data; });
+        instanceProcess.stdout.on('data', (data) => { stdout += data; });
         instanceProcess.on('error', e => reject(e));
         instanceProcess.on('close', (code) => {
-          if (code !== 0) {
-            error = stderr;
+          // for whatever reason singularity is outputting 
+          // error info on stdout and info on stderr......
+          if(code !== 0 || stdout) {
+            error = stdout || stderr;
             utils.logger.error(error);
             State.Running = false;
             return reject(new Error(error));
@@ -204,7 +210,7 @@ const SingularityService = () => {
         if (code !== 0) {
           return conversionProcess.emit('error', new Error(convStderr));
         }
-        await removeOldImages(dockerImageName, imageNameWithHash);
+        await removeOldImages(localImage, imageNameWithHash);
 
         conversionProcess.emit('end');
       });
@@ -255,7 +261,7 @@ const SingularityService = () => {
           .then((container) => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);
-            const serviceFunction = ServiceFunctionGenerator({ port });
+            const serviceFunction = ServiceFunctionGenerator({ port, compspecVersion: opts.version });
             return { service: serviceFunction, container };
           });
       };
