@@ -39,12 +39,12 @@
     "server": "cd packages/coinstac-server/ && npm start",
     "server-ci": "cd packages/coinstac-server/ && npm start -- --no-images",
     "start": "concurrently \"npm run api-server\" \"sleep 6 && npm run server\" \"npm run watch\" ",
-    "switch:prod": "cp packages/coinstac-ui/config/local-production.json packages/coinstac-ui/config/local.json",
-    "switch:dev": "cp packages/coinstac-ui/config/local-development.json packages/coinstac-ui/config/local.json",
-    "switch:local": "cp packages/coinstac-ui/config/local-local.json packages/coinstac-ui/config/local.json",
-    "switch:ci": "cp packages/coinstac-ui/config/local-ci.json packages/coinstac-ui/config/local.json",
+    "switch:prod": "cp packages/coinstac-desktop-app/config/local-production.json packages/coinstac-desktop-app/config/local.json",
+    "switch:dev": "cp packages/coinstac-desktop-app/config/local-development.json packages/coinstac-desktop-app/config/local.json",
+    "switch:local": "cp packages/coinstac-desktop-app/config/local-local.json packages/coinstac-desktop-app/config/local.json",
+    "switch:ci": "cp packages/coinstac-desktop-app/config/local-ci.json packages/coinstac-desktop-app/config/local.json",
     "test": "lerna run test --concurrency=1",
-    "watch": "cd packages/coinstac-ui/ && npm run watch"
+    "watch": "cd packages/coinstac-desktop-app/ && npm run watch"
   },
   "repository": {
     "type": "git",

@@ -50,22 +50,22 @@ packages/coinstac-server-core/computations
 jsconfig.json
 
 # Built files
-packages/coinstac-ui/build
-packages/coinstac-ui/dist
+packages/coinstac-desktop-app/build
+packages/coinstac-desktop-app/dist
 
 # Configuration files
 packages/coinstac-simulator/config/*
 !packages/coinstac-simulator/config/default.json
-packages/coinstac-ui/config/*local.json
+packages/coinstac-desktop-app/config/*local.json
 packages/coinstac-server/config/local.json
 
 # Built electron binaries
-packages/coinstac-ui/coinstac-darwin*
-packages/coinstac-ui/coinstac-linux*
-packages/coinstac-ui/coinstac-win32*
-packages/coinstac-ui/coinstac-mas*
+packages/coinstac-desktop-app/coinstac-darwin*
+packages/coinstac-desktop-app/coinstac-linux*
+packages/coinstac-desktop-app/coinstac-win32*
+packages/coinstac-desktop-app/coinstac-mas*
 
-packages/coinstac-ui/config/local-build-copy.json
+packages/coinstac-desktop-app/config/local-build-copy.json
 build/
 
 .vscode/settings.json

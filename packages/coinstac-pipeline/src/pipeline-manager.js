@@ -8,7 +8,7 @@ const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const { merge } = require('lodash');
-const coinstacManager = require('coinstac-manager');
+const containerManager = require('coinstac-container-manager');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -59,9 +59,9 @@ module.exports = {
     let waitingOnForRun;
     const remoteClients = {};
 
-    // set coinstac-manager defaults
-    coinstacManager.setImageDirectory(imageDirectory);
-    coinstacManager.setLogger(logger);
+    // set coinstac-container-manager defaults
+    containerManager.setImageDirectory(imageDirectory);
+    containerManager.setLogger(logger);
 
     utils.init({ logger });
     debugProfileClient.log = l => utils.logger.info(`PROFILING: ${l}`);
@@ -385,10 +385,10 @@ module.exports = {
         };
       },
       async getPipelineStats(runId, userId) {
-        await coinstacManager.getStats(runId, userId);
+        await containerManager.getStats(runId, userId);
       },
       waitingOnForRun,
-      coinstacManager,
+      containerManager,
     };
   },
 };
