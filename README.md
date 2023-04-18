@@ -13,6 +13,8 @@ A federated learning solution by your friends at the [Center for Translational R
   <img src="https://user-images.githubusercontent.com/2123095/133630259-6973616c-2134-4a56-9ace-7d9618126713.png" height="75px">
 </p>
 
+## For more extensive documentation for Researchers, Computaiton Authors and Developers our documentation wiki can be found [here](https://trendscenter.github.io/coinstac/)
+
 ## Table of Contents
 
 * [Introduction](#introduction)

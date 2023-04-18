@@ -29,7 +29,6 @@ module.exports = {
       userDirectories,
       alternateInputDirectory,
       owner,
-      Manager,
       saveState,
     }
   ) {
@@ -52,7 +51,6 @@ module.exports = {
         clientId,
         alternateInputDirectory,
         owner,
-        Manager,
         saveState,
       })
     );
