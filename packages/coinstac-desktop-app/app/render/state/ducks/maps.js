@@ -5,6 +5,9 @@ import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
 import { getAllUnfulfilledPipelineInputs } from '../../utils/helpers';
 
+const fs = require('fs');
+const path = require('path');
+
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
@@ -45,6 +48,26 @@ const castData = {
     throw new Error('Invalid empty string');
   },
 };
+
+const getAllFiles = ((dirPath, arrayOfFiles, type) => {
+  const files = fs.readdirSync(dirPath);
+
+  arrayOfFiles = arrayOfFiles || [];
+
+  files.forEach((file) => {
+    if (fs.statSync(`${dirPath}/${file}`).isDirectory()) {
+      if (type === 'dirs') {
+        arrayOfFiles.push(path.join(dirPath, file));
+      }
+      arrayOfFiles = getAllFiles(`${dirPath}/${file}`, arrayOfFiles, type);
+    } else if (type === 'all') {
+      arrayOfFiles.push(path.join(dirPath, file));
+    }
+  });
+
+  return arrayOfFiles;
+});
+
 export const saveDataMapping = applyAsyncLoading(
   (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
@@ -68,14 +91,18 @@ export const saveDataMapping = applyAsyncLoading(
         if (mappedData) {
           // has csv column mapping
           if (mappedData.fieldType === 'csv') {
-            const value = {};
+            let value = {};
             const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
             const csvData = { ...mappedData.fileData[0].data };
 
             baseDirectory = dirname(mappedData.files[0]);
 
-            Object.keys(csvData).forEach((subj) => {
-              value[subj] = {};
+            Object.keys(csvData).forEach((subjFile) => {
+              const subjRelPath = path.relative(
+                baseDirectory,
+                path.resolve(baseDirectory, subjFile)
+              );
+              value[subjRelPath] = {};
 
               try {
                 inputMapVariables.forEach((mappedColumnName) => {
@@ -83,13 +110,16 @@ export const saveDataMapping = applyAsyncLoading(
                     .find(c => c.name === mappedColumnName);
                   const csvColumn = mappedData.maps[mappedColumnName];
 
-                  value[subj][mappedColumnName] = castData[covarType.type](
-                    csvData[subj][csvColumn]
+                  value[subjRelPath][mappedColumnName] = castData[covarType.type](
+                    csvData[subjFile][csvColumn]
                   );
                 });
-                filesArray.push(subj);
+                filesArray.push(subjFile);
               } catch (e) {
-                excludedSubjectsArray.push({ name: subj, error: e.message });
+                // remove excluded subj
+                const { [subjRelPath]: _, ...temp } = value;
+                value = temp;
+                excludedSubjectsArray.push({ name: subjFile, error: e.message });
               }
             });
 
@@ -100,7 +130,20 @@ export const saveDataMapping = applyAsyncLoading(
 
             inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
           } else if (mappedData.fieldType === 'directory') {
-            directoryArray.push(mapData.directory);
+            // Get and store the initial mapped directory
+            baseDirectory = mappedData.directory;
+            directoryArray.push(mappedData.directory);
+            // Recursively get and store all the subdirectories
+            directoryArray.push(...getAllFiles(mappedData.directory, null, 'dirs'));
+            // Recursively get and store all the files
+            const files = [];
+            files.push(...getAllFiles(mappedData.directory, null, 'all'));
+            const newfilesArray = files.filter((value) => {
+              if (!value.includes('.DS_Store')) {
+                return value;
+              }
+            });
+            filesArray.push(...newfilesArray);
             inputMap[inputMapKey].value = mappedData.directory;
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
             || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
