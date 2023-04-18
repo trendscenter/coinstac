@@ -1,6 +1,6 @@
 {
   "name": "coinstac-api-server",
-  "version": "6.5.5",
+  "version": "6.5.8",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -25,7 +25,7 @@
     "graphql": "^15.5.0",
     "graphql-subscriptions": "^1.2.1",
     "graphql-type-json": "^0.1.4",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.15",
     "migrate": "^1.7.0",
     "mongodb": "^3.5.7",
