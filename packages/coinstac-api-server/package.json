@@ -7,7 +7,8 @@
     "start": "node src/index.js",
     "test": "docker-compose down && sleep 3 && docker-compose up -d && cross-env NODE_ENV=test nyc ava",
     "test-setup": "docker-compose up -d && node seed/test-setup.js",
-    "migrate-db": "node src/database/migrations/migrate.js"
+    "migrate-db": "node src/database/migrations/migrate.js",
+    "clear-runs": "node seed/clearRuns.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,7 +20,6 @@
     "aws-sdk": "^2.1150.0",
     "axios": "^0.21.1",
     "boom": "^5.2.0",
-    "coinstac-graphql-schema": "^6.5.0",
     "form-data": "^4.0.0",
     "github-api": "^3.3.0",
     "graphql": "^15.5.0",

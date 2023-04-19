@@ -29,8 +29,8 @@ const fmri = require('./data/coinstac-fmri.json');
 const pLink = require('./data/coinstac-plink.json');
 
 const decentralized = require('./data/coinstac-decentralized-test.json');
-// const transfer = require('./data/coinstac-file-transfer-test');
-// const stress = require('./data/coinstac-file-stress-test');
+const transfer = require('./data/coinstac-file-transfer-test');
+const stress = require('./data/coinstac-file-stress-test');
 const decentralizedError = require('./data/coinstac-decentralized-error.json');
 const enigmaSans = require('./data/coinstac-enigma-sans.json');
 const local = require('./data/coinstac-local-test.json');
@@ -49,6 +49,8 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -122,6 +124,8 @@ async function populateComputations() {
     { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
     { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
     { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
+    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
+    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
@@ -1298,6 +1302,16 @@ async function updateComputations(closeConnection = true) {
   }
 }
 
+async function clearRuns(){
+  await database.connect();
+  const db = database.getDbInstance();
+  const {deletedCount} = await db.collection('runs').deleteMany({})
+  console.log({deletedCount})
+  const remainingRuns = await db.collection('runs').find({}).toArray();
+  console.log({remainingRuns});
+  await database.close();
+}
+
 
 module.exports = {
   CONSORTIA_IDS,
@@ -1307,4 +1321,5 @@ module.exports = {
   RUN_IDS,
   populate,
   updateComputations,
+  clearRuns,
 };

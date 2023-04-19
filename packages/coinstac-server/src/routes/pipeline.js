@@ -4,7 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const chalk = require('chalk');
 const graphqlSchema = require('coinstac-graphql-schema');
-const { pullImagesFromList, pruneImages } = require('coinstac-container-manager');
+const { pullImagesFromList } = require('coinstac-container-manager');
 
 const manager = PipelineManager.create({
   mode: 'remote',
@@ -124,7 +124,6 @@ module.exports = manager.then((remotePipelineManager) => {
                 .reduce((acc, val) => acc.concat(val), []);
 
               return pullImagesFromList(computationImageList)
-                .then(() => pruneImages())
                 .then(() => {
                   try {
                     const { result, stateEmitter } = remotePipelineManager.startPipeline({

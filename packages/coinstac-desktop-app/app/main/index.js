@@ -67,7 +67,6 @@ const { configureLogger, readInitialLogContents } = require('./utils/boot/config
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir');
 const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
-
 const { checkForUpdates } = require('./utils/auto-update');
 const { generateResultsPdf } = require('./services/results-pdf-generator');
 
@@ -267,19 +266,20 @@ loadConfig()
 
 
       ipcMain.handle('login-init', (event, {
-        userId, appDirectory, clientServerURL, token,
+        userId, appDirectory, clientServerURL, token, containerService,
       }) => {
         return initializedCore
           ? Promise.resolve()
-          : configureCore(
+          : configureCore({
             config,
             logger,
             userId,
             appDirectory,
-            config.get('singularityDir'),
-            clientServerURL || config.get('clientServerURL'),
-            token
-          )
+            imageDirectory: config.get('singularityDir'),
+            containerService,
+            clientServerURL: clientServerURL || config.get('clientServerURL'),
+            token,
+          })
             .then((c) => {
               initializedCore = c;
               return upsertCoinstacUserDir(c);
@@ -310,6 +310,10 @@ loadConfig()
         initializedCore.setClientServerURL(url);
         resolve();
       }));
+
+      ipcMain.handle('set-container-service', (event, containerService) => {
+        initializedCore.containerManager.setServiceProvider(containerService);
+      });
 
       function startPipelineRun(run, filesArray, consortium, networkVolume, runState) {
         const pipeline = run.pipelineSnapshot;
@@ -377,7 +381,6 @@ loadConfig()
                 });
               });
           })
-          .then(() => initializedCore.containerManager.pruneImages())
           .then(() => {
             logger.verbose('############ Client starting pipeline');
 
@@ -641,7 +644,7 @@ loadConfig()
                 stream.on('data', (data) => {
                   let output = compact(data.toString().split('\r\n'));
                   output = output.map(JSON.parse);
-
+                  // these events can be renamed to not refer to docker specifically since we are now supporting Singularity
                   mainWindow.webContents.send('docker-out', { output, compId, compName });
                 });
 
