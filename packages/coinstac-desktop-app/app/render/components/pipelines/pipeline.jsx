@@ -628,7 +628,13 @@ class Pipeline extends Component {
 
     const { [headlessMemberId]: removedMember, ...remainingMembers } = pipeline.headlessMembers;
 
-    this.updatePipeline({ param: 'headlessMembers', value: remainingMembers });
+    this.setState(prevState => ({
+      pipeline: {
+        ...prevState.pipeline,
+        headlessMembers: remainingMembers,
+        steps: [],
+      },
+    }));
   }
 
   getAvailableComputations = () => {
@@ -711,7 +717,7 @@ class Pipeline extends Component {
     return connectDropTarget(
       <div>
         <Box className="page-header" marginBottom={2}>
-          <Typography variant="h4">{ title }</Typography>
+          <Typography variant="h4">{title}</Typography>
         </Box>
         <ValidatorForm instantValidate noValidate onSubmit={this.savePipeline}>
           <TextValidator
@@ -820,15 +826,16 @@ class Pipeline extends Component {
           </div>
           <Box textAlign="right" className={classes.buttonWrapper}>
             {consortium && consortium.activePipelineId
-              && consortium.activePipelineId === pipeline.id && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={this.handleGoToMap}
-              >
-                Map Local Data
-              </Button>
-            )}
+              && consortium.activePipelineId === pipeline.id
+              && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={this.handleGoToMap}
+                >
+                  Map Local Data
+                </Button>
+              )}
             {consortium && (
               <Button
                 variant="contained"
@@ -869,7 +876,7 @@ class Pipeline extends Component {
                   <Typography variant="h6" className={classes.vaultUserTitle}>Vault Users:</Typography>
                   <Tooltip
                     title={
-                      <Typography variant="body1">{ VAULT_USERS_TOOLTIP }</Typography>
+                      <Typography variant="body1">{VAULT_USERS_TOOLTIP}</Typography>
                     }
                   >
                     <InfoIcon />
