@@ -25,7 +25,7 @@ const helperFunctions = {
       issuer,
       subject,
       algorithm: 'HS256',
-      expiresIn: '12h',
+      expiresIn: '24h',
     });
   },
   /**

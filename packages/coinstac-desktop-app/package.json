@@ -107,7 +107,6 @@
     "react-hot-loader": "^4.13.0",
     "rimraf": "^2.6.2",
     "sass-loader": "^13.2.0",
-    "spectron": "^13.0.0",
     "stack-chain": "^2.0.0",
     "style-loader": "^3.3.1",
     "tape": "^4.9.0",
