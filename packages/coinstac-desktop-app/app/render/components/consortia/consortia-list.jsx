@@ -7,12 +7,15 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, some, flowRight as compose,
+  get, orderBy, some, flowRight as compose, debounce,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import Pagination from '@material-ui/lab/Pagination';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
@@ -52,7 +55,7 @@ import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../
 import STEPS from '../../constants/tutorial';
 import ErrorDialog from '../common/error-dialog';
 
-const MAX_LENGTH_CONSORTIA = 50;
+const PAGE_SIZE = 10;
 
 const styles = theme => ({
   button: {
@@ -101,6 +104,13 @@ const styles = theme => ({
   searchInput: {
     marginBottom: theme.spacing(4),
   },
+  tabs: {
+    marginBottom: theme.spacing(2),
+  },
+  pagination: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
 });
 
 class ConsortiaList extends Component {
@@ -117,6 +127,8 @@ class ConsortiaList extends Component {
         localStorage.getItem('CONSORTIUM_JOINED_BY_THREAD'),
       highlightedConsortium:
         localStorage.getItem('HIGHLIGHT_CONSORTIUM'),
+      activeTab: 'mine',
+      page: 1,
     };
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
@@ -152,6 +164,51 @@ class ConsortiaList extends Component {
     }
 
     subscribeToUsersOnlineStatus();
+  }
+
+  getFilteredConsortia = () => {
+    const { consortia } = this.props;
+    const { search } = this.state;
+
+    if (!search) {
+      return consortia || [];
+    }
+
+    return (consortia || []).filter(
+      consortium => consortium.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    );
+  }
+
+  getConsortiaByActiveTab = () => {
+    const { auth: { user } } = this.props;
+    const { activeTab } = this.state;
+
+    const filteredConsortia = this.getFilteredConsortia();
+
+    const consortia = filteredConsortia.filter((consortium) => {
+      const { owners, members } = consortium;
+
+      if (activeTab === 'mine') {
+        return user.id in owners || user.id in members;
+      }
+
+      if (activeTab === 'other') {
+        return !(user.id in owners || user.id in members);
+      }
+
+      return false;
+    });
+
+    return orderBy(consortia, ['createDate'], ['desc']);
+  }
+
+  getPaginatedConsortia = () => {
+    const { page } = this.state;
+
+    const consortia = this.getConsortiaByActiveTab();
+    const consortiaToShow = consortia.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    return consortiaToShow;
   }
 
   getConsortiumPipelines = (consortium) => {
@@ -445,45 +502,14 @@ class ConsortiaList extends Component {
   }
 
   handleSearchChange = (evt) => {
-    this.setState({ search: evt.target.value });
+    this.debouncedSearchChange(evt.target.value);
   }
 
-  getFilteredConsortia = () => {
-    const { consortia } = this.props;
-    const { search } = this.state;
+  // eslint-disable-next-line
+  debouncedSearchChange = debounce(search => this.setState({ search }), 500)
 
-    if (!search) {
-      return consortia;
-    }
-
-    return consortia.filter(
-      consortium => consortium.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
-    );
-  }
-
-  getConsortiaByOwner = () => {
-    const { auth: { user } } = this.props;
-
-    const consortia = this.getFilteredConsortia();
-
-    const memberConsortia = [];
-    const otherConsortia = [];
-
-    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
-      consortia.forEach((consortium) => {
-        const { owners, members } = consortium;
-        if (user.id in owners || user.id in members) {
-          memberConsortia.push(consortium);
-        } else {
-          otherConsortia.push(consortium);
-        }
-      });
-    }
-
-    return {
-      memberConsortia: orderBy(memberConsortia, ['createDate'], ['desc']),
-      otherConsortia: orderBy(otherConsortia, ['createDate'], ['desc']),
-    };
+  handlePageChange = (_, value) => {
+    this.setState({ page: value });
   }
 
   suspendPipeline = consortiumId => () => {
@@ -498,6 +524,10 @@ class ConsortiaList extends Component {
     if (presentRun) {
       ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
     }
+  }
+
+  handleChangeTab = (_, activeTab) => {
+    this.setState({ activeTab });
   }
 
   startPipeline(consortium) {
@@ -667,18 +697,44 @@ class ConsortiaList extends Component {
     this.setState({ showErrorDialog: false });
   }
 
+  renderPagiation = () => {
+    const { classes } = this.props;
+    const { page } = this.state;
+    const consortia = this.getConsortiaByActiveTab();
+
+    const totalPages = Math.ceil(consortia.length / PAGE_SIZE);
+
+    if (consortia.length === 0 || totalPages <= 1) {
+      return null;
+    }
+
+    return (
+      <div className={classes.pagination}>
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={this.handlePageChange}
+        />
+      </div>
+    );
+  }
+
   render() {
     const {
-      consortia,
       classes,
       auth,
       tutorialChange,
     } = this.props;
     const {
-      search, showModal, showErrorDialog, errorMessage, errorTitle,
+      // search,
+      showModal,
+      showErrorDialog,
+      errorMessage,
+      errorTitle,
+      activeTab,
     } = this.state;
 
-    const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
+    const consortia = this.getPaginatedConsortia();
 
     return (
       <div>
@@ -703,34 +759,33 @@ class ConsortiaList extends Component {
           id="search"
           label="Search"
           fullWidth
-          value={search}
+          // value={search}
+          defaultValue=""
           className={classes.searchInput}
           onChange={this.handleSearchChange}
         />
 
-        {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
-          && consortia.map(this.renderListItem)}
+        <Tabs
+          value={activeTab}
+          onChange={this.handleChangeTab}
+          className={classes.tabs}
+        >
+          <Tab label="My Consortia" value="mine" />
+          <Tab label="Other Consortia" value="other" />
+        </Tabs>
 
-        {memberConsortia.length > 0 && (
-          <Typography variant="h6">Your Consortia</Typography>
-        )}
+        {this.renderPagiation()}
 
-        {memberConsortia.length > 0
-          && memberConsortia.map(this.renderListItem)
-        }
-
-        {otherConsortia.length > 0 && (
-          <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>
-        )}
-
-        {otherConsortia.length > 0
-          && otherConsortia.map(this.renderListItem)}
-
-        {(!consortia || !consortia.length) && (
+        {consortia.length > 0 ? (
+          consortia.map(this.renderListItem)
+        ) : (
           <Typography variant="body2">
             No consortia found
           </Typography>
         )}
+
+        {this.renderPagiation()}
+
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.deleteConsortium}
