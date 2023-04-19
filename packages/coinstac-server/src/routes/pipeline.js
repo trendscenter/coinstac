@@ -2,6 +2,7 @@
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
+const chalk = require('chalk');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-container-manager');
 
@@ -145,7 +146,23 @@ module.exports = manager.then((remotePipelineManager) => {
                         saveResults(run.id, result);
                       })
                       .catch((error) => {
-                        console.log(error); // eslint-disable-line no-console
+                        console.log('\n============ Pipeline Failed ===========');
+                        if (error.message) {
+                          console.log(chalk.bold.red('**** Message ****'));
+                          error.message.split('\n').map(err => console.log(chalk.bold.red(err.trim())));
+                        }
+
+                        if (error.error) {
+                          console.log(chalk.yellow('\n**** Error ****'));
+                          error.error.split('\n').map(err => console.log(chalk.yellow(err.trim())));
+                        }
+
+                        if (error.stack) {
+                          console.log(chalk.bold.red('\n**** Stack ****'));
+                          error.stack.split('\n').map(err => console.log(chalk.red(err)));
+                        }
+                        console.log('============ Pipeline Failed ===========\n');
+
                         saveError(run.id, error);
                       });
                     return h.response({}).code(201);
