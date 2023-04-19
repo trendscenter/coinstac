@@ -250,7 +250,11 @@ describe('e2e run computation with 2 members', () => {
   it('joins a consortium', async () => {
     await appWindow2.click('a:has-text("Consortia")');
 
+    await appWindow2.click('span:has-text("Other Consortia")');
+
     await appWindow2.click(`button[name="${CONS_NAME}-join-cons-button"]`, { timeout: EXIST_TIMEOUT });
+
+    await appWindow2.click('span:has-text("My Consortia")');
 
     // Assert
     return Promise.all([
