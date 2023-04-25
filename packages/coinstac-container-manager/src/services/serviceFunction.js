@@ -146,8 +146,6 @@ const ServiceFunctionGenerator = ({
               `;
               throw error;
             }
-          }).catch((e) => {
-            proxRj(e);
           });
         });
         break;

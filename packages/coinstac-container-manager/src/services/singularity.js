@@ -4,7 +4,6 @@ const path = require('path');
 const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
-const local = require('../../../coinstac-pipeline/src/control-boxes/local');
 
 /**
  * returns an instance of the singularity service for usage
