@@ -1,6 +1,6 @@
 {
   "name": "coinstac-common",
-  "version": "6.6.1",
+  "version": "6.6.2",
   "description": "COINSTAC core functionality.",
   "main": "src/index.js",
   "directories": {
