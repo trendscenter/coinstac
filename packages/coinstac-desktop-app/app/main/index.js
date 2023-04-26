@@ -363,7 +363,7 @@ loadConfig()
             return Promise.all(streamProms);
           })
           .catch((err) => {
-            return initializedCore.unlinkFiles(run.id)
+            initializedCore.unlinkFiles(run.id)
               .then(() => {
                 mainWindow.webContents.send('local-run-error', {
                   consName: consortium.name,
@@ -380,6 +380,7 @@ loadConfig()
                   ),
                 });
               });
+            throw err;
           })
           .then(() => {
             logger.verbose('############ Client starting pipeline');
