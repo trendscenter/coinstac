@@ -153,10 +153,7 @@ const SingularityService = () => {
           [dockerImageName],
           (error, stdout, stderr) => {
             if (error) {
-              reject(new Error(error));
-            }
-            if (stderr) {
-              reject(new Error(stderr));
+              reject(new Error(error + stdout + stderr));
             }
             resolve(stdout);
           }
@@ -192,9 +189,7 @@ const SingularityService = () => {
           the conversion process spawn events to mimic the docker pull's returned stream
           */
           if (error) {
-            conversionProcess.emit('error', new Error(error));
-          } else if (stderr) {
-            conversionProcess.emit('error', new Error(stderr));
+            conversionProcess.emit('error', new Error(error + stdout + stderr));
           } else {
             removeOldImages(localImage, imageNameWithHash)
             .then(() => {
