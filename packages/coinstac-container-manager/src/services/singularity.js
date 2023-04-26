@@ -1,5 +1,5 @@
 const stream = require('stream');
-const { spawn } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const path = require('path');
 const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
@@ -148,27 +148,19 @@ const SingularityService = () => {
      */
     const getLatestDockerDigest = (dockerImageName) => {
       return new Promise((resolve, reject) => {
-        const latestDigest = spawn(
+        execFile(
           path.join(__dirname, 'utils', 'get-docker-digest.sh'),
-          [dockerImageName]
+          [dockerImageName],
+          (error, stdout, stderr) => {
+            if (error) {
+              reject(new Error(error));
+            }
+            if (stderr) {
+              reject(new Error(stderr));
+            }
+            resolve(stdout);
+          }
         );
-        let error = '';
-        let stderr = '';
-        let digest = '';
-        latestDigest.stderr.on('data', (data) => { stderr += data; });
-        latestDigest.stdout.on('data', (data) => { digest += data; });
-        latestDigest.on('error', (e) => {
-          error = e;
-        });
-        latestDigest.on('close', (code) => {
-          if (error) {
-            reject(new Error(error));
-          }
-          if (code !== 0) {
-            reject(new Error(stderr));
-          }
-          resolve(digest);
-        });
       });
     };
     /*
@@ -188,31 +180,31 @@ const SingularityService = () => {
       @return {stream}
      */
     const pullAndConvertDockerToSingularity = (imageNameWithHash) => {
-      const conversionProcess = spawn(
+      const conversionProcess = execFile(
         path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
         [
           path.join(imageDirectory, imageNameWithHash),
           dockerImageName,
-        ]
-      );
-      /*
-      in order to maintain api parity with the docker service, we have to wrap
-      the conversion process spawn events to mimic the docker pull's returned stream
-      */
-      let convStderr = '';
-      conversionProcess.stderr.on('data', (data) => { convStderr += data; });
-      conversionProcess.stdout.on('data', (data) => { conversionProcess.emit('data', data); });
-      // we're ignoring the .on('error') event as its handled
-      // by the caller of the manager api
-      // but we need to wrap and emit cases from the script itself erroring
-      conversionProcess.on('close', async (code) => {
-        if (code !== 0) {
-          return conversionProcess.emit('error', new Error(convStderr));
+        ],
+        (error, stdout, stderr) => {
+          /*
+          in order to maintain api parity with the docker service, we have to wrap
+          the conversion process spawn events to mimic the docker pull's returned stream
+          */
+          if (error) {
+            conversionProcess.emit('error', new Error(error));
+          } else if (stderr) {
+            conversionProcess.emit('error', new Error(stderr));
+          } else {
+            removeOldImages(localImage, imageNameWithHash)
+            .then(() => {
+              conversionProcess.emit('end');
+            }).catch((e) => {
+              conversionProcess.emit('error', e);
+            });
+          }
         }
-        await removeOldImages(localImage, imageNameWithHash);
-
-        conversionProcess.emit('end');
-      });
+      );
       return conversionProcess;
     };
 
