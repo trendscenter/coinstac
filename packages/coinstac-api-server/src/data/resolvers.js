@@ -1743,7 +1743,7 @@ const resolvers = {
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
 
       const soleOwner = ownedConsortia.reduce((sole, con) => {
-        if(Object.keys(con.owners).length <= 1) sole = true;
+        if (Object.keys(con.owners).length <= 1) sole = true;
         return sole;
       }, false)
 
@@ -1931,7 +1931,13 @@ const resolvers = {
         // Find the users that are in the same consortia as the logged user
         const db = database.getDbInstance();
 
-        const user = await helperFunctions.getUserDetailsByID(context.userId);
+        const userId = context.userId || payload.userId;
+
+        if (!userId) {
+          return getOnlineUsers();
+        }
+
+        const user = await helperFunctions.getUserDetailsByID(userId);
 
         const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
         const consortia = await db.collection('consortia').find(

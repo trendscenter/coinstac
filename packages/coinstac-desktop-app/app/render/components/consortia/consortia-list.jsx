@@ -7,7 +7,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, some, flowRight as compose, debounce,
+  get, orderBy, flowRight as compose, debounce,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -312,12 +312,10 @@ class ConsortiaList extends Component {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
 
-      const computations = get(pipeline, 'steps.0.computations', []);
-   
       if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
         if (auth.user.id in consortium.activeMembers
-          && !auth.containerService === "singularity"
+          && !auth.containerService === 'singularity'
           && !dockerStatus) {
           actions.push(
             <Tooltip title="Docker is not running" placement="top">
@@ -859,9 +857,6 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({
