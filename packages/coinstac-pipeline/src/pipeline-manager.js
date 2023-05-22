@@ -1,5 +1,3 @@
-'use strict';
-
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
@@ -8,7 +6,8 @@ const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const { merge } = require('lodash');
-const coinstacManager = require('coinstac-manager');
+const containerManager = require('coinstac-container-manager');
+const v8 = require('v8');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -16,6 +15,8 @@ const utils = require('./utils');
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
+
+v8.setFlagsFromString('--stack-size=150');
 
 const Pipeline = require('./pipeline');
 
@@ -59,9 +60,9 @@ module.exports = {
     let waitingOnForRun;
     const remoteClients = {};
 
-    // set coinstac-manager defaults
-    coinstacManager.setImageDirectory(imageDirectory);
-    coinstacManager.setLogger(logger);
+    // set coinstac-container-manager defaults
+    containerManager.setImageDirectory(imageDirectory);
+    containerManager.setLogger(logger);
 
     utils.init({ logger });
     debugProfileClient.log = l => utils.logger.info(`PROFILING: ${l}`);
@@ -385,10 +386,10 @@ module.exports = {
         };
       },
       async getPipelineStats(runId, userId) {
-        await coinstacManager.getStats(runId, userId);
+        await containerManager.getStats(runId, userId);
       },
       waitingOnForRun,
-      coinstacManager,
+      containerManager,
     };
   },
 };
