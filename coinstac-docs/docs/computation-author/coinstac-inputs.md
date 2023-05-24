@@ -1,3 +1,8 @@
+---
+sidebar_position: 2
+---
+
+# COINSTAC Inputs
 ## Table of Contents
 
 1. [COINSTAC Inputs](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
