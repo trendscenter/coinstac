@@ -84,7 +84,7 @@ This is how the field looks in COINSTAC UI (the “Interest” field is automati
 **UI Display Example**
 
 <!-- ![ui_display_example1.png](ui_display_example1.png) -->
-![/img/page-compspec/image1.png](/img/page-compspec/image1.png)
+![/img/page-compspec/image_1.png](/img/page-compspec/image_1.png)
 
 A freesurfer field only works if you also use it in conjunction with a csv field. Here is a typical input structure from a Compspec.
 
@@ -118,11 +118,11 @@ The field looks like this in the UI pipeline:
 **UI Display Example**
 
 <!-- ![ui_display_example2.png](ui_display_example2.png) -->
-![/img/page-compspec/image2.png](/img/page-compspec/image2.png)
+![/img/page-compspec/image_2.png](/img/page-compspec/image_2.png)
 
 We are telling the COINSTAC Pipeline UI what the expected covariate fields are based on the csv file header. Mind you, other member sites in a consortium might have similar but not exactly the same header formatting for their csv files. No problem. COINSTAC gives the ability to map local data columns to the expected pipeline covariates described in the fields above. Perhaps a user's column for “isControl” is labeled “control,” or “gender” is labeled “sex”. You get the idea...
 
-![/img/page-compspec/image3.png](/img/page-compspec/image3.png)
+![/img/page-compspec/image_3.png](/img/page-compspec/image_3.png)
 
 The Freesurfer/CSV setup above is the most standard scenario used in COINSTAC. A good working example to review in depth is: [https://github.com/trendscenter/coinstac-ssr-fsl](https://github.com/trendscenter/coinstac-ssr-fsl). However, it is very likely that your computation is a bit different...
 
@@ -173,14 +173,14 @@ This is what it looks like in the Pipeline UI:
 **UI Display Example**
 
 <!-- ![ui_display_example3.png](ui_display_example3.png) -->
-![/img/page-compspec/image4.png](/img/page-compspec/image4.png)
+![/img/page-compspec/image_4.png](/img/page-compspec/image_4.png)
 
 ...and finally this when mapping your files into the Consortium.
 
 **UI Display Example**
 
 <!-- ![ui_display_example4.png](ui_display_example4.png) -->
-![/img/page-compspec/image5.png](/img/page-compspec/image5.png)
+![/img/page-compspec/image_5.png](/img/page-compspec/image_5.png)
 
 ### Directory Input
 
@@ -188,7 +188,7 @@ So, we now know how to specify individual input files, but what if we have a bun
 
 Another computation [https://github.com/trendscenter/coinstac-mancova](https://github.com/trendscenter/coinstac-mancova) expects the results from GICA as input. The trouble is, we're dealing with a lot of files!
 
-![/img/page-compspec/image6.png](/img/page-compspec/image6.png)
+![/img/page-compspec/image_6.png](/img/page-compspec/image_6.png)
 
 Thankfully, we can handle this. Here's how the Compspec looks:
 
@@ -210,14 +210,14 @@ Which translates to this in Pipeline UI:
 **UI Display Example**
 
 <!-- ![ui_display_example5.png](ui_display_example5.png) -->
-![/img/page-compspec/image7.png](/img/page-compspec/image7.png)
+![/img/page-compspec/image_7.png](/img/page-compspec/image_7.png)
 
 ...and looks like this after selecting the files upon mapping:
 
 **UI Display Example**
 
 <!-- ![ui_display_example6.png](ui_display_example6.png) -->
-![/img/page-compspec/image8.png](/img/page-compspec/image8.png)
+![/img/page-compspec/image_8.png](/img/page-compspec/image_8.png)
 
 The computation is written in such a way to select the files necessary to run its algorithm.
 
@@ -238,7 +238,7 @@ COINSTAC allows the basic inputs that you might expect when using/creating an HT
 }
 
 ```
-![/img/page-compspec/image9.png](/img/page-compspec/image9.png)
+![/img/page-compspec/image_9.png](/img/page-compspec/image_9.png)
 
 **number:**
 
@@ -251,7 +251,7 @@ COINSTAC allows the basic inputs that you might expect when using/creating an HT
 }
 
 ```
-![/img/page-compspec/image10.png](/img/page-compspec/image10.png)
+![/img/page-compspec/image_10.png](/img/page-compspec/image_10.png)
 
 **string:**
 
@@ -264,7 +264,7 @@ COINSTAC allows the basic inputs that you might expect when using/creating an HT
 }
 
 ```
-![/img/page-compspec/image11.png](/img/page-compspec/image11.png)
+![/img/page-compspec/image_11.png](/img/page-compspec/image_11.png)
 
 **select:**
 
@@ -282,7 +282,7 @@ COINSTAC allows the basic inputs that you might expect when using/creating an HT
 **UI Display Example**
 
 <!-- ![ui_display_example7.png](ui_display_example7.png) -->
-![/img/page-compspec/image12.png](/img/page-compspec/image12.png)
+![/img/page-compspec/image_12.png](/img/page-compspec/image_12.png)
 
 ### Advanced Field Inputs
 
@@ -304,7 +304,7 @@ Sometimes the sort of data we are trying to capture via field inputs is a little
 
 ```
 
-![/img/page-compspec/image13.png](/img/page-compspec/image13.png)
+![/img/page-compspec/image_13.png](/img/page-compspec/image_13.png)
 
 **object:**
 
@@ -324,6 +324,6 @@ Sometimes the sort of data we are trying to capture via field inputs is a little
 }
 
 ```
-![/img/page-compspec/image14.png](/img/page-compspec/image14.png)
+![/img/page-compspec/image_14.png](/img/page-compspec/image_14.png)
 
 Hopefully, this has illuminated things for you. Feel free to reach out to the COINSTAC team via our Slack channel (#coinstac-general) if you have any questions.
