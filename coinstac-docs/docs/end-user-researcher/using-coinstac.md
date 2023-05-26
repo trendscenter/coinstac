@@ -66,4 +66,5 @@ You're done! All results are available in the results tab, as well as any pipeli
 ![image](https://user-images.githubusercontent.com/7193853/207144123-cfd15839-5ee8-4a70-b6af-bacf19e52a77.png)
 ![image](https://user-images.githubusercontent.com/7193853/207144144-d1185047-0fba-4101-975f-ea7721cc731c.png)
 
-![](https://youtu.be/Qw6QEwS-uXA?list=PLwamoYspgQX4xpdUBwo-uy2k8IPq1ta7O)
+
+[![COINSTAC CMI Freesurfer Volumes Vault Regression Demo](http://img.youtube.com/vi/Qw6QEwS-uXA/0.jpg)](http://www.youtube.com/watch?v=Qw6QEwS-uXA)
