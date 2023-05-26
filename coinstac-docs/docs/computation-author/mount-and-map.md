@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 ---
-# Mount and map
+# Mount and Map
 Computations are designed to consume data mounted into the `input` directory of the computation container. The expected directory structure for the computation must be specified so that the data owner can prepare and verify that their data is able to be consumed by the computation.
 
 Where possible, computations should be designed to consume common data structures such as BIDS and the COINSTAC CSV. If your computation needs data to be in a structure that current standards do not cover, consider whether current standards can be improved or new standards can be created to accommodate your use case.
