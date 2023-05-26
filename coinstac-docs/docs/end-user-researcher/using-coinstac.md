@@ -65,3 +65,5 @@ Going to the Home screen will show the currently running pipeline, as well as it
 You're done! All results are available in the results tab, as well as any pipelines that may have failed. Coinstac stores the results in a directory in the users home with the unique paths per consortium per run, 'open results' will open this path on your drive.
 ![image](https://user-images.githubusercontent.com/7193853/207144123-cfd15839-5ee8-4a70-b6af-bacf19e52a77.png)
 ![image](https://user-images.githubusercontent.com/7193853/207144144-d1185047-0fba-4101-975f-ea7721cc731c.png)
+
+![](https://youtu.be/Qw6QEwS-uXA?list=PLwamoYspgQX4xpdUBwo-uy2k8IPq1ta7O)
