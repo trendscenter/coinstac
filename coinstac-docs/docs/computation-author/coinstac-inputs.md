@@ -3,15 +3,6 @@ sidebar_position: 2
 ---
 
 # COINSTAC Inputs
-## Table of Contents
-
-1. [COINSTAC Inputs](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
-    - [Input Types](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
-    - [Field Inputs](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
-2. [Additional Input Parameters](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
-3. [Examples](https://www.notion.so/Compspec-doc-rewrite-732203143a714fa4a54e6b6113153c8c)
-
-### COINSTAC Inputs
 
 For the purposes of this document, we will assume that you've reviewed the COINSTAC Computation Development Guide and have a fundamental understanding of how to create a basic algorithm to integrate into the user interface (UI) of the COINSTAC application. In this document, we will be diving deeper into the COINSTAC Compspec file (compspec.json), which is the main way we describe our computation to the COINSTAC UI. Generally speaking, the Compspec tells COINSTAC what Docker image to use, what the expected inputs are, and how to display the resulting output. Since we've read the above Development Guide, we should know how to reference our Docker image, so let's talk about Inputs. By the end of this document, you should be able to understand how to design the UI for your computation by using the Compspec.
 
@@ -330,5 +321,8 @@ Sometimes the sort of data we are trying to capture via field inputs is a little
 
 ```
 ![/img/page-compspec/image_14.png](/img/page-compspec/image_14.png)
+
+Visualize how options in compspec.json looks in GUI using the following tool:
+https://trendscenter.github.io/coinstac-specgen/
 
 Hopefully, this has illuminated things for you. Feel free to reach out to the COINSTAC team via our Slack channel (#coinstac-general) if you have any questions.
