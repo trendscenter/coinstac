@@ -3,104 +3,80 @@ sidebar_position: 1
 ---
 
 
-# Coinstac Computation Development Guide
-[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
+# COINSTAC Computation Development Guide
+[![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-desktop-app/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
-Coinstac is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm for Coinstac.
+COINSTAC is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm for COINSTAC.
 
 
 ### Requirements
   - An LTS release of [Node and NPM](https://nodejs.org/en/)
-  - lastest version of [coinstac-simulator](https://npm.org/packages/coinstac-simulator)
-    ```sudo npm i -g coinstac-simulator```
-  - latest version of [docker](https://docs.docker.com/install/) or [singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html) (linux only)
+  - lastest version of [coinstac-simulator](https://npm.org/packages/coinstac-simulator) ```sudo npm i -g coinstac-simulator```
+  - latest version of [docker](https://docs.docker.com/install/)
 
 ## Getting Started
 To successfully run computation in the simulator we need to
-- [Create a compsec](#create-a-compsec)
-- [Use a container system](#use-a-container-system)
-- [Create the scripts](#create-the-scripts)
-- [Creating an inputspec](#creating-an-inputspec)
+
+  - [Create a compsec](#create-a-compsec)
+  - [Use a container system](#use-a-container-system)
+  - [Create the scripts](#create-the-scripts)
+  - [Creating an inputspec](#creating-an-inputspec)
 
 ## Other topics
+
 - [Advanced usage](#Advanced-usage)
 
 #### Create a compsec
-Starting a Coinstac computatation begins with making a `compspec.json` a document that allows the Coinstac system to understand how to run and use your computation with others or by itself.
+Starting a COINSTAC computatation begins with making a `compspec.json` a document that allows the COINSTAC system to understand how to run and use your computation with others or by itself.
 
-Below is an example from the Coinstac regression algorithm. There is a metadata section containing usefull data, and a computation section for how to use your computation.
+Below is an example from the COINSTAC regression algorithm. There is a metadata section containing usefull data, and a computation section for how to use your computation.
+COINSTAC
 
 The key sections here are
-- **type** - docker or singularity
-- **dockerImage** - the name of the Docker image to run, the image needs to be pulled locally or available on dockerhub, omit this if using singularity
-- **image**  for Singularity, the name of your singularity image, path relative to the compspec file
-- **command** - the command to call when your docker image is started, this should be an array of args
-- **remote** - if your computation has a decentralized component, the remote section is a mirror of the above, but for the remote. The remote can and usually uses the same docker image but calls a different file.
-- **input** - what your computation needs to start running a full overview can be found in the [computation spec api doc](https://github.com/MRN-Code/coinstac/tree/master/algorithm-development/computation-specification-api.md). For now lets take a look at an example:
--
-```json      
-"lambda": // name of your variable as it will be in your script
-      {
-        "defaultValue": 0,
-        "label": "Lambda", // what the UI will call your variable
-        "max": 1,
-        "min": 0,
-        "step": 0.05, // step by which the UI will increment your variable
-        "type": "number", // what type your variable is, more in the comp spec api
-        "source": "owner" // optional: only necessary for the UI if the pipeline
-                          // creator must supply the value
-      },
-```
 
-##### Full compspec example
+- **meta** - uniquely names and describes your computation for organizational purposes within the COINSTAC system
+- **computation** - describes container type, tells COINSTAC where to find and pull your image, and gives COINSTAC the initial files to run for both the remote server and each local client
+- **input** - describes the intended input data and parameters coming from the COINSTAC UI 
+- **output** - defines the expected output keys and values once a computation has completed (this is usually associated with the "Table" display type)
+- **display** - defines how the expected output should be displayed by COINSTAC
+
+For further detail see: [Compspec API Documentation](https://github.com/MRN-Code/coinstac/tree/master/algorithm-development/computation-specification-api.md). 
+
+For now lets take a look at a simple example:
+
 #
 
 ```json
 {
   "meta": {
-    "name": "single shot regression demo",
-    "id": "ssr_fsl",
+    "name": "Computation Name",
+    "id": "cool-comp-name",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_fsl",
-    "description": "Single shot regresssion on FreeSurfer Data"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac-cool-comp-name",
+    "description": "This Is A Cool Computation"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/ssr",
+    "dockerImage": "coinstac/cool-comp-name",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/ssr",
+      "dockerImage": "coinstac/cool-comp-name",
       "command": [
         "python",
         "\/computation\/remote.py"
       ]
     },
     "input": {
-      "lambda":
+      "number":
       {
-        "defaultValue": 0,
-        "label": "Lambda",
-        "max": 1,
-        "min": 0,
-        "step": 0.05,
+        "defaultValue": 1,
+        "label": "Number",
         "type": "number",
         "source": "owner"
-      },
-      "covariates":
-      {
-        "label": "Covariates",
-        "type": "array",
-        "items": ["boolean", "number"]
-      },
-      "data": {
-        "label": "Data",
-        "type": "array",
-        "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]]
       }
     },
     "output": {
@@ -111,19 +87,21 @@ The key sections here are
 }
 ```
 
-The `output` and `display` sections can be blank for now, and will be used later for telling Coinstac UI how to deal with your computation once it completes.
+The `output` and `display` sections can be blank for now, and will be used later for telling COINSTAC UI how to deal with your computation once it completes.
 
 ### Use a container system
 
-To run your computation in Coinstac you'll need to encapsulate it in an image. Coinstac either supports Docker or Singularity image formats, and Singularity `sif` images can be created from docker images.
+To run your computation in COINSTAC you'll need to encapsulate it in an image. Currently COINSTAC supports Docker. (We plan on supporting Singularity image formats, and Singularity `sif` images, which will be created from docker images in the near future)
 
-#### Create a Dockerfile with docker
+#### Create a Dockerfile with Docker
 
-First, all Coinstac images need to inherit from a Coinstac base image which contains a microservice that allows the container to be persistent between iterations. A list of base images can be found [here](https://hub.docker.com/r/coinstacteam/coinstac-base/tags?page=1&ordering=last_updated). A typical computation setup often has two scripts for `remote` and `local` computation.
+All COINSTAC images need to inherit from a COINSTAC base image which contains a microservice that allows the container to persist between iterations when running a pipeline. A list of base images can be found [here](https://hub.docker.com/r/coinstacteam/coinstac-base/tags?page=1&ordering=last_updated). 
 
-This `Dockerfile` below puts your code into `/computation`, and does any install required by your code. The Dockerfile should be in your computation's root directory or otherwise reference paths based on it's location.
+A typical computation setup often has two scripts for `remote` and `local` computation.
 
-**Note**: please ignore any test or extraneous files using a `.dockerignore`, this keeps image size down
+This `Dockerfile` example below includes the COINSTAC base image, places your code into the root `/computation` directory, and installs any libraries required by your code. The Dockerfile should be in your computation's root directory or otherwise reference paths based on it's location.
+
+**Note**: please create and use a `.dockerignore` file to limit and extraneous system files not needed or used by the computation, this keeps image size down
 
 ```sh
 FROM coinstacteam/coinstac-base
@@ -136,39 +114,6 @@ RUN pip install -r requirements.txt
 # Copy the current directory contents into the container
 COPY . /computation
 ```
-
-#### Singularity sif
-The computation internals don't differ between container types, however you will have to use the same docker base image, making a tool like [docker2singularity](https://github.com/singularityhub/docker2singularity) an easy way to build containers. Once your `sif` file is built you can use it by changing the `image` type to `singularity` and adding an image name relative to the compspec under `image` rather than `dockerImage`.
-
-```
-{
-  "meta": {
-    "name": "my computation",
-    "id": "unique_computation_name",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/user/comp",
-    "description": "Itsa Computation"
-  },
-  "computation": {
-    "type": "singularity",
-    "image": "my_image.sif",
-    "command": [
-      "python",
-      "\/computation\/local.py"
-    ],
-    "remote": {
-      "type": "singularity",
-      "image": "my_image.sif",
-      "command": [
-        "python",
-        "\/computation\/remote.py"
-      ]
-    },
-    .
-    .
-    .
-```
-
 ### Create the scripts
 Here is a simple example that just sends a number and sums it until it reaches `5`
 
@@ -225,14 +170,14 @@ sys.stdout.write(json.dumps(output))
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac\/coinstac-decentralized-test",
+    "dockerImage": "coinstac-decentralized-test",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac\/coinstac-decentralized-test",
+      "dockerImage": "coinstac-decentralized-test",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -248,9 +193,6 @@ sys.stdout.write(json.dumps(output))
         "type": "number",
         "label": "Decentralized Sum"
       }
-    },
-    "display": {
-      "type": "table"
     }
   }
 }
@@ -308,17 +250,17 @@ And finally the output as JSON
 local and decentralized computations are made nearly the same, except for two key differences: Decentralized computations **_always_** are ended by the remote, and decentralized computations have a `"remote"` section in their compspec.
 
 ## Advanced usage
-In this secion we'll go over some more advanced use cases of simualtor and Coinstac itself
+In this secion we'll go over some more advanced use cases of simualtor and COINSTAC itself
 #### Adding test files in simulator
 Adding files to simulator is a bit of a manual process at the moment, they must be put into the `./test` folder under a the automatic sitenames the simualtor generates. Sim names each site `local#` where # is 0 to the number of clients the run has. Here's what the directory sturcture looks like for `local0`, or the first client:
 
 ```sh
 ├── test
-│   ├── inputspec.json
-│   ├── local0
-│   │   └── simulatorRun
-│   │       ├── subject0_aseg_stats.txt
-│   │       ├── subject10_aseg_stats.txt
+│   ├── inputspec.json
+│   ├── local0
+│   │   └── simulatorRun
+│   │       ├── subject0_aseg_stats.txt
+│   │       ├── subject10_aseg_stats.txt
 ```
 The `simualtorRun` directory is the directory that is shared into docker, put your files in there and they will be accessible by your computation via `["state"]["baseDirectory"] + myfile.txt` for a python example.
 #### Transferring files between clients
@@ -329,37 +271,37 @@ From `remote` to `client` would look like this:
 Remote:
 ```
 ├── ['state']['transferDiretory']
-│   ├── move-this-file.txt
+│   ├── move-this-file.txt
 ```
 ##### Iteration ends....
 Remote:
 ```
 ├── ['state']['transferDiretory']
-│   ├──
+│   ├──
 ```
 All Clients:
 ```
 ├── ['state']['baseDiretory']
-│   ├── move-this-file.txt
+│   ├── move-this-file.txt
 ```
 
 From any `client` to `remote` would look like this:
 A Client:
 ```
 ├── ['state']['transferDiretory']
-│   ├── move-this-file.txt
+│   ├── move-this-file.txt
 ```
 ##### Iteration ends....
 A Client:
 ```
 ├── ['state']['transferDiretory']
-│   ├──
+│   ├──
 ```
 Remote:
 ```
 ├── ['state']['baseDiretory']
-│   ├── ['state']['baseDiretory']['clientID'] // files moved into folders based on the sending Client's ID so they cannot conflict
-│   │   └── move-this-file.txt
+│   ├── ['state']['baseDiretory']['clientID'] // files moved into folders based on the sending Client's ID so they cannot conflict
+│   │   └── move-this-file.txt
 ```
 *NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.
 
