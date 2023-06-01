@@ -36,7 +36,7 @@ The key sections here are
 
 - **meta** - uniquely names and describes your computation for organizational purposes within the COINSTAC system
 - **computation** - describes container type, tells COINSTAC where to find and pull your image, and gives COINSTAC the initial files to run for both the remote server and each local client
-- **input** - describes the intended input data and parameters coming from the COINSTAC UI 
+- **input** - describes the intended input data and parameters coming from your inputspec.json document and eventually the COINSTAC UI 
 - **output** - defines the expected output keys and values once a computation has completed (this is usually associated with the "Table" display type)
 - **display** - defines how the expected output should be displayed by COINSTAC
 
