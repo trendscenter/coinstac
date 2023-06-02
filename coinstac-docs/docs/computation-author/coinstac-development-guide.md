@@ -29,8 +29,7 @@ To successfully run computation in the simulator we need to
 #### Create a compsec
 Starting a COINSTAC computatation begins with making a `compspec.json` a document that allows the COINSTAC system to understand how to run and use your computation with others or by itself.
 
-Below is an example from the COINSTAC regression algorithm. There is a metadata section containing usefull data, and a computation section for how to use your computation.
-COINSTAC
+Below is an example from the COINSTAC regression algorithm.
 
 The key sections here are
 
@@ -57,14 +56,14 @@ For now lets take a look at a simple example:
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/cool-comp-name",
+    "dockerImage": "cool-comp-name",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/cool-comp-name",
+      "dockerImage": "cool-comp-name",
       "command": [
         "python",
         "\/computation\/remote.py"
