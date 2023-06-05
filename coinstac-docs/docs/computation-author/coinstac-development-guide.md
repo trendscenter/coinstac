@@ -51,7 +51,7 @@ For now lets take a look at a simple example:
     "name": "Computation Name",
     "id": "cool-comp-name",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac-cool-comp-name",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-cool-comp-name",
     "description": "This Is A Cool Computation"
   },
   "computation": {
