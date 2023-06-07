@@ -43,6 +43,7 @@ async function create(config, authToken) {
     userId: config.id,
     appDirectory,
     logger,
+    containerService: 'docker',
   };
 
   core = new CoinstacClientCore(clientCoreConfig);
