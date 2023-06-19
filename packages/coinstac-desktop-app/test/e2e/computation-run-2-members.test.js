@@ -116,7 +116,7 @@ describe('e2e run computation with 2 members', () => {
 
     try {
       await appWindow1.click('button:has-text("Never Show Again")', { timeout: 5000 });
-    } catch {}
+    } catch { }
 
     // Assert
     return appWindow1.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_1);
@@ -131,7 +131,7 @@ describe('e2e run computation with 2 members', () => {
 
     try {
       await appWindow2.click('button:has-text("Never Show Again")', { timeout: 5000 });
-    } catch {}
+    } catch { }
 
     // Assert
     return appWindow2.innerText('.user-account-name', { timeout: LOGIN_TIMEOUT }).should.eventually.equal(USER_ID_2);
