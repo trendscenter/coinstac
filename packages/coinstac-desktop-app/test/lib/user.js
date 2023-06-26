@@ -2,8 +2,6 @@
 const { EXIST_TIMEOUT } = require('../lib/constants');
 
 const logIn = async ({ username, password }, app) => {
-  await app.title().should.eventually.equal('COINSTAC');
-
   await app.click('#login-username', { timeout: EXIST_TIMEOUT });
   await app.fill('#login-username', username);
   await app.fill('#login-password', password);

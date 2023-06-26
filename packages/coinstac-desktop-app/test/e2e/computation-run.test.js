@@ -1,4 +1,3 @@
-/* eslint-disable prefer-destructuring */
 const consortium = require('../lib/consortia');
 const pipeline = require('../lib/pipeline');
 const {
@@ -28,11 +27,14 @@ const DATA = {
 describe('e2e run computation with 1 member', () => {
   afterEach(screenshot);
   before(async () => {
-    const res = await setup();
-    appWindow = res[0].appWindow;
+    appWindow = await setup();
   });
 
   after(cleanup);
+
+  it('displays the correct title', async () => {
+    await appWindow.title().should.eventually.equal('COINSTAC');
+  });
 
   it('authenticates demo user', async () => {
     await user.logIn(USER_1, appWindow);

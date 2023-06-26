@@ -4,7 +4,7 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
-const { exec } = require('child_process');
+const { execSync } = require('child_process');
 
 const appPath = path.join(__dirname, '../..');
 
@@ -55,7 +55,12 @@ const setup = async (instanceCount = 1) => {
   });
 
   instances = await Promise.all(promises);
-  return instances;
+
+  if (instanceCount === 1) {
+    return instances[0].appWindow;
+  }
+
+  return instances.map(instance => instance.appWindow);
 };
 
 const cleanup = async () => {
@@ -64,13 +69,13 @@ const cleanup = async () => {
     console.log((await fs.readFile('coinstac-log.json')).toString());
   }
 
-  return Promise.all(instances.map(instance => instance.app.close()));
+  await Promise.all(instances.map(instance => instance.app.close()));
 };
 
 const screenshot = async () => {
   if (process.env.CI && this.currentTest.state === 'failed') {
     await fs.mkdir('/tmp/screenshots', { recursive: true });
-    exec(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
+    execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
   }
 };
 

@@ -33,6 +33,57 @@ const createConsortium = async ({ name, description }, app) => {
   }).should.eventually.not.equal(null);
 };
 
+const addUser = async ({ consortiumName, username }, app) => {
+  await app.click('a:has-text("Consortia")');
+
+  await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('.consortium-add-user', { timeout: EXIST_TIMEOUT });
+
+  await app.click(`.react-select-dropdown-menu div:has-text("${username}")`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Member")');
+
+  // Assert
+  await app.waitForSelector(`span:has-text("${username}")`, {
+    state: 'visible',
+    timeout: 30000,
+  }).should.eventually.not.equal(null);
+};
+
+const accessAsMember = async ({ username }, app) => {
+  await app.click('a:has-text("Consortia")');
+
+  await app.waitForSelector('h6:has-text("Member")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  });
+  await app.waitForSelector(`span:has-text("${username}")`, {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  });
+};
+
+const grantOwnership = async ({ consortiumName, username }, app) => {
+  await app.click('a:has-text("Consortia")');
+
+  await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('#consortium-member-table tbody tr:last-child input[name="isOwner"]', { timeout: EXIST_TIMEOUT });
+
+  // Assert
+  await Promise.all([
+    app.waitForSelector(`div:has-text("${username}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+    app.waitForSelector('#consortium-member-table tbody tr:last-child input[name="isOwner"]:checked', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+  ]);
+};
+
 const setPipeline = async ({ consortium, pipeline, computation }, app) => {
   await app.click('a:has-text("Consortia")');
 
@@ -46,6 +97,28 @@ const setPipeline = async ({ consortium, pipeline, computation }, app) => {
   // Assert
   await Promise.all([
     app.waitForSelector(`a:has-text("${pipeline.name}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+    app.waitForSelector(`div:has-text("${computation.name} Download Complete")`, {
+      state: 'visible',
+      timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
+    }).should.eventually.not.equal(null),
+  ]);
+};
+
+const joinConsortium = async ({ consortium, computation }, app) => {
+  await app.click('a:has-text("Consortia")');
+
+  await app.click('span:has-text("Other Consortia")');
+
+  await app.click(`button[name="${consortium.name}-join-cons-button"]`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('span:has-text("My Consortia")');
+
+  // Assert
+  await Promise.all([
+    app.waitForSelector(`button[name="${consortium.name}-leave-cons-button"]`, {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null),
@@ -102,7 +175,7 @@ const runComputation = async ({ consortium, pipeline }, app) => {
   await app.click('div.run-item-paper:first-child a:has-text("View Results")', { timeout: COMPUTATION_TIMEOUT });
 
   // Assert
-  return Promise.all([
+  await Promise.all([
     app.waitForSelector('h3:has-text("Regressions")', {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
@@ -132,7 +205,11 @@ const deleteConsortium = async (name, app) => {
 
 module.exports = {
   create: createConsortium,
+  addUser,
+  accessAsMember,
+  grantOwnership,
   setPipeline,
+  join: joinConsortium,
   mapData: mapDataToConsortium,
   runComputation,
   delete: deleteConsortium,
