@@ -229,13 +229,24 @@ const resolvers = {
      * Returns all results.
      * @return {array} All results
      */
-    fetchAllResults: async () => {
+    fetchAllResults: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
-
-      const results = await db.collection('runs').find().toArray();
-      return transformToClient(results);
-    },
-    /**
+      let results;
+      if (!isAdmin(credentials.permissions)) {
+         results = await db.collection('runs').find({
+          $or: [
+            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ],
+          }
+        ).toArray();
+      } else {
+         results = await db.collection('runs').find().toArray();
+      }
+    return transformToClient(results);
+  },
+  /**
      * Returns single pipeline
      * @param {object} args
      * @param {string} args.resultId  Requested pipeline ID
@@ -245,10 +256,23 @@ const resolvers = {
       if (!args.resultId) {
         return null;
       }
-
       const db = database.getDbInstance();
 
-      const result = await db.collection('runs').findOne({ _id: ObjectID(args.resultId) });
+      let result;
+      if (!isAdmin(credentials.permissions)) {
+         results = await db.collection('runs').find({
+          _id: ObjectID(args.resultId),
+          $or: [
+            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ],
+          }
+        ).toArray();
+      } else {
+        await db.collection('runs').findOne({ _id: ObjectID(args.resultId) });
+      }
+
       return transformToClient(result);
     },
     /**
@@ -261,7 +285,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { members: { [credentials.id]: credentials.username } }
+          { [`members.${credentials.id}`]: credentials.username  }
         ]
       }).toArray();
 
@@ -273,14 +297,20 @@ const resolvers = {
      * @param {string} args.consortiumId Requested consortium ID
      * @return {object} Requested consortium if id present, null otherwise
      */
-    fetchConsortium: async (_, args) => {
+    fetchConsortium: async (_, args, { credentials }) => {
       if (!args.consortiumId) {
         return null;
       }
 
       const db = database.getDbInstance();
 
-      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+      const consortium = await db.collection('consortia').findOne({
+         _id: ObjectID(args.consortiumId),
+         $or: [
+           { isPrivate: false },
+           { members: { [credentials.id]: credentials.username } }
+         ]
+       });
       return transformToClient(consortium);
     },
     /**
@@ -377,12 +407,20 @@ const resolvers = {
      * @param {string} args.pipelineId  Requested pipeline ID
      * @return {object} Requested pipeline if id present, null otherwise
      */
-    fetchPipeline: async (_, args) => {
+    fetchPipeline: async (_, args, { credentials }) => {
       if (!args.pipelineId) {
         return null;
       }
 
       const pipeline = await fetchOnePipeline(ObjectID(args.pipelineId));
+      const memberConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
+      let res = Object.values(pipeline);
+      if (!isAdmin(credentials.permissions)
+        || (consortiaIds.includes(String(pipeline.owningConsortium))|| pipeline.shared)
+      ) {
+        return Boom.forbidden('Action not permitted');
+      }
       return transformToClient(pipeline);
     },
     /**
@@ -398,6 +436,7 @@ const resolvers = {
       const db = database.getDbInstance();
 
       const users = await db.collection('users').find().toArray();
+
       return transformToClient(users);
     },
     fetchAllUserRuns: async (parent, args, { credentials }) => {
@@ -410,7 +449,8 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true } },
+            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
         }).toArray();
@@ -534,6 +574,7 @@ const resolvers = {
         run = await db.collection('runs').findOne({
           _id: ObjectID(runId),
           $or: [
+            { [`observers.${credentials.id}`]: { $exists: true }  },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
@@ -546,10 +587,13 @@ const resolvers = {
 
       return transformToClient(run);
     },
-    getPipelines: async () => {
-      const result = await axios.get(
-        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
-      );
+    getPipelines: async (parent, args, { credentials }) => {
+      let result = [];
+      if (isAdmin(credentials.permissions)) {
+        result = await axios.get(
+          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/getPipelines`
+        );
+      }
 
       return { info: JSON.stringify(result.data) };
     }
@@ -653,13 +697,18 @@ const resolvers = {
      */
     createRun: async (parent, { consortiumId }, { credentials }) => {
       if (!credentials) {
-        // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
 
       const db = database.getDbInstance();
 
-      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      const consortium = await db.collection('consortia').findOne({
+        _id: ObjectID(consortiumId),
+        $or: [
+          { isPrivate: false },
+          { members: { [credentials.id]: credentials.username } }
+        ]
+      });
 
       if (!consortium) {
         return Boom.notFound('Consortium with provided id not found');
@@ -863,10 +912,19 @@ const resolvers = {
      */
     joinConsortium: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
+      const userId = credentials.id;
+
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+      const ownerIds = Object.keys(consortium.owners);
+
+      const isOwner = ownerIds.includes(userId);
 
       if (credentials.id in consortium.members) {
         return consortium;
+      }
+
+      if (consortium.isPrivate && !isOwner) {
+        return Boom.forbidden('Action not permitted');
       }
 
       await addUserPermissions({ userId: ObjectID(credentials.id), userName: credentials.username, role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
@@ -942,7 +1000,7 @@ const resolvers = {
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
-        return Boom.forbidden('You cannot remoe your own permissions');
+        return Boom.forbidden('You cannot remove your own permissions');
       }
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
@@ -974,18 +1032,21 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: async (_, args) => {
-      // const { permissions } = credentials;
-      /* TODO: Add permissions
-      if (!permissions.consortia.write
-          && args.consortium.id
-          && !permissions.consortia[args.consortium.id].write) {
-            return Boom.forbidden('Action not permitted');
-      }*/
-
+    saveActivePipeline: async (_, args, { credentials }) => {
+      const { permissions } = credentials;
       const db = database.getDbInstance();
 
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+
+      const pipelineId = ObjectID(args.pipelineId);
+
+      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
+
+      if (!permissions.consortia[pipeline.owningConsortium] ||
+        !permissions.consortia[pipeline.owningConsortium].includes('owner')
+      ) {
+        return Boom.forbidden('Action not permitted')
+      }
 
       if (consortium.activePipelineId) {
         const oldPipeline = await db.collection('pipelines').findOne({ _id: consortium.activePipelineId });
@@ -1005,8 +1066,6 @@ const resolvers = {
           );
         }
       }
-
-      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
 
       const updateObj = {
         $set: {
@@ -1133,8 +1192,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.error Error
      */
-    saveError: async (_, args) => {
+    saveError: async (_, args, { credentials }) => {
       const db = database.getDbInstance();
+
+      if (!isAdmin(credentials.permissions)) return Boom.forbidden('Action not permitted');
 
       const run = await db.collection('runs').findOne({
         _id: ObjectID(args.runId)
@@ -1174,14 +1235,11 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: async (_, args) => {
-      // const { permissions } = credentials;
-      /* TODO: Add permissions
-      if (!permissions.consortia.write
-          && args.consortium.id
-          && !permissions.consortia[args.consortium.id].write) {
-            return Boom.forbidden('Action not permitted');
-      }*/
+    savePipeline: async (_, args, { credentials }) => {
+      const { permissions } = credentials;
+      if (!permissions.consortia[args.pipeline.owningConsortium].includes('owner')) {
+        return Boom.forbidden('Action not permitted');
+      }
       const db = database.getDbInstance();
 
       args.pipeline.id = args.pipeline.id ? ObjectID(args.pipeline.id) : new ObjectID();
@@ -1261,8 +1319,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.results Results
      */
-    saveResults: async (_, args) => {
+    saveResults: async (_, args, { credentials }) => {
       const db = database.getDbInstance();
+
+      if (!isAdmin(credentials.permissions)) return Boom.forbidden('Action not permitted');
 
       const run = await db.collection('runs').findOne({
         _id: ObjectID(args.runId)
@@ -1302,8 +1362,10 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.data State data
      */
-    updateRunState: async (_, args) => {
+    updateRunState: async (_, args, { credentials }) => {
       const db = database.getDbInstance();
+
+      if (!isAdmin(credentials.permissions)) return Boom.forbidden('Action not permitted');
 
       const result = await db.collection('runs').findOneAndUpdate({
         _id: ObjectID(args.runId)
