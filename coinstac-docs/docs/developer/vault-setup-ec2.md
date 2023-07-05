@@ -3,7 +3,7 @@
 sidebar_position: 3
 ---
 
-# Creating a Vault instance on EC2 Ubuntu LTS
+# Creating a Vault sever instance on EC2 Ubuntu LTS
 
 
 [npm: coinstac-vault-client](https://www.npmjs.com/package/coinstac-vault-client)
