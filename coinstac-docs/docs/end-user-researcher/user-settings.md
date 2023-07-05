@@ -5,7 +5,7 @@ User settings can be found by scrolling to the bottom of the sidebar and clickin
 
 ### User information
 Modify your current user information
-![User info](/img/settings-user.png)
+![User info](/img/settings-name.png)
 
 ### Clear local data
 Removes locally stored data, which includes:
@@ -41,4 +41,4 @@ Updates the user password, for password reset use the reset form on the login sc
 Changes the currently used container service for computations ran on this computer.
 Options are Singularity and Docker, defaulting to Docker. Restart is unnecessary, some
 functions may not be available using Singularity, such as the client server.
-![User info](/img/settings-user.png)
+![User info](/img/settings-container-service.png)
