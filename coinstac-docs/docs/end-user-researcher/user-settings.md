@@ -5,7 +5,7 @@ User settings can be found by scrolling to the bottom of the sidebar and clickin
 
 ### User information
 Modify your current user information
-![User info](/img/settings-name.png)
+![User info](/img/settings-user.png)
 
 ### Clear local data
 Removes locally stored data, which includes:
@@ -14,6 +14,7 @@ Removes locally stored data, which includes:
 * cached data from remote pipelines used to map local data
 This can be useful if there are errors mapping, note this will delete
 the local pipeline data but _will not_ delete results from decentralized pipelines.
+
 ![User info](/img/settings-clear-data.png)
 
 ### Client server * experimental
@@ -40,4 +41,4 @@ Updates the user password, for password reset use the reset form on the login sc
 Changes the currently used container service for computations ran on this computer.
 Options are Singularity and Docker, defaulting to Docker. Restart is unnecessary, some
 functions may not be available using Singularity, such as the client server.
-![User info](/img/settings-container-service.png)
+![User info](/img/settings-user.png)
