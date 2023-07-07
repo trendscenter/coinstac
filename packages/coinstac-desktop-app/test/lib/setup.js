@@ -15,9 +15,11 @@ const devicePrefix = 'test';
 chai.should();
 chai.use(chaiAsPromised);
 
-const getNewAppId = () => instances.length + 1;
+function getNewAppId() {
+  return instances.length + 1;
+}
 
-const createInstance = async (appId) => {
+async function createInstance(appId) {
   const deviceId = `${devicePrefix}${appId}`;
   const app = await electron.launch({
     args: [
@@ -46,9 +48,9 @@ const createInstance = async (appId) => {
   });
 
   return { app, appWindow };
-};
+}
 
-const setup = async (instanceCount = 1) => {
+async function setup(instanceCount = 1) {
   const promises = Array(instanceCount).fill(0).map(() => {
     const appId = getNewAppId();
     return createInstance(appId);
@@ -61,27 +63,72 @@ const setup = async (instanceCount = 1) => {
   }
 
   return instances.map(instance => instance.appWindow);
-};
+}
 
-const cleanup = async () => {
+const originalFunctions = {};
+const logLevels = ['info', 'debug', 'warn', 'error', 'log', 'assert', 'verbose', 'trace'];
+
+let allTestMessages = [];
+let currentTestMessages = [];
+
+const trackingLogLevel = 'trace';
+
+async function beforeHandler() {
+  allTestMessages = [];
+  currentTestMessages = [];
+
+  // Save console's default functions
+  logLevels.forEach((level) => {
+    originalFunctions[level] = console[level];
+  });
+}
+
+async function afterHandler() {
   if (process.env.CI) {
     console.log('/********** Main process logs **********/');
     console.log((await fs.readFile('coinstac-log.json')).toString());
   }
 
   await Promise.all(instances.map(instance => instance.app.close()));
-};
+}
 
-const screenshot = async () => {
-  if (process.env.CI && this.currentTest.state === 'failed') {
-    await fs.mkdir('/tmp/screenshots', { recursive: true });
-    execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
+function beforeEachHandler() {
+  // Mock console's functions
+  logLevels.forEach((level) => {
+    console[level] = (...args) => {
+      if (level === trackingLogLevel) {
+        currentTestMessages.push(args);
+      }
+    };
+  });
+}
+
+async function afterEachHandler() {
+  if (this.currentTest.state === 'failed') {
+    if (currentTestMessages.length > 0) {
+      allTestMessages.push({
+        title: this.currentTest.title,
+        messages: currentTestMessages,
+      });
+    }
+    currentTestMessages = [];
+
+    if (process.env.CI) {
+      await fs.mkdir('/tmp/screenshots', { recursive: true });
+      execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
+    }
   }
-};
+
+  logLevels.forEach((level) => {
+    console[level] = originalFunctions[level];
+  });
+}
 
 module.exports = {
   instances,
   setup,
-  cleanup,
-  screenshot,
+  beforeHandler,
+  afterHandler,
+  beforeEachHandler,
+  afterEachHandler,
 };
