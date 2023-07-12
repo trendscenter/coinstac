@@ -373,5 +373,7 @@ second step inputspec-pipeline.json:
 Some notes on this:
 * The arrays for the multiple clients between the multiple inputspec and inputspec-pipeline files _must_ be the same length, as the client count has to be the same throughout the pipeline
 * The arrays for the multiple clients _must_ also be in the same order, as in array element [5] in the initial input spec should correspond to array element [5] in all other inputspec-pipeline files, otherwise your client input/output chaining will be mismatched.
+## Transfer data between local and remote easily using our intuitive 'coinstac_computation' python library
+Please check out the documentation [here](https://github.com/trendscenter/coinstac-computation)
 ## A full fledged example
 A more real world example can be found [here](https://github.com/MRN-Code/coinstac_ssr_fsl) with our Single Shot Regression Demo that uses freesurfer file test data to run it's simulator example
