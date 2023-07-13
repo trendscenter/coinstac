@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -6,7 +7,7 @@ import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { clipboard } from 'electron';
+import { clipboard, ipcRenderer } from 'electron';
 
 const styles = theme => ({
   pageTitle: {
@@ -54,7 +55,14 @@ class Logs extends Component {
     clipboard.writeText(logs.join('\n'));
   }
 
-  handleCopyDockerLogs = () => { }
+  handleCopyDockerLogs = async () => {
+    try {
+      const res = await ipcRenderer.invoke('get-docker-logs');
+      clipboard.writeText(res.map(res => JSON.stringify(res)).join());
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   render() {
     const { classes, logs } = this.props;
