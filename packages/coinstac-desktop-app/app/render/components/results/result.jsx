@@ -289,11 +289,11 @@ class Result extends Component {
           onChange={this.handleSelect}
         >
           {
-            run && run.results && displayTypes && displayTypes.map((disp) => {
-              const title = disp.type.replace('_', ' ')
+            run && run.results && displayTypes && displayTypes.map((disp, idx) => {
+              const title = (disp.type || '').replace('_', ' ')
                 .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-
-              return <Tab key={disp.type} label={`${title} View`} />;
+              // eslint-disable-next-line react/no-array-index-key
+              return <Tab key={idx} label={`${title} View`} />;
             })
           }
         </Tabs>
@@ -313,17 +313,17 @@ class Result extends Component {
               {
                 selectedDisplayType.type === 'box_plot'
                 && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Box plotData={plotData.testData} />
-                </Suspense>
+                  <Suspense fallback={<span>Loading...</span>}>
+                    <Box plotData={plotData.testData} />
+                  </Suspense>
                 )
               }
               {
                 selectedDisplayType.type === 'scatter_plot'
                 && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Scatter plotData={plotData.testData} />
-                </Suspense>
+                  <Suspense fallback={<span>Loading...</span>}>
+                    <Scatter plotData={plotData.testData} />
+                  </Suspense>
                 )
               }
               {
@@ -411,7 +411,7 @@ class Result extends Component {
         }
 
         {
-          (!selectedDisplayType || selectedDisplayType.type === '')
+          (!selectedDisplayType || Object.keys(selectedDisplayType).length === 0 || selectedDisplayType.type === '')
           && (
             <Paper className={classNames(classes.paper)}>
               <table>
