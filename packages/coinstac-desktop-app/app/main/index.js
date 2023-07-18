@@ -622,6 +622,30 @@ loadConfig()
       });
 
       /**
+   * IPC listener to return logs of docker containers
+   * @return {Promise} Docker logs
+   */
+      ipcMain.handle('get-docker-logs', async () => {
+        try {
+          const containers = await initializedCore.containerManager.listContainers({ all: true });
+          const latestContainers = containers.slice(-5);
+          const promises = latestContainers.map(container => initializedCore
+            .containerManager
+            .getContainerLogs(container.Id));
+          const response = await Promise.all(promises);
+          return response;
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      /**
     * IPC Listener to download a list of computations
     * @param {Object} params
     * @param {String[]} params.computations An array of docker image names
@@ -645,7 +669,8 @@ loadConfig()
                 stream.on('data', (data) => {
                   let output = compact(data.toString().split('\r\n'));
                   output = output.map(JSON.parse);
-                  // these events can be renamed to not refer to docker specifically since we are now supporting Singularity
+                  /* these events can be renamed to not refer to docker
+                  specifically since we are now supporting Singularity */
                   mainWindow.webContents.send('docker-out', { output, compId, compName });
                 });
 
