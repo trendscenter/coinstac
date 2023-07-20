@@ -408,6 +408,8 @@ const resolvers = {
      * @return {object} Requested pipeline if id present, null otherwise
      */
     fetchPipeline: async (_, args, { credentials }) => {
+      const db = database.getDbInstance();
+
       if (!args.pipelineId) {
         return null;
       }
@@ -417,10 +419,11 @@ const resolvers = {
       const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
       let res = Object.values(pipeline);
       if (!isAdmin(credentials.permissions)
-        || (consortiaIds.includes(String(pipeline.owningConsortium))|| pipeline.shared)
+        && !(consortiaIds.includes(String(pipeline.owningConsortium)) && !pipeline.shared)
       ) {
         return Boom.forbidden('Action not permitted');
       }
+      
       return transformToClient(pipeline);
     },
     /**
