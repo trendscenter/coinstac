@@ -423,7 +423,7 @@ const resolvers = {
       ) {
         return Boom.forbidden('Action not permitted');
       }
-      
+
       return transformToClient(pipeline);
     },
     /**
@@ -1045,7 +1045,7 @@ const resolvers = {
 
       const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
 
-      if (!permissions.consortia[pipeline.owningConsortium] ||
+      if (!permissions.consortia[pipeline.owningConsortium] &&
         !permissions.consortia[pipeline.owningConsortium].includes('owner')
       ) {
         return Boom.forbidden('Action not permitted')
