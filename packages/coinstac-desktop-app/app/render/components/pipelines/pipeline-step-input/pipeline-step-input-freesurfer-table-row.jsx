@@ -115,7 +115,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
             }
           </Menu>
         </TableCell>
-        <TableCell>
+        {obj && obj.type === 'FreeSurfer' ? <TableCell>
           <div id={`data-${index}-area`}>
             <Select
               value={obj.value
@@ -126,9 +126,10 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
               options={freeSurferOptions}
               isMulti
               onChange={value => this.selectInterest(value, index)}
+              style={{width: '100%'}}
             />
           </div>
-        </TableCell>
+        </TableCell> : <TableCell></TableCell>}
         <TableCell>
           <Button
             variant="contained"
