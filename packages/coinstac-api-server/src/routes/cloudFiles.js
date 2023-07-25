@@ -3,6 +3,10 @@ const { isArray } = require('lodash');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
 const database = require('../database');
+const {
+  eventEmitter,
+  RUN_CHANGED,
+} = require('../data/events');
 
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
@@ -56,7 +60,12 @@ module.exports = [
           return h.response(e).code(500);
         }
         // update the run document to indicate upload is complete
-        await db.collection('runs').updateOne({ _id: ObjectID(runId) }, { $set: { assetsUploaded: true } });
+        const run = await db.collection('runs').findOneAndUpdate(
+          { _id: ObjectID(runId) },
+          { $set: { assetsUploaded: true } },
+          { returnOriginal: false }
+        );
+        eventEmitter.emit(RUN_CHANGED, run);
         return h.response('file uploaded').code(201);
       },
       payload: {
@@ -87,8 +96,6 @@ module.exports = [
           console.log(e);
           return h.response(e).code(500);
         }
-
-
       },
       payload: {
         output: 'stream',
