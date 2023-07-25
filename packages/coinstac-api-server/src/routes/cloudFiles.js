@@ -65,7 +65,7 @@ module.exports = [
           { $set: { assetsUploaded: true } },
           { returnOriginal: false }
         );
-        eventEmitter.emit(RUN_CHANGED, run);
+        eventEmitter.emit(RUN_CHANGED, run.value);
         return h.response('file uploaded').code(201);
       },
       payload: {
