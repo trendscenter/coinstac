@@ -75,7 +75,7 @@ async function startPipelineRun(
   headlessClientConfig,
   coinstacClientCore,
   apolloClient,
-  clientId
+  clientId,
 ) {
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
@@ -103,7 +103,8 @@ async function startPipelineRun(
     pipelineRun.pipelineSnapshot,
     filesArray,
     run.id,
-    run.pipelineSteps
+    run.pipelineSteps,
+    !!process.env.COINTAC_USE_NETWORK_VOLUME
   );
 
   // Listen for local pipeline state updates
