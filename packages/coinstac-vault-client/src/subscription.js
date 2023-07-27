@@ -75,7 +75,7 @@ async function startPipelineRun(
   headlessClientConfig,
   coinstacClientCore,
   apolloClient,
-  clientId,
+  clientId
 ) {
   if (!run) {
     throw new Error('Could not start the run, because it\'s empty');
