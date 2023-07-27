@@ -103,7 +103,8 @@ async function startPipelineRun(
     pipelineRun.pipelineSnapshot,
     filesArray,
     run.id,
-    run.pipelineSteps
+    run.pipelineSteps,
+    !!process.env.COINTAC_USE_NETWORK_VOLUME
   );
 
   // Listen for local pipeline state updates
