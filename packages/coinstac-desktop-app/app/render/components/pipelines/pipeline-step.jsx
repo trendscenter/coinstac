@@ -266,7 +266,7 @@ class PipelineStep extends Component {
 
   renderPipelineStepInput = (localInput) => {
     const {
-      pipelineIndex, step, users, owner, updateStep,
+      pipelineIndex, step, users, owner, updateStep, headlessMembers,
     } = this.props;
     const { orderedInputs } = this.state;
 
@@ -282,6 +282,7 @@ class PipelineStep extends Component {
         step={step}
         updateStep={updateStep}
         users={users}
+        headlessMembers={headlessMembers}
       />
     );
   }
