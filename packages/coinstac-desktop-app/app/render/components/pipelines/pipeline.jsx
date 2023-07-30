@@ -15,7 +15,10 @@ import update from 'immutability-helper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Fade from '@material-ui/core/Fade';
+import green from '@material-ui/core/colors/green';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -769,7 +772,7 @@ class Pipeline extends Component {
               id="set-active"
               control={(
                 <Checkbox
-                  checked={pipeline.isActive || false}
+                  checked={pipeline.isActive || true}
                   disabled={!owner}
                   onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
                 />
@@ -856,6 +859,16 @@ class Pipeline extends Component {
               >
                 Save Pipeline
               </Button>
+              {savingStatus === 'success' ? 
+                <Fade in={
+                  setTimeout(() => {
+                    this.setState({ savingStatus: 'init' });
+                  }, 2000)} 
+                  timeout={1000}>
+                  <CheckCircleIcon style={{marginLeft: '0.5rem', color: 'green'}} />
+                </Fade> : 
+                null
+              }
             </StatusButtonWrapper>
           </Box>
           <FormControlLabel
