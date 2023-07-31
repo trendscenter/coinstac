@@ -138,7 +138,7 @@ const PipelineStepInputFreesurferTableRow = ({
           }
         </Menu>
       </TableCell>
-      <TableCell>
+      {obj && obj.type === 'FreeSurfer' ? <TableCell>
         <div id={`data-${index}-area`}>
           <Select
             value={obj.value
@@ -165,6 +165,7 @@ const PipelineStepInputFreesurferTableRow = ({
                 value: update(step.inputMap[objKey].value, {
                   $splice: [[index, 1]],
                 }),
+                },
               },
             },
           })}
