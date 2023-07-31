@@ -1,6 +1,6 @@
 {
   "name": "coinstac-desktop-app",
-  "version": "6.7.3",
+  "version": "6.7.5",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
