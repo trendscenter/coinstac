@@ -122,6 +122,7 @@ const PipelineStepInputFreesurferTableRow = ({
           }
         </Button>
         <Menu
+          anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           id={`${objKey}-${index}-data-dropdown-menu`}
