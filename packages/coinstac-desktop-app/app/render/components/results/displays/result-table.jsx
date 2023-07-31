@@ -75,7 +75,7 @@ function parseTableColumnOutput(output) {
         o = parseFloat(o).toExponential(4);
       }
       cols.push(
-        <td key={`value-${o}-${ind}`}>
+        <td key={`value-${o}-${ind}`} style={{border: 'none', paddingLeft: 0}}>
           {`${o} `}
         </td>
       );
@@ -291,8 +291,7 @@ class TableResult extends Component {
               }
               {
                 !Array.isArray(data) && keyValPairs.map((pair) => {
-                  if (typeof pair[1] === 'number') {
-                    return (
+                  return (
                       <TableRow key={`${pair[0]}-numbers-row`}>
                         <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
                           {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
@@ -301,9 +300,7 @@ class TableResult extends Component {
                           {parseTableColumnOutput(pair[1])}
                         </TableCell>
                       </TableRow>
-                    );
-                  }
-                  return null;
+                  )
                 })
               }
             </TableBody>

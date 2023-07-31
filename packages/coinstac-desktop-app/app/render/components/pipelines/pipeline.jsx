@@ -20,6 +20,7 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Fade from '@material-ui/core/Fade';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -801,7 +802,7 @@ class Pipeline extends Component {
               id="set-active"
               control={(
                 <Checkbox
-                  checked={pipeline.isActive || false}
+                  checked={pipeline.isActive || true}
                   disabled={!owner}
                   onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
                 />
@@ -888,6 +889,16 @@ class Pipeline extends Component {
               >
                 Save Pipeline
               </Button>
+              {savingStatus === 'success' ?
+                <Fade in={
+                  setTimeout(() => {
+                    this.setState({ savingStatus: 'init' });
+                  }, 2000)}
+                  timeout={1000}>
+                  <CheckCircleIcon style={{marginLeft: '0.5rem', color: 'green'}} />
+                </Fade> :
+                null
+              }
             </StatusButtonWrapper>
           </Box>
           <FormControlLabel

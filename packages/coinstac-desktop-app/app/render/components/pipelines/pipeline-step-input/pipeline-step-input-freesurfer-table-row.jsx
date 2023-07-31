@@ -138,20 +138,22 @@ const PipelineStepInputFreesurferTableRow = ({
           }
         </Menu>
       </TableCell>
-      <TableCell>
-        <div id={`data-${index}-area`}>
-          <Select
-            value={obj.value
-              ? obj.value.map(val => ({ label: val, value: val }))
-              : null
-            }
-            placeholder="Select Area(s) of Interest"
-            options={freeSurferOptions}
-            isMulti
-            onChange={value => selectInterest(value, index)}
-          />
-        </div>
-      </TableCell>
+      {obj && obj.type === 'FreeSurfer' ? (
+        <TableCell>
+          <div id={`data-${index}-area`}>
+            <Select
+              value={obj.value
+                ? obj.value.map(val => ({ label: val, value: val }))
+                : null
+              }
+              placeholder="Select Area(s) of Interest"
+              options={freeSurferOptions}
+              isMulti
+              onChange={value => selectInterest(value, index)}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </TableCell>) : <TableCell />}
       <TableCell>
         <Button
           variant="contained"
