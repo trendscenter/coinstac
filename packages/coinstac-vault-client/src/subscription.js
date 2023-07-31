@@ -82,7 +82,7 @@ async function startPipelineRun(
   }
 
   const { filesArray, steps } = mapData(run.pipelineSnapshot, headlessClientConfig);
-
+  if (process.env.COINSTAC_DEBUG) console.log(steps, filesArray);
   const pipelineRun = {
     ...run,
     pipelineSnapshot: {
