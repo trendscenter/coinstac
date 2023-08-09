@@ -520,7 +520,8 @@ class Pipeline extends Component {
     } = this.props;
     const { pipeline } = this.state;
 
-    const { isActive } = pipeline;
+    //const { isActive } = pipeline;
+    const isActive = true;
 
     const omittedPipeline = omit(pipeline, ['isActive']);
 
@@ -767,7 +768,7 @@ class Pipeline extends Component {
               inputComponent: NumberFormatCustom,
             }}
           />
-          {!isEditing && (
+          {/* {!isEditing && (
             <FormControlLabel
               id="set-active"
               control={(
@@ -780,7 +781,7 @@ class Pipeline extends Component {
               label="Set active on this consortium"
               className={classes.formControl}
             />
-          )}
+          )} */}
           <FormControlLabel
             control={(
               <Checkbox
