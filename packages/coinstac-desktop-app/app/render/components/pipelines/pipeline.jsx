@@ -18,7 +18,6 @@ import Checkbox from '@material-ui/core/Checkbox';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Fade from '@material-ui/core/Fade';
-import green from '@material-ui/core/colors/green';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -159,7 +158,6 @@ class Pipeline extends Component {
       shared: false,
       steps: [],
       delete: false,
-      isActive: false,
       limitOutputToOwner: false,
     };
 
@@ -185,6 +183,7 @@ class Pipeline extends Component {
       pipeline,
       selectedId: pipeline.steps.length ? pipeline.steps[0].id : null,
       startingPipeline: pipeline,
+      isActive: !pipeline.id,
       openOwningConsortiumMenu: false,
       openAddComputationStepMenu: false,
       showModal: false,
@@ -518,19 +517,15 @@ class Pipeline extends Component {
     const {
       auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline, updateMapStatus,
     } = this.props;
-    const { pipeline } = this.state;
-
-    const { isActive } = pipeline;
-
-    const omittedPipeline = omit(pipeline, ['isActive']);
+    const { pipeline, isActive } = this.state;
 
     this.setState({ savingStatus: 'pending' });
 
     try {
       const { data } = await savePipeline({
-        ...omittedPipeline,
+        ...pipeline,
         owner: user.id,
-        steps: omittedPipeline.steps.map(step => ({
+        steps: pipeline.steps.map(step => ({
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           inputMap: step.inputMap,
@@ -553,12 +548,12 @@ class Pipeline extends Component {
       });
 
       updateMapStatus(newPipeline.owningConsortium, newPipeline);
+      notifySuccess('Pipeline saved');
 
-      notifySuccess('Pipeline Saved');
-
-      if (isActive) {
+      if (isActive && !pipeline.id) {
         const { savePipeline } = data;
         await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
+        notifySuccess('Active pipeline is set');
       }
     } catch (error) {
       this.setState({ savingStatus: 'fail' });
@@ -690,6 +685,10 @@ class Pipeline extends Component {
     router.push(`/dashboard/maps/${consortium.id}`);
   }
 
+  handleChangeActiveState = (evt) => {
+    this.setState({ isActive: evt.target.checked });
+  }
+
   render() {
     const {
       connectDropTarget,
@@ -704,13 +703,14 @@ class Pipeline extends Component {
       consortium,
       pipeline,
       owner,
+      isActive,
       openOwningConsortiumMenu,
       openAddComputationStepMenu,
       showModal,
       savingStatus,
       selectedHeadlessMember,
     } = this.state;
-    const isEditing = !!pipeline.id;
+    const isEditing = Boolean(pipeline.id);
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
     const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients, pipeline);
@@ -772,9 +772,9 @@ class Pipeline extends Component {
               id="set-active"
               control={(
                 <Checkbox
-                  checked={pipeline.isActive || true}
+                  checked={isActive}
                   disabled={!owner}
-                  onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
+                  onChange={this.handleChangeActiveState}
                 />
               )}
               label="Set active on this consortium"
@@ -859,16 +859,18 @@ class Pipeline extends Component {
               >
                 Save Pipeline
               </Button>
-              {savingStatus === 'success' ? 
-                <Fade in={
-                  setTimeout(() => {
-                    this.setState({ savingStatus: 'init' });
-                  }, 2000)} 
-                  timeout={1000}>
-                  <CheckCircleIcon style={{marginLeft: '0.5rem', color: 'green'}} />
-                </Fade> : 
-                null
-              }
+              {savingStatus === 'success' && (
+                <Fade
+                  in={
+                    setTimeout(() => {
+                      this.setState({ savingStatus: 'init' });
+                    }, 2000)
+                  }
+                  timeout={1000}
+                >
+                  <CheckCircleIcon style={{ marginLeft: '0.5rem', color: 'green' }} />
+                </Fade>
+              )}
             </StatusButtonWrapper>
           </Box>
           <FormControlLabel
