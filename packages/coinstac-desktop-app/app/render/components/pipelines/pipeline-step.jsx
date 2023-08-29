@@ -117,20 +117,20 @@ class PipelineStep extends Component {
       if ((!compInputs || !compInputs.length)) {
         this.groupInputs(compIO);
       }
+    }
 
-      if ((!step.inputMap || Object.keys(step.inputMap).length === 0) && step) {
-        const inputMapDefaultValues = this.fillDefaultValues(compIO);
-        const inputMapPrefill = this.prefillDataFromHeadlessClients();
+    if (compIO && (!step.inputMap || Object.keys(step.inputMap).length === 0) && step) {
+      const inputMapDefaultValues = this.fillDefaultValues(compIO);
+      const inputMapPrefill = this.prefillDataFromHeadlessClients();
 
-        const prefillData = { ...inputMapDefaultValues, ...inputMapPrefill };
-
-        updateStep({
-          ...step,
-          inputMap: {
-            ...prefillData,
-          },
-        });
-      }
+      updateStep({
+        ...step,
+        inputMap: {
+          ...step.inputMap,
+          ...inputMapDefaultValues,
+          ...inputMapPrefill,
+        },
+      });
     }
   }
 

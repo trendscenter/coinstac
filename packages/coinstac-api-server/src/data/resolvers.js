@@ -706,15 +706,15 @@ const resolvers = {
       const db = database.getDbInstance();
 
       const consortium = await db.collection('consortia').findOne({
-        _id: ObjectID(consortiumId),
-        $or: [
-          { isPrivate: false },
-          { members: { [credentials.id]: credentials.username } }
-        ]
+        _id: ObjectID(consortiumId)
       });
 
       if (!consortium) {
         return Boom.notFound('Consortium with provided id not found');
+      }
+
+      if (!credentials.permissions.consortia[consortiumId].includes('owner')) {
+        return Boom.forbidden('Action not permitted');
       }
 
       const pipeline = await fetchOnePipeline(consortium.activePipelineId);
