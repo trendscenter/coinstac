@@ -226,19 +226,6 @@ class TableResult extends Component {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(data)
-                    && data.map((d, index) => {
-                      return (
-                        <TableRow key={`${heading}-${index}-objects-row`}>
-                          {keys.map(key => (
-                            <TableCell key={`${heading}-${index}-${key[0]}-column`}>
-                              {parseTableColumnOutput(d[key[0]])}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      );
-                    })
-                  }
                   {!Array.isArray(data)
                     && keyValPairs.map((pair) => {
                       if (typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
@@ -263,7 +250,7 @@ class TableResult extends Component {
           }
           <Table
             key={`${heading}-table-numbers`}
-            style={{ marginLeft, width: '60%' }}
+            style={{ marginLeft, width: '40%' }}
           >
             {
               Array.isArray(data)
@@ -277,30 +264,20 @@ class TableResult extends Component {
             }
             <TableBody>
               {
-                Array.isArray(data) && data.map((d, index) => {
-                  return (
-                    <TableRow key={`${index}-objects-row`}>
-                      {keys.map(key => (
-                        <TableCell key={`${key[0]}-column`}>
-                          {parseTableColumnOutput(d[key[0]])}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              }
-              {
                 !Array.isArray(data) && keyValPairs.map((pair) => {
-                  return (
-                      <TableRow key={`${pair[0]}-numbers-row`}>
-                        <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
-                          {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
-                        </TableCell>
-                        <TableCell key={`${pair[0]}-numbers-column-output`}>
-                          {parseTableColumnOutput(pair[1])}
-                        </TableCell>
-                      </TableRow>
-                  )
+                  if (data.covariate_labels && typeof pair[1] !== 'object' && pair[0] !== 'covariate_labels' ||
+                     !data.covariate_labels && pair[0] !== 'covariate_labels') {
+                    return (
+                        <TableRow key={`${pair[0]}-numbers-row`}>
+                          <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
+                            {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                          </TableCell>
+                          <TableCell key={`${pair[0]}-numbers-column-output`}>
+                            {parseTableColumnOutput(pair[1])}
+                          </TableCell>
+                        </TableRow>
+                    )
+                  }
                 })
               }
             </TableBody>
