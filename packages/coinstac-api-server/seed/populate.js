@@ -135,11 +135,8 @@ async function populateConsortia() {
         [USER_IDS[5]]: 'author',
       },
       isPrivate: false,
-      isJoinByRequest: true,
-      joinRequests: {
-        [USER_IDS[1]]: 'test2',
-        [USER_IDS[2]]: 'test3',
-      },
+      isJoinByRequest: false,
+      joinRequests: {},
       createDate: 1551666489519,
     },
   ]);
