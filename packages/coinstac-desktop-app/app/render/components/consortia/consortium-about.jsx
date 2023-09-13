@@ -193,12 +193,32 @@ class ConsortiumAbout extends Component {
           onChange={this.handleTextFieldChange('description')}
         />
         {owner && (
-          <FormControlLabel
-            control={
-              <Switch checked={consortium.isPrivate} value={consortium.isPrivate} onChange={this.handleSwitchChange('isPrivate')} />
-            }
-            label="Turn consortia private?"
-          />
+          <>
+            <Box>
+              <FormControlLabel
+                control={(
+                  <Switch
+                    checked={consortium.isPrivate}
+                    value={consortium.isPrivate}
+                    onChange={this.handleSwitchChange('isPrivate')}
+                  />
+                )}
+                label="Turn consortia private?"
+              />
+            </Box>
+            <Box>
+              <FormControlLabel
+                control={(
+                  <Switch
+                    checked={consortium.isJoinByRequest}
+                    value={consortium.isJoinByRequest}
+                    onChange={this.handleSwitchChange('isJoinByRequest')}
+                  />
+                )}
+                label="Members Join By Request"
+              />
+            </Box>
+          </>
         )}
         {
           consortium.id && (
@@ -223,7 +243,7 @@ class ConsortiumAbout extends Component {
                       disabled={!newMember || isAddingMember}
                       onClick={this.addMember}
                     >
-                        Add Member
+                      Add Member
                     </Button>
                   </Box>
                 )
@@ -265,14 +285,14 @@ class ConsortiumAbout extends Component {
                         owner && (
                           <TableCell>
                             {user.id !== consUser.id && (
-                            <Button
-                              variant="contained"
-                              color="default"
-                              onClick={() => this.removeMember(consUser)}
-                            >
-                              Remove
-                              <DeleteIcon />
-                            </Button>
+                              <Button
+                                variant="contained"
+                                color="default"
+                                onClick={() => this.removeMember(consUser)}
+                              >
+                                Remove
+                                <DeleteIcon />
+                              </Button>
                             )}
                           </TableCell>
                         )

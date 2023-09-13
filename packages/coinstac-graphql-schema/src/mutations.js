@@ -152,6 +152,20 @@ const mutations = {
       deleteRun(runId: $runId)
     }
   `,
+  approveOrRejectConsortiumJoinRequest: `
+    {
+      approveOrRejectConsortiumJoinRequest(consortiumId: $consortiumId, userId: $userId, isApprove: $isApprove) {
+        ${sharedFields.consortiaFields}
+      }
+    }
+  `,
+  sendConsortiumJoinRequest: `
+    {
+      sendConsortiumJoinRequest(consortiumId: $consortiumId) {
+        ${sharedFields.consortiaFields}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

@@ -233,25 +233,25 @@ const resolvers = {
       const db = database.getDbInstance();
       let results;
       if (!isAdmin(credentials.permissions)) {
-         results = await db.collection('runs').find({
+        results = await db.collection('runs').find({
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ],
-          }
+        }
         ).toArray();
       } else {
-         results = await db.collection('runs').find().toArray();
+        results = await db.collection('runs').find().toArray();
       }
-    return transformToClient(results);
-  },
-  /**
-     * Returns single pipeline
-     * @param {object} args
-     * @param {string} args.resultId  Requested pipeline ID
-     * @return {object} Requested pipeline if id present, null otherwise
-     */
+      return transformToClient(results);
+    },
+    /**
+       * Returns single pipeline
+       * @param {object} args
+       * @param {string} args.resultId  Requested pipeline ID
+       * @return {object} Requested pipeline if id present, null otherwise
+       */
     fetchResult: async (_, args) => {
       if (!args.resultId) {
         return null;
@@ -260,14 +260,14 @@ const resolvers = {
 
       let result;
       if (!isAdmin(credentials.permissions)) {
-         results = await db.collection('runs').find({
+        results = await db.collection('runs').find({
           _id: ObjectID(args.resultId),
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ],
-          }
+        }
         ).toArray();
       } else {
         await db.collection('runs').findOne({ _id: ObjectID(args.resultId) });
@@ -285,7 +285,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { [`members.${credentials.id}`]: credentials.username  }
+          { [`members.${credentials.id}`]: credentials.username }
         ]
       }).toArray();
 
@@ -305,12 +305,12 @@ const resolvers = {
       const db = database.getDbInstance();
 
       const consortium = await db.collection('consortia').findOne({
-         _id: ObjectID(args.consortiumId),
-         $or: [
-           { isPrivate: false },
-           { members: { [credentials.id]: credentials.username } }
-         ]
-       });
+        _id: ObjectID(args.consortiumId),
+        $or: [
+          { isPrivate: false },
+          { members: { [credentials.id]: credentials.username } }
+        ]
+      });
       return transformToClient(consortium);
     },
     /**
@@ -452,7 +452,7 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
@@ -577,7 +577,7 @@ const resolvers = {
         run = await db.collection('runs').findOne({
           _id: ObjectID(runId),
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
@@ -935,6 +935,98 @@ const resolvers = {
       return helperFunctions.getUserDetails(credentials.username);
     },
     /**
+     * Approve or reject consortium join request
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id that has join request
+     * @param {string} args.userId User id to join consortium
+     * @return {object} Updated consortium
+     */
+    approveOrRejectConsortiumJoinRequest: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+      const { id: currentUserId } = credentials;
+
+      const { consortiumId, userId, isApprove } = args;
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      if (!consortium) {
+        return Boom.forbidden('Invalid consortium');
+      }
+
+      const ownerIds = Object.keys(consortium.owners);
+
+      if (!ownerIds.includes(currentUserId)) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const userToAdd = await helperFunctions.getUserDetailsByID(userId);
+      if (!userToAdd) {
+        return Boom.forbidden('Invalid user');
+      }
+
+      if (isApprove) {
+        await addUserPermissions({
+          userId: ObjectID(userId),
+          userName: userToAdd.username,
+          role: 'member',
+          doc: ObjectID(consortiumId),
+          table: 'consortia',
+        });
+      }
+
+      const updateObj = {
+        $unset: {
+          [`joinRequests.${userId}`]: '',
+        },
+      };
+
+      const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(consortiumId) },
+        updateObj,
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
+
+      return transformToClient(consortiaUpdateResult.value);
+    },
+    /**
+     * Send consortium join request
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id that has join request
+     * @return {object} Updated consortium
+     */
+    sendConsortiumJoinRequest: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+      const { id: currentUserId } = credentials;
+
+      const { consortiumId } = args;
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      if (!consortium) {
+        return Boom.forbidden('Invalid consortium');
+      }
+
+      const user = await helperFunctions.getUserDetailsByID(currentUserId);
+
+      const updateObj = {
+        $set: {
+          [`joinRequests.${currentUserId}`]: user.username,
+        },
+      };
+
+      const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(consortiumId) },
+        updateObj,
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
+
+      return transformToClient(consortiaUpdateResult.value);
+    },
+    /**
      * Remove logged user from consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
@@ -1134,6 +1226,10 @@ const resolvers = {
 
       if (consortiumData.activePipelineId) {
         consortiumData.activePipelineId = ObjectID(consortiumData.activePipelineId);
+      }
+
+      if (!consortiumData.isJoinByRequest) {
+        consortiumData.joinRequests = {}
       }
 
       await db.collection('consortia').replaceOne({
@@ -1808,7 +1904,7 @@ const resolvers = {
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
 
       const soleOwner = ownedConsortia.reduce((sole, con) => {
-        if(Object.keys(con.owners).length <= 1) sole = true;
+        if (Object.keys(con.owners).length <= 1) sole = true;
         return sole;
       }, false)
 

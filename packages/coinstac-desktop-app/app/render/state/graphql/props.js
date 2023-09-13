@@ -306,3 +306,23 @@ export const setReadMessageProp = (name) => {
     }),
   };
 };
+
+export const approveOrRejectConsortiumJoinRequestProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: (consortiumId, userId, isApprove) => mutate({
+        variables: { consortiumId, userId, isApprove },
+      }),
+    }),
+  };
+};
+
+export const sendConsortiumJoinRequestProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: consortiumId => mutate({
+        variables: { consortiumId },
+      }),
+    }),
+  };
+};
