@@ -52,7 +52,7 @@ const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
 const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
 const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
-const SET_CONTAINER_SERVICE = "SET_CONTAINER_SERVICE";
+const SET_CONTAINER_SERVICE = 'SET_CONTAINER_SERVICE';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -210,8 +210,8 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .then(({ data }) => {
     const { auth: { appDirectory, clientServerURL, containerService } } = getState();
     return initCoreAndSetToken({
-      reqUser: { username, password, saveLogin }, 
-      data, 
+      reqUser: { username, password, saveLogin },
+      data,
       appDirectory,
       clientServerURL,
       containerService,

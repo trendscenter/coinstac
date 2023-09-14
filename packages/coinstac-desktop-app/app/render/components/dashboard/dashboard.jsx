@@ -1,5 +1,5 @@
 import React, {
-  useEffect, useMemo, useRef, useState,
+  useEffect, useMemo, useState,
 } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router';
@@ -49,6 +49,7 @@ import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
 function Dashboard({
   children,
   router,
+  client,
 }) {
   const auth = useSelector(state => state.auth);
   const runs = useSelector(state => state.runs.runs);
@@ -193,7 +194,7 @@ function Dashboard({
       <UpdateDataMapStatusStartupListener maps={maps} consortia={consortia} userId={auth.user.id} />
       <PullComputationsListener userId={auth.user.id} dockerStatus={dockerStatus} />
       <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
-      <UserPermissionsListener userId={auth.user.id} />
+      <UserPermissionsListener userId={auth.user.id} client={client} />
       <TreeviewListener
         userId={auth.user.id}
         appDirectory={auth.appDirectory}
@@ -238,7 +239,7 @@ function ConnectedDashboard(props) {
     && (
     <ApolloProvider client={apolloClient.client}>
       <ApolloHOCProvider client={apolloClient.client}>
-        <Dashboard {...props} />
+        <Dashboard {...props} client={apolloClient.client} />
       </ApolloHOCProvider>
     </ApolloProvider>
     )
