@@ -220,6 +220,7 @@ class PipelineStepInput extends Component {
       updateStep,
       users,
       classes,
+      headlessMembers,
     } = this.props;
 
     const { openInputSourceMenu } = this.state;
@@ -234,8 +235,8 @@ class PipelineStepInput extends Component {
       && step.inputMap) {
       visibility = 'none';
       if (step.inputMap[objParams.conditional.variable]
-          && step.inputMap[objParams.conditional.variable].value
-          === objParams.conditional.value) {
+        && step.inputMap[objParams.conditional.variable].value
+        === objParams.conditional.value) {
         visibility = 'block';
       }
     }
@@ -263,7 +264,7 @@ class PipelineStepInput extends Component {
       <div className={classes.pipelineStep} style={{ display: visibility }} key={`pipestep-${objKey}`}>
         <div className={classes.pipelineStepSection}>
           <Typography variant="subtitle2" className={classes.pipelineStepLabel}>
-            <span>{ objParams.label }</span>
+            <span>{objParams.label}</span>
             {
               objParams.tooltip && (
                 <Tooltip title={objParams.tooltip} placement="right-start">
@@ -274,7 +275,7 @@ class PipelineStepInput extends Component {
           </Typography>
           {
             objParams.description
-            && <Typography variant="body2">{ objParams.description }</Typography>
+            && <Typography variant="body2">{objParams.description}</Typography>
           }
           {
             objParams.type === 'csv' && (
@@ -299,6 +300,7 @@ class PipelineStepInput extends Component {
                 updateStep={updateStep}
                 getNewObj={this.getNewObj}
                 step={step}
+                headlessMembers={headlessMembers}
               />
             )
           }
@@ -513,6 +515,7 @@ PipelineStepInput.defaultProps = {
   owner: false,
   possibleInputs: [],
   users: [],
+  headlessMembers: {},
   updateStep: null,
 };
 
@@ -524,6 +527,7 @@ PipelineStepInput.propTypes = {
   possibleInputs: PropTypes.array,
   step: PropTypes.object.isRequired,
   users: PropTypes.array,
+  headlessMembers: PropTypes.object,
   updateStep: PropTypes.func,
 };
 
