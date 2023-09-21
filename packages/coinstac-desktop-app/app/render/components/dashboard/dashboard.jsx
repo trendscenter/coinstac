@@ -1,7 +1,6 @@
 import React, {
   useEffect, useMemo, useRef, useState,
 } from 'react';
-import debounceRender from 'react-debounce-render';
 import { useDispatch, useSelector } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
@@ -246,8 +245,6 @@ function ConnectedDashboard(props) {
   );
 }
 
-const DebouncedDashboard = debounceRender(ConnectedDashboard);
-
-const connectedComponent = withRouter(DebouncedDashboard);
+const connectedComponent = withRouter(ConnectedDashboard);
 
 export default connectedComponent;
