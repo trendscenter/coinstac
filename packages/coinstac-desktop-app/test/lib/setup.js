@@ -17,7 +17,7 @@ chai.use(chaiAsPromised);
 
 const getNewAppId = () => instances.length + 1;
 
-const createInstance = async (appId) => {
+async function createInstance(appId) {
   const deviceId = `${devicePrefix}${appId}`;
   const app = await electron.launch({
     args: [
@@ -46,9 +46,9 @@ const createInstance = async (appId) => {
   });
 
   return { app, appWindow };
-};
+}
 
-const setup = async (instanceCount = 1) => {
+async function setup(instanceCount = 1) {
   const promises = Array(instanceCount).fill(0).map(() => {
     const appId = getNewAppId();
     return createInstance(appId);
@@ -61,23 +61,23 @@ const setup = async (instanceCount = 1) => {
   }
 
   return instances.map(instance => instance.appWindow);
-};
+}
 
-const cleanup = async () => {
+async function cleanup() {
   if (process.env.CI) {
     console.log('/********** Main process logs **********/');
     console.log((await fs.readFile('coinstac-log.json')).toString());
   }
 
   await Promise.all(instances.map(instance => instance.app.close()));
-};
+}
 
-const screenshot = async () => {
+async function screenshot() {
   if (process.env.CI && this.currentTest.state === 'failed') {
     await fs.mkdir('/tmp/screenshots', { recursive: true });
     execSync(`xwd -root -silent | convert xwd:- png:/tmp/screenshots/screenshot-${this.currentTest.title.replaceAll(' ', '-')}$(date +%s).png`);
   }
-};
+}
 
 module.exports = {
   instances,
