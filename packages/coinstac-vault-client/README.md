@@ -45,6 +45,7 @@ MQTT_WS_SERVER_HOSTNAME
 MQTT_WS_SERVER_PATHNAME
 MQTT_WS_SERVER_PORT
 MQTT_WS_SERVER_PROTOCOL
+COINSTAC_USE_NETWORK_DRIVE // option to allow cross volume mounting, use if your data is not on the same filesystem
 ```
 
 Example for running locally
@@ -67,6 +68,7 @@ export MQTT_WS_SERVER_HOSTNAME=localhost
 export MQTT_WS_SERVER_PATHNAME=""
 export MQTT_WS_SERVER_PORT=9001
 export MQTT_WS_SERVER_PROTOCOL="ws:"
+export COINSTAC_USE_NETWORK_DRIVE=true
 ```
 A config file is needed for each site the headless client is server
 ```

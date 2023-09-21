@@ -6,6 +6,7 @@ import { DragDropContext } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import MBox from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
@@ -131,7 +132,7 @@ class Result extends Component {
       run,
       plotData,
     });
-    this.doFilesExist(run.id);
+    this.doFilesExist(run);
   }
 
   handleOpenResult = () => {
@@ -146,12 +147,41 @@ class Result extends Component {
     this.setState({ selectedTabIndex: value });
   }
 
-  doFilesExist = async (runId) => {
+  handleDownloadResults = async () => {
+    const { run } = this.state;
+    const {
+      auth: { user },
+      notifyError,
+      notifySuccess,
+    } = this.props;
+
+    const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
+    const clientId = user.id;
+    const { apiServer } = window.config;
+    const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}/${apiServer.pathname}${apiServer.port ? `:${apiServer.port}` : ''}`;
+
+    this.setState({ downloading: true });
+
+    try {
+      await ipcRenderer.invoke('download-run-assets', {
+        runId: run.id, authToken, clientId, apiServerUrl,
+      });
+      this.setState({ downloading: false, filesExist: true });
+      notifySuccess('Files Downloaded');
+    } catch (e) {
+      notifyError(e.toString());
+      this.setState({ downloading: false });
+    }
+  }
+
+  doFilesExist = async (run) => {
     const { auth: { user, appDirectory } } = this.props;
-    const directoryPath = path.join(appDirectory, 'output', user.id, runId);
+    const directoryPath = path.join(appDirectory, 'output', user.id, run.id);
     const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
     this.setState({ filesExist: exist });
-    return exist;
+    if (run.shouldUploadAssets && run.assetsUploaded && !exist) {
+      this.handleDownloadResults();
+    }
   }
 
   renderError = (errors) => {
@@ -166,14 +196,11 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
-
     } = this.state;
     const {
       consortia,
       classes,
       auth: { appDirectory, user },
-      notifyError,
-      notifySuccess,
     } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let { displayTypes } = this.state;
@@ -245,42 +272,15 @@ class Result extends Component {
               variant="contained"
               color="primary"
               style={{ marginLeft: 10 }}
+              disabled={!filesExist || downloading}
               onClick={this.handleOpenResult}
             >
-              Open Local Results
+              {downloading ? (
+                <>
+                  Downloading results <CircularProgress style={{ marginLeft: 8 }} size={15} />
+                </>
+              ) : 'Open Local Results'}
             </Button>
-          </div>
-          <div className={classes.resultButton}>
-            {run.shouldUploadAssets && (
-              <Button
-                disabled={!run.assetsUploaded || downloading || filesExist}
-                variant="contained"
-                color="primary"
-                style={{ marginLeft: 10 }}
-                onClick={async () => {
-                  const authToken = JSON.parse(localStorage.getItem(API_TOKEN_KEY)).token;
-                  const clientId = user.id;
-                  const { apiServer } = window.config;
-                  const apiServerUrl = `${apiServer.protocol}//${apiServer.hostname}/${apiServer.pathname}${apiServer.port ? `:${apiServer.port}` : ''}`;
-                  this.setState({ downloading: true });
-                  try {
-                    await ipcRenderer.invoke('download-run-assets', {
-                      runId: run.id, authToken, clientId, apiServerUrl,
-                    });
-                    this.setState({ downloading: false });
-                    const filesExist = await this.doFilesExist(run.id);
-                    if (filesExist) {
-                      notifySuccess('Files Downloaded');
-                    }
-                  } catch (e) {
-                    notifyError(e.toString());
-                    this.setState({ downloading: false });
-                  }
-                }}
-              >
-                Download results
-              </Button>
-            )}
           </div>
         </Paper>
 
@@ -289,11 +289,11 @@ class Result extends Component {
           onChange={this.handleSelect}
         >
           {
-            run && run.results && displayTypes && displayTypes.map((disp) => {
-              const title = disp.type.replace('_', ' ')
+            run && run.results && displayTypes && displayTypes.map((disp, idx) => {
+              const title = (disp.type || '').replace('_', ' ')
                 .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-
-              return <Tab key={disp.type} label={`${title} View`} />;
+              // eslint-disable-next-line react/no-array-index-key
+              return <Tab key={idx} label={`${title} View`} />;
             })
           }
         </Tabs>
@@ -313,17 +313,17 @@ class Result extends Component {
               {
                 selectedDisplayType.type === 'box_plot'
                 && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Box plotData={plotData.testData} />
-                </Suspense>
+                  <Suspense fallback={<span>Loading...</span>}>
+                    <Box plotData={plotData.testData} />
+                  </Suspense>
                 )
               }
               {
                 selectedDisplayType.type === 'scatter_plot'
                 && (
-                <Suspense fallback={<span>Loading...</span>}>
-                  <Scatter plotData={plotData.testData} />
-                </Suspense>
+                  <Suspense fallback={<span>Loading...</span>}>
+                    <Scatter plotData={plotData.testData} />
+                  </Suspense>
                 )
               }
               {
@@ -339,7 +339,7 @@ class Result extends Component {
                 )
               }
               {
-                selectedDisplayType.type === 'iframe'
+                selectedDisplayType.type === 'iframe' && filesExist
                 && (
                   <Iframe
                     plotData={plotData}
@@ -411,7 +411,7 @@ class Result extends Component {
         }
 
         {
-          (!selectedDisplayType || selectedDisplayType.type === '')
+          (!selectedDisplayType || Object.keys(selectedDisplayType).length === 0 || selectedDisplayType.type === '')
           && (
             <Paper className={classNames(classes.paper)}>
               <table>

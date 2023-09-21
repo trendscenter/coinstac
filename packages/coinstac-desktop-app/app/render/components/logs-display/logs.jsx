@@ -1,13 +1,22 @@
+/* eslint-disable no-console */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import { clipboard, ipcRenderer } from 'electron';
 
 const styles = theme => ({
   pageTitle: {
+    marginBottom: theme.spacing(2),
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 8,
     marginBottom: theme.spacing(2),
   },
   logsWrapper: {
@@ -41,6 +50,20 @@ class Logs extends Component {
     logsWrapper.scrollTop = logsWrapper.scrollHeight;
   }
 
+  handleCopyLogs = () => {
+    const { logs } = this.props;
+    clipboard.writeText(logs.join('\n'));
+  }
+
+  handleCopyDockerLogs = async () => {
+    try {
+      const res = await ipcRenderer.invoke('get-docker-logs');
+      clipboard.writeText(res.map(res => JSON.stringify(res)).join());
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   render() {
     const { classes, logs } = this.props;
 
@@ -51,6 +74,14 @@ class Logs extends Component {
             Logs
           </Typography>
         </div>
+        <div className={classes.actions}>
+          <Button variant="contained" onClick={this.handleCopyLogs}>
+            Copy Logs
+          </Button>
+          <Button variant="contained" onClick={this.handleCopyDockerLogs}>
+            Copy Docker Logs
+          </Button>
+        </div>
         {logs && (
           <div className="logs-wrapper">
             <button
@@ -60,7 +91,7 @@ class Logs extends Component {
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
-            <div id="logs-wrapper" className={classes.logsWrapper} onScroll={this.handleScroll}>
+            <div id="logs-wrapper" className={classes.logsWrapper}>
               {logs.map((message, ind) => (
                 <span
                   className={classes.message}

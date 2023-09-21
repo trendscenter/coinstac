@@ -46,7 +46,7 @@ const updateRunState = () => {
       const run = updateRunMessageQueue.shift();
       const { runId, data } = run;
 
-      console.log('Server update:'); // eslint-disable-line no-console
+      console.log(`Server update ${runId}:`); // eslint-disable-line no-console
       console.log(data); // eslint-disable-line no-console
 
       axios({
