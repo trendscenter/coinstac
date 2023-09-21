@@ -15,10 +15,14 @@ import update from 'immutability-helper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Fade from '@material-ui/core/Fade';
 import Grid from '@material-ui/core/Grid';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -32,6 +36,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import InfoIcon from '@material-ui/icons/Info';
+import HelpOutlineIcon from '@material-ui/icons/HelpOutlined';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
 
@@ -65,6 +70,7 @@ import {
   isUserInGroup,
 } from '../../utils/helpers';
 import STEPS from '../../constants/tutorial';
+import vaultDescriptions from './vault-descriptions.json';
 
 const VAULT_USERS_TOOLTIP = `Vault users are persistent nodes that can run some pipelines. If you add one or more vault users,
   the available pipelines list will be filtered by the ones that the vault users can run.`;
@@ -97,9 +103,6 @@ const styles = theme => ({
   },
   tooltip: {
     color: '#ab8e6b',
-  },
-  headlessUserSelect: {
-    marginRight: theme.spacing(4),
   },
   vaultUserTitle: {
     marginRight: theme.spacing(1),
@@ -190,6 +193,7 @@ class Pipeline extends Component {
       savingStatus: 'init',
       selectedHeadlessMember: null,
       orderedComputations: null,
+      showVaultDescriptionModal: false,
     };
   }
 
@@ -670,6 +674,25 @@ class Pipeline extends Component {
     return filteredComputations;
   }
 
+  getVaultDescription = () => {
+    const { selectedHeadlessMember } = this.state;
+
+    if (!selectedHeadlessMember?.label) {
+      return '';
+    }
+
+    const { label: vaultTitle } = selectedHeadlessMember;
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const [key, value] of Object.entries(vaultDescriptions)) {
+      if (vaultTitle === key || (vaultTitle.startsWith('gen-ec2-') && vaultTitle.endsWith(key))) {
+        return value;
+      }
+    }
+
+    return '';
+  }
+
   handleGoBackToConsortium = () => {
     const { consortium } = this.state;
     const { router } = this.context;
@@ -683,6 +706,12 @@ class Pipeline extends Component {
     const { router } = this.context;
 
     router.push(`/dashboard/maps/${consortium.id}`);
+  }
+
+  handleToggleVaultDescriptionModal = () => {
+    const { showVaultDescriptionModal } = this.state;
+
+    this.setState({ showVaultDescriptionModal: !showVaultDescriptionModal });
   }
 
   handleChangeActiveState = (evt) => {
@@ -709,6 +738,7 @@ class Pipeline extends Component {
       showModal,
       savingStatus,
       selectedHeadlessMember,
+      showVaultDescriptionModal,
     } = this.state;
     const isEditing = Boolean(pipeline.id);
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
@@ -716,6 +746,8 @@ class Pipeline extends Component {
     const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients, pipeline);
 
     const availableComputations = this.getAvailableComputations();
+
+    const vaultDescription = this.getVaultDescription();
 
     return connectDropTarget(
       <div>
@@ -897,16 +929,20 @@ class Pipeline extends Component {
                     <InfoIcon />
                   </Tooltip>
                 </Box>
-                <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box display="flex" justifyContent="space-between" alignItems="center" gridColumnGap={8}>
                   <Select
                     value={selectedHeadlessMember}
                     placeholder="Select an user"
                     options={headlessClientsOptions}
                     onChange={this.handleHeadlessMemberSelect}
                     removeSelected
-                    className={classes.headlessUserSelect}
                     name="members-input"
                   />
+                  {vaultDescription && (
+                    <IconButton onClick={this.handleToggleVaultDescriptionModal}>
+                      <HelpOutlineIcon />
+                    </IconButton>
+                  )}
                   <Button
                     className={classes.addMemberButton}
                     variant="contained"
@@ -1017,6 +1053,17 @@ class Pipeline extends Component {
             callback={tutorialChange}
           />
         )}
+        <Dialog
+          open={showVaultDescriptionModal}
+          onClose={this.handleToggleVaultDescriptionModal}
+        >
+          <DialogTitle>{selectedHeadlessMember?.label}</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {vaultDescription}
+            </DialogContentText>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
