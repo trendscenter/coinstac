@@ -2,7 +2,7 @@ import { gql } from '@apollo/client';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
 export const ADD_COMPUTATION_MUTATION = gql`
-  mutation addComputation($computationSchema: ComputationInput!) 
+  mutation addComputation($computationSchema: ComputationInput!)
     ${mutations.addComputation}
 `;
 
