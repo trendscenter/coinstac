@@ -60,7 +60,7 @@ function Dashboard({
   const [showTutorialModal, setShowTutorialModal] = useState(!auth.isTutorialHidden);
 
   const {
-    data: consortiaData, subscribeToMore: subscribeToConsortia,
+    data: consortiaData, subscribeToMore: subscribeToConsortia, refetch: refetchConsortia,
   } = useQuery(FETCH_ALL_CONSORTIA_QUERY, {
     onError: (error) => { console.error({ error }); },
   });
@@ -83,7 +83,7 @@ function Dashboard({
     onError: (error) => { console.error({ error }); },
   });
 
-  useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
+  useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged', undefined, refetchConsortia);
   useEntityListSubscription(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
   useEntityListSubscription(subscribeToPipelines, PIPELINE_CHANGED_SUBSCRIPTION, 'fetchAllPipelines', 'pipelineChanged');
   useEntityListSubscription(subscribeToThreads, THREAD_CHANGED_SUBSCRIPTION, 'fetchAllThreads', 'threadChanged');
