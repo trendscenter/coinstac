@@ -44,6 +44,34 @@ const pullImagesFromList = async (comps) => {
   return streams.map((stream, index) => ({ stream, compId: comps[index] }));
 };
 
+const listContainers = async (options = {}) => {
+  const containers = await docker.listContainers(options);
+  return containers.filter(container => container.Image.startsWith('coinstac'));
+};
+
+const getContainerLogs = async (containerId) => {
+  const container = docker.getContainer(containerId);
+  const containerInfo = await docker.getContainer(containerId).inspect();
+  const imageInfo = await docker.getImage(containerInfo.Image).inspect();
+
+  const logs = (await container.logs({
+    follow: false,
+    stdout: true,
+    stderr: true,
+    tail: 2,
+  }))
+    .toString()
+    .split('\n')
+    .map(elem => elem.replace(/[^\x20-\x7E]/g, '').trim())
+    .filter(Boolean);
+
+  return {
+    imageName: imageInfo.RepoTags[0].split(':')[0],
+    containerId: containerInfo.Id,
+    logs,
+  };
+};
+
 module.exports = {
   // id, port
   createService(serviceId, port, {
@@ -152,8 +180,10 @@ module.exports = {
   getContainerStats: async () => {
     const containers = await docker.listContainers();
     const result = Promise.all(containers.map((container) => {
-      return docker.getContainer(container.Id).stats({ id: container.id, stream: false });
+      return docker.getContainer(container.Id).stats({ id: container.Id, stream: false });
     }));
     return result;
   },
+  listContainers,
+  getContainerLogs,
 };

@@ -13,13 +13,14 @@ import Tabs from '@material-ui/core/Tabs';
 import { withStyles } from '@material-ui/core/styles';
 import LayoutNoauth from '../layout-noauth';
 import {
+  sendForgotUsernameEmail,
   sendPasswordResetEmail,
   resetPassword,
 } from '../../state/ducks/auth';
 
 const styles = theme => ({
   paper: {
-    maxWidth: 320,
+    maxWidth: 640,
   },
   tabPanel: {
     padding: theme.spacing(2),
@@ -36,8 +37,8 @@ class FormPasswordController extends Component {
     super(props);
 
     this.state = {
-      selectedTab: 'sendEmail',
-      sendingEmail: {
+      selectedTab: 'forgotPassword',
+      forgotPassword: {
         loading: false,
         email: '',
       },
@@ -46,6 +47,10 @@ class FormPasswordController extends Component {
         token: '',
         newPassword: '',
         confirmPassword: '',
+      },
+      forgotUsername: {
+        loading: false,
+        email: '',
       },
     };
   }
@@ -62,12 +67,12 @@ class FormPasswordController extends Component {
     ValidatorForm.removeValidationRule('isPasswordMatch');
   }
 
-  handleSendingEmailStateChange = (key, value) => {
-    const { sendingEmail } = this.state;
+  handleForgotPasswordStateChange = (key, value) => {
+    const { forgotPassword } = this.state;
 
     this.setState({
-      sendingEmail: {
-        ...sendingEmail,
+      forgotPassword: {
+        ...forgotPassword,
         [key]: value,
       },
     });
@@ -84,27 +89,38 @@ class FormPasswordController extends Component {
     });
   }
 
-  handleTabChange = (selectedTab) => {
-    const { sendingEmail, resettingPassword } = this.state;
+  handleForgotUsernameStateChange = (key, value) => {
+    const { forgotUsername } = this.state;
 
-    if (!sendingEmail.loading && !resettingPassword.loading) {
+    this.setState({
+      forgotUsername: {
+        ...forgotUsername,
+        [key]: value,
+      },
+    });
+  }
+
+  handleTabChange = (selectedTab) => {
+    const { forgotPassword, resettingPassword, forgotUsername } = this.state;
+
+    if (!forgotPassword.loading && !resettingPassword.loading && !forgotUsername.loading) {
       this.setState({ selectedTab });
     }
   }
 
-  handleSendEmail = () => {
+  handleSendForgotPasswordEmail = () => {
     const { sendPasswordResetEmail } = this.props;
-    const { sendingEmail } = this.state;
+    const { forgotPassword } = this.state;
 
-    this.handleSendingEmailStateChange('loading', true);
+    this.handleForgotPasswordStateChange('loading', true);
 
-    sendPasswordResetEmail({ email: sendingEmail.email })
+    sendPasswordResetEmail({ email: forgotPassword.email })
       .then(() => {
-        this.handleSendingEmailStateChange('loading', false);
+        this.handleForgotPasswordStateChange('loading', false);
         this.handleTabChange('passwordReset');
       })
       .catch(() => {
-        this.handleSendingEmailStateChange('loading', false);
+        this.handleForgotPasswordStateChange('loading', false);
       });
   }
 
@@ -125,9 +141,29 @@ class FormPasswordController extends Component {
       });
   }
 
+  handleSendForgotUsernameEmail = () => {
+    const { sendForgotUsernameEmail } = this.props;
+    const { forgotUsername } = this.state;
+
+    this.handleForgotUsernameStateChange('loading', true);
+
+    sendForgotUsernameEmail({ email: forgotUsername.email })
+      .then(() => {
+        this.handleForgotUsernameStateChange('loading', false);
+      })
+      .catch(() => {
+        this.handleForgotUsernameStateChange('loading', false);
+      });
+  }
+
   render() {
     const { classes } = this.props;
-    const { selectedTab, sendingEmail, resettingPassword } = this.state;
+    const {
+      selectedTab,
+      forgotPassword,
+      resettingPassword,
+      forgotUsername,
+    } = this.state;
 
     const commonProps = {
       fullWidth: true,
@@ -145,12 +181,13 @@ class FormPasswordController extends Component {
                 (_evt, value) => this.handleTabChange(value)
               }
             >
-              <Tab label="Send Reset Email" value="sendEmail" />
+              <Tab label="Forgot Password" value="forgotPassword" />
               <Tab label="Password Reset" value="passwordReset" />
+              <Tab label="Forogt Username" value="forgotUsername" />
             </Tabs>
           </AppBar>
 
-          {selectedTab === 'sendEmail' && (
+          {selectedTab === 'forgotPassword' && (
             <Paper
               className={classes.tabPanel}
               square
@@ -159,16 +196,16 @@ class FormPasswordController extends Component {
                 className={classes.form}
                 instantValidate
                 noValidate
-                onSubmit={this.handleSendEmail}
+                onSubmit={this.handleSendForgotPasswordEmail}
               >
                 <TextValidator
                   label="Email"
-                  value={sendingEmail.email}
-                  disabled={sendingEmail.loading}
+                  value={forgotPassword.email}
+                  disabled={forgotPassword.loading}
                   validators={['required']}
                   errorMessages={['Email is required']}
                   onChange={
-                    evt => this.handleSendingEmailStateChange('email', evt.target.value)
+                    evt => this.handleForgotPasswordStateChange('email', evt.target.value)
                   }
                   {...commonProps}
                 />
@@ -177,7 +214,7 @@ class FormPasswordController extends Component {
                   color="secondary"
                   type="submit"
                   fullWidth
-                  disabled={sendingEmail.loading}
+                  disabled={forgotPassword.loading}
                 >
                   Send
                 </Button>
@@ -243,6 +280,41 @@ class FormPasswordController extends Component {
               </ValidatorForm>
             </Paper>
           )}
+
+          {selectedTab === 'forgotUsername' && (
+            <Paper
+              className={classes.tabPanel}
+              square
+            >
+              <ValidatorForm
+                className={classes.form}
+                instantValidate
+                noValidate
+                onSubmit={this.handleSendForgotUsernameEmail}
+              >
+                <TextValidator
+                  label="Email"
+                  value={forgotUsername.email}
+                  disabled={forgotUsername.loading}
+                  validators={['required']}
+                  errorMessages={['Email is required']}
+                  onChange={
+                    evt => this.handleForgotUsernameStateChange('email', evt.target.value)
+                  }
+                  {...commonProps}
+                />
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  type="submit"
+                  fullWidth
+                  disabled={forgotUsername.loading}
+                >
+                  Send
+                </Button>
+              </ValidatorForm>
+            </Paper>
+          )}
         </Paper>
       </LayoutNoauth>
     );
@@ -261,6 +333,7 @@ const mapStateToProps = ({ auth, loading }) => ({
 });
 
 const connectedComponent = connect(mapStateToProps, {
+  sendForgotUsernameEmail,
   sendPasswordResetEmail,
   resetPassword,
 })(FormPasswordController);

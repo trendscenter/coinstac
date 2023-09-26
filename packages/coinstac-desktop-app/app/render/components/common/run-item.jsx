@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { shell } from 'electron';
-import map from 'lodash/map';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -80,11 +79,6 @@ const styles = theme => ({
   },
 });
 
-function parseWaiting(runObject, stateKey) {
-  return map(runObject[stateKey].waitingOn, clientId => runObject.clients[clientId])
-    .filter(clientId => Boolean(clientId));
-}
-
 function getStateWell(runObject, classes) {
   const OuterNodeRunObject = runObject.localPipelineState;
   const CentralNodeRunObject = runObject.remotePipelineState;
@@ -93,13 +87,6 @@ function getStateWell(runObject, classes) {
     <div className={classes.runStateInnerContainer}>
       {OuterNodeRunObject && (
         <React.Fragment>
-          <div className={classes.runStateKeyValueContainer}>
-            <Typography className={classes.label}>Pipeline Step:</Typography>
-            <Typography className={classes.value}>
-              {`${OuterNodeRunObject.pipelineStep + 1} out of ${OuterNodeRunObject.totalSteps}`}
-            </Typography>
-          </div>
-
           <div className={classes.runStateKeyValueContainer}>
             <Typography className={classes.label}>Iteration:</Typography>
             <Typography className={classes.value}>
@@ -118,7 +105,7 @@ function getStateWell(runObject, classes) {
       {CentralNodeRunObject
         && (
           <div className={classes.runStateKeyValueContainer}>
-            <Typography className={classes.label}>Central Node Status:</Typography>
+            <Typography className={classes.label}>Coinstac Central Server Status:</Typography>
             <Typography className={classes.value}>
               {CentralNodeRunObject.controllerState}
             </Typography>
@@ -129,13 +116,11 @@ function getStateWell(runObject, classes) {
         CentralNodeRunObject
         && CentralNodeRunObject.controllerState
         && CentralNodeRunObject.waitingOn
-        && CentralNodeRunObject.waitingOn.length > 0
-        && CentralNodeRunObject.controllerState.includes('waiting on')
         && (
           <div className={classes.runStateKeyValueContainer}>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {parseWaiting(runObject, 'remotePipelineState')}
+              {CentralNodeRunObject.waitingOn}
             </Typography>
           </div>)
       }
@@ -295,7 +280,7 @@ function RunItem(props) {
           && (
             <div>
               <Typography className={classes.label}>
-                Clients:
+                Users:
               </Typography>
               <Typography className={classes.value}>
                 {Object.values(clients).join(', ')}
