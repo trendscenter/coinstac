@@ -17,7 +17,6 @@ const styles = theme => ({
     paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
-    // flex: '1 0 auto',
     marginLeft: theme.spacing(0.5),
     minWidth: '80px',
     width: 'fit-content',
