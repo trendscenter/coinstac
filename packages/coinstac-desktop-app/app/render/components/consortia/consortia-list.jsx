@@ -259,7 +259,7 @@ class ConsortiaList extends Component {
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
         >
-          {pipeline ? pipeline.name : 'None'}
+          {pipeline?.name || 'None'}
         </Typography>
       </div>
     );
