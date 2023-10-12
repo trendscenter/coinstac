@@ -25,7 +25,7 @@ const helperFunctions = {
       issuer,
       subject,
       algorithm: 'HS256',
-      expiresIn: '12h',
+      expiresIn: '24h',
     });
   },
   /**
@@ -116,6 +116,23 @@ const helperFunctions = {
     return updatedUser;
   },
   /**
+   * Send forgot username email
+   * @param {string} email email to send password reset token
+   * @return {object}
+   */
+  async sendForgotUsernameEmail(email) {
+    const user = await helperFunctions.getUserDetailsByEmail(email);
+
+    const msg = {
+      to: email,
+      from: 'no-reply@coinstac.org',
+      subject: 'Forgot Username',
+      html: `Your username is <b>${user.username}</b>`,
+    };
+
+    await sgMail.send(msg);
+  },
+  /**
    * Save password reset token
    * @param {string} email email to send password reset token
    * @return {object}
@@ -152,6 +169,21 @@ const helperFunctions = {
 
     try {
       const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+      return transformToClient(user);
+    } catch {
+      return null;
+    }
+  },
+  /**
+   * Returns user table object for requested user
+   * @param {object} userId id of requested user
+   * @return {object} The requested user object
+   */
+  async getUserDetailsByEmail(email) {
+    const db = database.getDbInstance();
+
+    try {
+      const user = await db.collection('users').findOne({ email });
       return transformToClient(user);
     } catch {
       return null;

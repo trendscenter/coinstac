@@ -35,6 +35,7 @@ const INITIAL_STATE = {
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
+  containerService: localStorage.getItem('containerService') || window.config.containerService,
 };
 
 const EXCLUDE_PATHS = ['login', 'signup'];
@@ -51,6 +52,7 @@ const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
 const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
 const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
+const SET_CONTAINER_SERVICE = 'SET_CONTAINER_SERVICE';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -79,7 +81,14 @@ export const tutorialChange = payload => ({
 });
 
 // Helpers
-const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL, dispatch) => {
+const initCoreAndSetToken = async ({
+  reqUser,
+  data,
+  appDirectory,
+  clientServerURL,
+  containerService,
+  dispatch,
+}) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
@@ -88,7 +97,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
     localStorage.setItem('clientServerURL', clientServerURL);
   }
   await ipcRenderer.invoke('login-init', {
-    userId: data.user.id, appDirectory, clientServerURL, token: data.id_token,
+    userId: data.user.id, appDirectory, clientServerURL, containerService, token: data.id_token,
   });
   const user = { ...data.user, label: reqUser.username };
   const tokenData = {
@@ -112,12 +121,14 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 });
 
 export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
+  // the next line is probably not necessary
   localStorage.setItem('clientServerURL', url);
   return ipcRenderer.invoke('set-client-server-url', url)
     .then(() => {
       dispatch(setClientServerURL(url));
     });
 });
+
 export const refreshToken = async () => {
   let token = localStorage.getItem(API_TOKEN_KEY);
 
@@ -165,14 +176,15 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
-      const { auth: { appDirectory, clientServerURL } } = getState();
-      return initCoreAndSetToken(
-        { id: data.user.id, saveLogin, password: 'password' },
+      const { auth: { appDirectory, clientServerURL, containerService } } = getState();
+      return initCoreAndSetToken({
+        reqUser: { id: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
         clientServerURL,
-        dispatch
-      );
+        containerService,
+        dispatch,
+      });
     })
     .catch((err) => {
       console.error(err); // eslint-disable-line no-console
@@ -201,10 +213,15 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const { auth: { appDirectory, clientServerURL } } = getState();
-    return initCoreAndSetToken(
-      { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch
-    );
+    const { auth: { appDirectory, clientServerURL, containerService } } = getState();
+    return initCoreAndSetToken({
+      reqUser: { username, password, saveLogin },
+      data,
+      appDirectory,
+      clientServerURL,
+      containerService,
+      dispatch,
+    });
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
@@ -223,8 +240,15 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
-    const { auth: { appDirectory, clientServerURL } } = getState();
-    return initCoreAndSetToken(user, data, appDirectory, clientServerURL, dispatch);
+    const { auth: { appDirectory, clientServerURL, containerService } } = getState();
+    return initCoreAndSetToken({
+      reqUser: user,
+      data,
+      appDirectory,
+      clientServerURL,
+      containerService,
+      dispatch,
+    });
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
@@ -251,6 +275,16 @@ export const update = applyAsyncLoading(user => dispatch => axios.post(`${API_UR
     }
   }));
 
+export const sendForgotUsernameEmail = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/sendForgotUsernameEmail`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Sent email successfully'));
+  })
+  .catch((err) => {
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Failed to send email'));
+    throw err;
+  }));
+
 export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/sendPasswordResetEmail`, payload)
   .then(() => {
     dispatch(notifySuccess('Sent password reset email successfully'));
@@ -270,6 +304,17 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
     dispatch(notifyError(message || 'Provided password reset token is not valid. It could be expired'));
     throw err;
   }));
+
+
+export const setContainerService = applyAsyncLoading(containerService => (dispatch) => {
+  return ipcRenderer.invoke('set-container-service', containerService)
+    .then(() => {
+      dispatch({
+        type: SET_CONTAINER_SERVICE,
+        payload: containerService,
+      });
+    });
+});
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
   const { locationStacks, isTutorialHidden, tutorialSteps } = state;
@@ -341,6 +386,10 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         tutorialSteps: newTutorialSteps,
         isTutorialHidden: newTutorialSteps.length > 15,
       };
+    }
+    case SET_CONTAINER_SERVICE: {
+      localStorage.setItem('containerService', payload);
+      return { ...state, containerService: payload };
     }
     default:
       return state;

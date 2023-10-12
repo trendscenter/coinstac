@@ -11,7 +11,8 @@ import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 
-export const ExcludedSubjects = ({ excludedSubjects }) => {
+
+const MapsExcludedSubjects = ({ excludedSubjects }) => {
   const [expandList, setExpandList] = useState(false);
 
   if (!excludedSubjects) {
@@ -54,12 +55,12 @@ export const ExcludedSubjects = ({ excludedSubjects }) => {
   );
 };
 
-ExcludedSubjects.propTypes = {
-  excludedSubjects: PropTypes.array,
-};
-
-ExcludedSubjects.defaultProps = {
+MapsExcludedSubjects.defaultProps = {
   excludedSubjects: [],
 };
 
-export default ExcludedSubjects;
+MapsExcludedSubjects.propTypes = {
+  excludedSubjects: PropTypes.array,
+};
+
+export default MapsExcludedSubjects;

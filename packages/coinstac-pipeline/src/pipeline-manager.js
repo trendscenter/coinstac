@@ -1,5 +1,3 @@
-'use strict';
-
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
@@ -9,6 +7,7 @@ const rmrf = pify(require('rimraf'));
 const debug = require('debug');
 const { merge } = require('lodash');
 const containerManager = require('coinstac-container-manager');
+const v8 = require('v8');
 const Store = require('./io-store');
 const setupCentral = require('./setup-central');
 const setupOuter = require('./setup-outer');
@@ -16,6 +15,8 @@ const utils = require('./utils');
 
 const debugProfile = debug('pipeline:profile');
 const debugProfileClient = debug('pipeline:profile-client');
+
+v8.setFlagsFromString('--stack-size=150');
 
 const Pipeline = require('./pipeline');
 

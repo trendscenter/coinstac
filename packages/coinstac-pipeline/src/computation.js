@@ -62,7 +62,6 @@ module.exports = {
           {
             serviceId: `${this.runId}-${this.clientId}`,
             serviceUserId: `${this.runId}-${this.clientId}`,
-            serviceType: computation.type,
             opts,
           }
         )

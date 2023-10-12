@@ -14,10 +14,11 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial } from '../../state/ducks/auth';
+import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerService } from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
+import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
@@ -185,6 +186,11 @@ class Settings extends Component {
     setNetworkVolume(event.target.checked);
   }
 
+  handleSelectContainerService = (event) => {
+    const { setContainerService } = this.props;
+    setContainerService(event.target.value);
+  }
+
   render() {
     const {
       classes,
@@ -192,6 +198,7 @@ class Settings extends Component {
       networkVolume,
       isTutorialHidden,
       toggleTutorial,
+      containerService,
     } = this.props;
     const {
       currentPassword,
@@ -272,10 +279,10 @@ class Settings extends Component {
         <div>
           {networkVolume
             && (
-            <Typography variant="subtitle1" className={classes.warning}>
-              To use network volumes on Windows users must run the COINSTAC application
-              with administrator priviledges or have Windows Developer Mode enabled
-            </Typography>
+              <Typography variant="subtitle1" className={classes.warning}>
+                To use network volumes on Windows users must run the COINSTAC application
+                with administrator priviledges or have Windows Developer Mode enabled
+              </Typography>
             )
           }
 
@@ -352,6 +359,23 @@ class Settings extends Component {
             {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
           </div>
         </ValidatorForm>
+        <Typography variant="h5">
+          Container Service
+        </Typography>
+        <FormControl fullWidth>
+          <InputLabel id="container-service-label">Container Service</InputLabel>
+          <Select
+            labelId="container-service-label"
+            id="container-service-select"
+            value={containerService}
+            label="Container Service"
+            onChange={this.handleSelectContainerService}
+          >
+            <MenuItem value="docker">Docker</MenuItem>
+            <MenuItem value="singularity">Singularity</MenuItem>
+          </Select>
+        </FormControl>
+
       </div>
     );
   }
@@ -370,6 +394,8 @@ Settings.propTypes = {
   updatePassword: PropTypes.func.isRequired,
   setNetworkVolume: PropTypes.func.isRequired,
   toggleTutorial: PropTypes.func.isRequired,
+  containerService: PropTypes.string.isRequired,
+  setContainerService: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
@@ -388,9 +414,11 @@ const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
   networkVolume: auth.networkVolume,
   isTutorialHidden: auth.isTutorialHidden,
+  containerService: auth.containerService,
 });
 
 const connectedComponent = connect(mapStateToProps, {
+  setContainerService,
   setClientCoreUrlAsync,
   setNetworkVolume,
   toggleTutorial,

@@ -120,7 +120,7 @@ class FormLogin extends Component {
       <div className={classes.loginFormContainer}>
         <Paper className={classes.paper}>
           <form onSubmit={this.onSubmit}>
-            { auth.error && this.renderError() }
+            {auth.error && this.renderError()}
             {
               !auth.isApiVersionCompatible
               && (
@@ -173,7 +173,7 @@ class FormLogin extends Component {
           to="/forgot-password"
           color={window.location.href.includes('/forgot-password') ? 'primary' : 'default'}
         >
-          Forgot Password?
+          Forgot Password or Username?
         </Button>
 
         <Button

@@ -24,7 +24,6 @@ const sharedFields = {
       repository
       testData
     }
-    delete
     submittedBy
   `,
   consortiaFields: `
