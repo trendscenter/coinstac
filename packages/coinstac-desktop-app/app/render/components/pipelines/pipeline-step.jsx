@@ -4,7 +4,7 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from '@apollo/react-hoc';
-import { debounce } from 'lodash';
+import { capitalize, debounce, isEqual } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Accordion from '@material-ui/core/Accordion';
@@ -26,11 +26,6 @@ const styles = theme => ({
     display: 'block',
   },
 });
-
-const capitalize = (s) => {
-  if (typeof s !== 'string') return '';
-  return s.charAt(0).toUpperCase() + s.slice(1);
-};
 
 const stepSource = {
   beginDrag(props) {
@@ -75,7 +70,6 @@ const collectDrag = (connect, monitor) => {
 };
 
 const collectDrop = connect => ({ connectDropTarget: connect.dropTarget() });
-
 class PipelineStep extends Component {
   state = {
     orderedInputs: [],
@@ -107,30 +101,34 @@ class PipelineStep extends Component {
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps) {
     const {
       compIO, possibleInputs, updateStep, step,
     } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
-    if ((!orderedInputs || !orderedInputs.length) && possibleInputs) {
+    if ((!orderedInputs || !orderedInputs.length) && possibleInputs
+      && !isEqual(prevProps.possibleInputs, possibleInputs)
+    ) {
       debounce(this.orderComputations, 500)(possibleInputs);
     }
 
-    if ((!compInputs || !compInputs.length) && compIO) {
-      this.groupInputs(compIO);
+    if (compIO && !isEqual(prevProps.compIO, compIO)) {
+      if ((!compInputs || !compInputs.length)) {
+        this.groupInputs(compIO);
+      }
     }
 
-    if (step && (!step.inputMap || Object.keys(step.inputMap).length === 0) && compIO) {
+    if (compIO && (!step.inputMap || Object.keys(step.inputMap).length === 0) && step) {
       const inputMapDefaultValues = this.fillDefaultValues(compIO);
       const inputMapPrefill = this.prefillDataFromHeadlessClients();
-
-      const prefillData = { ...inputMapDefaultValues, ...inputMapPrefill };
 
       updateStep({
         ...step,
         inputMap: {
-          ...prefillData,
+          ...step.inputMap,
+          ...inputMapDefaultValues,
+          ...inputMapPrefill,
         },
       });
     }
@@ -268,7 +266,7 @@ class PipelineStep extends Component {
 
   renderPipelineStepInput = (localInput) => {
     const {
-      pipelineIndex, step, users, owner, updateStep,
+      pipelineIndex, step, users, owner, updateStep, headlessMembers,
     } = this.props;
     const { orderedInputs } = this.state;
 
@@ -284,6 +282,7 @@ class PipelineStep extends Component {
         step={step}
         updateStep={updateStep}
         users={users}
+        headlessMembers={headlessMembers}
       />
     );
   }

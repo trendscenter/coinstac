@@ -13,6 +13,8 @@ const fileExists = (fPath) => {
   return access(fPath).then(() => true, () => false);
 };
 
+const   coinstacHome = path.join(home(), '.coinstac');
+
 const conf = convict({
   env: {
     doc: 'The applicaton environment.',
@@ -62,10 +64,11 @@ const conf = convict({
     sunos: path.join(process.env.HOME || process.env.TEMP, '.config/coinstac/'),
     win32: path.join(process.env.HOME || process.env.TEMP, 'coinstac/'),
   },
-  coinstacHome: path.join(home(), '.coinstac'),
-  singularityDir: path.join(home(), 'singularityImages'),
+  coinstacHome,
+  singularityDir: path.join(coinstacHome, 'singularityImages'),
   clientServerURL: '',
   version: app.getVersion(),
+  containerService: 'docker'
 });
 
 module.exports = function loadConfig() {

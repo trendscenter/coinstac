@@ -4,8 +4,9 @@ const CoinstacClientCore = require('coinstac-client-core');
 const { merge } = require('lodash');
 const parseCLIInput = require('./parse-cli-input');
 
-module.exports = function configureCore(
-  config, logger, userId, appDirectory, imageDirectory, clientServerURL, token
+module.exports = function configureCore({
+  config, logger, userId, appDirectory, imageDirectory, containerService, clientServerURL, token
+}
 ) {
   const coreConfiguration = merge(
     JSON.parse(config.toString()),
@@ -15,6 +16,7 @@ module.exports = function configureCore(
       userId,
       appDirectory,
       imageDirectory,
+      containerService,
       clientServerURL,
       token,
     }

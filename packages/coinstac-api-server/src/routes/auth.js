@@ -117,6 +117,20 @@ module.exports = [
   },
   {
     method: 'POST',
+    path: '/sendForgotUsernameEmail',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateEmail }],
+      handler: (req, h) => {
+        return helperFunctions
+          .sendForgotUsernameEmail(req.payload.email)
+          .then(() => h.response().code(204))
+          .catch(() => h.response().code(400));
+      },
+    },
+  },
+  {
+    method: 'POST',
     path: '/sendPasswordResetEmail',
     config: {
       auth: false,
@@ -124,8 +138,7 @@ module.exports = [
       handler: (req, h) => {
         return helperFunctions
           .savePasswordResetToken(req.payload.email)
-          .then(() => h.response().code(204))
-          .catch(() => h.response().code(400));
+          .then(() => h.response().code(204));
       },
     },
   },

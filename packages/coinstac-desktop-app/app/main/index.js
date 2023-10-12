@@ -67,7 +67,6 @@ const { configureLogger, readInitialLogContents } = require('./utils/boot/config
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir');
 const loadConfig = require('../config');
 const fileFunctions = require('./services/files');
-
 const { checkForUpdates } = require('./utils/auto-update');
 const { generateResultsPdf } = require('./services/results-pdf-generator');
 
@@ -267,19 +266,20 @@ loadConfig()
 
 
       ipcMain.handle('login-init', (event, {
-        userId, appDirectory, clientServerURL, token,
+        userId, appDirectory, clientServerURL, token, containerService,
       }) => {
         return initializedCore
           ? Promise.resolve()
-          : configureCore(
+          : configureCore({
             config,
             logger,
             userId,
             appDirectory,
-            config.get('singularityDir'),
-            clientServerURL || config.get('clientServerURL'),
-            token
-          )
+            imageDirectory: config.get('singularityDir'),
+            containerService,
+            clientServerURL: clientServerURL || config.get('clientServerURL'),
+            token,
+          })
             .then((c) => {
               initializedCore = c;
               return upsertCoinstacUserDir(c);
@@ -310,6 +310,10 @@ loadConfig()
         initializedCore.setClientServerURL(url);
         resolve();
       }));
+
+      ipcMain.handle('set-container-service', (event, containerService) => {
+        initializedCore.containerManager.setServiceProvider(containerService);
+      });
 
       function startPipelineRun(run, filesArray, consortium, networkVolume, runState) {
         const pipeline = run.pipelineSnapshot;
@@ -359,7 +363,7 @@ loadConfig()
             return Promise.all(streamProms);
           })
           .catch((err) => {
-            return initializedCore.unlinkFiles(run.id)
+            initializedCore.unlinkFiles(run.id)
               .then(() => {
                 mainWindow.webContents.send('local-run-error', {
                   consName: consortium.name,
@@ -376,8 +380,8 @@ loadConfig()
                   ),
                 });
               });
+            throw err;
           })
-          .then(() => initializedCore.containerManager.pruneImages())
           .then(() => {
             logger.verbose('############ Client starting pipeline');
 
@@ -618,6 +622,30 @@ loadConfig()
       });
 
       /**
+   * IPC listener to return logs of docker containers
+   * @return {Promise} Docker logs
+   */
+      ipcMain.handle('get-docker-logs', async () => {
+        try {
+          const containers = await initializedCore.containerManager.listContainers({ all: true });
+          const latestContainers = containers.slice(-5);
+          const promises = latestContainers.map(container => initializedCore
+            .containerManager
+            .getContainerLogs(container.Id));
+          const response = await Promise.all(promises);
+          return response;
+        } catch (err) {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        }
+      });
+
+      /**
     * IPC Listener to download a list of computations
     * @param {Object} params
     * @param {String[]} params.computations An array of docker image names
@@ -641,7 +669,8 @@ loadConfig()
                 stream.on('data', (data) => {
                   let output = compact(data.toString().split('\r\n'));
                   output = output.map(JSON.parse);
-
+                  /* these events can be renamed to not refer to docker
+                  specifically since we are now supporting Singularity */
                   mainWindow.webContents.send('docker-out', { output, compId, compName });
                 });
 

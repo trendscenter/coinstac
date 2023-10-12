@@ -7,6 +7,70 @@ const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
 const docker = new Docker();
+const listImages = (opts, cb) => docker.listImages(opts, cb);
+const ping = () => docker.ping();
+const getImage = id => docker.getImage(id);
+const pruneImages = () => {
+  // TODO fix arguments to pruneImages
+  return docker.pruneImages();
+};
+const pull = (id) => {
+  if (process.platform === 'win32') {
+    // NOTE: this uses a fixed api version, while this should be respected in docker
+    // a better solution should be found
+    const options = {
+      socketPath: '//./pipe/docker_engine',
+      path: `/v1.37/images/create?fromImage=${encodeURIComponent(id)}`,
+      method: 'POST',
+    };
+
+    return new Promise((resolve) => {
+      const callback = (res) => {
+        res.setEncoding('utf8');
+        resolve(res);
+      };
+      const clientRequest = http.request(options, callback);
+      clientRequest.end();
+    });
+  }
+  return docker.pull(id);
+};
+
+const pullImagesFromList = async (comps) => {
+  const streams = await Promise.all(
+    comps.map((image) => { return pull(`${image}:latest`); })
+  );
+  await pruneImages();
+  return streams.map((stream, index) => ({ stream, compId: comps[index] }));
+};
+
+const listContainers = async (options = {}) => {
+  const containers = await docker.listContainers(options);
+  return containers.filter(container => container.Image.startsWith('coinstac'));
+};
+
+const getContainerLogs = async (containerId) => {
+  const container = docker.getContainer(containerId);
+  const containerInfo = await docker.getContainer(containerId).inspect();
+  const imageInfo = await docker.getImage(containerInfo.Image).inspect();
+
+  const logs = (await container.logs({
+    follow: false,
+    stdout: true,
+    stderr: true,
+    tail: 2,
+  }))
+    .toString()
+    .split('\n')
+    .map(elem => elem.replace(/[^\x20-\x7E]/g, '').trim())
+    .filter(Boolean);
+
+  return {
+    imageName: imageInfo.RepoTags[0].split(':')[0],
+    containerId: containerInfo.Id,
+    logs,
+  };
+};
 
 module.exports = {
   // id, port
@@ -107,35 +171,19 @@ module.exports = {
     return tryStartService();
   },
   docker,
-  listImages: (opts, cb) => docker.listImages(opts, cb),
-  ping: () => docker.ping(),
-  getImage: id => docker.getImage(id),
-  pull: (id, cb) => {
-    if (process.platform === 'win32') {
-      // NOTE: this uses a fixed api version, while this should be respected in docker
-      // a better solution should be found
-      const options = {
-        socketPath: '//./pipe/docker_engine',
-        path: `/v1.37/images/create?fromImage=${encodeURIComponent(id)}`,
-        method: 'POST',
-      };
-
-      const callback = (res) => {
-        res.setEncoding('utf8');
-        cb(null, res);
-      };
-
-      const clientRequest = http.request(options, callback);
-      clientRequest.end();
-    } else {
-      return docker.pull(id, cb);
-    }
-  },
+  listImages,
+  pruneImages,
+  pullImagesFromList,
+  ping,
+  getImage,
+  pull,
   getContainerStats: async () => {
     const containers = await docker.listContainers();
     const result = Promise.all(containers.map((container) => {
-      return docker.getContainer(container.Id).stats({ id: container.id, stream: false });
+      return docker.getContainer(container.Id).stats({ id: container.Id, stream: false });
     }));
     return result;
   },
+  listContainers,
+  getContainerLogs,
 };

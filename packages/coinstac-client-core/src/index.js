@@ -89,6 +89,7 @@ class CoinstacClient {
     this.appDirectory = opts.appDirectory;
     this.clientServerURL = opts.clientServerURL;
     this.imageDirectory = opts.imageDirectory;
+    this.containerService = opts.containerService;
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -124,6 +125,7 @@ class CoinstacClient {
     }).then((pipelineManager) => {
       this.pipelineManager = pipelineManager;
       this.containerManager = pipelineManager.containerManager;
+      this.containerManager.setServiceProvider(this.containerService);
       return pipelineManager;
     });
   }

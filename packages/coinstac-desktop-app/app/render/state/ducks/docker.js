@@ -58,10 +58,10 @@ export default function reducer(state = INITIAL_STATE, action) {
       const localImages = {};
       action.payload.forEach((image) => {
         if (image.RepoTags) {
-          const name = image.RepoTags[0].split(':')[0];
+          const name = image.RepoTags[0]?.split(':')[0];
           localImages[name] = { id: image.Id, size: image.Size };
         } else if (image.RepoDigests) {
-          const name = image.RepoDigests[0].split('@')[0];
+          const name = image.RepoDigests[0]?.split('@')[0];
           localImages[name] = { id: image.Id, size: image.Size };
         }
       });

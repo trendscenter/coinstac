@@ -13,18 +13,14 @@ const ServiceFunctionGenerator = ({
   port,
   compspecVersion = 1,
 }) => {
-  return ({
+  return async ({
     input,
     mode,
     command,
   }) => {
-    let proxR;
-    let proxRj;
+
     let wsProm;
-    const prox = new Promise((resolve, reject) => {
-      proxR = resolve;
-      proxRj = reject;
-    });
+    
     switch (compspecVersion) {
       case 1: {
         const serviceCommand = JSON.stringify({
@@ -32,7 +28,7 @@ const ServiceFunctionGenerator = ({
           args: command.slice(1),
         });
         const serviceInput = JSON.stringify(input);
-        wsProm = new Promise((resolve) => {
+        wsProm = new Promise((resolve, reject) => {
           let count = 0;
           const testConnection = () => {
             const ws = new WS(`ws://${host}:${port}`);
@@ -44,32 +40,33 @@ const ServiceFunctionGenerator = ({
               if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                 ws.terminate();
                 if (count > 10) {
-                  proxRj(new Error('Container websocket server timeout exceeded'));
+                  reject(new Error('Container websocket server timeout exceeded'));
                 } else {
                   count += 1;
                   setTimeout(testConnection, 200 * count);
                 }
               } else {
-                proxRj(e);
+                reject(e);
               }
             });
           };
           testConnection();
         }).then(() => {
-          const ws = new WS(`ws://${host}:${port}`);
-          ws.on('open', () => {
-            ws.send(serviceCommand);
-            utils.logger.debug(`Input data size: ${serviceInput.length}`);
-            ws.send(serviceInput);
-            ws.send(null);
-          });
-          ws.on('close', (code, reason) => {
-            if (code !== 1000) proxRj(new Error(`Abnormal Container websocket close: ${reason}`));
-          });
-          ws.on('error', (e) => {
-            proxRj(e);
-          });
           return new Promise((resolve, reject) => {
+            const ws = new WS(`ws://${host}:${port}`);
+            ws.on('open', () => {
+              ws.send(serviceCommand);
+              utils.logger.debug(`Input data size: ${serviceInput.length}`);
+              ws.send(serviceInput);
+              ws.send(null);
+            });
+            ws.on('close', (code, reason) => {
+              if (code !== 1000) reject(new Error(`Abnormal Container websocket close: ${reason}`));
+            });
+            ws.on('error', (e) => {
+              reject(e);
+            });
+            
             let stdout = '';
             let stderr = '';
             let outfin = false;
@@ -124,7 +121,7 @@ const ServiceFunctionGenerator = ({
                   break;
                 default:
               }
-            });
+            }); 
           }).then((output) => {
             utils.logger.debug('Container service call finished');
             if (output.code !== 0) {
@@ -135,7 +132,7 @@ const ServiceFunctionGenerator = ({
             let error;
             try {
               const parsed = JSON.parse(output.stdout);
-              proxR(parsed);
+              return parsed;
             } catch (e) {
               error = e;
               utils.logger.error(`Computation output serialization failed with value: ${JSON.stringify(output)}`);
@@ -149,15 +146,12 @@ const ServiceFunctionGenerator = ({
               `;
               throw error;
             }
-          }).catch((e) => {
-            proxRj(e);
           });
         });
-
         break;
       }
       case 2:
-        wsProm = new Promise((resolve) => {
+        wsProm = new Promise((resolve, reject) => {
           let count = 0;
           const testConnection = () => {
             const ws = new WS(`ws://${host}:${port}`);
@@ -169,38 +163,38 @@ const ServiceFunctionGenerator = ({
               if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                 ws.terminate();
                 if (count > 10) {
-                  proxRj(new Error('Container websocket server timeout exceeded'));
+                  reject(new Error('Container websocket server timeout exceeded'));
                 } else {
                   count += 1;
                   setTimeout(testConnection, 200 * count);
                 }
               } else {
-                proxRj(e);
+                reject(e);
               }
             });
           };
           testConnection();
         }).then(() => {
-          const ws = new WS(`ws://${host}:${port}`);
-          ws.on('open', () => {
-            // this object is coupled to the coinstac language utilities lib
-            ws.send(JSON.stringify({
-              mode,
-              data: input,
-            }));
-          });
-          ws.on('error', (e) => {
-            proxRj(e);
-          });
-          ws.on('close', (code, reason) => {
-            if (code !== 1000) proxRj(new Error(`Abnormal Container websocket close: ${reason}`));
-          });
           return new Promise((resolve, reject) => {
             let stdout = '';
             let stderr = '';
             let outfin = false;
             let errfin = false;
             let code;
+            const ws = new WS(`ws://${host}:${port}`);
+            ws.on('open', () => {
+              // this object is coupled to the coinstac language utilities lib
+              ws.send(JSON.stringify({
+                mode,
+                data: input,
+              }));
+            });
+            ws.on('error', (e) => {
+              reject(e);
+            });
+            ws.on('close', (code, reason) => {
+              if (code !== 1000) reject(new Error(`Abnormal Container websocket close: ${reason}`));
+            });
             ws.on('message', (data) => {
               let res;
               try {
@@ -257,17 +251,16 @@ const ServiceFunctionGenerator = ({
             if (output.code !== 0) {
               throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
             }
-            proxR(output.stdout);
-          }).catch((e) => {
-            proxRj(e);
-          });
+            return output.stdout;
+          })
         });
         break;
       default:
-        proxRj(new Error('Invalid compspeccompspecVersion'));
+        throw new Error('Invalid compspeccompspecVersion');
     }
+    
     // promise fullfilled by container output
-    return wsProm.then(() => prox);
+    return wsProm;
   };
 };
 
