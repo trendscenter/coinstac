@@ -38,7 +38,7 @@ function MapsEdit({
       const excluded = consortiumDataMap.map.reduce((prev, curr) => {
         return prev.concat(curr.excludedSubjectsArray);
       }, []);
-      setExcludedSubjects(excluded);
+      setExcludedSubjects(excluded.filter(Boolean));
       setDataMap(consortiumDataMap.dataMap);
     }
   }, [maps]);
@@ -131,12 +131,12 @@ const mapStateToProps = ({ auth, maps }) => ({
 const ComponentWithData = compose(
   graphql(
     UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
-    props: ({ mutate }) => ({
-      updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
-        variables: { consortiumId, isMapped },
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
       }),
-    }),
-  }
+    }
   ),
   withApollo
 )(MapsEdit);

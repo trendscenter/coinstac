@@ -82,7 +82,7 @@ async function startPipelineRun(
   }
 
   const { filesArray, steps } = mapData(run.pipelineSnapshot, headlessClientConfig);
-
+  if (process.env.COINSTAC_DEBUG) console.log(JSON.stringify(steps, null, 2), JSON.stringify(filesArray, null, 2));
   const pipelineRun = {
     ...run,
     pipelineSnapshot: {
@@ -103,7 +103,8 @@ async function startPipelineRun(
     pipelineRun.pipelineSnapshot,
     filesArray,
     run.id,
-    run.pipelineSteps
+    run.pipelineSteps,
+    !!process.env.COINTAC_USE_NETWORK_VOLUME
   );
 
   // Listen for local pipeline state updates
