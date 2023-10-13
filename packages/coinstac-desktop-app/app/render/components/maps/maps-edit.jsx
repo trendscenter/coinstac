@@ -66,7 +66,10 @@ function MapsEdit({
     const undef = [];
 
     Object.keys(unfulfilledArr).forEach((key) => {
-      if (dataMap[key] && dataMap[key].fieldType === 'csv') {
+      if (dataMap[key]
+        && dataMap[key].fieldType === 'csv'
+        && unfulfilledArr[key].value.length !== Object.keys(dataMap[key].maps).length
+      ) {
         undef.push(`Missing fields for ${key}`);
       } else if (!dataMap[key]) {
         undef.push(`Please set value for ${key}`);
