@@ -233,25 +233,25 @@ const resolvers = {
       const db = database.getDbInstance();
       let results;
       if (!isAdmin(credentials.permissions)) {
-         results = await db.collection('runs').find({
+        results = await db.collection('runs').find({
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ],
-          }
+        }
         ).toArray();
       } else {
-         results = await db.collection('runs').find().toArray();
+        results = await db.collection('runs').find().toArray();
       }
-    return transformToClient(results);
-  },
-  /**
-     * Returns single pipeline
-     * @param {object} args
-     * @param {string} args.resultId  Requested pipeline ID
-     * @return {object} Requested pipeline if id present, null otherwise
-     */
+      return transformToClient(results);
+    },
+    /**
+       * Returns single pipeline
+       * @param {object} args
+       * @param {string} args.resultId  Requested pipeline ID
+       * @return {object} Requested pipeline if id present, null otherwise
+       */
     fetchResult: async (_, args) => {
       if (!args.resultId) {
         return null;
@@ -260,14 +260,14 @@ const resolvers = {
 
       let result;
       if (!isAdmin(credentials.permissions)) {
-         results = await db.collection('runs').find({
+        results = await db.collection('runs').find({
           _id: ObjectID(args.resultId),
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ],
-          }
+        }
         ).toArray();
       } else {
         await db.collection('runs').findOne({ _id: ObjectID(args.resultId) });
@@ -285,7 +285,7 @@ const resolvers = {
       const consortia = await db.collection('consortia').find({
         $or: [
           { isPrivate: false },
-          { [`members.${credentials.id}`]: credentials.username  }
+          { [`members.${credentials.id}`]: credentials.username }
         ]
       }).toArray();
 
@@ -305,12 +305,12 @@ const resolvers = {
       const db = database.getDbInstance();
 
       const consortium = await db.collection('consortia').findOne({
-         _id: ObjectID(args.consortiumId),
-         $or: [
-           { isPrivate: false },
-           { members: { [credentials.id]: credentials.username } }
-         ]
-       });
+        _id: ObjectID(args.consortiumId),
+        $or: [
+          { isPrivate: false },
+          { members: { [credentials.id]: credentials.username } }
+        ]
+      });
       return transformToClient(consortium);
     },
     /**
@@ -452,7 +452,7 @@ const resolvers = {
       } else {
         runs = await db.collection('runs').find({
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
@@ -577,7 +577,7 @@ const resolvers = {
         run = await db.collection('runs').findOne({
           _id: ObjectID(runId),
           $or: [
-            { [`observers.${credentials.id}`]: { $exists: true }  },
+            { [`observers.${credentials.id}`]: { $exists: true } },
             { [`clients.${credentials.id}`]: { $exists: true } },
             { sharedUsers: credentials.id }
           ]
@@ -1041,11 +1041,10 @@ const resolvers = {
 
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
-      const pipelineId = ObjectID(args.pipelineId);
+      const pipeline = args.activePipelineId ? await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) }) : null;
 
-      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
-
-      if (!permissions.consortia[pipeline.owningConsortium] &&
+      if (pipeline &&
+        !permissions.consortia[pipeline.owningConsortium] &&
         !permissions.consortia[pipeline.owningConsortium].includes('owner')
       ) {
         return Boom.forbidden('Action not permitted')
@@ -1808,7 +1807,7 @@ const resolvers = {
       const ownedConsortia = await db.collection('consortia').find({ [consortiaOwnersKey]: { '$exists': true } }).toArray();
 
       const soleOwner = ownedConsortia.reduce((sole, con) => {
-        if(Object.keys(con.owners).length <= 1) sole = true;
+        if (Object.keys(con.owners).length <= 1) sole = true;
         return sole;
       }, false)
 
