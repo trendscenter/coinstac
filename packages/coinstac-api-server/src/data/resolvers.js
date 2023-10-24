@@ -2026,7 +2026,13 @@ const resolvers = {
         // Find the users that are in the same consortia as the logged user
         const db = database.getDbInstance();
 
-        const user = await helperFunctions.getUserDetailsByID(context.userId);
+        const userId = context.userId || payload.userId;
+
+        if (!userId) {
+          return getOnlineUsers();
+        }
+
+        const user = await helperFunctions.getUserDetailsByID(userId);
 
         const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
         const consortia = await db.collection('consortia').find(

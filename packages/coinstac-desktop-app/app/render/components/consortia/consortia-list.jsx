@@ -884,9 +884,6 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({
