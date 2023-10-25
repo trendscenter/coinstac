@@ -259,7 +259,7 @@ class ConsortiaList extends Component {
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
         >
-          {pipeline ? pipeline.name : 'None'}
+          {pipeline?.name || 'None'}
         </Typography>
       </div>
     );
@@ -397,6 +397,21 @@ class ConsortiaList extends Component {
           </Menu>
         </Fragment>
       );
+    } else if (owner && consortium.activePipelineId) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-unset-active-pipeline-button`}
+          component={Link}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          onClick={event => this.handleUnsetActivePipelineOnConsortium(
+            event, consortium
+          )}
+        >
+          Unset Active Pipeline
+        </Button>
+      );
     } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
@@ -468,6 +483,11 @@ class ConsortiaList extends Component {
     } else {
       this.openConsortiumPipelinesMenu(event, consortium.id);
     }
+  }
+
+  handleUnsetActivePipelineOnConsortium = (event, consortium) => {
+    const { saveActivePipeline } = this.props;
+    saveActivePipeline(consortium.id, null);
   }
 
   closeConsortiumPipelinesMenu = () => {
@@ -869,9 +889,6 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({
