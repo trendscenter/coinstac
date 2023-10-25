@@ -37,6 +37,7 @@ import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import InfoIcon from '@material-ui/icons/Info';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutlined';
+import Alert from '@material-ui/lab/Alert';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
 
@@ -111,7 +112,12 @@ const styles = theme => ({
     display: 'flex',
     columnGap: theme.spacing(1),
     justifyContent: 'flex-end',
+    alignItems: 'center',
     marginBottom: theme.spacing(2),
+  },
+  error: {
+    paddingTop: 0,
+    paddingBottom: 0,
   },
 });
 
@@ -162,6 +168,7 @@ class Pipeline extends Component {
       steps: [],
       delete: false,
       limitOutputToOwner: false,
+      error: '',
     };
 
     // if routed from New Pipeline button on consortium page
@@ -508,6 +515,7 @@ class Pipeline extends Component {
 
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [param]: value },
+      error: '',
     }));
     // this.updateStorePipeline());
   }
@@ -517,11 +525,98 @@ class Pipeline extends Component {
     return isEqual(startingPipeline, pipeline);
   }
 
+  validatePipeline = () => {
+    const { consortium, pipeline } = this.state;
+
+    let error;
+
+    if (!consortium) {
+      error = 'Please select consortium';
+    } else if (pipeline.steps.length === 0) {
+      error = 'No computations added';
+    } else {
+      const errorMessages = [];
+      pipeline.steps.forEach((step) => {
+        const { computations, inputMap } = step;
+
+        computations.forEach(({ computation }) => {
+          const { input } = computation;
+
+          Object.keys(input).forEach((key) => {
+            const { type, label } = input[key];
+
+            const value = inputMap[key]?.value;
+
+            if (!value) {
+              errorMessages.push(`Missing value for ${label}`);
+              return;
+            }
+
+            if (type === 'number') {
+              const { min, max } = input[key];
+              const mappedValue = inputMap[key]?.value;
+
+              if (mappedValue < min || mappedValue > max) {
+                errorMessages.push(`Invalid value for ${label}`);
+              }
+
+              return;
+            }
+
+            if (type === 'csv') {
+              const { items } = input[key];
+              const requiredItemCount = items.length;
+              const mappedValue = inputMap[key]?.value;
+
+              const mappedItemCount = mappedValue.filter(val => val.name && val.type).length;
+
+              if (requiredItemCount !== mappedItemCount) {
+                errorMessages.push(`Missing data types for ${label}`);
+                return;
+              }
+
+              const requiredDataTypes = [...items].sort().join(',');
+              const actualDataTypes = mappedValue.map(val => val.type).filter(Boolean).sort().join(',');
+
+              if (requiredDataTypes !== actualDataTypes) {
+                errorMessages.push(`Invalid data types for ${label}`);
+                return;
+              }
+
+              return;
+            }
+
+            if (!inputMap[key]?.fulfilled) {
+              errorMessages.push(`Missing fields for ${label}`);
+            }
+          });
+        });
+      });
+
+      if (errorMessages.length > 0) {
+        // eslint-disable-next-line prefer-destructuring
+        error = errorMessages[0];
+      }
+    }
+
+    if (error) {
+      this.setState({ error });
+    }
+
+    return !error;
+  }
+
   savePipeline = async () => {
     const {
       auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline, updateMapStatus,
     } = this.props;
     const { pipeline, isActive } = this.state;
+
+    this.setState({ error: '' });
+
+    if (!this.validatePipeline()) {
+      return;
+    }
 
     this.setState({ savingStatus: 'pending' });
 
@@ -739,6 +834,7 @@ class Pipeline extends Component {
       savingStatus,
       selectedHeadlessMember,
       showVaultDescriptionModal,
+      error,
     } = this.state;
     const isEditing = Boolean(pipeline.id);
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
@@ -860,6 +956,7 @@ class Pipeline extends Component {
             </Menu>
           </div>
           <Box textAlign="right" className={classes.buttonWrapper}>
+            {error && <Alert className={classes.error} severity="error">{error}</Alert>}
             {consortium && consortium.activePipelineId
               && consortium.activePipelineId === pipeline.id
               && (
@@ -886,7 +983,7 @@ class Pipeline extends Component {
                 key="save-pipeline-button"
                 variant="contained"
                 color="primary"
-                disabled={!owner || !consortium || savingStatus === 'pending'}
+                disabled={!owner || savingStatus === 'pending'}
                 type="submit"
               >
                 Save Pipeline
@@ -1039,11 +1136,6 @@ class Pipeline extends Component {
               />
             ))}
           </div>
-          {!pipeline.steps.length && (
-            <Typography variant="body2">
-              No computations added
-            </Typography>
-          )}
         </ValidatorForm>
         {!auth.isTutorialHidden && (
           <Joyride
