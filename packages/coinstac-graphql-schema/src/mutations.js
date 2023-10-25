@@ -137,11 +137,6 @@ const mutations = {
       }
     }
   `,
-  deleteUser: `
-    {
-      deleteUser(userId: $userId)
-    }
-  `,
   stopRun: `
     {
       stopRun(runId: $runId)
@@ -150,6 +145,18 @@ const mutations = {
   deleteRun: `
     {
       deleteRun(runId: $runId)
+    }
+  `,
+  saveUser: `
+    {
+      saveUser(userId: $userId, data: $data) {
+        ${sharedFields.userData}
+      }
+    }
+  `,
+  deleteUser: `
+    {
+      deleteUser(userId: $userId)
     }
   `,
 };

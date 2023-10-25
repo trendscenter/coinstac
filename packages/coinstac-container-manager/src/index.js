@@ -310,6 +310,20 @@ const setServiceProvider = (provider) => {
   globalServiceProvider = provider;
 };
 
+/**
+ * List all docker containers
+ */
+const listContainers = (options) => {
+  return serviceProviders[globalServiceProvider].listContainers(options);
+};
+
+/**
+ * Get docker container logs
+ */
+const getContainerLogs = (containerId) => {
+  return serviceProviders[globalServiceProvider].getContainerLogs(containerId);
+};
+
 
 module.exports = {
   getImages,
@@ -330,4 +344,6 @@ module.exports = {
   docker: dockerService.docker,
   getContainerStats: dockerService.getContainerStats,
   setImageDirectory,
+  listContainers,
+  getContainerLogs,
 };

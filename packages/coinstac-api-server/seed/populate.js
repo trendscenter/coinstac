@@ -36,64 +36,17 @@ const enigmaSans = require('./data/coinstac-enigma-sans.json');
 const local = require('./data/coinstac-local-test.json');
 const localError = require('./data/coinstac-local-error.json');
 
-const CONSORTIA_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-];
+const generateUniqueIDs = count => Array(count).fill(0).map(() => database.createUniqueId());
 
-const PIPELINE_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-];
+const CONSORTIA_IDS = generateUniqueIDs(2);
 
-const COMPUTATION_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-];
+const PIPELINE_IDS = generateUniqueIDs(4);
 
-const USER_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-];
+const COMPUTATION_IDS = generateUniqueIDs(27);
 
-const RUN_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-];
+const USER_IDS = generateUniqueIDs(6);
+
+const RUN_IDS = generateUniqueIDs(4);
 
 async function populateComputations() {
   const db = database.getDbInstance();
@@ -1302,13 +1255,11 @@ async function updateComputations(closeConnection = true) {
   }
 }
 
-async function clearRuns(){
+async function clearRuns() {
   await database.connect();
   const db = database.getDbInstance();
-  const {deletedCount} = await db.collection('runs').deleteMany({})
-  console.log({deletedCount})
-  const remainingRuns = await db.collection('runs').find({}).toArray();
-  console.log({remainingRuns});
+  await db.collection('runs').deleteMany({});
+  await db.collection('runs').find({}).toArray();
   await database.close();
 }
 
