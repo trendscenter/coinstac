@@ -266,7 +266,7 @@ class ConsortiaList extends Component {
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
         >
-          {pipeline ? pipeline.name : 'None'}
+          {pipeline?.name || 'None'}
         </Typography>
       </div>
     );
@@ -348,7 +348,7 @@ class ConsortiaList extends Component {
               key={`${consortium.id}-start-pipeline-button`}
               variant="contained"
               className={`${classes.button} start-pipeline`}
-              onClick={this.startPipeline(consortium)}
+              onClick={() => this.debouncedStartPipeline(consortium)}
             >
               Start Pipeline
             </Button>
@@ -403,6 +403,21 @@ class ConsortiaList extends Component {
             }
           </Menu>
         </Fragment>
+      );
+    } else if (owner && consortium.activePipelineId) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-unset-active-pipeline-button`}
+          component={Link}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          onClick={event => this.handleUnsetActivePipelineOnConsortium(
+            event, consortium
+          )}
+        >
+          Unset Active Pipeline
+        </Button>
       );
     } else if ((owner || member) && needsDataMapping) {
       actions.push(
@@ -497,6 +512,11 @@ class ConsortiaList extends Component {
     }
   }
 
+  handleUnsetActivePipelineOnConsortium = (event, consortium) => {
+    const { saveActivePipeline } = this.props;
+    saveActivePipeline(consortium.id, null);
+  }
+
   closeConsortiumPipelinesMenu = () => {
     this.setState({ isConsortiumPipelinesMenuOpen: false });
   }
@@ -562,58 +582,58 @@ class ConsortiaList extends Component {
     this.setState({ activeTab });
   }
 
-  startPipeline(consortium) {
-    return async () => {
-      const {
-        pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-        notifyWarning, notifyError, auth,
-      } = this.props;
+  startPipeline = async (consortium) => {
+    const {
+      pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
+      notifyWarning, notifyError, auth,
+    } = this.props;
 
-      const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+    const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
-      if (!pipeline.steps) {
-        return notifyWarning('The selected pipeline has no steps');
+    if (!pipeline.steps) {
+      return notifyWarning('The selected pipeline has no steps');
+    }
+
+    const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
+    try {
+      startLoading('start-pipeline');
+
+      if (isPipelineDecentralized) {
+        return await saveRemoteDecentralizedRun(consortium.id);
       }
 
-      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+      const localRun = {
+        id: uuid(),
+        clients: {
+          [auth.user.id]: auth.user.username,
+        },
+        observers: {
+          [auth.user.id]: auth.user.username,
+        },
+        consortiumId: consortium.id,
+        pipelineSnapshot: pipeline,
+        startDate: Date.now(),
+        type: 'local',
+        status: 'started',
+      };
 
-      try {
-        startLoading('start-pipeline');
+      startRun(localRun, consortium);
+    } catch ({ graphQLErrors }) {
+      const errorCode = get(graphQLErrors, '0.extensions.exception.data.errorCode', '');
+      const errorMessage = get(graphQLErrors, '0.message', 'Failed to start pipeline');
 
-        if (isPipelineDecentralized) {
-          return await saveRemoteDecentralizedRun(consortium.id);
-        }
-
-        const localRun = {
-          id: uuid(),
-          clients: {
-            [auth.user.id]: auth.user.username,
-          },
-          observers: {
-            [auth.user.id]: auth.user.username,
-          },
-          consortiumId: consortium.id,
-          pipelineSnapshot: pipeline,
-          startDate: Date.now(),
-          type: 'local',
-          status: 'started',
-        };
-
-        startRun(localRun, consortium);
-      } catch ({ graphQLErrors }) {
-        const errorCode = get(graphQLErrors, '0.extensions.exception.data.errorCode', '');
-        const errorMessage = get(graphQLErrors, '0.message', 'Failed to start pipeline');
-
-        if (errorCode === 'VAULT_OFFLINE') {
-          this.setState({ showErrorDialog: true, errorMessage, errorTitle: 'Vault offline' });
-        } else {
-          notifyError(errorMessage);
-        }
-      } finally {
-        finishLoading('start-pipeline');
+      if (errorCode === 'VAULT_OFFLINE') {
+        this.setState({ showErrorDialog: true, errorMessage, errorTitle: 'Vault offline' });
+      } else {
+        notifyError(errorMessage);
       }
-    };
+    } finally {
+      finishLoading('start-pipeline');
+    }
   }
+
+  debouncedStartPipeline = debounce(consortium => this.startPipeline(consortium), 5000)
 
   stopPipeline(pipelineId) {
     return () => {
@@ -955,9 +975,6 @@ const ConsortiaListWithData = compose(
   ),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({

@@ -1,6 +1,13 @@
 import { useEffect } from 'react';
 
-function useEntityListSubscription(subscriptionFunc, document, query, subscriptionName, variables) {
+function useEntityListSubscription(
+  subscriptionFunc,
+  document,
+  query,
+  subscriptionName,
+  variables,
+  refetchFunc
+) {
   useEffect(() => {
     const unsubscribe = subscriptionFunc({
       document,
@@ -8,17 +15,25 @@ function useEntityListSubscription(subscriptionFunc, document, query, subscripti
       updateQuery: (prev, { subscriptionData: { data } }) => {
         if (!data) return prev;
 
+        const prevData = prev[query];
+        const docFromSub = data[subscriptionName];
+
         if (data[subscriptionName].delete) {
           return {
-            [query]: prev[query].filter(o => o.id !== data[subscriptionName].id),
+            [query]: prevData.filter(doc => doc.id !== docFromSub.id),
           };
         }
 
-        const index = prev[query].findIndex(c => c.id === data[subscriptionName].id);
-        if (index === -1) {
+        const isNew = prevData.findIndex(doc => doc.id === docFromSub.id) === -1;
+
+        if (isNew) {
           return {
-            [query]: [...prev[query], data[subscriptionName]],
+            [query]: [...prevData, docFromSub],
           };
+        }
+
+        if (refetchFunc) {
+          refetchFunc();
         }
       },
     });

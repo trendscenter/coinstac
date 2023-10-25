@@ -109,7 +109,7 @@ const typeDefs = `
     ${sharedFields.userFields}
   }
 
-  type UserInput {
+  input UserInput {
     id: ID
     ${sharedFields.userFields}
   }
@@ -216,9 +216,10 @@ const typeDefs = `
     saveDataset(input: DatasetInput!): Dataset
     deleteDataset(id: ID!): Dataset
     saveConsortiumActiveMembers(consortiumId: ID!, members: JSON): Consortium
-    deleteUser(userId: ID!): String
     stopRun(runId: ID): JSON
     deleteRun(runId: ID): JSON
+    saveUser(userId: ID, data: UserInput!): User
+    deleteUser(userId: ID!): String
   }
 
   # This is a description of the queries

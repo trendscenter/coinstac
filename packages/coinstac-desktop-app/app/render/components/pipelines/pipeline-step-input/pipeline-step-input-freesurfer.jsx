@@ -21,7 +21,7 @@ const styles = theme => ({
 function PipelineStepInputFreesurfer(props) {
   const {
     objKey, objParams, owner, addClientProp, getNewObj, possibleInputs, step,
-    updateStep, classes,
+    updateStep, classes, headlessMembers,
   } = props;
 
   const objInputMap = step.inputMap[objKey];
@@ -62,6 +62,7 @@ function PipelineStepInputFreesurfer(props) {
                     getNewObj={getNewObj}
                     updateStep={updateStep}
                     step={step}
+                    headlessMembers={headlessMembers}
                   />
                 ))
               }
@@ -75,6 +76,7 @@ function PipelineStepInputFreesurfer(props) {
 
 PipelineStepInputFreesurfer.defaultProps = {
   possibleInputs: null,
+  headlessMembers: {},
 };
 
 PipelineStepInputFreesurfer.propTypes = {
@@ -87,6 +89,7 @@ PipelineStepInputFreesurfer.propTypes = {
   addClientProp: PropTypes.func.isRequired,
   possibleInputs: PropTypes.array,
   classes: PropTypes.object.isRequired,
+  headlessMembers: PropTypes.object,
 };
 
 export default withStyles(styles)(PipelineStepInputFreesurfer);

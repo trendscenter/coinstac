@@ -1133,11 +1133,10 @@ const resolvers = {
 
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
-      const pipelineId = ObjectID(args.pipelineId);
+      const pipeline = args.activePipelineId ? await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) }) : null;
 
-      const pipeline = await db.collection('pipelines').findOne({ _id: ObjectID(args.activePipelineId) });
-
-      if (!permissions.consortia[pipeline.owningConsortium] &&
+      if (pipeline &&
+        !permissions.consortia[pipeline.owningConsortium] &&
         !permissions.consortia[pipeline.owningConsortium].includes('owner')
       ) {
         return Boom.forbidden('Action not permitted')
@@ -1164,12 +1163,12 @@ const resolvers = {
 
       const updateObj = {
         $set: {
-          activePipelineId: ObjectID(args.activePipelineId),
+          activePipelineId: args.activePipelineId ? ObjectID(args.activePipelineId) : null,
           mappedForRun: []
         }
       };
 
-      if (pipeline.headlessMembers) {
+      if (pipeline && pipeline.headlessMembers) {
         // Sets only the vault users as the default active members
         updateObj.$set.activeMembers = {
           ...pipeline.headlessMembers
@@ -1891,6 +1890,68 @@ const resolvers = {
 
       return transformToClient(dataset);
     },
+    stopRun: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to stop this run')
+      }
+
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
+      );
+    },
+    deleteRun: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const runs = await db.collection('runs').find({
+        _id: ObjectID(args.runId)
+      }).toArray();
+
+      if (runs.length) {
+        await db.collection('runs').deleteMany({
+          _id: ObjectID(args.runId)
+        });
+
+        eventEmitter.emit(RUN_DELETED, runs);
+        runs.forEach(async (run) => {
+          try {
+            await axios.post(
+              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+            );
+          } catch (e) { }
+        });
+      }
+    },
+    /*
+      Admin user actions
+      - Save user
+      - Delete user
+    */
+    saveUser: async (parent, args, { credentials }) => {
+      if (!isAdmin(credentials.permissions)) {
+        return Boom.unauthorized('You do not have permission to delete this user');
+      }
+      const db = database.getDbInstance();
+
+      let allUsers = transformToClient(await db.collection('users').find().toArray());
+
+      if (args.userId) {
+        allUsers = allUsers.filter(user => user.id !== args.userId);
+      }
+
+      if (allUsers.filter(user => user.username === args.data.username).length > 0) {
+        return Boom.badRequest('Username is already taken')
+      }
+
+      if (allUsers.filter(user => user.email === args.data.email).length > 0) {
+        return Boom.badRequest('Email is already taken')
+      }
+
+      const result = args.userId
+        ? await helperFunctions.updateUser({ id: args.userId, ...args.data })
+        : await helperFunctions.createUser(args.data, '')
+
+      return result
+    },
     deleteUser: async (parent, args, { credentials }) => {
       if (!isAdmin(credentials.permissions)) {
         return Boom.unauthorized('You do not have permission to delete this user');
@@ -1940,37 +2001,6 @@ const resolvers = {
 
       eventEmitter.emit(USER_CHANGED, user);
     },
-    stopRun: async (parent, args, { credentials }) => {
-      if (!isAdmin(credentials.permissions)) {
-        return Boom.unauthorized('You do not have permission to stop this run')
-      }
-
-      await axios.post(
-        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: args.runId }
-      );
-    },
-    deleteRun: async (parent, args, { credentials }) => {
-      const db = database.getDbInstance();
-
-      const runs = await db.collection('runs').find({
-        _id: ObjectID(args.runId)
-      }).toArray();
-
-      if (runs.length) {
-        await db.collection('runs').deleteMany({
-          _id: ObjectID(args.runId)
-        });
-
-        eventEmitter.emit(RUN_DELETED, runs);
-        runs.forEach(async (run) => {
-          try {
-            await axios.post(
-              `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
-            );
-          } catch (e) { }
-        });
-      }
-    }
   },
   Subscription: {
     /**
@@ -2092,7 +2122,13 @@ const resolvers = {
         // Find the users that are in the same consortia as the logged user
         const db = database.getDbInstance();
 
-        const user = await helperFunctions.getUserDetailsByID(context.userId);
+        const userId = context.userId || payload.userId;
+
+        if (!userId) {
+          return getOnlineUsers();
+        }
+
+        const user = await helperFunctions.getUserDetailsByID(userId);
 
         const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
         const consortia = await db.collection('consortia').find(

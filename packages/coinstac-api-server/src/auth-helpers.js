@@ -89,7 +89,11 @@ const helperFunctions = {
     const db = database.getDbInstance();
     const result = await db.collection('users').insertOne(userDetails);
 
-    return result.ops[0];
+    const createdUser = transformToClient(result.ops[0]);
+
+    eventEmitter.emit(USER_CHANGED, createdUser);
+
+    return createdUser;
   },
   async updateUser(user) {
     const db = database.getDbInstance();
@@ -114,6 +118,23 @@ const helperFunctions = {
     eventEmitter.emit(USER_CHANGED, updatedUser);
 
     return updatedUser;
+  },
+  /**
+   * Send forgot username email
+   * @param {string} email email to send password reset token
+   * @return {object}
+   */
+  async sendForgotUsernameEmail(email) {
+    const user = await helperFunctions.getUserDetailsByEmail(email);
+
+    const msg = {
+      to: email,
+      from: 'no-reply@coinstac.org',
+      subject: 'Forgot Username',
+      html: `Your username is <b>${user.username}</b>`,
+    };
+
+    await sgMail.send(msg);
   },
   /**
    * Save password reset token
@@ -152,6 +173,21 @@ const helperFunctions = {
 
     try {
       const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+      return transformToClient(user);
+    } catch {
+      return null;
+    }
+  },
+  /**
+   * Returns user table object for requested user
+   * @param {object} userId id of requested user
+   * @return {object} The requested user object
+   */
+  async getUserDetailsByEmail(email) {
+    const db = database.getDbInstance();
+
+    try {
+      const user = await db.collection('users').findOne({ email });
       return transformToClient(user);
     } catch {
       return null;

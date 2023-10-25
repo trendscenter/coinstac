@@ -6,10 +6,10 @@
 .card-deck {
   margin-top: 12px;
   display: flex;
+  gap: 1rem;
   background: #F5F5F5;
   border: 3px dashed #DDD;
-  padding: 0.5rem 1rem;
-  padding-top: 0;
+  padding: 0.5rem;
   border-radius: 0.5rem;
   width: 100%;
   min-height: 50px;
@@ -21,9 +21,7 @@
   border-radius: 0.5rem;
   padding: 0 1rem 0 2.25rem;
   position: relative;
-  float: left;
-  margin-right: 1rem;
-  margin-top: 0.5rem;
+  float: right;
   background-color: rgba(0, 0, 0, 0.2);
   transition: opacity 0.4s ease-in-out;
   line-height: 3rem;

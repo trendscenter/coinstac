@@ -137,11 +137,6 @@ const mutations = {
       }
     }
   `,
-  deleteUser: `
-    {
-      deleteUser(userId: $userId)
-    }
-  `,
   stopRun: `
     {
       stopRun(runId: $runId)
@@ -164,6 +159,18 @@ const mutations = {
       sendConsortiumJoinRequest(consortiumId: $consortiumId) {
         ${sharedFields.consortiaFields}
       }
+    }
+  `,
+  saveUser: `
+    {
+      saveUser(userId: $userId, data: $data) {
+        ${sharedFields.userData}
+      }
+    }
+  `,
+  deleteUser: `
+    {
+      deleteUser(userId: $userId)
     }
   `,
 };

@@ -132,7 +132,7 @@ class Result extends Component {
       run,
       plotData,
     });
-    this.doFilesExist(run.id);
+    this.doFilesExist(run);
   }
 
   handleOpenResult = () => {
@@ -166,23 +166,22 @@ class Result extends Component {
       await ipcRenderer.invoke('download-run-assets', {
         runId: run.id, authToken, clientId, apiServerUrl,
       });
-      this.setState({ downloading: false });
-      const filesExist = await this.doFilesExist(run.id);
-      if (filesExist) {
-        notifySuccess('Files Downloaded');
-      }
+      this.setState({ downloading: false, filesExist: true });
+      notifySuccess('Files Downloaded');
     } catch (e) {
       notifyError(e.toString());
       this.setState({ downloading: false });
     }
   }
 
-  doFilesExist = async (runId) => {
+  doFilesExist = async (run) => {
     const { auth: { user, appDirectory } } = this.props;
-    const directoryPath = path.join(appDirectory, 'output', user.id, runId);
+    const directoryPath = path.join(appDirectory, 'output', user.id, run.id);
     const exist = await ipcRenderer.invoke('filesExist', { directoryPath });
     this.setState({ filesExist: exist });
-    return exist;
+    if (run.shouldUploadAssets && run.assetsUploaded && !exist) {
+      this.handleDownloadResults();
+    }
   }
 
   renderError = (errors) => {
@@ -273,25 +272,15 @@ class Result extends Component {
               variant="contained"
               color="primary"
               style={{ marginLeft: 10 }}
-              disabled={!filesExist}
+              disabled={!filesExist || downloading}
               onClick={this.handleOpenResult}
             >
-              Open Local Results
+              {downloading ? (
+                <>
+                  Downloading results <CircularProgress style={{ marginLeft: 8 }} size={15} />
+                </>
+              ) : 'Open Local Results'}
             </Button>
-          </div>
-          <div className={classes.resultButton}>
-            {run.shouldUploadAssets && (
-              <Button
-                disabled={!run.assetsUploaded || downloading || filesExist}
-                variant="contained"
-                color="primary"
-                style={{ marginLeft: 10 }}
-                onClick={this.handleDownloadResults}
-              >
-                Download results
-                {downloading && <CircularProgress style={{ marginLeft: 8 }} size={15} />}
-              </Button>
-            )}
           </div>
         </Paper>
 
