@@ -13,6 +13,8 @@ const DOCKER_IGNORABLE_MESSAGES = [
   'connect ECONNREFUSED',
   '(HTTP code 500) server error',
   'socket hang up',
+  '(HTTP code 502) unexpected - Bad response from Docker engine',
+  'connect ENOENT',
 ];
 
 function DockerEventsListeners({

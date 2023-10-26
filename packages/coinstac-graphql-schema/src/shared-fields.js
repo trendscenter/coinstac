@@ -105,6 +105,8 @@ const sharedFields = {
     email
     institution
     username
+    name
+    institution
     permissions
     photo
     photoID
@@ -116,6 +118,8 @@ const sharedFields = {
     email
     permissions
     username
+    name
+    institution
     photo
     photoID
     delete

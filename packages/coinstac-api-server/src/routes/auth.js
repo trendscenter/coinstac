@@ -1,5 +1,4 @@
 const helperFunctions = require('../auth-helpers');
-const { eventEmitter, USER_LOGOUT } = require('../data/events');
 
 module.exports = [
   {
@@ -109,9 +108,21 @@ module.exports = [
     config: {
       auth: false,
       handler: (req, h) => {
-        eventEmitter.emit(USER_LOGOUT, req.payload.username);
-
         return h.response({ username: req.payload.username }).code(200);
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/sendForgotUsernameEmail',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateEmail }],
+      handler: (req, h) => {
+        return helperFunctions
+          .sendForgotUsernameEmail(req.payload.email)
+          .then(() => h.response().code(204))
+          .catch(() => h.response().code(400));
       },
     },
   },
@@ -124,8 +135,7 @@ module.exports = [
       handler: (req, h) => {
         return helperFunctions
           .savePasswordResetToken(req.payload.email)
-          .then(() => h.response().code(204))
-          .catch(() => h.response().code(400));
+          .then(() => h.response().code(204));
       },
     },
   },
