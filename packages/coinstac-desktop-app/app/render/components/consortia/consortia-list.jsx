@@ -555,60 +555,58 @@ class ConsortiaList extends Component {
     this.setState({ activeTab });
   }
 
-  startPipeline(consortium) {
-    return async () => {
-      const {
-        pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-        notifyWarning, notifyError, auth, router,
-      } = this.props;
+  startPipeline = async (consortium) => {
+    const {
+      pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
+      notifyWarning, notifyError, auth, router,
+    } = this.props;
 
-      const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+    const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
-      if (!pipeline.steps) {
-        return notifyWarning('The selected pipeline has no steps');
-      }
+    if (!pipeline.steps) {
+      return notifyWarning('The selected pipeline has no steps');
+    }
 
-      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+    const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
-      try {
-        startLoading('start-pipeline');
+    try {
+      startLoading('start-pipeline');
 
-        if (isPipelineDecentralized) {
-          await saveRemoteDecentralizedRun(consortium.id);
-          router.push('/dashboard');
-          return;
-        }
-
-        const localRun = {
-          id: uuid(),
-          clients: {
-            [auth.user.id]: auth.user.username,
-          },
-          observers: {
-            [auth.user.id]: auth.user.username,
-          },
-          consortiumId: consortium.id,
-          pipelineSnapshot: pipeline,
-          startDate: Date.now(),
-          type: 'local',
-          status: 'started',
-        };
-
-        startRun(localRun, consortium);
-      } catch ({ graphQLErrors }) {
-        const errorCode = get(graphQLErrors, '0.extensions.exception.data.errorCode', '');
-        const errorMessage = get(graphQLErrors, '0.message', 'Failed to start pipeline');
-
-        if (errorCode === 'VAULT_OFFLINE') {
-          this.setState({ showErrorDialog: true, errorMessage, errorTitle: 'Vault offline' });
-        } else {
-          notifyError(errorMessage);
-        }
-      } finally {
-        finishLoading('start-pipeline');
+      if (isPipelineDecentralized) {
+        await saveRemoteDecentralizedRun(consortium.id);
         router.push('/dashboard');
+        return;
       }
-    };
+
+      const localRun = {
+        id: uuid(),
+        clients: {
+          [auth.user.id]: auth.user.username,
+        },
+        observers: {
+          [auth.user.id]: auth.user.username,
+        },
+        consortiumId: consortium.id,
+        pipelineSnapshot: pipeline,
+        startDate: Date.now(),
+        type: 'local',
+        status: 'started',
+      };
+
+      startRun(localRun, consortium);
+    } catch ({ graphQLErrors }) {
+      const errorCode = get(graphQLErrors, '0.extensions.exception.data.errorCode', '');
+      const errorMessage = get(graphQLErrors, '0.message', 'Failed to start pipeline');
+
+      if (errorCode === 'VAULT_OFFLINE') {
+        this.setState({ showErrorDialog: true, errorMessage, errorTitle: 'Vault offline' });
+      } else {
+        notifyError(errorMessage);
+      }
+    } finally {
+      finishLoading('start-pipeline');
+      router.push('/dashboard');
+    }
   }
 
   debouncedStartPipeline = debounce(consortium => this.startPipeline(consortium), 5000)
