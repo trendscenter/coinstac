@@ -91,14 +91,18 @@ export const saveDataMapping = applyAsyncLoading(
         if (mappedData) {
           // has csv column mapping
           if (mappedData.fieldType === 'csv') {
-            const value = {};
+            let value = {};
             const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
             const csvData = { ...mappedData.fileData[0].data };
 
             baseDirectory = dirname(mappedData.files[0]);
 
-            Object.keys(csvData).forEach((subj) => {
-              value[subj] = {};
+            Object.keys(csvData).forEach((subjFile) => {
+              const subjRelPath = path.relative(
+                baseDirectory,
+                path.resolve(baseDirectory, subjFile)
+              );
+              value[subjRelPath] = {};
 
               try {
                 inputMapVariables.forEach((mappedColumnName) => {
@@ -106,13 +110,16 @@ export const saveDataMapping = applyAsyncLoading(
                     .find(c => c.name === mappedColumnName);
                   const csvColumn = mappedData.maps[mappedColumnName];
 
-                  value[subj][mappedColumnName] = castData[covarType.type](
-                    csvData[subj][csvColumn]
+                  value[subjRelPath][mappedColumnName] = castData[covarType.type](
+                    csvData[subjFile][csvColumn]
                   );
                 });
-                filesArray.push(subj);
+                filesArray.push(subjFile);
               } catch (e) {
-                excludedSubjectsArray.push({ name: subj, error: e.message });
+                // remove excluded subj
+                const { [subjRelPath]: _, ...temp } = value;
+                value = temp;
+                excludedSubjectsArray.push({ name: subjFile, error: e.message });
               }
             });
 

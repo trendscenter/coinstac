@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import PropTypes from 'prop-types';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -11,8 +11,8 @@ import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 
-export default function (props) {
-  const { excludedSubjects } = props;
+
+const MapsExcludedSubjects = ({ excludedSubjects }) => {
   const [expandList, setExpandList] = useState(false);
 
   if (!excludedSubjects) {
@@ -53,4 +53,14 @@ export default function (props) {
       </Paper>
     </div>
   );
-}
+};
+
+MapsExcludedSubjects.defaultProps = {
+  excludedSubjects: [],
+};
+
+MapsExcludedSubjects.propTypes = {
+  excludedSubjects: PropTypes.array,
+};
+
+export default MapsExcludedSubjects;

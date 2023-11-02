@@ -11,7 +11,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import FormStartupDirectory from './form-startup-directory';
-import { EXPIRED_TOKEN } from '../../utils/error-codes';
+import { EXPIRED_TOKEN, PASSWORD_EXPIRED } from '../../utils/error-codes';
 
 const validationSchema = Yup.object().shape({
   username: Yup.string().required('Required'),
@@ -98,10 +98,10 @@ const FormLogin = ({
           {auth.error}
         </p>
         <Box display="flex" justifyContent="center" mb={2}>
-          {auth.error === 'Password is expired' && (
-          <Link to="/reset-password">
-            Reset Password
-          </Link>
+          {auth.error === PASSWORD_EXPIRED && (
+            <Link to="/reset-password">
+              Reset Password
+            </Link>
           )}
         </Box>
       </>
@@ -112,12 +112,12 @@ const FormLogin = ({
     <div className={classes.loginFormContainer}>
       <Paper className={classes.paper}>
         <form onSubmit={formik.handleSubmit}>
-          { error }
-          { !auth.isApiVersionCompatible && (
+          {error}
+          {!auth.isApiVersionCompatible && (
             <p className={classes.error}>
               This Coinstac version is not compatible with the API.
             </p>
-          ) }
+          )}
           <TextField
             id="username"
             name="username"
@@ -172,7 +172,7 @@ const FormLogin = ({
         to="/forgot-password"
         color={window.location.href.includes('/forgot-password') ? 'primary' : 'default'}
       >
-        Forgot Password?
+        Forgot Password or Username?
       </Button>
 
       <Button

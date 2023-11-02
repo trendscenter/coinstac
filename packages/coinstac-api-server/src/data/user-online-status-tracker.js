@@ -2,6 +2,7 @@ const {
   eventEmitter,
   WS_CONNECTION_STARTED,
   WS_CONNECTION_TERMINATED,
+  USER_CONNECTION_CHANGED,
 } = require('./events');
 
 // A map that stores the current ws connections on the server.
@@ -20,10 +21,22 @@ function getOnlineUsers() {
 
 function wsConnectionStarted(connectionId, userId) {
   connections.set(connectionId, userId);
+  eventEmitter.emit(USER_CONNECTION_CHANGED, {
+    usersOnlineStatusChanged: getOnlineUsers(),
+    userId,
+  });
 }
 
 function wsConnectionTerminated(connectionId) {
+  const userId = connections.get(connectionId);
   connections.delete(connectionId);
+
+  if (userId) {
+    eventEmitter.emit(USER_CONNECTION_CHANGED, {
+      usersOnlineStatusChanged: getOnlineUsers(),
+      userId,
+    });
+  }
 }
 
 eventEmitter.on(WS_CONNECTION_STARTED, wsConnectionStarted);

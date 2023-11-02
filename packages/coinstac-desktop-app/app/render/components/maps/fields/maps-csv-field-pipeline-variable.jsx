@@ -9,9 +9,7 @@ import classNames from 'classnames';
 
 const styles = theme => ({
   rootPaper: {
-    marginTop: theme.spacing(1.5),
-    minWidth: '250px',
-    display: 'inline-flex',
+    display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -19,9 +17,9 @@ const styles = theme => ({
     paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
-    flex: '1 0 auto',
     marginLeft: theme.spacing(0.5),
-    maxWidth: '80px',
+    minWidth: '80px',
+    width: 'fit-content',
   },
   dropZone: {
     flex: '1 0 auto',
@@ -57,10 +55,24 @@ function MapsCsvFieldPipelineVariable({
     <div>
       <div className={classNames('drop-panel', classes.rootPaper)}>
         <div>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: mappedColumn ? 'black' : 'red',
+            }}
+            className={classes.title}
+          >
             {name}
           </Typography>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: 'green',
+            }}
+            className={classes.title}
+          >
             {`${dataType}`}
           </Typography>
         </div>

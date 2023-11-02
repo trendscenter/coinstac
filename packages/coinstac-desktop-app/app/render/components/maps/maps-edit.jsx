@@ -38,7 +38,7 @@ function MapsEdit({
       const excluded = consortiumDataMap.map.reduce((prev, curr) => {
         return prev.concat(curr.excludedSubjectsArray);
       }, []);
-      setExcludedSubjects(excluded);
+      setExcludedSubjects(excluded.filter(Boolean));
       setDataMap(consortiumDataMap.dataMap);
     }
   }, [maps]);
@@ -49,7 +49,7 @@ function MapsEdit({
     } else {
       setDataMap({ ...dataMap, [fieldName]: fieldData });
       setSaved(false);
-      setAlertMsg(false);
+      setAlertMsg(null);
     }
   }
 
@@ -66,20 +66,24 @@ function MapsEdit({
     const undef = [];
 
     Object.keys(unfulfilledArr).forEach((key) => {
-      if (!dataMap[key]) undef.push(key);
+      if (dataMap[key]
+        && dataMap[key].fieldType === 'csv'
+        && unfulfilledArr[key].value.length !== Object.keys(dataMap[key].maps).length
+      ) {
+        undef.push(`Missing fields for ${key}`);
+      } else if (!dataMap[key]) {
+        undef.push(`Please set value for ${key}`);
+      }
     });
 
-
     if (undef.length > 0) {
-      undef.forEach((item) => {
-        setAlertMsg(`Please set value for ${item}`);
-      });
+      setAlertMsg(undef[0]);
     } else {
       try {
         await saveDataMapping(consortium, pipeline, dataMap);
         updateConsortiumMappedUsers(consortium.id, true);
         setSaved(true);
-        setAlertMsg(false);
+        setAlertMsg(null);
       } catch (error) {
         setSaved(false);
         setAlertMsg(`${error}`);
@@ -130,13 +134,14 @@ const mapStateToProps = ({ auth, maps }) => ({
 
 const ComponentWithData = compose(
   graphql(
-    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
-    props: ({ mutate }) => ({
-      updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
-        variables: { consortiumId, isMapped },
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    {
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
       }),
-    }),
-  }
+    }
   ),
   withApollo
 )(MapsEdit);

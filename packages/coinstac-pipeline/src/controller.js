@@ -416,7 +416,7 @@ module.exports = {
               .catch(error => rej(error));
           };
           waterfall(input, (result) => {
-            setStateProp('state', 'stopped');
+            setStateProp('state', 'stopping');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => {
                 debugProfilePipeline(`**************************** ${clientId} totals ***************************`);

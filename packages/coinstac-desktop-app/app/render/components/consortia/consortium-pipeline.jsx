@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import Joyride from 'react-joyride';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -86,6 +87,10 @@ function ConsortiumPipeline({
     saveActivePipeline(pipelineId);
   };
 
+  const unsetPipeline = () => {
+    saveActivePipeline(null);
+  };
+
   return (
     <div>
       <Typography variant="h5" className={classes.tabTitle}>
@@ -93,18 +98,28 @@ function ConsortiumPipeline({
       </Typography>
       <Paper className={classes.paper}>
         {activePipeline && activePipeline.id ? (
-          <div>
-            <Typography
-              variant="h6"
-              component={Link}
-              to={`/dashboard/pipelines/${consortium.activePipelineId}`}
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <div>
+              <Typography
+                variant="h6"
+                component={Link}
+                to={`/dashboard/pipelines/${consortium.activePipelineId}`}
+              >
+                {activePipeline.name}
+              </Typography>
+              <Typography variant="body2">
+                {activePipeline.description}
+              </Typography>
+            </div>
+            <Button
+              id="unset-active-pipeline"
+              variant="contained"
+              color="primary"
+              onClick={unsetPipeline}
             >
-              {activePipeline.name}
-            </Typography>
-            <Typography variant="body2">
-              {activePipeline.description}
-            </Typography>
-          </div>
+              Unset
+            </Button>
+          </Box>
         ) : (
           <Typography variant="body2"><em>No active pipeline</em></Typography>
         )}

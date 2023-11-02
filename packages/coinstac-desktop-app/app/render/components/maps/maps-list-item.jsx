@@ -29,7 +29,6 @@ const styles = theme => ({
   labelInline: {
     fontWeight: 'bold',
     marginRight: theme.spacing(1),
-    
     display: 'inline-block',
   },
   value: {
