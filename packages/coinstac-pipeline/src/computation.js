@@ -1,62 +1,6 @@
 'use strict';
 
-const _ = require('lodash');
-const Manager = require('coinstac-manager');
-const path = require('path');
-
-/**
- * Generates manager options per computation type
- * @param  {Object} computation      a computation spec
- * @param  {Object} operatingDirectory    base directory reference for options
- * @param  {Object} containerOptions overide or complementary options from the spec
- * @return {Object}                  options
- */
-const managerOptions = ({
-  alternateInputDirectory,
-  computation,
-  operatingDirectory,
-  containerOptions,
-  imageDirectory,
-}) => {
-  let opts;
-  switch (computation.type) {
-    case 'docker':
-      opts = {
-        docker: _.merge({
-          Image: computation.dockerImage,
-          HostConfig: {
-            Binds: [
-              `${operatingDirectory}/input:/input:ro`,
-              `${operatingDirectory}/output:/output:rw`,
-              `${operatingDirectory}/transfer:/transfer:rw`,
-            ],
-          },
-        }, containerOptions),
-      };
-      if (alternateInputDirectory) opts.docker.HostConfig.Binds.push(`${alternateInputDirectory.in}:${alternateInputDirectory.out}:ro`);
-      if (process.env.CI) {
-        opts.docker.HostConfig = {
-          Binds: [
-            `${process.env.CI_VOLUME}:${operatingDirectory}`,
-          ],
-          Volumes: {
-            [operatingDirectory]: {},
-          },
-          NetworkMode: process.env.CI_DOCKER_NETWORK,
-        };
-      }
-      break;
-    case 'singularity':
-      opts = {
-        binds: `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/transfer:/transfer:rw`,
-        image: path.join(imageDirectory, computation.image),
-      };
-      break;
-    default:
-      throw new Error('Invalid computation type');
-  }
-  return opts;
-};
+const containerManager = require('coinstac-container-manager');
 
 module.exports = {
   /**
@@ -70,7 +14,6 @@ module.exports = {
   create({
     alternateInputDirectory,
     clientId,
-    imageDirectory,
     mode,
     runId,
     spec,
@@ -103,20 +46,22 @@ module.exports = {
        */
       start(input, { operatingDirectory }) {
         // console.log(input); Keeping this for future ref.
-        const opts = managerOptions({
-          alternateInputDirectory,
-          computation,
-          operatingDirectory,
-          containerOptions,
-          imageDirectory,
-        });
+        const opts = {};
         opts.version = meta.compspecVersion || 1;
+        opts.mounts = [
+          `${operatingDirectory}/input:/input:ro`,
+          `${operatingDirectory}/output:/output:rw`,
+          `${operatingDirectory}/transfer:/transfer:rw`,
+        ];
+        opts.dockerImage = computation.dockerImage;
+        opts.containerOptions = containerOptions;
+        opts.ciDirectory = operatingDirectory;
+        if (alternateInputDirectory) opts.mounts.push(`${alternateInputDirectory.in}:${alternateInputDirectory.out}:ro`);
 
-        return Manager.startService(
+        return containerManager.startService(
           {
             serviceId: `${this.runId}-${this.clientId}`,
             serviceUserId: `${this.runId}-${this.clientId}`,
-            serviceType: computation.type,
             opts,
           }
         )
@@ -129,7 +74,7 @@ module.exports = {
        * @return {Promise}   resolves on stop
        */
       stop() {
-        return Manager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
+        return containerManager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

@@ -1,15 +1,19 @@
 #!/usr/bin/env node
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
-const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
-const inquirer = require('inquirer');
 const path = require('path');
 const winston = require('winston');
 const fs = require('fs');
 const parseJson = require('json-parse-even-better-errors');
+const termkit = require('terminal-kit');
+const term = require('terminal-kit').terminal;
 
 const pkg = require('../package.json');
+
+term.on('key', (name) => {
+  if (name === 'CTRL_C') { process.exit(); }
+});
 
 const logger = winston.createLogger({
   level: 'debug',
@@ -59,7 +63,7 @@ program.on('--help', () => {
 program.parse(process.argv);
 
 let globalMode = 'local';
-const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
+const inputSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
 if (program.loglevel) {
   DEBUG_MODE = true;
@@ -72,7 +76,7 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages } = require('coinstac-manager'); // eslint-disable-line import/order
+const { pullImages, getStats } = require('coinstac-container-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
@@ -90,7 +94,168 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
   });
   try {
     const simRun = await started;
+
+    const rowKeys = [
+      'pipeline\nName',
+      'current\nIteration',
+      'controllerState',
+      'pipeline\nStep',
+      'mode',
+      'waitingOn',
+      'containerId',
+      'name',
+      'memUsageLimit',
+      'memPercent',
+      'cpuPercent',
+    ];
+    let textTable;
+    if (!DEBUG_MODE) {
+      const document = term.createDocument({
+        palette: new termkit.Palette(),
+      });
+      textTable = new termkit.TextTable({
+        parent: document,
+        cellContents: [
+          rowKeys,
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+          ['', '', '', '', '', '', '', '', '', '', ''],
+        ],
+        contentHasMarkup: true,
+        fit: true,
+        borderAttr: { color: 'blue' },
+        selectable: 'cell',
+        autoWidth: 1,
+        autoHeight: 1,
+      });
+    }
+    const writeValuesToRow = (rowNumber, valuesToWrite) => {
+      if (DEBUG_MODE) return;
+      Object.keys(valuesToWrite).forEach((rowKey) => {
+        textTable.setCellContent(rowKeys.indexOf(rowKey), rowNumber, valuesToWrite[rowKey]);
+      });
+    };
+
+    const localPipelines = simRun.pipelines.locals;
+    const remotePipeline = simRun.pipelines.remote;
+
+    const formatUpdateEvent = (data) => {
+      const {
+        currentIteration,
+        controllerState,
+        pipelineStep,
+        mode,
+        totalSteps,
+        waitingOn,
+      } = data;
+      return {
+        'current\nIteration': currentIteration,
+        controllerState,
+        'pipeline\nStep': `${pipelineStep}/${totalSteps}`,
+        mode,
+        waitingOn,
+      };
+    };
+    // hook into the pipeline events
+    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
+    remoteStateEmitter.on('update', (m) => {
+      writeValuesToRow(1, formatUpdateEvent(m));
+    });
+
+    localPipelines.forEach((pipeline, index) => {
+      const { stateEmitter } = pipeline.pipeline;
+      stateEmitter.on('update', (m) => {
+        writeValuesToRow(index + 2, formatUpdateEvent(m));
+      });
+    });
+
+    const containerStatsInterval = setInterval(async () => {
+      const formatContainerStats = (containerStatObject) => {
+        if (!containerStatObject) {
+          return {
+            containerId: null,
+            name: null,
+            memUsage: null,
+            memLimit: null,
+            memPercent: null,
+            cpuPercent: null,
+          };
+        }
+        const { name } = containerStatObject;
+        // truncate this to the last 12 characters of the id
+        const containerId = containerStatObject.id.substring(containerStatObject.id.length - 12);
+        const memUsageLimit = `${((containerStatObject.memory_stats.usage) / 1000000).toFixed(3)}MB/${(containerStatObject.memory_stats.limit / 1000000).toFixed(3)}MB`;
+        // truncate this to a few decimal places
+        const memPercent = (
+          containerStatObject.memory_stats.usage / containerStatObject.memory_stats.limit
+        ).toFixed(3);
+
+        function getCpuPercent(containerStatObject) {
+          const currentCpuUsage = containerStatObject.cpu_stats.cpu_usage.total_usage;
+          const preCpuUsage = containerStatObject.precpu_stats.cpu_usage.total_usage;
+          const cpuDelta = currentCpuUsage - preCpuUsage;
+          const systemUsage = containerStatObject.cpu_stats.system_cpu_usage;
+          const preSystemUsage = containerStatObject.precpu_stats.system_cpu_usage;
+          const systemDelta = systemUsage - preSystemUsage;
+
+          try {
+            const cpuPercent = (cpuDelta / systemDelta)
+              * (containerStatObject.cpu_stats.cpu_usage.percpu_usage
+                ? containerStatObject.cpu_stats.cpu_usage.percpu_usage.length
+                : containerStatObject.cpu_stats.online_cpus) * 100.0;
+            // truncate this to a few decmial places
+            return (cpuPercent).toFixed(3);
+          } catch (e) {
+            return null;
+          }
+        }
+
+        const cpuPercent = getCpuPercent(containerStatObject);
+
+        const formatted = {
+          containerId,
+          name,
+          memUsageLimit,
+          memPercent,
+          cpuPercent,
+        };
+
+        return formatted;
+      };
+
+      const remotePipelineStats = await getStats('simulatorRun', 'remote');
+      const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
+      writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
+
+      const localPipelineStatsPromises = [];
+
+      localPipelines.forEach((pipeline, index) => {
+        localPipelineStatsPromises.push(getStats('simulatorRun', `local${index}`));
+      });
+
+      const localPipelinesStats = await Promise.all(localPipelineStatsPromises);
+
+      const formattedLocalPipelinesStats = [];
+
+      localPipelinesStats.forEach((containerStatObject) => {
+        const formatted = formatContainerStats(containerStatObject);
+        formattedLocalPipelinesStats.push(formatted);
+      });
+
+      formattedLocalPipelinesStats.forEach((formattedContainerStat, index) => {
+        writeValuesToRow(index + 2, { 'pipeline\nName': `local${index}`, ...formattedContainerStat });
+      });
+    }, 1000);
+
     const results = await simRun.allResults;
+    clearInterval(containerStatsInterval);
 
     logger.info('Simulator run finished');
     if (globalMode === 'decentralized') {
@@ -141,7 +306,18 @@ const startPreprocessRun = async (pipelineSpec, baseDir) => {
   return run;
 };
 
-const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
+const upload = async () => {
+  if (!program.username && !program.password) {
+    logger.error('Username and password required for compspec upload');
+    process.exit(1);
+  }
+  logger.info('Uploading computation schema.');
+  return compUpload.compspecUpload(program.username, program.password, logger);
+};
+
+const promptGenerateAndPreprocess = async () => {
+  const pipelineSpecPath = './pipelineSpec.json';
+  const baseDir = path.join(program.directory || '', 'coinstac/');
   let rawSpec;
   let pipelineSpec;
   let specError;
@@ -161,96 +337,84 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
     }
     const computations = await fetchPreprocessComputations(program.username, program.password);
     // list options of computations
-    await inquirer.prompt([{
-      type: 'number',
-      name: 'select preprocess',
-      message: `Select a preprocessing computation:\n${computations.map((computation, index) => {
-        return `${index} ) ${computation.meta.name}`;
-      }).join('\n\n')}${pipelineSpec ? '\n\n*** Note: this will rename your current pipelineSpec and create a new one ***' : ''}`,
-    }]).then(async (answers) => {
-      const answer = answers['select preprocess'];
-      if (!Object.keys(computations).includes(answer)) {
-        logger.info('The answer provided is not a valid choice.');
-      } else {
-        // download the selected computation
-        const selectedComputation = computations[answer];
-        const pullStreams = await pullImages([{
-          img: selectedComputation.computation.dockerImage,
-          compId: selectedComputation.id,
-          compName: selectedComputation.meta.name,
-        }]);
+    if (computations.length < 1) {
+      logger.error('no computations returned from API');
+      process.exit(1);
+    }
 
-        logger.info('Downloading docker image...');
-        await Promise.all(
-          pullStreams.map((obj) => {
-            return new Promise((resolve, reject) => {
-              if (typeof obj.stream.pipe === 'function') {
-                obj.stream.pipe(process.stdout);
-                obj.stream
-                  .on('end', () => { resolve(); })
-                  .on('error', (error) => { reject(error); });
-              } else {
-                resolve();
-                process.stdout.write('.');
-              }
-            });
-          })
-        );
-        // find the .csv file
-        const files = await new Promise((resolve, reject) => {
-          fs.readdir('./', (err, data) => {
-            if (err) {
-              reject(err);
-            }
-            resolve(data);
-          });
-        });
-        const csvs = files.filter((file) => {
-          if (file.includes('.csv')) {
-            return file;
-          }
-          return false;
-        });
-        if (csvs.length < 1) {
-          logger.info('no .csv files found');
-          process.exit(0);
-        }
-        await inquirer.prompt([{
-          type: 'number',
-          name: 'select covariates file',
-          message: `Select Covariates File to use for pipeline:\n${csvs.map((csv, index) => {
-            return `${index} ) ${csv}`;
-          }).join('\n\n')}\n`,
-        }]).then(async (answers) => {
-          const answer = answers['select covariates file'];
+    term('Select a preprocessing computation: ');
+    if (pipelineSpec) term('\n\n*** Note: this will rename your current pipelineSpec and create a new one ***');
+    const selectComputationAnswer = await term.singleColumnMenu(
+      computations.map((computation, index) => { return `${index}) ${computation.meta.id}`; }), {}
+    ).promise;
 
-          if (!Object.keys(csvs).includes(answer)) {
-            logger.info('The answer provided is not a valid choice.');
-            process.exit();
+    // download the selected computation
+    const selectedComputation = computations[selectComputationAnswer.selectedIndex];
+    const pullStreams = await pullImages([{
+      img: selectedComputation.computation.dockerImage,
+      compId: selectedComputation.id,
+      compName: selectedComputation.meta.name,
+    }]);
+
+    logger.info('Downloading docker image...');
+    await Promise.all(
+      pullStreams.map((obj) => {
+        return new Promise((resolve, reject) => {
+          if (typeof obj.stream.pipe === 'function') {
+            obj.stream.pipe(process.stdout);
+            obj.stream
+              .on('end', () => { resolve(); })
+              .on('error', (error) => { reject(error); });
           } else {
-            //  create an inputspec from the csv and the api results
-            const baseInputSpec = JSON.parse(
-              JSON.stringify(selectedComputation.computation.input)
-            );
-            const fulfilledInputMap = createInputMap(baseInputSpec, csvs[answer]);
-            const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
-            if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
-            fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
-
-            return inquirer.prompt([{
-              type: 'confirm',
-              name: 'noexit',
-              message: 'pipelineSpec.json created\n\nIf you dont want to use default options\nPlease edit pipelineSpec.json manually\nProceed with pipeline?.',
-            }]).then((resp) => {
-              if (resp.noexit) {
-                return startPreprocessRun(generatedPipeSpec, baseDir);
-              }
-              process.exit();
-            });
+            resolve();
+            process.stdout.write('.');
           }
         });
-      }
+      })
+    );
+    // find the .csv file
+    const files = await new Promise((resolve, reject) => {
+      fs.readdir('./', (err, data) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(data);
+      });
     });
+    const csvs = files.filter((file) => {
+      if (file.includes('.csv')) {
+        return file;
+      }
+      return false;
+    });
+    if (csvs.length < 1) {
+      logger.info('no .csv files found');
+      process.exit(0);
+    }
+
+    term('Select Covariates File to use for pipeline:');
+    const covariatesFileAnswer = await term.singleColumnMenu(csvs.map((csv, index) => { return `${index}) ${csv}`; })).promise;
+
+    //  create an inputspec from the csv and the api results
+    const baseInputSpec = JSON.parse(
+      JSON.stringify(selectedComputation.computation.input)
+    );
+    const fulfilledInputMap = createInputMap(
+      baseInputSpec, csvs[covariatesFileAnswer.selectedIndex]
+    );
+    const generatedPipeSpec = pipelineSpecFactory(fulfilledInputMap, ['local'], selectedComputation);
+    if (pipelineSpec) fs.promises.rename('./pipelineSpec.json', `./pipelineSpec-${pipelineSpec.steps[0].computations[0].meta.id}-${new Date().toLocaleString('en-US').replace(/[ ,:/]/ig, '-')}.json`);
+    fs.writeFileSync('pipelineSpec.json', JSON.stringify(generatedPipeSpec, null, 2));
+
+    term('pipelineSpec.json created \n');
+    term('If you do not want to use default options -\nPlease edit pipelineSpec.json manually. \n');
+    term('Proceed with pipeline? y,n \n');
+    const proceed = await term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
+
+    if (proceed) {
+      return startPreprocessRun(generatedPipeSpec, baseDir);
+    }
+    process.exit();
   };
 
   if (rawSpec) {
@@ -267,46 +431,111 @@ const promptGenerateAndPreprocess = async (pipelineSpecPath, baseDir) => {
   if (!pipelineSpec && !specError) {
     await genSpecAndProcess(pipelineSpec, baseDir);
   } else if (specError) {
-    await inquirer.prompt([{
-      type: 'confirm',
-      name: 'newSpec',
-      message: specError,
-    }]).then(async (resp) => {
-      if (resp.newSpec) {
-        await genSpecAndProcess(pipelineSpec, baseDir);
-      }
-    });
-  } else {
-    await inquirer.prompt([{
-      type: 'confirm',
-      name: 'run',
-      message: `Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}?`,
-    }]).then(async (resp) => {
-      if (resp.run) {
-        return startPreprocessRun(pipelineSpec, baseDir);
-      }
+    term(specError);
+    const newSpec = await term.yesOrNo({ yes: ['ENTER', 'y'], no: ['n'] }).promise;
+    if (newSpec) {
       await genSpecAndProcess(pipelineSpec, baseDir);
-    });
+    }
+  } else {
+    term(`Preprocess using existing pipeline for ${pipelineSpec.steps[0].computations[0].meta.name}? y,n \n`);
+    const useExistingPipeline = await term.yesOrNo({ yes: ['y'], no: ['n'] }).promise;
+    if (useExistingPipeline) {
+      await startPreprocessRun(pipelineSpec, baseDir);
+    } else {
+      await genSpecAndProcess(pipelineSpec, baseDir);
+    }
   }
 };
 
+const pipelineSpecFulfill = async () => {
+  const compspec = JSON.parse(await readFile(program.compspec ? program.compspec : 'compspec.json'));
+  const inputSpec = JSON.parse(
+    await readFile(program.inputspec ? program.inputspec : inputSpecPath)
+  );
+  globalMode = compspec.computation.remote ? 'decentralized' : 'local';
+  const mode = new Array(2).fill(globalMode);
+
+  // TODO: create an inputSpec if one doesn't exist
+
+  let generatedPipeSpec;
+  if (Array.isArray(inputSpec)) {
+    generatedPipeSpec = inputSpec.map(spec => pipelineSpecFactory(spec, mode, compspec));
+  } else {
+    generatedPipeSpec = pipelineSpecFactory(inputSpec, mode, compspec);
+  }
+  return generatedPipeSpec;
+};
+
+const pipelineSpecFulfillPipelineOption = async () => {
+  const pipeSpec = await readFile(program.pipeline);
+
+  const compSpecs = JSON.parse(pipeSpec);
+  const fileProm = compSpecs.reduce((memo, spec, index) => {
+    const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
+    memo.push(Promise.all([
+      readFile(path.resolve(baseDir, spec))
+        .then(file => JSON.parse(file)).catch(() => {
+          throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
+        }),
+      readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
+        .then(file => JSON.parse(file)).catch(() => {
+          throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
+        }),
+    ]));
+    return memo;
+  }, []);
+
+  const fileGroups = await fileProm;
+  // each group element is [0] compspec, [1] inputSpec
+  // group compspecs and inputspecs into an object we can create pipepecs from
+  const mode = fileGroups.reduce((memo, fileGroup) => {
+    if (fileGroup[0].computation.remote) {
+      memo.push('decentralized');
+      globalMode = 'decentralized';
+    } else {
+      memo.push('local');
+    }
+    return memo;
+  }, []);
+
+  let clientCount;
+  const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
+    memo.compSpecs.push(fileGroup[0]);
+    const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
+
+    clientCount = clientCount || inputSpec.length;
+    if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
+
+    inputSpec.forEach((spec, idx) => {
+      if (memo.inputSpecs[idx]) {
+        memo.inputSpecs[idx][index] = spec;
+      } else {
+        memo.inputSpecs[idx] = [spec];
+      }
+    });
+
+    return memo;
+  }, { compSpecs: [], inputSpecs: [] });
+
+  const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
+    return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
+  });
+
+  return pipelineSpecs;
+};
 
 if (program.preprocess) {
-  return promptGenerateAndPreprocess(
-    './pipelineSpec.json',
-    path.join(program.directory || '', 'coinstac/')
-  )
-    .then(() => process.exit(0));
-}
-
-if (program.upload) {
-  if (!program.username && !program.password) {
-    logger.error('Username and password required for compspec upload');
-    process.exit(1);
-  }
-  logger.info('Uploading computation schema.');
-
-  compUpload.compspecUpload(program.username, program.password, logger)
+  (async () => {
+    try {
+      await promptGenerateAndPreprocess();
+      process.exit();
+    } catch (error) {
+      logger.error(error.message);
+      process.exit(1);
+    }
+  })();
+} else if (program.upload) {
+  upload()
     .then(() => {
       process.exit();
     })
@@ -318,137 +547,9 @@ if (program.upload) {
   let fulfilledPipelineSpec;
 
   if (program.pipeline) {
-    fulfilledPipelineSpec = readFile(program.pipeline)
-      .then((pipeSpec) => {
-        const compSpecs = JSON.parse(pipeSpec);
-        const fileProm = compSpecs.reduce((memo, spec, index) => {
-          const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
-          memo.push(Promise.all([
-            readFile(path.resolve(baseDir, spec))
-              .then(file => JSON.parse(file)).catch(() => {
-                throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
-              }),
-            readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
-              .then(file => JSON.parse(file)).catch(() => {
-                throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
-              }),
-          ]));
-          return memo;
-        }, []);
-        return Promise.all(fileProm)
-          .then((fileGroups) => {
-            // each group element is [0] compspec, [1] inputSpec
-            // group compspecs and inputspecs into an object we can create pipepecs from
-            const mode = fileGroups.reduce((memo, fileGroup) => {
-              if (fileGroup[0].computation.remote) {
-                memo.push('decentralized');
-                globalMode = 'decentralized';
-              } else {
-                memo.push('local');
-              }
-              return memo;
-            }, []);
-
-            let clientCount;
-            const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
-              memo.compSpecs.push(fileGroup[0]);
-              const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
-
-              clientCount = clientCount || inputSpec.length;
-              if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
-
-              inputSpec.forEach((spec, idx) => {
-                if (memo.inputSpecs[idx]) {
-                  memo.inputSpecs[idx][index] = spec;
-                } else {
-                  memo.inputSpecs[idx] = [spec];
-                }
-              });
-
-              return memo;
-            }, { compSpecs: [], inputSpecs: [] });
-
-            const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
-              return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
-            });
-
-            return pipelineSpecs;
-          });
-      });
+    fulfilledPipelineSpec = pipelineSpecFulfillPipelineOption();
   } else {
-    fulfilledPipelineSpec = Promise.all([
-      readFile(program.compspec ? program.compspec : 'compspec.json'),
-      readFile(program.inputspec ? program.inputspec : inSpecPath),
-    ].map(p => p.catch(error => error)))
-      .then((specs) => {
-        const comp = JSON.parse(specs[0]);
-        globalMode = comp.computation.remote ? 'decentralized' : 'local';
-        const mode = new Array(specs.length).fill(globalMode);
-        /**
-         * Create a spec via cmdline if none is given
-         * @param  {Object} variable [description]
-         * @param  {[type]} key      [description]
-         * @return {[type]}          [description]
-         */
-        // const createInputSpec = (variable, key) => {
-        //   return inquirer.prompt({
-        //     type: 'input',
-        //     name: `${key}`,
-        //     message: `Please give a ${variable.type} input for variable: ${key}
-        //   Files can use glob paterns to resolve to multiple file paths from the input dir
-        //   ie: **/*.txt`,
-        //   }).then((value) => {
-        //     return Promise.all([
-        //       variable.type === 'files' ? glob(value[key]) : value[key],
-        //     ]).then((resolvedVal) => {
-        //       const coerce = variable.type === 'number'
-        //         ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-        //       return {
-        //         [key]: { value: coerce },
-        //       };
-        //     });
-        //   });
-        // };
-
-        let specProm;
-        if (specs[1].code === 'ENOENT') {
-          const memo = {};
-          specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
-            return prom.then(() => {
-              return createInputMap(comp.computation.input[variable], variable);
-            }).then(res => Object.assign(memo, res));
-          }, Promise.resolve())
-            .then((res) => {
-              return inquirer.prompt({
-                type: 'confirm',
-                name: 'write',
-                message: `Write out the input spec just entered? This WILL overwrite any spec in
-            ${inSpecPath}`,
-              }).then((response) => {
-                const prom = Promise.resolve(res);
-                if (response.write) {
-                  prom.then(res => writeFile(inSpecPath, JSON.stringify(res))
-                    .then(res => res));
-                }
-                return prom;
-              });
-            });
-        } else {
-          specProm = JSON.parse(specs[1]);
-        }
-
-        return Promise.all([specProm])
-          .then((inputSpec) => {
-            let generatedPipeSpec;
-            if (Array.isArray(inputSpec[0])) {
-              generatedPipeSpec = inputSpec[0].map(spec => pipelineSpecFactory(spec, mode, comp));
-            } else {
-              generatedPipeSpec = pipelineSpecFactory(inputSpec[0], mode, comp);
-            }
-
-            return generatedPipeSpec;
-          });
-      });
+    fulfilledPipelineSpec = pipelineSpecFulfill();
   }
 
   fulfilledPipelineSpec

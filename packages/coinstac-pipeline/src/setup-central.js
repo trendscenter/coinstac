@@ -84,7 +84,6 @@ async function setupCentral({
     const message = store.getAndRemove(pipeline.id, clientId);
     if (message instanceof Error) {
       const runError = Object.assign(
-        message,
         {
           error: `Pipeline error from central node\n Error details: ${message.error}`,
           message: `Pipeline error from central node\n Error details: ${message.message}`,
@@ -101,6 +100,22 @@ async function setupCentral({
       );
     } else {
       logger.silly('############ Sending out remote data');
+
+      activePipelines[pipeline.id].currentState.waitingOn = Object.keys(
+        activePipelines[pipeline.id].clients
+      ).reduce((reduction, clientId) => {
+        reduction.push(activePipelines[pipeline.id].clients[clientId]);
+        return reduction;
+      }, []);
+
+      const stateUpdate = Object.assign(
+        {},
+        activePipelines[pipeline.id].pipeline.currentState,
+        activePipelines[pipeline.id].currentState
+      );
+      activePipelines[pipeline.id].stateEmitter
+        .emit('update', stateUpdate);
+
       await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
         .then((data) => {
           return Promise.all([
@@ -187,10 +202,11 @@ async function setupCentral({
           );
         }).catch((e) => {
           logger.error(e);
+
           clientPublish('run', {
             id: clientId,
             runId: pipeline.id,
-            error: `Error from central node ${e}`,
+            error: { message: `Error from central node ${e}`, error: `Error from central node ${e}`, stack: e.stack },
             debug: { sent: Date.now() },
           });
         });
@@ -255,8 +271,12 @@ async function setupCentral({
                   remoteClients[id][runId].files.expected.push(...files);
                 }
                 if (activePipelines[runId].state !== 'pre-pipeline') {
-                  const waitingOn = waitingOnForRun(runId);
-                  activePipelines[runId].currentState.waitingOn = waitingOn;
+                  activePipelines[runId].currentState.waitingOn = waitingOnForRun(runId).map(
+                    (id) => {
+                      return activePipelines[runId].clients[id];
+                    }
+                  );
+
                   const stateUpdate = Object.assign(
                     {},
                     activePipelines[runId].pipeline.currentState,
@@ -265,11 +285,20 @@ async function setupCentral({
                   activePipelines[runId].stateEmitter
                     .emit('update', stateUpdate);
                   logger.silly(JSON.stringify(stateUpdate));
-                  if (waitingOn.length === 0) {
+                  if (activePipelines[runId].currentState.waitingOn.length === 0) {
                     activePipelines[runId].stateStatus = 'Received all node data';
                     logger.silly('Received all node data');
                     // clear transfer and start run
                     clearClientFileList(runId);
+
+                    const stateUpdate = Object.assign(
+                      {},
+                      activePipelines[runId].pipeline.currentState,
+                      activePipelines[runId].currentState
+                    );
+                    activePipelines[runId].stateEmitter
+                      .emit('update', stateUpdate);
+
                     rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
                       .then(() => {
                         printClientTimeProfiling(runId, 'Transmission');
@@ -320,8 +349,12 @@ async function setupCentral({
               remoteClients[id]
             );
           } else {
-            mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ runId }));
+            if (!remoteClients[id]) {
+              logger.silly(`Supposed clientID: ${id} for client list: ${JSON.stringify(remoteClients, null, 2)}`);
+              return mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ error: { message: 'no such run' } }));
+            }
             remoteClients[id].state = 'registered';
+            mqttServer.publish(`${mqttSubChannel}${id}-register`, JSON.stringify({ runId }));
             logger.silly(`MQTT registered: ${id}`);
           }
           break;

@@ -2,6 +2,7 @@
 
 import asyncio as _asyncio
 import json as _json
+import os
 import traceback as _tb
 from datetime import datetime as _dt
 import websockets as _websockets
@@ -18,6 +19,7 @@ def _run(local, remote):
 
         if msg['mode'] == 'remote':
             try:
+                print('### remote data: ', msg['data'])
                 start = _dt.now()
                 output = await _asyncio.get_event_loop().run_in_executor(None, remote, msg['data'])
                 print('Remote exec time:', (_dt.now() - start).total_seconds())
@@ -30,6 +32,7 @@ def _run(local, remote):
 
         elif msg['mode'] == 'local':
             try:
+                print('### Local data: ', msg['data'])
                 start = _dt.now()
                 output = await _asyncio.get_event_loop().run_in_executor(None, local, msg['data'])
                 print('Local exec time:', (_dt.now() - start).total_seconds())
@@ -47,7 +50,7 @@ def _run(local, remote):
 
 
 def start(localFunction, remoteFunction):
-    start_server = _websockets.serve(_run(localFunction, remoteFunction), '0.0.0.0', 8881)
-    print("Python microservice started on 8881")
+    start_server = _websockets.serve(_run(localFunction, remoteFunction), '0.0.0.0', os.environ.get('COINSTAC_PORT', 8881),  max_size=1048576000)
+    print("Python microservice started on", os.environ.get('COINSTAC_PORT', 8881))
     _asyncio.get_event_loop().run_until_complete(start_server)
     _asyncio.get_event_loop().run_forever()

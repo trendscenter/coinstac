@@ -11,7 +11,6 @@ const { extractTar } = require('./pipeline-manager-helpers');
 const {
   unlink,
 } = fs.promises;
-
 async function expressFileServerSetup({
   activePipelines,
   remoteClients,
@@ -24,17 +23,25 @@ async function expressFileServerSetup({
 }) {
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-      const fp = path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId);
-      mkdirp(fp)
-        .then(() => {
-          cb(
-            null,
-            fp
-          );
-        });
+      try {
+        const fp = path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId);
+        mkdirp(fp)
+          .then(() => {
+            cb(
+              null,
+              fp
+            );
+          });
+      } catch (e) {
+        cb(e);
+      }
     },
     filename: (req, file, cb) => {
-      cb(null, req.body.filename);
+      try {
+        cb(null, req.body.filename);
+      } catch (e) {
+        cb(e);
+      }
     },
   });
 
@@ -48,7 +55,6 @@ async function expressFileServerSetup({
     res.end();
     const { clientId, runId } = req.body;
     const client = remoteClients[clientId][runId];
-
 
     Promise.resolve().then(() => {
       // is this file the last?
@@ -94,6 +100,7 @@ async function expressFileServerSetup({
           });
       }
     }).catch((error) => {
+      if (!activePipelines[runId]) return logger.error(`File Transmission attempt on invalid runId ${runId} error: ${error} `);
       const runError = Object.assign(
         error,
         {
