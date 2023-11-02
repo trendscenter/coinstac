@@ -9,6 +9,8 @@ const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const passwordLifeTime = 180;
+
 const audience = 'coinstac';
 const issuer = 'coinstac';
 const subject = 'coinstac';
@@ -84,6 +86,7 @@ const helperFunctions = {
         pipelines: {},
       },
       consortiaStatuses: user.consortiaStatuses || {},
+      passwordChangedAt: new Date(),
     };
 
     const db = database.getDbInstance();
@@ -341,11 +344,21 @@ const helperFunctions = {
       req.payload.password, user.passwordHash
     );
 
-    if (passwordMatch) {
-      return h.response(transformToClient(user));
+    if (!passwordMatch) {
+      return Boom.unauthorized('Incorrect username or password');
     }
 
-    return Boom.unauthorized('Incorrect username or password');
+    const { passwordChangedAt } = user;
+    const currentDate = new Date();
+    const difference = Math.ceil(
+      (currentDate.getTime() - passwordChangedAt.getTime()) / (1000 * 3600 * 24)
+    );
+
+    if (difference >= passwordLifeTime) {
+      return Boom.unauthorized('Password is expired');
+    }
+
+    return h.response(transformToClient(user));
   },
   /**
    * Validate api key used by headless client
@@ -407,12 +420,42 @@ const helperFunctions = {
     }
   },
   /**
-   * Reset password
-   * @param {object} password token for resetting password
+   * Confirms that submitted token is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  async validateResetPassword(req, h) {
+    const db = database.getDbInstance();
+    const user = await db.collection('users').findOne({ username: req.payload.username });
+
+    if (!user) {
+      return Boom.badRequest('Invalid user');
+    }
+
+    const passwordMatch = await helperFunctions.verifyPassword(
+      req.payload.currentPassword, user.passwordHash
+    );
+
+    if (!passwordMatch) {
+      return Boom.badRequest('Current Password is not correct');
+    }
+
+    const isPasswordValid = helperFunctions.validatePasswordWithRegEx(req.payload.newPassword);
+
+    if (!isPasswordValid) {
+      return Boom.badRequest('New Password is not valid');
+    }
+
+    return h.response();
+  },
+  /**
+   * Reset forgot password
+   * @param {object} token token for resetting password
    * @param {object} password new password
    * @return {object}
    */
-  async resetPassword(token, password) {
+  async resetForgotPassword(token, password) {
     const db = database.getDbInstance();
 
     const newPassword = await helperFunctions.hashPassword(password);
@@ -423,6 +466,29 @@ const helperFunctions = {
       $set: {
         passwordHash: newPassword,
         passwordResetToken: '',
+        passwordChangedAt: new Date(),
+      },
+    }, {
+      returnOriginal: false,
+    });
+  },
+  /**
+   * Reset password
+   * @param {object} username username
+   * @param {object} password new password
+   * @return {object}
+   */
+  async resetPassword(username, password) {
+    const db = database.getDbInstance();
+
+    const newPassword = await helperFunctions.hashPassword(password);
+
+    return db.collection('users').updateOne({
+      username,
+    }, {
+      $set: {
+        passwordHash: newPassword,
+        passwordChangedAt: new Date(),
       },
     }, {
       returnOriginal: false,
@@ -498,6 +564,10 @@ const helperFunctions = {
     } catch (e) {
       return Boom.badRequest('invalid user/run combination');
     }
+  },
+  validatePasswordWithRegEx(password) {
+    const PASSWORD_PATTERN = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[#?!@$%^&*-]).{8,}$/g;
+    return PASSWORD_PATTERN.test(password);
   },
   audience,
   issuer,
