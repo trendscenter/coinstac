@@ -21,7 +21,7 @@ import { omit } from 'lodash';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const styles = theme => ({
   textField: {
@@ -136,10 +136,12 @@ class ConsortiumAbout extends Component {
       users,
       classes,
       savingStatus,
-      isTutorialHidden,
+      showPipelineTutorial,
+      showVaultTutorial,
       saveConsortium,
       consortiumUsers,
-      tutorialChange,
+      pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
 
     const { newMember, isAddingMember } = this.state;
@@ -284,12 +286,20 @@ class ConsortiumAbout extends Component {
             </Box>
           )
         }
-        {!isTutorialHidden && (
+        {showPipelineTutorial && (
           <Joyride
-            steps={STEPS.consortiumAbout}
+            steps={PIPELINE_TUTORIAL_STEPS.consortiumAbout}
             continuous
             disableScrollParentFix
-            callback={tutorialChange}
+            callback={pipelineTutorialChange}
+          />
+        )}
+        {showVaultTutorial && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.consortiumAbout}
+            continuous
+            disableScrollParentFix
+            callback={vaultTutorialChange}
           />
         )}
       </ValidatorForm>
@@ -305,12 +315,14 @@ ConsortiumAbout.propTypes = {
   user: PropTypes.object.isRequired,
   users: PropTypes.array,
   consortiumUsers: PropTypes.array,
-  isTutorialHidden: PropTypes.bool.isRequired,
+  showPipelineTutorial: PropTypes.bool.isRequired,
+  showVaultTutorial: PropTypes.bool.isRequired,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 ConsortiumAbout.defaultProps = {

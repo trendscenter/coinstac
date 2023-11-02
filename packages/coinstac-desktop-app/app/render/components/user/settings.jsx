@@ -1,8 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
+import Select from '@material-ui/core/Select';
 import Switch from '@material-ui/core/Switch';
 import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
@@ -14,11 +18,16 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerService } from '../../state/ducks/auth';
+import {
+  setClientCoreUrlAsync,
+  setContainerService,
+  setNetworkVolume,
+  togglePipelineTutorial,
+  toggleVaultTutorial,
+} from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
-import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
@@ -196,8 +205,10 @@ class Settings extends Component {
       classes,
       clientServerURL,
       networkVolume,
-      isTutorialHidden,
-      toggleTutorial,
+      showPipelineTutorial,
+      showVaultTutorial,
+      togglePipelineTutorial,
+      toggleVaultTutorial,
       containerService,
     } = this.props;
     const {
@@ -289,13 +300,24 @@ class Settings extends Component {
         </div>
 
         <Typography variant="h5" className={classes.topMargin}>
-          Hide tutorial for running pipeline
+          Show tutorial for running pipeline
         </Typography>
         <div className={classes.directory}>
           <Switch
-            checked={isTutorialHidden}
-            value={isTutorialHidden}
-            onChange={toggleTutorial}
+            checked={showPipelineTutorial}
+            value={showPipelineTutorial}
+            onChange={togglePipelineTutorial}
+          />
+        </div>
+
+        <Typography variant="h5" className={classes.topMargin}>
+          Show tutorial for interactive vault
+        </Typography>
+        <div className={classes.directory}>
+          <Switch
+            checked={showVaultTutorial}
+            value={showVaultTutorial}
+            onChange={toggleVaultTutorial}
           />
         </div>
 
@@ -384,7 +406,8 @@ class Settings extends Component {
 Settings.propTypes = {
   clientServerURL: PropTypes.string.isRequired,
   networkVolume: PropTypes.bool.isRequired,
-  isTutorialHidden: PropTypes.bool.isRequired,
+  showPipelineTutorial: PropTypes.bool.isRequired,
+  showVaultTutorial: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
@@ -393,7 +416,8 @@ Settings.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   updatePassword: PropTypes.func.isRequired,
   setNetworkVolume: PropTypes.func.isRequired,
-  toggleTutorial: PropTypes.func.isRequired,
+  togglePipelineTutorial: PropTypes.func.isRequired,
+  toggleVaultTutorial: PropTypes.func.isRequired,
   containerService: PropTypes.string.isRequired,
   setContainerService: PropTypes.func.isRequired,
 };
@@ -413,7 +437,8 @@ const ComponentWithData = compose(
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
   networkVolume: auth.networkVolume,
-  isTutorialHidden: auth.isTutorialHidden,
+  showPipelineTutorial: auth.showPipelineTutorial,
+  showVaultTutorial: auth.showVaultTutorial,
   containerService: auth.containerService,
 });
 
@@ -421,7 +446,8 @@ const connectedComponent = connect(mapStateToProps, {
   setContainerService,
   setClientCoreUrlAsync,
   setNetworkVolume,
-  toggleTutorial,
+  togglePipelineTutorial,
+  toggleVaultTutorial,
   clearRuns,
   notifySuccess,
   notifyInfo,

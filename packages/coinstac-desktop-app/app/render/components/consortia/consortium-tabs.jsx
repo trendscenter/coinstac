@@ -13,7 +13,11 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumMembers from './consortium-members';
 import ConsortiumRuns from './consortium-runs';
-import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
+import {
+  updateUserPerms,
+  pipelineTutorialChange,
+  vaultTutorialChange,
+} from '../../state/ducks/auth';
 import {
   getAllAndSubProp,
   saveDocumentProp,
@@ -30,7 +34,7 @@ import {
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const styles = theme => ({
   title: {
@@ -253,10 +257,11 @@ class ConsortiumTabs extends Component {
       removeUserRole,
       pipelines,
       classes,
-      tutorialChange,
+      pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
 
-    const { user, isTutorialHidden } = auth;
+    const { user, showPipelineTutorial, showVaultTutorial } = auth;
     const {
       selectedTabIndex,
       consortium,
@@ -279,8 +284,19 @@ class ConsortiumTabs extends Component {
             {title}
           </Typography>
         </div>
-        {!isTutorialHidden && isEditingConsortium && (
-          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
+        {showPipelineTutorial && isEditingConsortium && (
+          <Joyride
+            steps={PIPELINE_TUTORIAL_STEPS.consortiumTabs}
+            disableScrollParentFix
+            callback={pipelineTutorialChange}
+          />
+        )}
+        {showVaultTutorial && isEditingConsortium && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.consortiumTabs}
+            disableScrollParentFix
+            callback={vaultTutorialChange}
+          />
         )}
         <Tabs
           value={this.getTabIndex()}
@@ -304,8 +320,10 @@ class ConsortiumTabs extends Component {
             user={user}
             users={users}
             savingStatus={savingStatus}
-            isTutorialHidden={isTutorialHidden || isEditingConsortium}
-            tutorialChange={tutorialChange}
+            showPipelineTutorial={showPipelineTutorial}
+            showVaultTutorial={showVaultTutorial}
+            pipelineTutorialChange={pipelineTutorialChange}
+            vaultTutorialChange={vaultTutorialChange}
           />
         )}
         {selectedTabIndex === 1 && (
@@ -313,8 +331,10 @@ class ConsortiumTabs extends Component {
             consortium={consortium}
             owner={isOwner}
             pipelines={pipelines}
-            isTutorialHidden={isTutorialHidden}
-            tutorialChange={tutorialChange}
+            showPipelineTutorial={showPipelineTutorial}
+            showVaultTutorial={showVaultTutorial}
+            pipelineTutorialChange={pipelineTutorialChange}
+            vaultTutorialChange={vaultTutorialChange}
             saveActivePipeline={this.saveActivePipeline}
           />
         )}
@@ -360,7 +380,8 @@ ConsortiumTabs.propTypes = {
   saveConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -387,7 +408,8 @@ const connectedComponent = connect(
     notifySuccess,
     notifyError,
     updateUserPerms,
-    tutorialChange,
+    pipelineTutorialChange,
+    vaultTutorialChange,
   }
 )(ConsortiumTabsWithData);
 

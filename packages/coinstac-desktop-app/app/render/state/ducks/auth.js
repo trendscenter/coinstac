@@ -30,8 +30,10 @@ const INITIAL_STATE = {
   appDirectory: localStorage.getItem('appDirectory') || window.config.coinstacHome,
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
-  isTutorialHidden: localStorage.getItem('isTutorialHidden') === 'true',
-  tutorialSteps: [],
+  showPipelineTutorial: localStorage.getItem('showPipelineTutorial') === 'true',
+  pipelineTutorialSteps: [],
+  showVaultTutorial: localStorage.getItem('showVaultTutorial') === 'true',
+  vaultTutorialSteps: [],
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -50,8 +52,10 @@ const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
 const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
-const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
-const TUTORIAL_CHANGE = 'TUTORIAL_CHANGE';
+const TOGGLE_PIPELINE_TUTORIAL = 'TOGGLE_PIPELINE_TUTORIAL';
+const PIPELINE_TUTORIAL_CHANGE = 'PIPELINE_TUTORIAL_CHANGE';
+const TOGGLE_VAULT_TUTORIAL = 'TOGGLE_VAULT_TUTORIAL';
+const VAULT_TUTORIAL_CHANGE = 'VAULT_TUTORIAL_CHANGE';
 const SET_CONTAINER_SERVICE = 'SET_CONTAINER_SERVICE';
 
 // Action Creators
@@ -73,11 +77,17 @@ export const setNetworkVolume = networkVolume => ({
   type: SET_NETWORK_VOLUME,
   payload: networkVolume,
 });
-export const toggleTutorial = () => ({
-  type: TOGGLE_TUTORIAL,
+export const togglePipelineTutorial = () => ({
+  type: TOGGLE_PIPELINE_TUTORIAL,
 });
-export const tutorialChange = payload => ({
-  type: TUTORIAL_CHANGE, payload,
+export const pipelineTutorialChange = payload => ({
+  type: PIPELINE_TUTORIAL_CHANGE, payload,
+});
+export const toggleVaultTutorial = () => ({
+  type: TOGGLE_VAULT_TUTORIAL,
+});
+export const vaultTutorialChange = payload => ({
+  type: VAULT_TUTORIAL_CHANGE, payload,
 });
 
 // Helpers
@@ -317,7 +327,13 @@ export const setContainerService = applyAsyncLoading(containerService => (dispat
 });
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
-  const { locationStacks, isTutorialHidden, tutorialSteps } = state;
+  const {
+    locationStacks,
+    showPipelineTutorial,
+    pipelineTutorialSteps,
+    showVaultTutorial,
+    vaultTutorialSteps,
+  } = state;
   const { pathname } = payload || {};
 
   switch (type) {
@@ -340,9 +356,28 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_NETWORK_VOLUME:
       localStorage.setItem('networkVolume', payload);
       return { ...state, networkVolume: payload };
-    case TOGGLE_TUTORIAL:
-      localStorage.setItem('isTutorialHidden', !isTutorialHidden);
-      return { ...state, isTutorialHidden: !isTutorialHidden };
+    case TOGGLE_PIPELINE_TUTORIAL: {
+      const newShowPipelineTutorial = !showPipelineTutorial;
+      const newState = { ...state, showPipelineTutorial: newShowPipelineTutorial };
+      localStorage.setItem('showPipelineTutorial', newShowPipelineTutorial);
+
+      if (newShowPipelineTutorial) {
+        localStorage.setItem('showVaultTutorial', false);
+        newState.showVaultTutorial = false;
+      }
+      return newState;
+    }
+    case TOGGLE_VAULT_TUTORIAL: {
+      const newShowVaultTutorial = !showVaultTutorial;
+      const newState = { ...state, showVaultTutorial: newShowVaultTutorial };
+      localStorage.setItem('showVaultTutorial', newShowVaultTutorial);
+
+      if (newShowVaultTutorial) {
+        localStorage.setItem('showPipelineTutorial', false);
+        newState.showPipelineTutorial = false;
+      }
+      return newState;
+    }
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
@@ -368,24 +403,47 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         ...state,
         locationStacks: [...locationStacks, pathname],
       };
-    case TUTORIAL_CHANGE: {
+    case PIPELINE_TUTORIAL_CHANGE: {
       if ((payload.action !== 'close' && payload.action !== 'next')
         || payload.lifecycle !== 'complete') {
         return state;
       }
 
-      const newTutorialSteps = tutorialSteps.includes(payload.step.id)
-        ? tutorialSteps : [...tutorialSteps, payload.step.id];
+      const newPipelineTutorialSteps = pipelineTutorialSteps.includes(payload.step.id)
+        ? pipelineTutorialSteps : [...pipelineTutorialSteps, payload.step.id];
 
-      if (newTutorialSteps.length >= 15) {
-        localStorage.setItem('isTutorialHidden', true);
+      const newState = {
+        ...state,
+        pipelineTutorialSteps: newPipelineTutorialSteps,
+      };
+
+      if (newPipelineTutorialSteps.length >= 15) {
+        localStorage.setItem('showPipelineTutorial', false);
+        newState.showPipelineTutorial = false;
       }
 
-      return {
+      return newState;
+    }
+    case VAULT_TUTORIAL_CHANGE: {
+      if ((payload.action !== 'close' && payload.action !== 'next')
+        || payload.lifecycle !== 'complete') {
+        return state;
+      }
+
+      const newVaultTutorialSteps = vaultTutorialSteps.includes(payload.step.id)
+        ? vaultTutorialSteps : [...vaultTutorialSteps, payload.step.id];
+
+      const newState = {
         ...state,
-        tutorialSteps: newTutorialSteps,
-        isTutorialHidden: newTutorialSteps.length > 15,
+        vaultTutorialSteps: newVaultTutorialSteps,
       };
+
+      if (newVaultTutorialSteps.length >= 14) {
+        localStorage.setItem('showVaultTutorial', false);
+        newState.showVaultTutorial = false;
+      }
+
+      return newState;
     }
     case SET_CONTAINER_SERVICE: {
       localStorage.setItem('containerService', payload);

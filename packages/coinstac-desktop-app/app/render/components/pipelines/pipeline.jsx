@@ -61,7 +61,7 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
-import { tutorialChange } from '../../state/ducks/auth';
+import { pipelineTutorialChange, vaultTutorialChange } from '../../state/ducks/auth';
 import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import {
@@ -69,7 +69,7 @@ import {
   getGraphQLErrorMessage,
   isUserInGroup,
 } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 import vaultDescriptions from './vault-descriptions.json';
 
 const VAULT_USERS_TOOLTIP = `Vault users are persistent nodes that can run some pipelines. If you add one or more vault users,
@@ -726,7 +726,8 @@ class Pipeline extends Component {
       classes,
       auth,
       availableHeadlessClients,
-      tutorialChange,
+      pipelineTutorialChange,
+      vaultTutorialChange,
     } = this.props;
     const {
       consortium,
@@ -931,6 +932,7 @@ class Pipeline extends Component {
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center" gridColumnGap={8}>
                   <Select
+                    id="select-vault-user"
                     value={selectedHeadlessMember}
                     placeholder="Select an user"
                     options={headlessClientsOptions}
@@ -944,6 +946,7 @@ class Pipeline extends Component {
                     </IconButton>
                   )}
                   <Button
+                    id="add-vault-user"
                     className={classes.addMemberButton}
                     variant="contained"
                     color="secondary"
@@ -1045,12 +1048,20 @@ class Pipeline extends Component {
             </Typography>
           )}
         </ValidatorForm>
-        {!auth.isTutorialHidden && (
+        {auth.showPipelineTutorial && (
           <Joyride
-            steps={STEPS.pipeline}
+            steps={PIPELINE_TUTORIAL_STEPS.pipeline}
             continuous
             disableScrollParentFix
-            callback={tutorialChange}
+            callback={pipelineTutorialChange}
+          />
+        )}
+        {auth.showVaultTutorial && (
+          <Joyride
+            steps={VAULT_TUTORIAL_STEPS.pipeline}
+            continuous
+            disableScrollParentFix
+            callback={vaultTutorialChange}
           />
         )}
         <Dialog
@@ -1099,7 +1110,8 @@ Pipeline.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -1139,7 +1151,8 @@ const connectedComponent = connect(mapStateToProps, {
   notifySuccess,
   notifyError,
   updateMapStatus,
-  tutorialChange,
+  pipelineTutorialChange,
+  vaultTutorialChange,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

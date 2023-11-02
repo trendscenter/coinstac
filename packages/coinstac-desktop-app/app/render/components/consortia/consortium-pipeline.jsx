@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
-import STEPS from '../../constants/tutorial';
+import { PIPELINE_TUTORIAL_STEPS, VAULT_TUTORIAL_STEPS } from '../../constants/tutorial';
 
 const styles = theme => ({
   tabTitle: {
@@ -47,8 +47,10 @@ function ConsortiumPipeline({
   owner,
   classes,
   pipelines,
-  isTutorialHidden,
-  tutorialChange,
+  showPipelineTutorial,
+  showVaultTutorial,
+  pipelineTutorialChange,
+  vaultTutorialChange,
   saveActivePipeline,
 }) {
   const activePipeline = useMemo(() => {
@@ -195,11 +197,18 @@ function ConsortiumPipeline({
           </div>
         </div>
       )}
-      {!isTutorialHidden && (
+      {showPipelineTutorial && (
         <Joyride
-          steps={STEPS.consortiumPipeline}
+          steps={PIPELINE_TUTORIAL_STEPS.consortiumPipeline}
           disableScrollParentFix
-          callback={tutorialChange}
+          callback={pipelineTutorialChange}
+        />
+      )}
+      {showVaultTutorial && (
+        <Joyride
+          steps={VAULT_TUTORIAL_STEPS.consortiumPipeline}
+          disableScrollParentFix
+          callback={vaultTutorialChange}
         />
       )}
     </div>
@@ -211,9 +220,11 @@ ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
-  isTutorialHidden: PropTypes.bool.isRequired,
+  showPipelineTutorial: PropTypes.bool.isRequired,
+  showVaultTutorial: PropTypes.bool.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
-  tutorialChange: PropTypes.func.isRequired,
+  pipelineTutorialChange: PropTypes.func.isRequired,
+  vaultTutorialChange: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(ConsortiumPipeline);

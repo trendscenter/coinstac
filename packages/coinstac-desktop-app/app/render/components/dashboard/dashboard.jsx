@@ -14,7 +14,7 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import useApolloClient from '../../state/apollo-client';
-import { toggleTutorial, tutorialChange, refreshToken } from '../../state/ducks/auth';
+import { togglePipelineTutorial, pipelineTutorialChange, refreshToken } from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
@@ -57,7 +57,7 @@ function Dashboard({
 
   const dispatch = useDispatch();
 
-  const [showTutorialModal, setShowTutorialModal] = useState(!auth.isTutorialHidden);
+  const [showTutorialModal, setShowTutorialModal] = useState(auth.showPipelineTutorial);
 
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia, refetch: refetchConsortia,
@@ -140,7 +140,7 @@ function Dashboard({
     setShowTutorialModal(false);
 
     if (neverShow) {
-      dispatch(toggleTutorial());
+      dispatch(togglePipelineTutorial());
     }
   };
 
@@ -159,8 +159,8 @@ function Dashboard({
         <DashboardNav
           user={auth.user}
           hasRunOfInterestInProgress={Boolean(runsOfInterestInProgress.length)}
-          isTutorialHidden={auth.isTutorialHidden}
-          tutorialChange={data => dispatch(tutorialChange(data))}
+          showPipelineTutorial={auth.showPipelineTutorial}
+          pipelineTutorialChange={data => dispatch(pipelineTutorialChange(data))}
         />
         <List>
           <ListItem>
