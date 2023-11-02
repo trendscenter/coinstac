@@ -15,9 +15,8 @@ import AssignmentIcon from '@material-ui/icons/Assignment';
 import EqualizerIcon from '@material-ui/icons/Equalizer';
 import DescriptionIcon from '@material-ui/icons/Description';
 import CloudIcon from '@material-ui/icons/Cloud';
-import SecurityIcon from '@material-ui/icons/Security';
 import LanguageIcon from '@material-ui/icons/Language';
-
+import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 import { TUTORIAL_STEPS } from '../../constants';
 
@@ -66,15 +65,9 @@ const DashboardNav = ({
         </ListItem>
       )}
       {isAdmin(user) && (
-        <ListItem button component={Link} to="/dashboard/permissions">
-          <ListItemIcon><SecurityIcon /></ListItemIcon>
-          <ListItemText primary="Permissions" />
-        </ListItem>
-      )}
-      {(isAdmin(user)) && (
-        <ListItem button component={Link} to="/dashboard/pipeline-states">
-          <ListItemIcon><AssignmentIcon /></ListItemIcon>
-          <ListItemText primary="Pipeline States" />
+        <ListItem button component={Link} to="/dashboard/admin">
+          <ListItemIcon><SupervisorAccountIcon /></ListItemIcon>
+          <ListItemText primary="Admin" />
         </ListItem>
       )}
     </List>

@@ -104,7 +104,6 @@ const getStats = async (runId, userId) => {
 const startService = ({
   serviceId,
   serviceUserId,
-  serviceType,
   opts,
 }) => {
   const createAndAssignService = () => {
@@ -113,9 +112,9 @@ const startService = ({
     const tryService = () => {
       return generateServicePort(serviceId, process.env.CI_PORT_START || 8101)
         .then((port) => {
-          return serviceProviders[serviceType].createService(serviceId, port, opts);
+          return serviceProviders[globalServiceProvider].createService(serviceId, port, opts);
         }).catch((e) => {
-          if (e.message.includes('port') && depth < 20) {
+          if (e.message.includes('Bind') && depth < 20) {
             depth += 1;
             return tryService();
           }
@@ -179,52 +178,22 @@ const startService = ({
 * Finds dangling coinstac images and deletes them
 * @return {Promise} list of deleted images and tags
 */
-const pruneImages = () => {
-  return new Promise((resolve, reject) => {
-    serviceProviders[globalServiceProvider]
-      .listImages({ filters: { dangling: { true: true } } }, (err, res) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(res.filter(((elem) => {
-          // TODO: find better way, make docker api 'reference' work?
-          if (elem.RepoTags) {
-            return elem.RepoTags[0].includes('coinstac');
-          } if (elem.RepoDigests) {
-            return elem.RepoDigests[0].includes('coinstac');
-          }
-          return false;
-        })));
-      });
-  }).then((images) => {
-    return Promise.all(images.map((image) => {
-      return new Promise((resolve) => {
-        serviceProviders[globalServiceProvider].getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
-          if (err) {
-            // remove can fail for serveral benign reasons, just resolve with the reason
-            resolve(err);
-          }
-          resolve(res);
-        });
-      });
-    }));
-  });
-};
 
 /**
  * Pull individual image from Docker hub
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
+ * TODO: define the api of the returned object itself
+ * Returns Promise<stream>
+ * Stream events from the docker api {
+ *   message: Error message for issues with the docker api
+ *   on('data': Docker image pull progress and status as an output stream
+ *   on('error': Error message for issues with the image pull
+ *   on('end': Emitted on pull completion
+ * }
  */
 const pullImage = (computation) => {
-  return new Promise((resolve, reject) => {
-    serviceProviders[globalServiceProvider].pull(computation, (err, stream) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(stream);
-    });
-  });
+  return serviceProviders[globalServiceProvider].pull(computation);
 };
 
 /**
@@ -232,7 +201,7 @@ const pullImage = (computation) => {
  * TODO: this function should be depricated for pullImagesFromList,
  *  as it couples too closely w/ the UI
  * @param {Object[]} comps array of computation objects to download
- * @param {String} comps.img Docker image name
+ * @param {String} comp.img Docker image name
  * @param {String} comp.compId Computation ID from app DB
  * @param {String} comp.compName Computation name from DB
  * @return {Object} Returns array of objects containing stream and computation parameters
@@ -259,8 +228,9 @@ const pullImages = (comps) => {
  * @param {Object[]} comps array of computation id's to download
  * @return {Object} Returns array of objects containing stream and computation parameters
  */
-const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${image}:latest`)))
-  .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
+const pullImagesFromList = (comps) => {
+  return serviceProviders[globalServiceProvider].pullImagesFromList(comps);
+};
 
 /**
  * Remove the Docker image associated with the image id
@@ -340,6 +310,20 @@ const setServiceProvider = (provider) => {
   globalServiceProvider = provider;
 };
 
+/**
+ * List all docker containers
+ */
+const listContainers = (options) => {
+  return serviceProviders[globalServiceProvider].listContainers(options);
+};
+
+/**
+ * Get docker container logs
+ */
+const getContainerLogs = (containerId) => {
+  return serviceProviders[globalServiceProvider].getContainerLogs(containerId);
+};
+
 
 module.exports = {
   getImages,
@@ -348,7 +332,6 @@ module.exports = {
   getServices,
   pullImages,
   pullImagesFromList,
-  pruneImages,
   removeImage,
   removeImagesFromList,
   services,
@@ -361,4 +344,6 @@ module.exports = {
   docker: dockerService.docker,
   getContainerStats: dockerService.getContainerStats,
   setImageDirectory,
+  listContainers,
+  getContainerLogs,
 };

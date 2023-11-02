@@ -4,21 +4,22 @@
     "id": "coinstac-file-transfer-test",
     "version": "v1.0.0",
     "repository": "github.com\/user\/computation.git",
-    "description": "sends a large file"
+    "description": "sends a large file",
+    "compspecVersion": 2
   },
   "computation": {
     "type": "docker",
     "dockerImage": "coinstacteam/coinstac-file-transfer-test",
     "command": [
       "python",
-      "\/computation\/local.py"
+      "\/computation\/entry.py"
     ],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/coinstac-file-transfer-test",
       "command": [
         "python",
-        "\/computation\/remote.py"
+        "\/computation\/entry.py"
       ]
     },
     "input": {

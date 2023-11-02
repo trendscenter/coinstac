@@ -13,6 +13,7 @@ const {
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
+  USER_CONNECTION_CHANGED,
   USER_SESSION_STARTED,
   USER_SESSION_FINISHED,
   HEADLESS_CLIENT_CHANGED,
@@ -200,6 +201,10 @@ function usersOnlineStatusChanged(usersOnlineStatus) {
   });
 }
 
+function userConnectionStatusChanged(payload) {
+  pubSub.publish('usersOnlineStatusChanged', payload);
+}
+
 function initSubscriptions(ps) {
   pubSub = ps;
 
@@ -225,6 +230,8 @@ function initSubscriptions(ps) {
   eventEmitter.on(THREAD_CHANGED, threadChanged);
 
   eventEmitter.on(USER_CHANGED, userChanged);
+
+  eventEmitter.on(USER_CONNECTION_CHANGED, userConnectionStatusChanged);
 
   eventEmitter.on(USER_SESSION_STARTED, usersOnlineStatusChanged);
   eventEmitter.on(USER_SESSION_FINISHED, usersOnlineStatusChanged);

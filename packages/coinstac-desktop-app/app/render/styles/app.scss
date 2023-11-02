@@ -50,21 +50,11 @@ html {
  * Logo
  */
 .logo {
-  margin: 3rem 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem 0;
-}
+  margin-bottom: 2rem;
 
-.logo::before {
-  background: url(../../../img/icons/coinstac-logo.png) no-repeat;
-  background-size: contain;
-  content: "";
-  height: 10rem;
-  width: 20rem;
-  vertical-align: top;
-  position: absolute;
+  img {
+    width: 250px;
+  }
 }
 
 .mainnav svg {
@@ -113,15 +103,11 @@ html {
     }
 
     .logo {
-      margin: 3rem 0;
-      padding: 2.5rem 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem 0 1rem;
     }
-
-    .logo::before {
-      height: 8rem;
-      width: 18rem;
-    }
-
   }
 
   &-content {
@@ -203,7 +189,7 @@ html {
 
 .settings {
   .logs-wrapper {
-    height: calc(100vh - 105px);
+    height: calc(100vh - 180px);
     background-color: whitesmoke;
     position: relative;
   }

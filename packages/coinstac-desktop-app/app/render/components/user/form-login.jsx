@@ -99,9 +99,9 @@ const FormLogin = ({
         </p>
         <Box display="flex" justifyContent="center" mb={2}>
           {auth.error === 'Password is expired' && (
-          <Link to="/reset-password">
-            Reset Password
-          </Link>
+            <Link to="/reset-password">
+              Reset Password
+            </Link>
           )}
         </Box>
       </>
@@ -112,12 +112,12 @@ const FormLogin = ({
     <div className={classes.loginFormContainer}>
       <Paper className={classes.paper}>
         <form onSubmit={formik.handleSubmit}>
-          { error }
-          { !auth.isApiVersionCompatible && (
+          {error}
+          {!auth.isApiVersionCompatible && (
             <p className={classes.error}>
               This Coinstac version is not compatible with the API.
             </p>
-          ) }
+          )}
           <TextField
             id="username"
             name="username"
@@ -172,7 +172,7 @@ const FormLogin = ({
         to="/forgot-password"
         color={window.location.href.includes('/forgot-password') ? 'primary' : 'default'}
       >
-        Forgot Password?
+        Forgot Password or Username?
       </Button>
 
       <Button

@@ -20,23 +20,24 @@ def md5sum(filename, blocksize=65536):
                 break
             hash.update(data)
     return { "hash": hash.hexdigest(), "count": count }
-doc = json.loads(sys.stdin.read())
-for site, output in doc["input"].items():
-    hasha = md5sum(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"))
-    hashb = md5sum(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"))
-    if hasha["hash"] == output["hasha"] and hashb["hash"] == output["hashb"]:
-        success = False
-        if doc["state"]["iteration"] > 4:
-            success = True
+
+def start(doc):
+    for site, output in doc["input"].items():
+        hasha = md5sum(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"))
+        hashb = md5sum(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"))
+        if hasha["hash"] == output["hasha"] and hashb["hash"] == output["hashb"]:
+            success = False
+            if doc["state"]["iteration"] > 4:
+                success = True
+        else:
+            raise Exception("Hash mismatch site: " + "hasha: " + hasha["hash"] + " hashb: " + hashb["hash"])
+        shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
+        shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"), os.path.join(doc["state"]["transferDirectory"], "b.txt"))
+        break
+
+    if success == True:
+        output = { "output": { "message": "hashes match", "files": ["a.txt", "b.txt"] }, "success": success }
     else:
-        raise Exception("Hash mismatch site: " + "hasha: " + hasha["hash"] + " hashb: " + hashb["hash"])
-    shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
-    shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"), os.path.join(doc["state"]["transferDirectory"], "b.txt"))
-    break 
+        output = { "output": { "hasha": hasha["hash"], "hashb": hashb["hash"], "counta": hasha["count"], "countb": hashb["count"]  }, "success": success }
 
-if success == True:
-    output = { "output": { "message": "hashes match", "files": ["a.txt", "b.txt"] }, "success": success }
-else:
-    output = { "output": { "hasha": hasha["hash"], "hashb": hashb["hash"], "counta": hasha["count"], "countb": hashb["count"]  }, "success": success }
-
-sys.stdout.write(json.dumps(output))
+    return output
