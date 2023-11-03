@@ -389,8 +389,8 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      const ownerConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
-      const consortiaIds = ownerConsortia.map(consortium => String(consortium._id));
+      const accessibleConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = accessibleConsortia.map(consortium => String(consortium._id));
       const res = Object.values(pipelines).filter(pipeline =>
         consortiaIds.includes(String(pipeline.owningConsortium)) || pipeline.shared
       );
