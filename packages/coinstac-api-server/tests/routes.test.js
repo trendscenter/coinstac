@@ -225,8 +225,8 @@ test('sendPasswordResetEmail', async (t) => {
 });
 
 
-test('resetPassword', async (t) => {
-  const createAccount = find(authRoutes, { path: '/resetPassword' });
+test('resetForgotPassword', async (t) => {
+  const createAccount = find(authRoutes, { path: '/resetForgotPassword' });
 
   const req = {
     payload: {
@@ -235,7 +235,7 @@ test('resetPassword', async (t) => {
     },
   };
 
-  sinon.stub(helperFunctions, 'resetPassword').resolves();
+  sinon.stub(helperFunctions, 'resetForgotPassword').resolves();
 
   const res = {
     response: () => ({
@@ -247,7 +247,7 @@ test('resetPassword', async (t) => {
 
   await createAccount.config.handler(req, res);
 
-  helperFunctions.resetPassword.restore();
+  helperFunctions.resetForgotPassword.restore();
 });
 
 test('version', (t) => {

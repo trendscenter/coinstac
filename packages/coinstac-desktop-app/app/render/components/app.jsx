@@ -54,6 +54,11 @@ class App extends Component {
 
   transitionSplashScreenIntoApp() {
     const splashComponent = document.getElementById('splash-component');
+
+    if (!splashComponent) {
+      return;
+    }
+
     splashComponent.className = 'fade-out';
 
     // eslint-disable-next-line react/no-find-dom-node

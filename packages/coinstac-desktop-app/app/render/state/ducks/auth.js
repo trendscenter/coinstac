@@ -226,10 +226,10 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
     if (err.response) {
-      const { statusCode } = getErrorDetail(err);
+      const { statusCode, message } = getErrorDetail(err);
 
       if (statusCode === 401) {
-        dispatch(setError('Username and/or Password Incorrect'));
+        dispatch(setError(message));
       } else {
         dispatch(setError('An unexpected error has occurred'));
       }
@@ -295,7 +295,7 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
     throw err;
   }));
 
-export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+export const resetForgotPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetForgotPassword`, payload)
   .then(() => {
     dispatch(notifySuccess('Reset password successfully'));
   })
@@ -305,6 +305,15 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
     throw err;
   }));
 
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Reset password successfully'));
+  })
+  .catch((err) => {
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Failed to reset password'));
+    throw err;
+  }));
 
 export const setContainerService = applyAsyncLoading(containerService => (dispatch) => {
   return ipcRenderer.invoke('set-container-service', containerService)
