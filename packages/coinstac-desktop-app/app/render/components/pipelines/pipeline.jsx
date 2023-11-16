@@ -120,7 +120,7 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
     getInputRef={inputRef}
     onValueChange={values => onChange({
       target: {
-        value: values.value,
+        value: Number(values.value),
       },
     })
     }
