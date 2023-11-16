@@ -554,7 +554,7 @@ class ConsortiaList extends Component {
   startPipeline = async (consortium) => {
     const {
       pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-      notifyWarning, notifyError, auth,
+      notifyWarning, notifyError, auth, router,
     } = this.props;
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
@@ -569,7 +569,9 @@ class ConsortiaList extends Component {
       startLoading('start-pipeline');
 
       if (isPipelineDecentralized) {
-        return await saveRemoteDecentralizedRun(consortium.id);
+        await saveRemoteDecentralizedRun(consortium.id);
+        router.push('/dashboard');
+        return;
       }
 
       const localRun = {
@@ -599,6 +601,7 @@ class ConsortiaList extends Component {
       }
     } finally {
       finishLoading('start-pipeline');
+      router.push('/dashboard');
     }
   }
 
