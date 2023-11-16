@@ -22,7 +22,6 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
-import Fuse from 'fuse.js';
 import { v4 as uuid } from 'uuid';
 
 import MemberAvatar from '../common/member-avatar';
@@ -57,12 +56,6 @@ import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
 
 const PAGE_SIZE = 10;
-
-const fuseOptions = {
-  keys: [
-    'name', 'description',
-  ],
-};
 
 const styles = theme => ({
   button: {
@@ -181,9 +174,12 @@ class ConsortiaList extends Component {
       return consortia || [];
     }
 
-    const fuse = new Fuse(consortia, fuseOptions);
+    const searchLowerCase = search.toLowerCase();
 
-    return fuse.search(search).map(({ item }) => item);
+    return (consortia || []).filter(consortium =>
+      // eslint-disable-next-line
+      consortium.name.toLowerCase().includes(searchLowerCase)
+      || consortium.description.toLowerCase().includes(searchLowerCase));
   }
 
   getConsortiaByActiveTab = () => {
