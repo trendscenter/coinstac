@@ -22,7 +22,6 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
-import Fuse from 'fuse.js';
 import { v4 as uuid } from 'uuid';
 
 import MemberAvatar from '../common/member-avatar';
@@ -53,16 +52,10 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
 
 const PAGE_SIZE = 10;
-
-const fuseOptions = {
-  keys: [
-    'name', 'description',
-  ],
-};
 
 const styles = theme => ({
   button: {
@@ -181,9 +174,12 @@ class ConsortiaList extends Component {
       return consortia || [];
     }
 
-    const fuse = new Fuse(consortia, fuseOptions);
+    const searchLowerCase = search.toLowerCase();
 
-    return fuse.search(search).map(({ item }) => item);
+    return (consortia || []).filter(consortium =>
+      // eslint-disable-next-line
+      consortium.name.toLowerCase().includes(searchLowerCase)
+      || consortium.description.toLowerCase().includes(searchLowerCase));
   }
 
   getConsortiaByActiveTab = () => {
@@ -397,6 +393,21 @@ class ConsortiaList extends Component {
           </Menu>
         </Fragment>
       );
+    } else if (owner && consortium.activePipelineId) {
+      actions.push(
+        <Button
+          key={`${consortium.id}-unset-active-pipeline-button`}
+          component={Link}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          onClick={event => this.handleUnsetActivePipelineOnConsortium(
+            event, consortium
+          )}
+        >
+          Unset Active Pipeline
+        </Button>
+      );
     } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
@@ -468,6 +479,11 @@ class ConsortiaList extends Component {
     } else {
       this.openConsortiumPipelinesMenu(event, consortium.id);
     }
+  }
+
+  handleUnsetActivePipelineOnConsortium = (event, consortium) => {
+    const { saveActivePipeline } = this.props;
+    saveActivePipeline(consortium.id, null);
   }
 
   closeConsortiumPipelinesMenu = () => {
@@ -806,7 +822,7 @@ class ConsortiaList extends Component {
         />
         {!auth.isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiaList}
+            steps={TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
             callback={tutorialChange}
           />
@@ -864,9 +880,6 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({

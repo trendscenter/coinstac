@@ -1,12 +1,14 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { graphql } from '@apollo/react-hoc';
 import { Link } from 'react-router';
+import Box from '@material-ui/core/Box';
 import Fab from '@material-ui/core/Fab';
 import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
-import { withStyles } from '@material-ui/core/styles';
-import { Alert } from 'react-bootstrap';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import { makeStyles } from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -20,150 +22,131 @@ import {
 } from '../../state/graphql/props';
 import { isPipelineOwner } from '../../utils/helpers';
 
-const MAX_LENGTH_PIPELINES = 5;
-
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   button: {
     margin: theme.spacing(1),
   },
-});
+}));
 
-class PipelinesList extends Component {
-  constructor(props) {
-    super(props);
+const PipelinesList = ({ pipelines, deletePipeline }) => {
+  const [pipelineToDelete, setPipelineToDelete] = useState(null);
+  const [activeTab, setActiveTab] = useState('mine');
 
-    this.state = {
-      ownedPipelines: [],
-      otherPipelines: [],
-      pipelineToDelete: -1,
-      showModal: false,
-    };
+  const auth = useSelector(state => state.auth);
 
-    this.deletePipeline = this.deletePipeline.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.getListItem = this.getListItem.bind(this);
-    this.openModal = this.openModal.bind(this);
-  }
+  const dispatch = useDispatch();
 
-  static getDerivedStateFromProps(props) {
-    const { pipelines, auth } = props;
+  const classes = useStyles();
+
+  const { ownedPipelines, sharedPipelines } = useMemo(() => {
     const ownedPipelines = [];
-    const otherPipelines = [];
-    if (pipelines && pipelines.length > MAX_LENGTH_PIPELINES) {
-      const { user } = auth;
-      pipelines.forEach((pipeline) => {
-        if (isPipelineOwner(user.permissions, pipeline.owningConsortium)) {
-          ownedPipelines.push(pipeline);
-        } else {
-          otherPipelines.push(pipeline);
-        }
+    const sharedPipelines = [];
+
+    const { user } = auth;
+    pipelines.forEach((pipeline) => {
+      if (isPipelineOwner(user.permissions, pipeline.owningConsortium)) {
+        ownedPipelines.push(pipeline);
+      } else {
+        sharedPipelines.push(pipeline);
+      }
+    });
+
+    return { ownedPipelines, sharedPipelines };
+  }, [pipelines, auth]);
+
+  const onCloseModal = () => {
+    setPipelineToDelete(null);
+  };
+
+  const onOpenModal = pipelineId => () => {
+    setPipelineToDelete(pipelineId);
+  };
+
+  const onDeletePipeline = () => {
+    deletePipeline(pipelineToDelete)
+      .catch((error) => {
+        dispatch(notifyError(error.message));
       });
+
+    onCloseModal();
+  };
+
+  const onChangeTab = (_, tab) => {
+    setActiveTab(tab);
+  };
+
+  const renderPipelines = () => {
+    const pipelinesToShow = activeTab === 'mine' ? ownedPipelines : sharedPipelines;
+
+    if (pipelinesToShow.length === 0) {
+      return (
+        <Box padding={2}>
+          <Typography variant="body2">
+            No pipelines found
+          </Typography>
+        </Box>
+      );
     }
-    return { ownedPipelines, otherPipelines };
-  }
 
-  getListItem(pipeline) {
-    const { auth } = this.props;
-
-    return (
+    return pipelinesToShow.map(pipeline => (
       <ListItem
         key={`${pipeline.name}-list-item`}
         itemObject={pipeline}
-        deleteItem={this.openModal}
+        deleteItem={onOpenModal}
         owner={isPipelineOwner(auth.user.permissions, pipeline.owningConsortium)}
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"
       />
-    );
-  }
+    ));
+  };
 
-  closeModal() {
-    this.setState({ showModal: false });
-  }
-
-  openModal(pipelineId) {
-    return () => {
-      this.setState({
-        showModal: true,
-        pipelineToDelete: pipelineId,
-      });
-    };
-  }
-
-  deletePipeline() {
-    const { notifyError, deletePipeline } = this.props;
-    const { pipelineToDelete } = this.state;
-
-    deletePipeline(pipelineToDelete)
-      .catch((error) => {
-        notifyError(error.message);
-      });
-
-    this.closeModal();
-  }
-
-  render() {
-    const { pipelines, classes } = this.props;
-    const { ownedPipelines, otherPipelines, showModal } = this.state;
-
-    return (
-      <div>
-        <div className="page-header">
-          <Typography variant="h4">
-            Pipelines
-          </Typography>
-          <Fab
-            color="primary"
-            component={Link}
-            to="/dashboard/pipelines/new"
-            className={classes.button}
-            name="create-pipeline-button"
-          >
-            <AddIcon />
-          </Fab>
-        </div>
-        {
-          pipelines && pipelines.length > 0 && pipelines.length <= MAX_LENGTH_PIPELINES
-          && pipelines.map(pipeline => this.getListItem(pipeline))
-        }
-        {ownedPipelines.length > 0 && <Typography variant="h6">Owned Pipelines</Typography>}
-        {ownedPipelines.length > 0 && ownedPipelines.map(pipeline => this.getListItem(pipeline))}
-        {otherPipelines.length > 0 && <Typography variant="h6">Other Pipelines</Typography>}
-        {otherPipelines.length > 0 && otherPipelines.map(pipeline => this.getListItem(pipeline))}
-
-        {(!pipelines || !pipelines.length)
-          && (
-          <Alert bsStyle="info">
-            No pipelines found
-          </Alert>
-          )
-        }
-        <ListDeleteModal
-          close={this.closeModal}
-          deleteItem={this.deletePipeline}
-          itemName="pipeline"
-          show={showModal}
-        />
+  return (
+    <div>
+      <div className="page-header">
+        <Typography variant="h4">
+          Pipelines
+        </Typography>
+        <Fab
+          color="primary"
+          component={Link}
+          to="/dashboard/pipelines/new"
+          className={classes.button}
+          name="create-pipeline-button"
+        >
+          <AddIcon />
+        </Fab>
       </div>
-    );
-  }
-}
+
+      <Tabs
+        value={activeTab}
+        onChange={onChangeTab}
+        className={classes.tabs}
+      >
+        <Tab label="My Pipelines" value="mine" />
+        <Tab label="Public Pipelines" value="public" />
+      </Tabs>
+
+      {renderPipelines()}
+
+      <ListDeleteModal
+        close={onCloseModal}
+        deleteItem={onDeletePipeline}
+        itemName="pipeline"
+        show={Boolean(pipelineToDelete)}
+      />
+    </div>
+  );
+};
+
 
 PipelinesList.propTypes = {
-  auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   pipelines: PropTypes.array,
   deletePipeline: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
 };
 
 PipelinesList.defaultProps = {
-  pipelines: null,
+  pipelines: [],
 };
-
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
 
 const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
   removeDocFromTableProp(
@@ -173,6 +156,4 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
     'fetchAllPipelines'
   ))(PipelinesList);
 
-const connectedComponent = connect(mapStateToProps, { notifyError })(PipelinesListWithData);
-
-export default withStyles(styles)(connectedComponent);
+export default PipelinesListWithData;

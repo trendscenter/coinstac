@@ -31,10 +31,19 @@ function PullComputationsListener({
     const pipelineData = apolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const computationData = apolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
 
+    if (!consortium.activePipelineId) {
+      return;
+    }
+
     const pipeline = pipelineData.fetchAllPipelines
       .find(p => p.id === consortium.activePipelineId);
 
+    if (!pipeline) {
+      return;
+    }
+
     const computations = [];
+
     pipeline.steps.forEach((step) => {
       const compObject = computationData.fetchAllComputations
         .find(comp => comp.id === step.computations[0].id);
