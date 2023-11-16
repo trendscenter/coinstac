@@ -366,10 +366,19 @@ const helperFunctions = {
       return Boom.unauthorized('Incorrect username or password');
     }
 
-    const { passwordChangedAt } = user;
+    let { passwordChangedAt } = user;
     const currentDate = new Date();
+debugger
+    if (!passwordChangedAt) {
+      let date181DaysAgo = new Date(currentDate);
+      passwordChangedAt = date181DaysAgo.setDate(currentDate.getDate() - 181);
+      const a = 1;
+    } else {
+      passwordChangedAt = passwordChangedAt.getTime();
+    }
+
     const difference = Math.ceil(
-      (currentDate.getTime() - passwordChangedAt.getTime()) / (1000 * 3600 * 24)
+      (currentDate.getTime() - passwordChangedAt) / (1000 * 3600 * 24)
     );
 
     if (difference >= passwordLifeTime) {
