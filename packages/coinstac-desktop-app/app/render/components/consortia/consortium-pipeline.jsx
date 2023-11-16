@@ -11,7 +11,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 
 const styles = theme => ({
   tabTitle: {
@@ -197,7 +197,7 @@ function ConsortiumPipeline({
       )}
       {!isTutorialHidden && (
         <Joyride
-          steps={STEPS.consortiumPipeline}
+          steps={TUTORIAL_STEPS.consortiumPipeline}
           disableScrollParentFix
           callback={tutorialChange}
         />

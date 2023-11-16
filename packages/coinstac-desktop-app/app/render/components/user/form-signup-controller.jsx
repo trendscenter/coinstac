@@ -44,26 +44,6 @@ class FormSignupController extends Component {
   onSubmit = (formData) => {
     const { signUp, notifySuccess } = this.props;
 
-    let error;
-
-    if (!formData.name) {
-      error = 'Name required';
-    } else if (!formData.username) {
-      error = 'Username required';
-    } else if (!formData.email) {
-      error = 'Email required';
-    } else if (!formData.password) {
-      error = 'Password required';
-    } else if (formData.password.length < 8) {
-      error = 'Password must be at least 8 characters long';
-    } else if (!formData.institution) {
-      error = 'Institution required';
-    }
-
-    if (error) {
-      return this.handleSignupError(error);
-    }
-
     this.setState({ error: null });
 
     return signUp(formData)

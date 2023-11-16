@@ -52,7 +52,7 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
 
 const PAGE_SIZE = 10;
@@ -822,7 +822,7 @@ class ConsortiaList extends Component {
         />
         {!auth.isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiaList}
+            steps={TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
             callback={tutorialChange}
           />

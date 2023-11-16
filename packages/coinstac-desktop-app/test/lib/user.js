@@ -2,9 +2,9 @@
 const { EXIST_TIMEOUT } = require('../lib/constants');
 
 const logIn = async ({ username, password }, app) => {
-  await app.click('#login-username', { timeout: EXIST_TIMEOUT });
-  await app.fill('#login-username', username);
-  await app.fill('#login-password', password);
+  await app.click('#username', { timeout: EXIST_TIMEOUT });
+  await app.fill('#username', username);
+  await app.fill('#password', password);
 
   await app.click('button:has-text("Log In")');
 
