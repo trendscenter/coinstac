@@ -21,7 +21,7 @@ import { omit } from 'lodash';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 
 const styles = theme => ({
   textField: {
@@ -286,7 +286,7 @@ class ConsortiumAbout extends Component {
         }
         {!isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiumAbout}
+            steps={TUTORIAL_STEPS.consortiumAbout}
             continuous
             disableScrollParentFix
             callback={tutorialChange}
