@@ -30,7 +30,7 @@ import {
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 
 const styles = theme => ({
   title: {
@@ -280,7 +280,11 @@ class ConsortiumTabs extends Component {
           </Typography>
         </div>
         {!isTutorialHidden && isEditingConsortium && (
-          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix callback={tutorialChange} />
+          <Joyride
+            steps={TUTORIAL_STEPS.consortiumTabs}
+            disableScrollParentFix
+            callback={tutorialChange}
+          />
         )}
         <Tabs
           value={this.getTabIndex()}

@@ -389,15 +389,11 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      const memberConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
-      const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
-      let res = Object.values(pipelines);
-      if (!isAdmin(credentials.permissions)) {
-        res = res.filter(pipeline => {
-          return consortiaIds.includes(String(pipeline.owningConsortium))
-            || pipeline.shared;
-        });
-      }
+      const accessibleConsortia = await db.collection('consortia').find({ [`owners.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = accessibleConsortia.map(consortium => String(consortium._id));
+      const res = Object.values(pipelines).filter(pipeline =>
+        consortiaIds.includes(String(pipeline.owningConsortium)) || pipeline.shared
+      );
 
       return transformToClient(res);
     },

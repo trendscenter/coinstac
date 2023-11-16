@@ -1,4 +1,6 @@
-export default {
+export const PASSWORD_PATTERN = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[#?!@$%^&*-]).{8,}$/g;
+
+export const TUTORIAL_STEPS = {
   consortiumPipeline: [
     {
       id: 'cp-create-pipeline',

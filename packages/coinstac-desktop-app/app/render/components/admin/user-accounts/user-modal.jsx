@@ -37,7 +37,7 @@ const UserModal = ({ initialValues, onSave, onClose }) => {
   };
 
   const handleSubmit = () => {
-    onSave(values)
+    onSave(values);
   };
 
   return (

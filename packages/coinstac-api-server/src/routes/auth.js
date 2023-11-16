@@ -68,6 +68,10 @@ module.exports = [
         { method: helperFunctions.validateUniqueUser },
       ],
       handler: async (req, h) => {
+        const isPasswordValid = helperFunctions.validatePassword(req.payload.password);
+        if (!isPasswordValid) {
+          return h.response('Invalid password').code(400);
+        }
         const passwordHash = await helperFunctions.hashPassword(req.payload.password);
         const user = await helperFunctions.createUser(req.payload, passwordHash);
         const {
@@ -131,10 +135,23 @@ module.exports = [
     path: '/sendPasswordResetEmail',
     config: {
       auth: false,
-      pre: [{ method: helperFunctions.validateEmail }],
       handler: (req, h) => {
         return helperFunctions
-          .savePasswordResetToken(req.payload.email)
+          .savePasswordResetToken(req.payload.emailOrUsername)
+          .then(() => h.response().code(204))
+          .catch(() => h.response().code(400));
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/resetForgotPassword',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateResetToken }],
+      handler: (req, h) => {
+        return helperFunctions
+          .resetForgotPassword(req.payload.token, req.payload.password)
           .then(() => h.response().code(204));
       },
     },
@@ -144,10 +161,10 @@ module.exports = [
     path: '/resetPassword',
     config: {
       auth: false,
-      pre: [{ method: helperFunctions.validateResetToken }],
+      pre: [{ method: helperFunctions.validateResetPassword }],
       handler: (req, h) => {
         return helperFunctions
-          .resetPassword(req.payload.token, req.payload.password)
+          .resetPassword(req.payload.username, req.payload.newPassword)
           .then(() => h.response().code(204));
       },
     },

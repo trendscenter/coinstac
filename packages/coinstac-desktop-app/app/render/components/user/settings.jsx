@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
 import Switch from '@material-ui/core/Switch';
@@ -14,11 +18,15 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerService } from '../../state/ducks/auth';
+import {
+  setClientCoreUrlAsync,
+  setNetworkVolume,
+  toggleTutorial,
+  setContainerService,
+} from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
-import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
