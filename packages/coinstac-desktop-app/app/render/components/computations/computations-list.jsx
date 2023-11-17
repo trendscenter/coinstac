@@ -372,7 +372,6 @@ class ComputationsList extends Component {
           && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
         {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
-        {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
         {(!computations || !computations.length) && (

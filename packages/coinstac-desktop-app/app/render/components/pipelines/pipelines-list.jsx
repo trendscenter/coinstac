@@ -20,7 +20,7 @@ import {
 import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
-import { isPipelineOwner } from '../../utils/helpers';
+import { hasPipelineAccess, isPipelineOwner } from '../../utils/helpers';
 
 const useStyles = makeStyles(theme => ({
   button: {
@@ -44,7 +44,7 @@ const PipelinesList = ({ pipelines, deletePipeline }) => {
 
     const { user } = auth;
     pipelines.forEach((pipeline) => {
-      if (isPipelineOwner(user.permissions, pipeline.owningConsortium)) {
+      if (hasPipelineAccess(user.permissions, pipeline.owningConsortium)) {
         ownedPipelines.push(pipeline);
       } else {
         sharedPipelines.push(pipeline);
