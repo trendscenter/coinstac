@@ -865,6 +865,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -890,6 +891,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -915,6 +917,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -940,6 +943,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -965,6 +969,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -986,6 +991,7 @@ async function populateUsers() {
         author: false,
       },
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   const adminPassword = await helperFunctions.hashPassword(process.argv[3]
@@ -1011,6 +1017,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, adminPassword);
 }
 

@@ -9,6 +9,15 @@ export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
 }
 
+export function isPipelineMember(permissions, owningConsortium) {
+  return indexOf(permissions.consortia[owningConsortium], 'member') !== -1;
+}
+
+export function hasPipelineAccess(permissions, owningConsortium) {
+  return isPipelineOwner(permissions, owningConsortium)
+    || isPipelineMember(permissions, owningConsortium);
+}
+
 export function pipelineNeedsDataMapping(pipeline) {
   if (!pipeline || !pipeline.steps) {
     return false;

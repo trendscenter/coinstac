@@ -95,7 +95,7 @@ test('decodeToken', (t) => {
   t.is(decoded.id, username);
 });
 
-test('createPasswordResetToken, savePasswordResetToken, validateResetToken and resetPassword', async (t) => {
+test('createPasswordResetToken, savePasswordResetToken, validateResetToken and resetForgotPassword', async (t) => {
   /* createPasswordResetToken */
   const email = 'test@mrn.org';
   const token = helperFunctions.createPasswordResetToken(email);
@@ -133,9 +133,9 @@ test('createPasswordResetToken, savePasswordResetToken, validateResetToken and r
   t.is(error.message, INVALID_EMAIL);
   jwt.verify.restore();
 
-  /* resetPassword */
+  /* resetForgotPassword */
   const newPassword = 'newPassword';
-  await helperFunctions.resetPassword(token, newPassword);
+  await helperFunctions.resetForgotPassword(token, newPassword);
   const res = await helperFunctions.getUserDetailsByID(USER_IDS[0]);
   const isValid = await helperFunctions.verifyPassword(newPassword, res.passwordHash);
   t.true(isValid);

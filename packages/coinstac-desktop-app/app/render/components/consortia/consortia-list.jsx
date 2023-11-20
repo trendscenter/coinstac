@@ -23,7 +23,6 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
-import Fuse from 'fuse.js';
 import { v4 as uuid } from 'uuid';
 
 import MemberAvatar from '../common/member-avatar';
@@ -58,17 +57,11 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
 import ConsortiaJoinDialog from './consortia-join-dialog';
 
 const PAGE_SIZE = 10;
-
-const fuseOptions = {
-  keys: [
-    'name', 'description',
-  ],
-};
 
 const styles = theme => ({
   button: {
@@ -188,9 +181,12 @@ class ConsortiaList extends Component {
       return consortia || [];
     }
 
-    const fuse = new Fuse(consortia, fuseOptions);
+    const searchLowerCase = search.toLowerCase();
 
-    return fuse.search(search).map(({ item }) => item);
+    return (consortia || []).filter(consortium =>
+      // eslint-disable-next-line
+      consortium.name.toLowerCase().includes(searchLowerCase)
+      || consortium.description.toLowerCase().includes(searchLowerCase));
   }
 
   getConsortiaByActiveTab = () => {
@@ -585,7 +581,7 @@ class ConsortiaList extends Component {
   startPipeline = async (consortium) => {
     const {
       pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-      notifyWarning, notifyError, auth,
+      notifyWarning, notifyError, auth, router,
     } = this.props;
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
@@ -600,7 +596,9 @@ class ConsortiaList extends Component {
       startLoading('start-pipeline');
 
       if (isPipelineDecentralized) {
-        return await saveRemoteDecentralizedRun(consortium.id);
+        await saveRemoteDecentralizedRun(consortium.id);
+        router.push('/dashboard');
+        return;
       }
 
       const localRun = {
@@ -630,6 +628,7 @@ class ConsortiaList extends Component {
       }
     } finally {
       finishLoading('start-pipeline');
+      router.push('/dashboard');
     }
   }
 
@@ -899,7 +898,7 @@ class ConsortiaList extends Component {
         />
         {!auth.isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiaList}
+            steps={TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
             callback={tutorialChange}
           />
