@@ -52,6 +52,8 @@ class ConsortiumTabs extends Component {
       activeComputationInputs: [],
       tags: [],
       isPrivate: false,
+      isJoinByRequest: false,
+      joinRequests: {},
     };
 
     this.state = {
@@ -102,9 +104,9 @@ class ConsortiumTabs extends Component {
 
       if (remoteConsortium && prevRemoteConsortium && (
         Object.keys(prevRemoteConsortium.members).length
-          !== Object.keys(remoteConsortium.members).length
+        !== Object.keys(remoteConsortium.members).length
         || Object.keys(prevRemoteConsortium.owners).length
-          !== Object.keys(remoteConsortium.owners).length
+        !== Object.keys(remoteConsortium.owners).length
       )) {
         const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
 

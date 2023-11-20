@@ -38,6 +38,8 @@ const sharedFields = {
     owners
     activeMembers
     isPrivate
+    isJoinByRequest
+    joinRequests
     mappedForRun
     createDate
   `,

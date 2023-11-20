@@ -1,3 +1,4 @@
+/* eslint-disable react/sort-comp */
 import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -7,7 +8,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import {
-  get, orderBy, flowRight as compose, debounce,
+  get, orderBy, flowRight as compose, debounce, keys,
 } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Grid from '@material-ui/core/Grid';
@@ -31,6 +32,7 @@ import { tutorialChange } from '../../state/ducks/auth';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
 import {
+  APPROVE_OR_REJECT_CONSORTIUM_JOIN_REQUEST_MUTATION,
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
@@ -39,6 +41,7 @@ import {
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   SAVE_ACTIVE_PIPELINE_MUTATION,
+  SEND_CONSORTIUM_JOIN_REQUEST_MUTATION,
   FETCH_USERS_ONLINE_STATUS,
   USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
@@ -47,6 +50,8 @@ import {
   removeDocFromTableProp,
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
+  approveOrRejectConsortiumJoinRequestProp,
+  sendConsortiumJoinRequestProp,
 } from '../../state/graphql/props';
 import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
@@ -54,6 +59,7 @@ import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
 import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
+import ConsortiaJoinDialog from './consortia-join-dialog';
 
 const PAGE_SIZE = 10;
 
@@ -121,6 +127,7 @@ class ConsortiaList extends Component {
       consortiumToDelete: -1,
       showModal: false,
       showErrorDialog: false,
+      showJoinRequestDialog: true,
       isConsortiumPipelinesMenuOpen: false,
       search: '',
       consortiumJoinedByThread:
@@ -454,18 +461,38 @@ class ConsortiaList extends Component {
     }
 
     if (!member && !owner) {
-      actions.push(
-        <Button
-          key={`${consortium.id}-join-cons-button`}
-          name={`${consortium.name}-join-cons-button`}
-          variant="contained"
-          color="secondary"
-          className={classes.button}
-          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
-        >
-          Join Consortium
-        </Button>
-      );
+      if (consortium.isJoinByRequest) {
+        const isRequestSent = keys(consortium.joinRequests).includes(auth.user.id);
+
+        actions.push(
+          <Button
+            key={`${consortium.id}-join-request-cons-button`}
+            name={`${consortium.name}-join-request-cons-button`}
+            variant="contained"
+            color="secondary"
+            className={classes.button}
+            disabled={isRequestSent}
+            onClick={() => {
+              this.sendJoinRequestToConsortium(consortium.id);
+            }}
+          >
+            {isRequestSent ? 'Request Pending' : 'Request to Join Consortium'}
+          </Button>
+        );
+      } else {
+        actions.push(
+          <Button
+            key={`${consortium.id}-join-cons-button`}
+            name={`${consortium.name}-join-cons-button`}
+            variant="contained"
+            color="secondary"
+            className={classes.button}
+            onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
+          >
+            Join Consortium
+          </Button>
+        );
+      }
     }
 
     return { actions, text, owner };
@@ -683,6 +710,11 @@ class ConsortiaList extends Component {
     }
   }
 
+  async sendJoinRequestToConsortium(consortiumId) {
+    const { sendConsortiumJoinRequest } = this.props;
+    sendConsortiumJoinRequest(consortiumId);
+  }
+
   async deleteConsortium() {
     const { deleteAllDataMappingsFromConsortium, deleteConsortiumById, consortia } = this.props;
     const { consortiumToDelete } = this.state;
@@ -743,6 +775,44 @@ class ConsortiaList extends Component {
     );
   }
 
+  getJoinRequests = () => {
+    const { auth, consortia } = this.props;
+    const { id: currentUserId } = auth.user;
+
+    const allJoinRequests = [];
+
+    consortia.forEach(({
+      id,
+      name,
+      owners,
+      isJoinByRequest,
+      joinRequests,
+    }) => {
+      if (!isJoinByRequest || !Object.keys(owners).includes(currentUserId)) {
+        return;
+      }
+
+      const consortium = { id, name };
+
+      Object.keys(joinRequests).forEach((userId) => {
+        const user = { id: userId, username: joinRequests[userId] };
+        allJoinRequests.push({ consortium, user });
+      });
+    });
+
+    return allJoinRequests;
+  }
+
+  handleApproveRequest = async ({ consortium, user }) => {
+    const { approveOrRejectConsortiumJoinRequest } = this.props;
+    approveOrRejectConsortiumJoinRequest(consortium.id, user.id, true);
+  }
+
+  handleRejectRequest = async ({ consortium, user }) => {
+    const { approveOrRejectConsortiumJoinRequest } = this.props;
+    approveOrRejectConsortiumJoinRequest(consortium.id, user.id, false);
+  }
+
   render() {
     const {
       classes,
@@ -753,12 +823,15 @@ class ConsortiaList extends Component {
       // search,
       showModal,
       showErrorDialog,
+      showJoinRequestDialog,
       errorMessage,
       errorTitle,
       activeTab,
     } = this.state;
 
     const consortia = this.getPaginatedConsortia();
+
+    const joinRequests = this.getJoinRequests();
 
     return (
       <div>
@@ -830,6 +903,14 @@ class ConsortiaList extends Component {
             callback={tutorialChange}
           />
         )}
+        {joinRequests.length > 0 && showJoinRequestDialog && (
+          <ConsortiaJoinDialog
+            joinRequests={joinRequests}
+            onApproveRequest={this.handleApproveRequest}
+            onRejectRequest={this.handleRejectRequest}
+            onClose={() => this.setState({ showJoinRequestDialog: false })}
+          />
+        )}
       </div>
     );
   }
@@ -852,6 +933,8 @@ ConsortiaList.propTypes = {
   deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
+  approveOrRejectConsortiumJoinRequest: PropTypes.func.isRequired,
+  sendConsortiumJoinRequest: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
@@ -881,6 +964,14 @@ const ConsortiaListWithData = compose(
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
+  graphql(
+    APPROVE_OR_REJECT_CONSORTIUM_JOIN_REQUEST_MUTATION,
+    approveOrRejectConsortiumJoinRequestProp('approveOrRejectConsortiumJoinRequest')
+  ),
+  graphql(
+    SEND_CONSORTIUM_JOIN_REQUEST_MUTATION,
+    sendConsortiumJoinRequestProp('sendConsortiumJoinRequest')
+  ),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
     props: props => ({

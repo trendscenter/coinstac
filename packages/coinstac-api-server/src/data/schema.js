@@ -191,6 +191,8 @@ const typeDefs = `
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID!): Consortium
+    approveOrRejectConsortiumJoinRequest(consortiumId: ID!, userId: ID!, isApprove: Boolean!): Consortium
+    sendConsortiumJoinRequest(consortiumId: ID!): Consortium
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
     removeUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String, roleType: String!): User

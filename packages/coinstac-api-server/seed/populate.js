@@ -114,6 +114,8 @@ async function populateConsortia() {
         [USER_IDS[5]]: 'author',
       },
       isPrivate: false,
+      isJoinByRequest: false,
+      joinRequests: {},
       createDate: 1551333489519,
     },
     {
@@ -133,6 +135,8 @@ async function populateConsortia() {
         [USER_IDS[5]]: 'author',
       },
       isPrivate: false,
+      isJoinByRequest: false,
+      joinRequests: {},
       createDate: 1551666489519,
     },
   ]);

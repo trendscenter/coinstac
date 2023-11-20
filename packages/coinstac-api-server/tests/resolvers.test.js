@@ -118,18 +118,18 @@ test('createPasswordResetToken, savePasswordResetToken, validateResetToken and r
 
   // should return error if cannot find user with token
   const invalidTokenReq = { payload: { token: 'token' } };
-  let error = await helperFunctions.validateResetToken(invalidTokenReq, { response: () => {} });
+  let error = await helperFunctions.validateResetToken(invalidTokenReq, { response: () => { } });
   t.is(error.message, INVALID_TOKEN);
 
   // should return error if token cannot be verified
   sinon.stub(jwt, 'verify').throws(new Error('error'));
-  error = await helperFunctions.validateResetToken(req, { response: () => {} });
+  error = await helperFunctions.validateResetToken(req, { response: () => { } });
   t.is(error.message, 'error');
   jwt.verify.restore();
 
   // should return error due to invalid email
   sinon.stub(jwt, 'verify').resolves({ email: 'email@mrn.org' });
-  error = await helperFunctions.validateResetToken(req, { response: () => {} });
+  error = await helperFunctions.validateResetToken(req, { response: () => { } });
   t.is(error.message, INVALID_EMAIL);
   jwt.verify.restore();
 
@@ -232,12 +232,12 @@ test('validateToken and validateUser', async (t) => {
 
   // should return error due to invalid username
   const req2 = { payload: { username: 'invalid-user', password: 'password' } };
-  let error = await helperFunctions.validateUser(req2, { response: () => {} });
+  let error = await helperFunctions.validateUser(req2, { response: () => { } });
   t.is(error.message, INCORRECT_CREDENTIAL);
 
   // should return error due to invalid password
   const req3 = { payload: { username: 'test1', password: 'password1' } };
-  error = await helperFunctions.validateUser(req3, { response: () => {} });
+  error = await helperFunctions.validateUser(req3, { response: () => { } });
   t.is(error.message, INCORRECT_CREDENTIAL);
 });
 
@@ -291,7 +291,7 @@ test('validateEmail', async (t) => {
 
   // should return error if provided email is not valid
   req.payload.email = 'email@mrn.org';
-  const error = await helperFunctions.validateEmail(req, { response: () => {} });
+  const error = await helperFunctions.validateEmail(req, { response: () => { } });
   t.is(error.message, INVALID_EMAIL);
 });
 
@@ -304,12 +304,12 @@ test('validateUniqueUsername', async (t) => {
 test('validateUniqueUser', async (t) => {
   // should return error if username is already taken
   let req = { payload: { username: 'test1', email: 'test@mrn.org' } };
-  let error = await helperFunctions.validateUniqueUser(req, { response: () => {} });
+  let error = await helperFunctions.validateUniqueUser(req, { response: () => { } });
   t.is(error.message, USERNAME_TAKEN);
 
   // should return error if email is already taken
   req = { payload: { username: 'newuser', email: 'test@mrn.org' } };
-  error = await helperFunctions.validateUniqueUser(req, { response: () => {} });
+  error = await helperFunctions.validateUniqueUser(req, { response: () => { } });
   t.is(error.message, EMAIL_TAKEN);
 
   // should return true if provided username and email are unique
@@ -501,7 +501,7 @@ test('searchDatasets and deleteDataset', async (t) => {
 });
 
 test('fetchDataset', async (t) => {
-  const datasets = await Query.searchDatasets('', { });
+  const datasets = await Query.searchDatasets('', {});
   const datasetId = datasets[0].id;
   const dataset = await Query.fetchDataset('', { id: datasetId });
   t.is(dataset.id, datasetId);
@@ -748,7 +748,7 @@ test('saveActivePipeline', async (t) => {
 test('saveConsortium', async (t) => {
   /* saveConsortium */
   let auth = {
-    credentials: { id: USER_IDS[0], username: 'test1', permissions: { } },
+    credentials: { id: USER_IDS[0], username: 'test1', permissions: {} },
   };
 
   const consortium1 = {

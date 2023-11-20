@@ -931,6 +931,98 @@ const resolvers = {
       return helperFunctions.getUserDetails(credentials.username);
     },
     /**
+     * Approve or reject consortium join request
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id that has join request
+     * @param {string} args.userId User id to join consortium
+     * @return {object} Updated consortium
+     */
+    approveOrRejectConsortiumJoinRequest: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+      const { id: currentUserId } = credentials;
+
+      const { consortiumId, userId, isApprove } = args;
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      if (!consortium) {
+        return Boom.forbidden('Invalid consortium');
+      }
+
+      const ownerIds = Object.keys(consortium.owners);
+
+      if (!ownerIds.includes(currentUserId)) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const userToAdd = await helperFunctions.getUserDetailsByID(userId);
+      if (!userToAdd) {
+        return Boom.forbidden('Invalid user');
+      }
+
+      if (isApprove) {
+        await addUserPermissions({
+          userId: ObjectID(userId),
+          userName: userToAdd.username,
+          role: 'member',
+          doc: ObjectID(consortiumId),
+          table: 'consortia',
+        });
+      }
+
+      const updateObj = {
+        $unset: {
+          [`joinRequests.${userId}`]: '',
+        },
+      };
+
+      const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(consortiumId) },
+        updateObj,
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
+
+      return transformToClient(consortiaUpdateResult.value);
+    },
+    /**
+     * Send consortium join request
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id that has join request
+     * @return {object} Updated consortium
+     */
+    sendConsortiumJoinRequest: async (parent, args, { credentials }) => {
+      const db = database.getDbInstance();
+      const { id: currentUserId } = credentials;
+
+      const { consortiumId } = args;
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      if (!consortium) {
+        return Boom.forbidden('Invalid consortium');
+      }
+
+      const user = await helperFunctions.getUserDetailsByID(currentUserId);
+
+      const updateObj = {
+        $set: {
+          [`joinRequests.${currentUserId}`]: user.username,
+        },
+      };
+
+      const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate(
+        { _id: ObjectID(consortiumId) },
+        updateObj,
+        { returnDocument: 'after' }
+      );
+
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
+
+      return transformToClient(consortiaUpdateResult.value);
+    },
+    /**
      * Remove logged user from consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
@@ -1129,6 +1221,10 @@ const resolvers = {
 
       if (consortiumData.activePipelineId) {
         consortiumData.activePipelineId = ObjectID(consortiumData.activePipelineId);
+      }
+
+      if (!consortiumData.isJoinByRequest) {
+        consortiumData.joinRequests = {}
       }
 
       await db.collection('consortia').replaceOne({

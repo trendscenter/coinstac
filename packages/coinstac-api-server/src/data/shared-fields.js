@@ -12,6 +12,8 @@ const schemaFields = {
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean
+    isJoinByRequest: Boolean
+    joinRequests: JSON
     mappedForRun: [ID]
     createDate: String
   `,

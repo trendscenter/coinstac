@@ -126,6 +126,16 @@ export const JOIN_CONSORTIUM_MUTATION = gql`
   }
 `;
 
+export const APPROVE_OR_REJECT_CONSORTIUM_JOIN_REQUEST_MUTATION = gql`
+  mutation approveOrRejectConsortiumJoinRequest($consortiumId: ID!, $userId: ID!, $isApprove: Boolean!)
+    ${mutations.approveOrRejectConsortiumJoinRequest}
+`;
+
+export const SEND_CONSORTIUM_JOIN_REQUEST_MUTATION = gql`
+  mutation sendConsortiumJoinRequest($consortiumId: ID!)
+    ${mutations.sendConsortiumJoinRequest}
+`;
+
 export const LEAVE_CONSORTIUM_MUTATION = gql`
   mutation leaveConsortium($consortiumId: ID!) {
     leaveConsortium(consortiumId: $consortiumId){
@@ -188,6 +198,8 @@ export const SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION = gql`
       owners
       activeMembers
       isPrivate
+      isJoinByRequest
+      joinRequests
       mappedForRun
       createDate
     }
