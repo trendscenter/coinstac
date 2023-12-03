@@ -18,7 +18,7 @@ function PullComputationsListener({
   userId,
   notifyInfo,
   pullComputations,
-  dockerStatus,
+  containerStatus,
 }) {
   const { data } = useSubscription(CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION);
   const apolloClient = useApolloClient();
@@ -26,7 +26,7 @@ function PullComputationsListener({
   const consortium = get(data, 'consortiumPipelineChanged');
 
   useEffect(() => {
-    if (!consortium || !(userId in consortium.activeMembers) || !dockerStatus) return;
+    if (!consortium || !(userId in consortium.activeMembers) || !containerStatus) return;
 
     const pipelineData = apolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const computationData = apolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
