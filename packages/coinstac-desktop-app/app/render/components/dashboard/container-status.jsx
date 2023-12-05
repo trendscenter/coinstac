@@ -1,4 +1,5 @@
 import React from 'react';
+import capitalize from 'lodash/capitalize';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
@@ -7,9 +8,12 @@ const styles = () => ({
   status: {
     display: 'flex',
     alignItems: 'center',
+    borderWidth: 0,
+    cursor: 'pointer',
   },
   statusText: {
     fontSize: 16,
+    textDecoration: 'underline',
   },
   statusUp: {
     width: 20,
@@ -27,24 +31,35 @@ const styles = () => ({
   },
 });
 
-function DockerStatus({ classes, status }) {
+function ContainerStatus({
+  classes,
+  status,
+  containerService,
+  onChangeContainerService,
+}) {
   return (
-    <span className={classes.status}>
+    <button
+      className={classes.status}
+      type="button"
+      onClick={onChangeContainerService}
+    >
       <Typography variant="subtitle2" className={classes.statusText}>
-        Docker Status:
+        {`${capitalize(containerService)} Status:`}
       </Typography>
       <span className={status ? classes.statusUp : classes.statusDown} />
-    </span>
+    </button>
   );
 }
 
-DockerStatus.defaultProps = {
+ContainerStatus.defaultProps = {
   status: false,
 };
 
-DockerStatus.propTypes = {
+ContainerStatus.propTypes = {
   status: PropTypes.bool,
   classes: PropTypes.object.isRequired,
+  containerService: PropTypes.string.isRequired,
+  onChangeContainerService: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(DockerStatus);
+export default withStyles(styles)(ContainerStatus);

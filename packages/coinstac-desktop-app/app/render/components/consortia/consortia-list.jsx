@@ -227,7 +227,7 @@ class ConsortiaList extends Component {
       pipelines,
       runs,
       usersOnlineStatus,
-      dockerStatus,
+      containerStatus,
     } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
 
@@ -319,7 +319,7 @@ class ConsortiaList extends Component {
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
         if (auth.user.id in consortium.activeMembers
           && !auth.containerService === 'singularity'
-          && !dockerStatus) {
+          && !containerStatus) {
           actions.push(
             <Tooltip title="Docker is not running" placement="top">
               <Button
@@ -645,7 +645,7 @@ class ConsortiaList extends Component {
       notifyInfo,
       notifyError,
       joinConsortium,
-      dockerStatus,
+      containerStatus,
     } = this.props;
 
     joinConsortium(consortiumId);
@@ -677,7 +677,7 @@ class ConsortiaList extends Component {
       });
     });
 
-    if (dockerStatus) {
+    if (containerStatus) {
       pullComputations({ consortiumId, computations });
       notifyInfo('Pipeline computations downloading via Docker.');
     }
@@ -840,7 +840,7 @@ ConsortiaList.propTypes = {
   classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  dockerStatus: PropTypes.bool,
+  containerStatus: PropTypes.bool,
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
@@ -863,7 +863,7 @@ ConsortiaList.propTypes = {
 
 ConsortiaList.defaultProps = {
   usersOnlineStatus: {},
-  dockerStatus: false,
+  containerStatus: false,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({

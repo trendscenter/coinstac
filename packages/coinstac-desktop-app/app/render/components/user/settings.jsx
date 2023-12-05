@@ -39,15 +39,14 @@ const styles = theme => ({
   removeDataTitle: {
     marginBottom: theme.spacing(1),
   },
-  updatePasswordTitle: {
-    marginTop: theme.spacing(5),
-    marginBottom: theme.spacing(1),
-  },
   sectionTitle: {
     marginBottom: theme.spacing(1),
   },
   topMargin: {
     marginTop: theme.spacing(4),
+  },
+  bottomMargin: {
+    marginBottom: theme.spacing(6),
   },
   rightMargin: {
     marginRight: theme.spacing(2),
@@ -307,7 +306,7 @@ class Settings extends Component {
           />
         </div>
 
-        <Typography variant="h5" className={classes.updatePasswordTitle}>
+        <Typography variant="h5" className={classes.topMargin}>
           Update Password
         </Typography>
         <ValidatorForm
@@ -367,23 +366,25 @@ class Settings extends Component {
             {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
           </div>
         </ValidatorForm>
-        <Typography variant="h5">
+
+        <Typography variant="h5" className={classes.topMargin}>
           Container Service
         </Typography>
-        <FormControl fullWidth>
-          <InputLabel id="container-service-label">Container Service</InputLabel>
-          <Select
-            labelId="container-service-label"
-            id="container-service-select"
-            value={containerService}
-            label="Container Service"
-            onChange={this.handleSelectContainerService}
-          >
-            <MenuItem value="docker">Docker</MenuItem>
-            <MenuItem value="singularity">Singularity</MenuItem>
-          </Select>
-        </FormControl>
-
+        <div className={classes.bottomMargin}>
+          <FormControl fullWidth>
+            <InputLabel id="container-service-label">Container Service</InputLabel>
+            <Select
+              labelId="container-service-label"
+              id="container-service-select"
+              value={containerService}
+              label="Container Service"
+              onChange={this.handleSelectContainerService}
+            >
+              <MenuItem value="docker">Docker</MenuItem>
+              <MenuItem value="singularity">Singularity</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
       </div>
     );
   }
