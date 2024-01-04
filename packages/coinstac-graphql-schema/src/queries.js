@@ -259,6 +259,11 @@ const queries = {
     }
   }
   `,
+  getLatestGitRelease: `
+  {
+    getLatestGitRelease
+  }
+  `,
 };
 
 module.exports = queries;
