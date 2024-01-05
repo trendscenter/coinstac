@@ -606,9 +606,15 @@ const resolvers = {
 
       try {
         const repo = new Repository(repository, auth);
+        const { data } = await repo.listReleases();
 
-        const releases = await repo.listReleases();
-        return { version: '1.2.3', releases }
+        const publishedReleases = data.filter(release => !release.prerelease)
+
+        if (publishedReleases.length > 0) {
+          return publishedReleases[0]
+        }
+
+        return null
       } catch (error) {
         return Boom.notAcceptable('Failed to get latest release');
       }
