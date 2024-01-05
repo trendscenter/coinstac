@@ -80,6 +80,7 @@ const useStyles = makeStyles(theme => ({
   prLink: {
     fontSize: 'inherit',
     textDecoration: 'underline',
+    textUnderlineOffset: '4px',
   },
   loader: {
     position: 'absolute',
