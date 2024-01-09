@@ -159,7 +159,7 @@ const helperFunctions = {
       return Boom.badRequest('Invalid user');
     }
 
-    const { email } = user;
+    const { email, username } = user;
 
     const resetToken = helperFunctions.createPasswordResetToken(email);
 
@@ -169,6 +169,7 @@ const helperFunctions = {
       subject: 'Password Reset Request',
       html: `We received your password reset request. <br/>
         Please use this token for password reset. <br/>
+        Username: <strong>${username}</strong> <br/>
         Token: <strong>${resetToken}</strong>`,
     };
 
@@ -368,11 +369,10 @@ const helperFunctions = {
 
     let { passwordChangedAt } = user;
     const currentDate = new Date();
-debugger
+
     if (!passwordChangedAt) {
-      let date181DaysAgo = new Date(currentDate);
+      const date181DaysAgo = new Date(currentDate);
       passwordChangedAt = date181DaysAgo.setDate(currentDate.getDate() - 181);
-      const a = 1;
     } else {
       passwordChangedAt = passwordChangedAt.getTime();
     }
