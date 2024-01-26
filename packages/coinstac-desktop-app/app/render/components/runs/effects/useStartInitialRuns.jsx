@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { useRef, useEffect } from 'react';
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { get } from 'lodash';

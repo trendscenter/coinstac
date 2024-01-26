@@ -2,6 +2,8 @@
 
 require('trace');
 require('clarify');
+
+/* eslint-disable-next-line import/no-unresolved */
 const test = require('ava');
 const path = require('path');
 const { existsSync } = require('fs');

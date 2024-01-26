@@ -30,10 +30,10 @@ import MarkdownValidator from './markdown-validator';
 
 const {
   CLOUDINARY_UPLOAD_PRESET,
-  CLOUDINARY_API_KEY,
-  CLOUDINARY_API_SECRET,
+  // CLOUDINARY_API_KEY,
+  // CLOUDINARY_API_SECRET,
   CLOUDINARY_UPLOAD_URL,
-  CLOUDINARY_DELETE_URL,
+  // CLOUDINARY_DELETE_URL,
 } = process.env;
 
 const styles = theme => ({
@@ -249,18 +249,21 @@ class Issue extends Component {
       });
   }
 
+  /* eslint-disable-next-line */
   removeImage = async (imageId) => {
     // const date = new Date();
     // const timestamp = date.getTime();
     // const hash = crypto.createHash('sha1');
-    // const sign = hash.update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
-    //
+    // const sign = hash
+    //   .update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`)
+    //   .digest('hex');
+
     // const fd = new FormData();
     // fd.append('public_id', imageId);
     // fd.append('api_key', CLOUDINARY_API_KEY);
     // fd.append('timestamp', timestamp);
     // fd.append('signature', sign);
-    //
+
     // axios.post(CLOUDINARY_DELETE_URL, fd)
     //   .then(() => {
     //     const { screenshots } = this.state;

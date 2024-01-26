@@ -5,9 +5,8 @@ const { merge } = require('lodash');
 const parseCLIInput = require('./parse-cli-input');
 
 module.exports = function configureCore({
-  config, logger, userId, appDirectory, imageDirectory, containerService, clientServerURL, token
-}
-) {
+  config, logger, userId, appDirectory, imageDirectory, containerService, clientServerURL, token,
+}) {
   const coreConfiguration = merge(
     JSON.parse(config.toString()),
     parseCLIInput.get(),

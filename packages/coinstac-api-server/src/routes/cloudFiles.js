@@ -86,14 +86,12 @@ module.exports = [
         { method: helperFunctions.canUserDownload, assign: 'runId' },
       ],
       handler: async (req, h) => {
-        const { payload } = req;
         const { runId } = req.pre;
         const fileKey = `${runId}/${runId}.tar.gz`;
         try {
           const fileStream = await downloadFromS3(fileKey);
           return h.response(fileStream).code(200);
         } catch (e) {
-          console.log(e);
           return h.response(e).code(500);
         }
       },
