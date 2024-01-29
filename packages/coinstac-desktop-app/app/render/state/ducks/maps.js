@@ -138,11 +138,7 @@ export const saveDataMapping = applyAsyncLoading(
             // Recursively get and store all the files
             const files = [];
             files.push(...getAllFiles(mappedData.directory, null, 'all'));
-            const newfilesArray = files.filter((value) => {
-              if (!value.includes('.DS_Store')) {
-                return value;
-              }
-            });
+            const newfilesArray = files.filter(value => !value.includes('.DS_Store'));
             filesArray.push(...newfilesArray);
             inputMap[inputMapKey].value = mappedData.directory;
           } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'

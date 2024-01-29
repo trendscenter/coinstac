@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 const test = require('ava');
 const { transformToClient } = require('../src/utils');
 

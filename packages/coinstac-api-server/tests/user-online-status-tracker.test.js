@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 const test = require('ava');
 const { getOnlineUsers } = require('../src/data/user-online-status-tracker');
 const { eventEmitter, WS_CONNECTION_STARTED, WS_CONNECTION_TERMINATED } = require('../src/data/events');

@@ -8,10 +8,10 @@ import UserEdit from './user-edit';
 
 const {
   CLOUDINARY_UPLOAD_PRESET,
-  CLOUDINARY_API_KEY,
-  CLOUDINARY_API_SECRET,
+  // CLOUDINARY_API_KEY,
+  // CLOUDINARY_API_SECRET,
   CLOUDINARY_UPLOAD_URL,
-  CLOUDINARY_DELETE_URL,
+  // CLOUDINARY_DELETE_URL,
 } = process.env;
 
 class UserAccountController extends Component {
@@ -107,18 +107,21 @@ class UserAccountController extends Component {
   }
 
   // *********** Delete Cloudinary Image File ******************** //
+  /* eslint-disable-next-line */
   async destroyImage(file) {
     // const date = new Date();
     // const timestamp = date.getTime();
     // const hash = crypto.createHash('sha1');
-    // const sign = hash.update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
-    //
+    // const sign = hash
+    //   .update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`)
+    //   .digest('hex');
+
     // const fd = new FormData();
     // fd.append('public_id', file);
     // fd.append('api_key', CLOUDINARY_API_KEY);
     // fd.append('timestamp', timestamp);
     // fd.append('signature', sign);
-    //
+
     // try {
     //   await axios.post(
     //     CLOUDINARY_DELETE_URL,

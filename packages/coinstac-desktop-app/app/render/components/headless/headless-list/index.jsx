@@ -23,7 +23,10 @@ function HeadlessList({ auth }) {
 
   const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, {
     fetchPolicy: 'cache-and-network',
-    onError: (error) => { console.error({ error }); },
+    onError: (error) => {
+      /* eslint-disable-next-line no-console */
+      console.error({ error });
+    },
   });
   const [submitDelete] = useMutation(DELETE_HEADLESS_CLIENT_MUTATION);
 

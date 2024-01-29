@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import ReactJson from 'react-json-view';
 import { connect } from 'react-redux';
-import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../../state/graphql/functions';
+import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../state/graphql/functions';
 
 const styles = () => ({
   pipelineCard: {

@@ -75,7 +75,7 @@ function parseTableColumnOutput(output) {
         o = parseFloat(o).toExponential(4);
       }
       cols.push(
-        <td key={`value-${o}-${ind}`} style={{border: 'none', paddingLeft: 0}}>
+        <td key={`value-${o}-${ind}`} style={{ border: 'none', paddingLeft: 0 }}>
           {`${o} `}
         </td>
       );
@@ -265,19 +265,21 @@ class TableResult extends Component {
             <TableBody>
               {
                 !Array.isArray(data) && keyValPairs.map((pair) => {
-                  if (data.covariate_labels && typeof pair[1] !== 'object' && pair[0] !== 'covariate_labels' ||
-                     !data.covariate_labels && pair[0] !== 'covariate_labels') {
+                  if ((data.covariate_labels && typeof pair[1] !== 'object' && pair[0] !== 'covariate_labels')
+                    || (!data.covariate_labels && pair[0] !== 'covariate_labels')) {
                     return (
-                        <TableRow key={`${pair[0]}-numbers-row`}>
-                          <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
-                            {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
-                          </TableCell>
-                          <TableCell key={`${pair[0]}-numbers-column-output`}>
-                            {parseTableColumnOutput(pair[1])}
-                          </TableCell>
-                        </TableRow>
-                    )
+                      <TableRow key={`${pair[0]}-numbers-row`}>
+                        <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
+                          {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                        </TableCell>
+                        <TableCell key={`${pair[0]}-numbers-column-output`}>
+                          {parseTableColumnOutput(pair[1])}
+                        </TableCell>
+                      </TableRow>
+                    );
                   }
+
+                  return null;
                 })
               }
             </TableBody>

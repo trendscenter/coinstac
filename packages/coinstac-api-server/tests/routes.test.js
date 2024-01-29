@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 const test = require('ava');
 const sinon = require('sinon');
 const find = require('lodash/find');
@@ -8,7 +9,7 @@ const helperFunctions = require('../src/auth-helpers');
 
 const { USER_IDS } = require('../seed/populate');
 
-const resMock = { code: () => {} };
+const resMock = { code: () => { } };
 
 test('routes', (t) => {
   t.is(routes.length, authRoutes.length + versionRoutes.length);
