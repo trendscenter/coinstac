@@ -8,12 +8,12 @@ import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
 import { TUTORIAL_STEPS } from '../../constants';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   tabTitle: {
     marginTop: theme.spacing(2),
   },
@@ -40,17 +40,18 @@ const styles = theme => ({
   createPipelineHint: {
     marginBottom: theme.spacing(1),
   },
-});
+}));
 
 function ConsortiumPipeline({
   consortium,
   owner,
-  classes,
   pipelines,
   isTutorialHidden,
   tutorialChange,
   saveActivePipeline,
 }) {
+  const classes = useStyles();
+
   const activePipeline = useMemo(() => {
     return pipelines.find(p => p.id === consortium.activePipelineId);
   }, [pipelines, consortium]);
@@ -207,7 +208,6 @@ function ConsortiumPipeline({
 }
 
 ConsortiumPipeline.propTypes = {
-  classes: PropTypes.object.isRequired,
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
@@ -216,4 +216,4 @@ ConsortiumPipeline.propTypes = {
   tutorialChange: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ConsortiumPipeline);
+export default ConsortiumPipeline;

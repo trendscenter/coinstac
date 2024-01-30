@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useSubscription } from '@apollo/client';
 import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
@@ -16,16 +16,13 @@ function runIsFinished(run) {
 
 function RemoteRunsListener({
   userId,
-  localRuns,
   consortia,
-  loadLocalRuns,
-  saveRunLocally,
-  updateRunLocally,
-  deleteRun,
-  suspendedRuns,
-  notifyError,
-  notifySuccess,
 }) {
+  const localRuns = useSelector(state => state.runs.runs);
+  const suspendedRuns = useSelector(state => state.suspendedRuns);
+
+  const dispatch = useDispatch();
+
   const ranFirstQuery = useRef(false);
 
   const { data } = useQuery(FETCH_ALL_USER_RUNS_QUERY, {
@@ -46,7 +43,7 @@ function RemoteRunsListener({
   useEffect(() => {
     if (!remoteRunsFirstFetch) return;
 
-    loadLocalRuns();
+    dispatch(loadLocalRuns());
 
     ranFirstQuery.current = true;
 
@@ -61,7 +58,7 @@ function RemoteRunsListener({
         runData.status = 'suspended';
       }
 
-      saveRunLocally(runData);
+      dispatch(saveRunLocally(runData));
     });
   }, [remoteRunsFirstFetch]);
 
@@ -69,7 +66,7 @@ function RemoteRunsListener({
     if (!remoteRunChanged) return;
 
     if (remoteRunChanged.delete) {
-      deleteRun(remoteRunChanged.id);
+      dispatch(deleteRun(remoteRunChanged.id));
       return;
     }
 
@@ -77,13 +74,13 @@ function RemoteRunsListener({
 
     // Current user is not part of the run, but is part of the consortium
     if (!localRun) {
-      saveRunLocally(remoteRunChanged);
+      dispatch(saveRunLocally(remoteRunChanged));
     }
 
     if (!runIsFinished(remoteRunChanged)) {
-      updateRunLocally(remoteRunChanged.id, {
+      dispatch(updateRunLocally(remoteRunChanged.id, {
         remotePipelineState: remoteRunChanged.remotePipelineState,
-      });
+      }));
 
       return;
     }
@@ -96,34 +93,21 @@ function RemoteRunsListener({
       runData.status = 'complete';
 
       if (!localRun.results) {
-        notifySuccess(`${consortium.name} Pipeline Complete.`);
+        dispatch(notifySuccess(`${consortium.name} Pipeline Complete.`));
       }
     } else if (remoteRunChanged.error) {
       runData.status = 'error';
 
       if (!localRun.error) {
-        notifyError(`${consortium.name} Pipeline Error.`);
+        dispatch(notifyError(`${consortium.name} Pipeline Error.`));
       }
     }
 
     ipcRenderer.send('clean-remote-pipeline', remoteRunChanged.id);
-    saveRunLocally(runData);
+    dispatch(saveRunLocally(runData));
   }, [remoteRunChanged]);
 
   return null;
 }
 
-const mapStateToProps = ({ runs, suspendedRuns }) => ({
-  localRuns: runs.runs,
-  suspendedRuns,
-});
-
-export default connect(mapStateToProps,
-  {
-    loadLocalRuns,
-    saveRunLocally,
-    updateRunLocally,
-    deleteRun,
-    notifyError,
-    notifySuccess,
-  })(RemoteRunsListener);
+export default RemoteRunsListener;

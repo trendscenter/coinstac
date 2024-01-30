@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import Joyride from 'react-joyride';
@@ -23,7 +23,7 @@ import { TUTORIAL_STEPS } from '../../constants';
 const DashboardNav = ({
   user, hasRunOfInterestInProgress, isTutorialHidden, tutorialChange,
 }, { router }) => (
-  <Fragment>
+  <>
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
@@ -78,7 +78,7 @@ const DashboardNav = ({
         callback={tutorialChange}
       />
     )}
-  </Fragment>
+  </>
 );
 
 DashboardNav.propTypes = {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -20,7 +20,7 @@ import FileCopyIcon from '@material-ui/icons/FileCopy';
 import InfoIcon from '@material-ui/icons/Info';
 import { ipcRenderer } from 'electron';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   selectFileButton: {
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
@@ -29,7 +29,7 @@ const styles = theme => ({
   fileListContainer: {
     marginTop: theme.spacing(1),
   },
-});
+}));
 
 function openFileDialog(multiple, directory, extensions, filterName) {
   const filters = [];
@@ -51,8 +51,10 @@ function openFileDialog(multiple, directory, extensions, filterName) {
 
 function FilePicker({
   multiple, directory, extensions, filterName, selected, onChange,
-  deleteItem, tooltip, classes,
+  deleteItem, tooltip,
 }) {
+  const classes = useStyles();
+
   const [expandList, setExpandList] = useState(false);
 
   return (
@@ -72,61 +74,55 @@ function FilePicker({
         >
           {directory ? 'Select Directory(s)' : 'Select File(s)'}
         </Button>
-        {
-          tooltip && (
-            <Tooltip
-              title={
-                <Typography variant="body1">{tooltip}</Typography>
-              }
-            >
-              <InfoIcon />
-            </Tooltip>
-          )
-        }
+        {tooltip && (
+          <Tooltip
+            title={
+              <Typography variant="body1">{tooltip}</Typography>
+            }
+          >
+            <InfoIcon />
+          </Tooltip>
+        )}
       </Box>
-      {
-        selected && selected.length > 0 && (
-          <Paper variant="outlined" className={classes.fileListContainer}>
+      {selected && selected.length > 0 && (
+        <Paper variant="outlined" className={classes.fileListContainer}>
+          <List disablePadding>
+            <ListItem button onClick={() => setExpandList(!expandList)}>
+              <ListItemIcon>
+                <FileCopyIcon />
+              </ListItemIcon>
+              <ListItemText primary={`Click to see selected ${directory ? 'directories' : 'files'}`} />
+              {expandList ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItem>
+          </List>
+          <Collapse in={expandList} timeout="auto">
             <List disablePadding>
-              <ListItem button onClick={() => setExpandList(!expandList)}>
-                <ListItemIcon>
-                  <FileCopyIcon />
-                </ListItemIcon>
-                <ListItemText primary={`Click to see selected ${directory ? 'directories' : 'files'}`} />
-                {expandList ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              </ListItem>
+              {selected.map((file, index) => (
+                <ListItem key={file} button>
+                  <ListItemText>
+                    <Typography
+                      component="span"
+                      variant="body2"
+                      color="textPrimary"
+                    >
+                      {file}
+                    </Typography>
+                  </ListItemText>
+                  <ListItemSecondaryAction>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => deleteItem(index)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
             </List>
-            <Collapse in={expandList} timeout="auto">
-              <List disablePadding>
-                {
-                  selected.map((file, index) => (
-                    <ListItem key={file} button>
-                      <ListItemText>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          color="textPrimary"
-                        >
-                          {file}
-                        </Typography>
-                      </ListItemText>
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => deleteItem(index)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))
-                }
-              </List>
-            </Collapse>
-          </Paper>
-        )
-      }
+          </Collapse>
+        </Paper>
+      )}
     </div>
   );
 }
@@ -148,8 +144,7 @@ FilePicker.propTypes = {
   onChange: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
   selected: PropTypes.array,
-  classes: PropTypes.object.isRequired,
   deleteItem: PropTypes.func,
 };
 
-export default withStyles(styles)(FilePicker);
+export default FilePicker;

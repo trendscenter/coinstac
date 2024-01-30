@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Alert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import MapsEditForm from './maps-edit-form';
@@ -13,8 +13,11 @@ import {
 import MapsExcludedSubjects from './fields/maps-excluded-subjects';
 
 function MapsEdit({
-  params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers,
+  params, pipelines, consortia, updateConsortiumMappedUsers,
 }) {
+  const maps = useSelector(state => state.maps.consortiumDataMappings);
+  const dispatch = useDispatch();
+
   const [saved, setSaved] = useState(false);
   const [consortium, setConsortium] = useState(null);
   const [pipeline, setPipeline] = useState(null);
@@ -80,7 +83,7 @@ function MapsEdit({
       setAlertMsg(undef[0]);
     } else {
       try {
-        await saveDataMapping(consortium, pipeline, dataMap);
+        await dispatch(saveDataMapping(consortium, pipeline, dataMap));
         updateConsortiumMappedUsers(consortium.id, true);
         setSaved(true);
         setAlertMsg(null);
@@ -120,17 +123,10 @@ function MapsEdit({
 
 MapsEdit.propTypes = {
   consortia: PropTypes.array.isRequired,
-  maps: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
-  saveDataMapping: PropTypes.func.isRequired,
   updateConsortiumMappedUsers: PropTypes.func.isRequired,
 };
-
-const mapStateToProps = ({ auth, maps }) => ({
-  auth,
-  maps: maps.consortiumDataMappings,
-});
 
 const ComponentWithData = compose(
   graphql(
@@ -146,7 +142,4 @@ const ComponentWithData = compose(
   withApollo
 )(MapsEdit);
 
-export default connect(mapStateToProps,
-  {
-    saveDataMapping,
-  })(ComponentWithData);
+export default ComponentWithData;

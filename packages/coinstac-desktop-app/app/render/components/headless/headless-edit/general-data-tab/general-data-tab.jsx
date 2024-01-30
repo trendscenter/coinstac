@@ -207,16 +207,16 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
         <Box marginLeft={2} display="flex" alignItems="center">
           {(creating || updating) && <CircularProgress size={20} />}
           {submitCompleted && (
-            <React.Fragment>
+            <>
               <CheckCircleIcon className={classes.successIcon} />
               Data saved
-            </React.Fragment>
+            </>
           )}
           {submitError && (
-            <React.Fragment>
+            <>
               <ErrorIcon color="error" />
               {submitError}
-            </React.Fragment>
+            </>
           )}
         </Box>
       </Box>

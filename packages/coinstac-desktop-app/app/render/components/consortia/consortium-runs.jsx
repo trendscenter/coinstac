@@ -1,11 +1,13 @@
 import React, { useMemo } from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import RunsList from '../common/runs-list';
 import { isUserInGroup } from '../../utils/helpers';
 
-const ConsortiumRuns = ({ auth, runs, consortium }) => {
+const ConsortiumRuns = ({ runs, consortium }) => {
+  const auth = useSelector(state => state.auth);
+
   const filteredRuns = useMemo(() => {
     if (!runs) return [];
 
@@ -25,7 +27,6 @@ const ConsortiumRuns = ({ auth, runs, consortium }) => {
 };
 
 ConsortiumRuns.propTypes = {
-  auth: PropTypes.object.isRequired,
   consortium: PropTypes.object.isRequired,
   runs: PropTypes.array,
 };
@@ -34,8 +35,4 @@ ConsortiumRuns.defaultProps = {
   runs: null,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(ConsortiumRuns);
+export default ConsortiumRuns;

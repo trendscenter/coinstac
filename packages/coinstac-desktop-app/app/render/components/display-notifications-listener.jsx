@@ -1,20 +1,22 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import Notification from './notification';
 
 import { dequeueNotification } from '../state/ducks/notifyAndLog';
 
-function DisplayNotificationsListener({ notifications, dequeueNotification }) {
+function DisplayNotificationsListener() {
+  const notifications = useSelector(state => state.notifications.notifications);
+  const dispatch = useDispatch();
+
   if (!notifications) return null;
 
   function onCloseNotification(notificationId) {
-    dequeueNotification(notificationId);
+    dispatch(dequeueNotification(notificationId));
   }
 
   return (
-    <React.Fragment>
+    <>
       {notifications.map((notification, index) => (
         <Notification
           key={notification.id}
@@ -26,24 +28,8 @@ function DisplayNotificationsListener({ notifications, dequeueNotification }) {
           onClose={onCloseNotification}
         />
       ))}
-    </React.Fragment>
+    </>
   );
 }
 
-DisplayNotificationsListener.defaultProps = {
-  notifications: [],
-};
-
-DisplayNotificationsListener.propTypes = {
-  notifications: PropTypes.array,
-  dequeueNotification: PropTypes.func.isRequired,
-};
-
-const mapStateToProps = ({ notifications }) => ({
-  notifications: notifications.notifications,
-});
-
-export default connect(mapStateToProps,
-  {
-    dequeueNotification,
-  })(DisplayNotificationsListener);
+export default DisplayNotificationsListener;

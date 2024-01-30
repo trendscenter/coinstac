@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { get, toUpper } from 'lodash';
 import Avatar from '@material-ui/core/Avatar';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
     display: 'flex',
     alignItems: 'center',
@@ -25,34 +25,36 @@ const styles = theme => ({
     paddingLeft: theme.spacing(1),
     paddingRight: theme.spacing(1),
   },
-});
+}));
 
 const ThreadAvatar = ({
-  classes,
   className,
   isSender,
   showUsername,
   username,
-}) => (
-  <div className={classes.wrapper}>
-    <Avatar
-      className={
-        classNames(
-          className || classes.avatar,
-          { sender: isSender, receiver: !isSender }
-        )
-      }
-    >
-      {toUpper(get(username, '0'))}
-    </Avatar>
-    {showUsername && username && (
-      <span className={classes.username}>{username}</span>
-    )}
-  </div>
-);
+}) => {
+  const classes = useStyles();
+
+  return (
+    <div className={classes.wrapper}>
+      <Avatar
+        className={
+          classNames(
+            className || classes.avatar,
+            { sender: isSender, receiver: !isSender }
+          )
+        }
+      >
+        {toUpper(get(username, '0'))}
+      </Avatar>
+      {showUsername && username && (
+        <span className={classes.username}>{username}</span>
+      )}
+    </div>
+  );
+};
 
 ThreadAvatar.propTypes = {
-  classes: PropTypes.object.isRequired,
   className: PropTypes.any,
   isSender: PropTypes.bool,
   showUsername: PropTypes.bool,
@@ -65,4 +67,4 @@ ThreadAvatar.defaultProps = {
   showUsername: false,
 };
 
-export default withStyles(styles)(ThreadAvatar);
+export default ThreadAvatar;

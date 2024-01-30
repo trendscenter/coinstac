@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
@@ -16,7 +16,9 @@ import { FETCH_DATASET_QUERY, SAVE_DATASET_MUTATION } from '../../../state/graph
 import JsonField from './json-field';
 import useStyles from './edit-dataset.styles';
 
-function EditDataset({ params, auth }) {
+function EditDataset({ params }) {
+  const auth = useSelector(state => state.auth);
+
   const { datasetId } = params;
 
   const classes = useStyles();
@@ -191,20 +193,20 @@ function EditDataset({ params, auth }) {
             <Box marginLeft={2} display="flex" alignItems="center">
               {(submitting) && <CircularProgress size={20} />}
               {submitCompleted && (
-                <React.Fragment>
+                <>
                   <CheckCircleIcon className={classes.successIcon} />
                   <Typography variant="body2" className={classes.statusMessage}>
                     Data saved
                   </Typography>
-                </React.Fragment>
+                </>
               )}
               {submitError && (
-                <React.Fragment>
+                <>
                   <ErrorIcon color="error" />
                   <Typography color="error" variant="body2" className={classes.statusMessage}>
-                    { submitError }
+                    {submitError}
                   </Typography>
-                </React.Fragment>
+                </>
               )}
             </Box>
           </Box>
@@ -216,11 +218,6 @@ function EditDataset({ params, auth }) {
 
 EditDataset.propTypes = {
   params: PropTypes.object.isRequired,
-  auth: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(EditDataset);
+export default EditDataset;

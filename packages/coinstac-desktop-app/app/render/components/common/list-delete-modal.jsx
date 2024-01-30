@@ -7,9 +7,9 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import WarningIcon from '@material-ui/icons/Warning';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   warningMessageContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -19,7 +19,7 @@ const styles = theme => ({
     marginTop: theme.spacing(0.5),
     marginLeft: theme.spacing(0.5),
   },
-});
+}));
 
 const ListDeleteModal = ({
   close,
@@ -27,41 +27,40 @@ const ListDeleteModal = ({
   itemName,
   show,
   warningMessage,
-  classes,
-}) => (
-  <Dialog id="list-delete-modal" open={show} onClose={close}>
-    <DialogTitle>
-      Delete
-    </DialogTitle>
-    <DialogContent>
-      <DialogContentText>
-        {`Are you sure you want to delete this ${itemName}?`}
-      </DialogContentText>
-      {
-        warningMessage
-        && (
+}) => {
+  const classes = useStyles();
+
+  return (
+    <Dialog id="list-delete-modal" open={show} onClose={close}>
+      <DialogTitle>
+        Delete
+      </DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          {`Are you sure you want to delete this ${itemName}?`}
+        </DialogContentText>
+        {warningMessage && (
           <div className={classes.warningMessageContainer}>
             <WarningIcon />
             <DialogContentText className={classes.warningMessage}>
-              { warningMessage }
+              {warningMessage}
             </DialogContentText>
           </div>
-        )
-      }
-    </DialogContent>
-    <DialogActions>
-      <Button onClick={close}>Cancel</Button>
-      <Button color="primary" onClick={deleteItem}>Delete</Button>
-    </DialogActions>
-  </Dialog>
-);
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={close}>Cancel</Button>
+        <Button color="primary" onClick={deleteItem}>Delete</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 ListDeleteModal.defaultProps = {
   warningMessage: null,
 };
 
 ListDeleteModal.propTypes = {
-  classes: PropTypes.object.isRequired,
   itemName: PropTypes.string.isRequired,
   show: PropTypes.bool.isRequired,
   warningMessage: PropTypes.string,
@@ -69,4 +68,4 @@ ListDeleteModal.propTypes = {
   deleteItem: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ListDeleteModal);
+export default ListDeleteModal;

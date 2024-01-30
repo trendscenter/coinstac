@@ -8,21 +8,28 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import PipelineStepInputFreesurferTableRow from './pipeline-step-input-freesurfer-table-row';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   addObjButton: {
     marginBottom: theme.spacing(1),
     marginLeft: theme.spacing(1),
   },
-});
+}));
 
-function PipelineStepInputFreesurfer(props) {
-  const {
-    objKey, objParams, owner, addClientProp, getNewObj, possibleInputs, step,
-    updateStep, classes, headlessMembers,
-  } = props;
+function PipelineStepInputFreesurfer({
+  objKey,
+  objParams,
+  owner,
+  addClientProp,
+  getNewObj,
+  possibleInputs,
+  step,
+  updateStep,
+  headlessMembers,
+}) {
+  const classes = useStyles();
 
   const objInputMap = step.inputMap[objKey];
 
@@ -38,38 +45,34 @@ function PipelineStepInputFreesurfer(props) {
         <AddIcon />
         {`Add ${objParams.label}`}
       </Button>
-      {
-        objInputMap && objInputMap.value && (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Data Type</TableCell>
-                <TableCell>{objParams.items.includes('FreeSurfer') ? 'Interest' : ''}</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {
-                objInputMap.value.map((obj, index) => (
-                  <PipelineStepInputFreesurferTableRow
-                    key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
-                    index={index}
-                    obj={obj}
-                    objKey={objKey}
-                    owner={owner}
-                    possibleInputs={possibleInputs}
-                    objParams={objParams}
-                    getNewObj={getNewObj}
-                    updateStep={updateStep}
-                    step={step}
-                    headlessMembers={headlessMembers}
-                  />
-                ))
-              }
-            </TableBody>
-          </Table>
-        )
-      }
+      {objInputMap && objInputMap.value && (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Data Type</TableCell>
+              <TableCell>{objParams.items.includes('FreeSurfer') ? 'Interest' : ''}</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {objInputMap.value.map((obj, index) => (
+              <PipelineStepInputFreesurferTableRow
+                key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
+                index={index}
+                obj={obj}
+                objKey={objKey}
+                owner={owner}
+                possibleInputs={possibleInputs}
+                objParams={objParams}
+                getNewObj={getNewObj}
+                updateStep={updateStep}
+                step={step}
+                headlessMembers={headlessMembers}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
@@ -88,8 +91,7 @@ PipelineStepInputFreesurfer.propTypes = {
   updateStep: PropTypes.func.isRequired,
   addClientProp: PropTypes.func.isRequired,
   possibleInputs: PropTypes.array,
-  classes: PropTypes.object.isRequired,
   headlessMembers: PropTypes.object,
 };
 
-export default withStyles(styles)(PipelineStepInputFreesurfer);
+export default PipelineStepInputFreesurfer;

@@ -4,12 +4,12 @@ import capitalize from 'lodash/capitalize';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import Tooltip from '@material-ui/core/Tooltip';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
 import DockerImage from '../../../../img/icons/docker.svg';
 import SingularityImage from '../../../../img/icons/singularity.svg';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   status: {
     display: 'flex',
     alignItems: 'center',
@@ -61,14 +61,15 @@ const styles = theme => ({
     marginLeft: '0.5rem',
     cursor: 'pointer',
   },
-});
+}));
 
 function ContainerStatus({
-  classes,
   status,
   containerService,
   onChangeContainerService,
 }) {
+  const classes = useStyles();
+
   return (
     <div className={classes.status}>
       <div
@@ -107,9 +108,8 @@ ContainerStatus.defaultProps = {
 
 ContainerStatus.propTypes = {
   status: PropTypes.bool,
-  classes: PropTypes.object.isRequired,
   containerService: PropTypes.string.isRequired,
   onChangeContainerService: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ContainerStatus);
+export default ContainerStatus;
