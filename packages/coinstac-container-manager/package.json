@@ -1,6 +1,6 @@
 {
   "name": "coinstac-container-manager",
-  "version": "6.8.0",
+  "version": "6.8.1",
   "description": "",
   "main": "src/index.js",
   "scripts": {
