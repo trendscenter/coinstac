@@ -408,7 +408,9 @@ class ConsortiaList extends Component {
           Unset Active Pipeline
         </Button>
       );
-    } else if ((owner || member) && needsDataMapping) {
+    }
+
+    if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
           key={`${consortium.id}-set-map-local-button`}
