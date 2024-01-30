@@ -1,11 +1,11 @@
 import React from 'react';
-import useDockerStatus from '../../hooks/useDockerStatus';
+import useContainerStatus from '../../hooks/useContainerStatus';
 import ComputationsList from './computations-list';
 
 const ComputationsListContainer = (props) => {
-  const dockerStatus = useDockerStatus();
+  const containerStatus = useContainerStatus();
 
-  return <ComputationsList {...props} dockerStatus={dockerStatus} />;
+  return <ComputationsList {...props} containerStatus={containerStatus} />;
 };
 
 export default ComputationsListContainer;

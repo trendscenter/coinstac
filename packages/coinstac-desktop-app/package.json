@@ -1,6 +1,6 @@
 {
   "name": "coinstac-desktop-app",
-  "version": "6.7.7",
+  "version": "6.8.0",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -11,14 +11,14 @@
     "@material-ui/lab": "^4.0.0-alpha.57",
     "add-graphql-subscriptions": "^1.0.1",
     "app-module-path": "^2.2.0",
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "bitap": "^1.0.1",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^6.7.7",
-    "coinstac-common": "^6.7.7",
-    "coinstac-container-manager": "^6.7.7",
-    "coinstac-graphql-schema": "^6.6.0",
-    "coinstac-pipeline": "^6.7.7",
+    "coinstac-client-core": "^6.8.0",
+    "coinstac-common": "^6.8.0",
+    "coinstac-container-manager": "^6.8.0",
+    "coinstac-graphql-schema": "^6.8.0",
+    "coinstac-pipeline": "^6.8.0",
     "commander": "^2.15.1",
     "convict": "^6.2.1",
     "core-js": "^3.19.1",
@@ -29,6 +29,7 @@
     "electron-store": "^8.0.1",
     "electron-updater": "^4.6.1",
     "form-data": "^4.0.0",
+    "formik": "^2.2.9",
     "fuse.js": "^6.6.2",
     "graphql": "^15.5.0",
     "gunzip-maybe": "^1.4.2",
@@ -80,7 +81,8 @@
     "tail": "^1.2.3",
     "tar-fs": "^2.1.1",
     "uuid": "^8.3.2",
-    "winston": "^3.4.0"
+    "winston": "^3.4.0",
+    "yup": "^1.0.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
@@ -133,7 +135,9 @@
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
+    "test:e2e-permissions": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/consortia-permissions.test.js",
     "test:e2e-single": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run.test.js",
+    "test:e2e-multi": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run-2-members.test.js",
     "test:e2e": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/*.test.js",
     "watch": "cross-env NODE_ENV=development webpack-dev-server --mode=development"
   },

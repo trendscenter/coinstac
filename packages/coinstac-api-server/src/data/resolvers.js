@@ -3,6 +3,7 @@ const GraphQLJSON = require('graphql-type-json');
 const axios = require('axios');
 const { get, keys } = require('lodash');
 const Issue = require('github-api/dist/components/Issue');
+const Repository = require('github-api/dist/components/Repository');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
@@ -389,15 +390,11 @@ const resolvers = {
 
       steplessPipelines.forEach(p => pipelines[p._id] = p);
 
-      const memberConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
-      const consortiaIds = memberConsortia.map(consortium => String(consortium._id));
-      let res = Object.values(pipelines);
-      if (!isAdmin(credentials.permissions)) {
-        res = res.filter(pipeline => {
-          return consortiaIds.includes(String(pipeline.owningConsortium))
-            || pipeline.shared;
-        });
-      }
+      const accessibleConsortia = await db.collection('consortia').find({ [`members.${credentials.id}`]: { $exists: true } }).toArray();
+      const consortiaIds = accessibleConsortia.map(consortium => String(consortium._id));
+      const res = Object.values(pipelines).filter(pipeline =>
+        consortiaIds.includes(String(pipeline.owningConsortium)) || pipeline.shared
+      );
 
       return transformToClient(res);
     },
@@ -599,6 +596,28 @@ const resolvers = {
       }
 
       return { info: JSON.stringify(result.data) };
+    },
+    getLatestGitRelease: async () => {
+      const repository = process.env.COINSTAC_REPOSITORY_NAME
+      const auth = {
+        username: process.env.GITHUB_BOT_USERNAME,
+        password: process.env.GITHUB_ACCESS_TOKEN,
+      }
+
+      try {
+        const repo = new Repository(repository, auth);
+        const { data } = await repo.listReleases();
+
+        const publishedReleases = data.filter(release => !release.prerelease)
+
+        if (publishedReleases.length > 0) {
+          return publishedReleases[0]
+        }
+
+        return null
+      } catch (error) {
+        return Boom.notAcceptable('Failed to get latest release');
+      }
     }
   },
   Mutation: {
@@ -2026,7 +2045,13 @@ const resolvers = {
         // Find the users that are in the same consortia as the logged user
         const db = database.getDbInstance();
 
-        const user = await helperFunctions.getUserDetailsByID(context.userId);
+        const userId = context.userId || payload.userId;
+
+        if (!userId) {
+          return getOnlineUsers();
+        }
+
+        const user = await helperFunctions.getUserDetailsByID(userId);
 
         const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
         const consortia = await db.collection('consortia').find(

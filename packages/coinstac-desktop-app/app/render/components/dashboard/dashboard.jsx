@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import React, {
   useEffect, useMemo, useState,
 } from 'react';
@@ -14,7 +15,12 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import useApolloClient from '../../state/apollo-client';
-import { toggleTutorial, tutorialChange, refreshToken } from '../../state/ducks/auth';
+import {
+  toggleTutorial,
+  tutorialChange,
+  refreshToken,
+  setContainerService,
+} from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
@@ -28,11 +34,11 @@ import {
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
-import useDockerStatus from '../../hooks/useDockerStatus';
+import useContainerStatus from '../../hooks/useContainerStatus';
 import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
 import DashboardNav from './dashboard-nav';
 import DashboardTutorialModal from './dashboard-tutorial';
-import DockerStatus from './docker-status';
+import ContainerStatus from './container-status';
 import NotificationsListener from './listeners/notifications-listener';
 import DockerEventsListeners from './listeners/docker-events-listeners';
 import LocalRunStatusListeners from './listeners/local-run-status-listeners';
@@ -56,6 +62,8 @@ function Dashboard({
   const maps = useSelector(state => state.maps.consortiumDataMappings);
 
   const dispatch = useDispatch();
+
+  const { containerService } = auth;
 
   const [showTutorialModal, setShowTutorialModal] = useState(!auth.isTutorialHidden);
 
@@ -109,7 +117,7 @@ function Dashboard({
   const pipelines = get(pipelinesData, 'fetchAllPipelines');
   const threads = get(threadsData, 'fetchAllThreads');
 
-  const dockerStatus = useDockerStatus();
+  const containerStatus = useContainerStatus();
 
   useStartInitialRuns(); // starts pipelines on app startup
   useStartDecentralizedRun(); // starts decentralized runs when the api server sends a subscription
@@ -144,8 +152,14 @@ function Dashboard({
     }
   };
 
+  const handleSelectContainerService = () => {
+    dispatch(setContainerService(
+      containerService === 'docker' ? 'singularity' : 'docker'
+    ));
+  };
+
   const childrenWithProps = React.cloneElement(children, {
-    computations, consortia, pipelines, runs, threads, dockerStatus,
+    computations, consortia, pipelines, runs, threads, containerStatus,
   });
 
   if (!get(auth, 'user.email')) {
@@ -169,7 +183,11 @@ function Dashboard({
             />
           </ListItem>
           <ListItem>
-            <DockerStatus status={dockerStatus} />
+            <ContainerStatus
+              status={containerStatus}
+              containerService={containerService}
+              onChangeContainerService={handleSelectContainerService}
+            />
           </ListItem>
         </List>
       </div>
@@ -192,7 +210,7 @@ function Dashboard({
       <DockerEventsListeners />
       <LogListener />
       <UpdateDataMapStatusStartupListener maps={maps} consortia={consortia} userId={auth.user.id} />
-      <PullComputationsListener userId={auth.user.id} dockerStatus={dockerStatus} />
+      <PullComputationsListener userId={auth.user.id} containerStatus={containerStatus} />
       <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
       <UserPermissionsListener userId={auth.user.id} client={client} />
       <TreeviewListener
@@ -209,6 +227,7 @@ function Dashboard({
 Dashboard.displayName = 'Dashboard';
 
 Dashboard.propTypes = {
+  client: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
   router: PropTypes.object.isRequired,
 };
@@ -237,11 +256,11 @@ function ConnectedDashboard(props) {
 
   return (apolloClient
     && (
-    <ApolloProvider client={apolloClient.client}>
-      <ApolloHOCProvider client={apolloClient.client}>
-        <Dashboard {...props} client={apolloClient.client} />
-      </ApolloHOCProvider>
-    </ApolloProvider>
+      <ApolloProvider client={apolloClient.client}>
+        <ApolloHOCProvider client={apolloClient.client}>
+          <Dashboard {...props} client={apolloClient.client} />
+        </ApolloHOCProvider>
+      </ApolloProvider>
     )
   );
 }

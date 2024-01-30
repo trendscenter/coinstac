@@ -22,7 +22,6 @@ import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
-import Fuse from 'fuse.js';
 import { v4 as uuid } from 'uuid';
 
 import MemberAvatar from '../common/member-avatar';
@@ -53,16 +52,10 @@ import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notify
 import { start, finish } from '../../state/ducks/loading';
 import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import STEPS from '../../constants/tutorial';
+import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
 
 const PAGE_SIZE = 10;
-
-const fuseOptions = {
-  keys: [
-    'name', 'description',
-  ],
-};
 
 const styles = theme => ({
   button: {
@@ -181,9 +174,12 @@ class ConsortiaList extends Component {
       return consortia || [];
     }
 
-    const fuse = new Fuse(consortia, fuseOptions);
+    const searchLowerCase = search.toLowerCase();
 
-    return fuse.search(search).map(({ item }) => item);
+    return (consortia || []).filter(consortium =>
+      // eslint-disable-next-line
+      consortium.name.toLowerCase().includes(searchLowerCase)
+      || consortium.description.toLowerCase().includes(searchLowerCase));
   }
 
   getConsortiaByActiveTab = () => {
@@ -231,7 +227,7 @@ class ConsortiaList extends Component {
       pipelines,
       runs,
       usersOnlineStatus,
-      dockerStatus,
+      containerStatus,
     } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
 
@@ -323,7 +319,7 @@ class ConsortiaList extends Component {
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
         if (auth.user.id in consortium.activeMembers
           && !auth.containerService === 'singularity'
-          && !dockerStatus) {
+          && !containerStatus) {
           actions.push(
             <Tooltip title="Docker is not running" placement="top">
               <Button
@@ -412,7 +408,9 @@ class ConsortiaList extends Component {
           Unset Active Pipeline
         </Button>
       );
-    } else if ((owner || member) && needsDataMapping) {
+    }
+
+    if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
           key={`${consortium.id}-set-map-local-button`}
@@ -558,7 +556,7 @@ class ConsortiaList extends Component {
   startPipeline = async (consortium) => {
     const {
       pipelines, saveRemoteDecentralizedRun, startRun, startLoading, finishLoading,
-      notifyWarning, notifyError, auth,
+      notifyWarning, notifyError, auth, router,
     } = this.props;
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
@@ -573,7 +571,9 @@ class ConsortiaList extends Component {
       startLoading('start-pipeline');
 
       if (isPipelineDecentralized) {
-        return await saveRemoteDecentralizedRun(consortium.id);
+        await saveRemoteDecentralizedRun(consortium.id);
+        router.push('/dashboard');
+        return;
       }
 
       const localRun = {
@@ -603,6 +603,7 @@ class ConsortiaList extends Component {
       }
     } finally {
       finishLoading('start-pipeline');
+      router.push('/dashboard');
     }
   }
 
@@ -646,7 +647,7 @@ class ConsortiaList extends Component {
       notifyInfo,
       notifyError,
       joinConsortium,
-      dockerStatus,
+      containerStatus,
     } = this.props;
 
     joinConsortium(consortiumId);
@@ -678,7 +679,7 @@ class ConsortiaList extends Component {
       });
     });
 
-    if (dockerStatus) {
+    if (containerStatus) {
       pullComputations({ consortiumId, computations });
       notifyInfo('Pipeline computations downloading via Docker.');
     }
@@ -826,7 +827,7 @@ class ConsortiaList extends Component {
         />
         {!auth.isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiaList}
+            steps={TUTORIAL_STEPS.consortiaList}
             disableScrollParentFix
             callback={tutorialChange}
           />
@@ -841,7 +842,7 @@ ConsortiaList.propTypes = {
   classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  dockerStatus: PropTypes.bool,
+  containerStatus: PropTypes.bool,
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
@@ -864,7 +865,7 @@ ConsortiaList.propTypes = {
 
 ConsortiaList.defaultProps = {
   usersOnlineStatus: {},
-  dockerStatus: false,
+  containerStatus: false,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -884,9 +885,6 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   graphql(FETCH_USERS_ONLINE_STATUS, {
-    options: ({
-      fetchPolicy: 'cache-and-network',
-    }),
     props: props => ({
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({

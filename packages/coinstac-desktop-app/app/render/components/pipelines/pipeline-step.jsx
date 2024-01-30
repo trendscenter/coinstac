@@ -107,19 +107,25 @@ class PipelineStep extends Component {
     } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
-    if ((!orderedInputs || !orderedInputs.length) && possibleInputs
+    if ((!orderedInputs || !orderedInputs.length)
+      && possibleInputs
       && !isEqual(prevProps.possibleInputs, possibleInputs)
     ) {
       debounce(this.orderComputations, 500)(possibleInputs);
     }
 
-    if (compIO && !isEqual(prevProps.compIO, compIO)) {
-      if ((!compInputs || !compInputs.length)) {
-        this.groupInputs(compIO);
-      }
+    if (compIO
+      && !isEqual(prevProps.compIO, compIO)
+      && (!compInputs || !compInputs.length)
+    ) {
+      this.groupInputs(compIO);
     }
 
-    if (compIO && (!step.inputMap || Object.keys(step.inputMap).length === 0) && step) {
+    if (compIO
+      && step
+      && !isEqual(step, prevProps.step)
+      && (!step.inputMap || Object.keys(step.inputMap).length === 0)
+    ) {
       const inputMapDefaultValues = this.fillDefaultValues(compIO);
       const inputMapPrefill = this.prefillDataFromHeadlessClients();
 

@@ -1,6 +1,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
 import Switch from '@material-ui/core/Switch';
@@ -14,11 +18,15 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerService } from '../../state/ducks/auth';
+import {
+  setClientCoreUrlAsync,
+  setNetworkVolume,
+  toggleTutorial,
+  setContainerService,
+} from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
-import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
@@ -31,15 +39,14 @@ const styles = theme => ({
   removeDataTitle: {
     marginBottom: theme.spacing(1),
   },
-  updatePasswordTitle: {
-    marginTop: theme.spacing(5),
-    marginBottom: theme.spacing(1),
-  },
   sectionTitle: {
     marginBottom: theme.spacing(1),
   },
   topMargin: {
     marginTop: theme.spacing(4),
+  },
+  bottomMargin: {
+    marginBottom: theme.spacing(6),
   },
   rightMargin: {
     marginRight: theme.spacing(2),
@@ -299,7 +306,7 @@ class Settings extends Component {
           />
         </div>
 
-        <Typography variant="h5" className={classes.updatePasswordTitle}>
+        <Typography variant="h5" className={classes.topMargin}>
           Update Password
         </Typography>
         <ValidatorForm
@@ -359,23 +366,25 @@ class Settings extends Component {
             {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
           </div>
         </ValidatorForm>
-        <Typography variant="h5">
+
+        <Typography variant="h5" className={classes.topMargin}>
           Container Service
         </Typography>
-        <FormControl fullWidth>
-          <InputLabel id="container-service-label">Container Service</InputLabel>
-          <Select
-            labelId="container-service-label"
-            id="container-service-select"
-            value={containerService}
-            label="Container Service"
-            onChange={this.handleSelectContainerService}
-          >
-            <MenuItem value="docker">Docker</MenuItem>
-            <MenuItem value="singularity">Singularity</MenuItem>
-          </Select>
-        </FormControl>
-
+        <div className={classes.bottomMargin}>
+          <FormControl fullWidth>
+            <InputLabel id="container-service-label">Container Service</InputLabel>
+            <Select
+              labelId="container-service-label"
+              id="container-service-select"
+              value={containerService}
+              label="Container Service"
+              onChange={this.handleSelectContainerService}
+            >
+              <MenuItem value="docker">Docker</MenuItem>
+              <MenuItem value="singularity">Singularity</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+/* eslint-disable-next-line import/no-unresolved */
 const test = require('ava');
 const sinon = require('sinon');
 const portscanner = require('portscanner');

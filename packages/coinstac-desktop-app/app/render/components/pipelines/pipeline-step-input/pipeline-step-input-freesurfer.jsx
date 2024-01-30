@@ -44,7 +44,7 @@ function PipelineStepInputFreesurfer(props) {
             <TableHead>
               <TableRow>
                 <TableCell>Data Type</TableCell>
-                <TableCell>{objParams.items.includes('FreeSurfer') ? 'Interest': ''}</TableCell>
+                <TableCell>{objParams.items.includes('FreeSurfer') ? 'Interest' : ''}</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>

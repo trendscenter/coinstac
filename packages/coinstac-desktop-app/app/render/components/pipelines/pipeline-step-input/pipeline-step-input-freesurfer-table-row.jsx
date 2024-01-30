@@ -12,39 +12,6 @@ import useOnUpdateEffect from '../../../hooks/useOnUpdateEffect';
 import Select from '../../common/react-select';
 import freesurferDataOptions from '../freesurfer-data-options.json';
 
-
-const getROIs = (headlessMembers) => {
-  const vaultNames = values(headlessMembers);
-
-  const allROIs = ['All Interests', ...freesurferDataOptions.freesurferROIs];
-
-  if (vaultNames.length === 0) {
-    return allROIs;
-  }
-
-  let ROIs = [];
-
-  vaultNames.forEach((vaultName) => {
-    if (vaultName === 'TReNDS COBRE FreeSurfer Vault'
-      || (vaultName.startsWith('gen-ec2-') && vaultName.endsWith('TReNDS COBRE FreeSurfer Vault'))
-    ) {
-      ROIs = [...ROIs, ...freesurferDataOptions.TReNDSCOBREFreeSurferVaultROIs];
-    }
-
-    if (vaultName === 'CMI FreeSurfer Healthy Brain Network Vault'
-      || (vaultName.startsWith('gen-ec2-') && vaultName.endsWith('CMI FreeSurfer Healthy Brain Network Vault'))
-    ) {
-      ROIs = [...ROIs, ...freesurferDataOptions.CMIFreeSurferHealthyBrainNetworkVaultROIs];
-    }
-  });
-
-  if (ROIs.length === 0) {
-    return allROIs;
-  }
-
-  return uniq(['All Interests', ...ROIs]);
-};
-
 const PipelineStepInputFreesurferTableRow = ({
   step,
   obj,
@@ -59,6 +26,43 @@ const PipelineStepInputFreesurferTableRow = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [freeSurferOptions, setFreeSurferOptions] = useState([]);
+  const [freeSurferDataOptions, setFreeSurferDataOptions] = useState(
+    freesurferDataOptions.freesurferROIs
+  );
+  const [file, setFile] = useState(null);
+  const [inputKey, setInputKey] = useState(Date.now());
+
+  const getROIs = (headlessMembers) => {
+    const vaultNames = values(headlessMembers);
+
+    const allROIs = ['All Interests', ...freeSurferDataOptions];
+
+    if (vaultNames.length === 0) {
+      return uniq(allROIs);
+    }
+
+    let ROIs = [];
+
+    vaultNames.forEach((vaultName) => {
+      if (vaultName === 'TReNDS COBRE FreeSurfer Vault'
+        || (vaultName.startsWith('gen-ec2-') && vaultName.endsWith('TReNDS COBRE FreeSurfer Vault'))
+      ) {
+        ROIs = [...ROIs, ...freesurferDataOptions.TReNDSCOBREFreeSurferVaultROIs];
+      }
+
+      if (vaultName === 'CMI FreeSurfer Healthy Brain Network Vault'
+        || (vaultName.startsWith('gen-ec2-') && vaultName.endsWith('CMI FreeSurfer Healthy Brain Network Vault'))
+      ) {
+        ROIs = [...ROIs, ...freesurferDataOptions.CMIFreeSurferHealthyBrainNetworkVaultROIs];
+      }
+    });
+
+    if (ROIs.length === 0) {
+      return allROIs;
+    }
+
+    return uniq(['All Interests', ...ROIs]);
+  };
 
   useEffect(() => {
     const newFreeSurferOptions = getROIs(headlessMembers)
@@ -86,8 +90,13 @@ const PipelineStepInputFreesurferTableRow = ({
     setAnchorEl(null);
   };
 
+
   const selectInterest = (value, index) => {
-    if (value[0] && value[0].label === 'All Interests') {
+    let v = [];
+    if (value) {
+      v = value;
+    }
+    if (v[0] && v[0].label === 'All Interests') {
       const options = getROIs().slice(1);
       updateStep({
         ...step,
@@ -96,9 +105,42 @@ const PipelineStepInputFreesurferTableRow = ({
     } else {
       updateStep({
         ...step,
-        inputMap: getNewObj('value', value ? value.map(val => val.value) : null, index, false),
+        inputMap: getNewObj('value', v ? v.map(val => val.value) : null, index, false),
       });
     }
+  };
+
+  const handleFile = (e) => {
+    const content = e.target.result;
+    const lines = content.split(/\n/).map(line => line.split(/\s/));
+
+    const sortAlphaNum = (a, b) => a.localeCompare(b, 'en', { numeric: true });
+
+    const rois = lines.map(line => line[0]).filter(n => n).sort(sortAlphaNum);
+
+    setFreeSurferDataOptions(rois);
+
+    rois.unshift('All Interests');
+
+    const fsOptions = rois.map(val => ({ label: val, value: val }));
+
+    setFreeSurferOptions(fsOptions);
+  };
+
+  const handleFileChange = (file) => {
+    const fileData = new FileReader();
+    fileData.onloadend = handleFile;
+    fileData.readAsText(file);
+    setFile(file);
+  };
+
+  const handleFileReset = () => {
+    setInputKey({ date: Date.now() });
+    const freeSurferOptions = freesurferDataOptions.freesurferROIs.map((val) => {
+      return { label: val, value: val };
+    });
+    setFreeSurferOptions(freeSurferOptions);
+    setFile(null);
   };
 
   return (
@@ -140,7 +182,28 @@ const PipelineStepInputFreesurferTableRow = ({
         </Menu>
       </TableCell>
       {obj && obj.type === 'FreeSurfer' ? (
-        <TableCell>
+        <TableCell style={{ width: '50%' }}>
+          <div
+            style={{
+              padding: '0.5rem',
+              marginBottom: '1rem',
+              border: '3px dashed #efefef',
+              borderRadius: '0.5rem',
+            }}
+          >
+            <div style={{ marginBottom: '0.5rem' }}>
+              <b>(Optional)</b>
+              {' '}
+              Choose Local ASEG file to get specific ROIs
+            </div>
+            <input
+              type="file"
+              onChange={e => handleFileChange(e.target.files[0])}
+              key={inputKey}
+            />
+            {/* eslint-disable-next-line */}
+            {file && <a onClick={e => handleFileReset()}>[x]</a>}
+          </div>
           <div id={`data-${index}-area`}>
             <Select
               value={obj.value

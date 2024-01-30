@@ -118,7 +118,7 @@ class ComputationsList extends Component {
 
   getTable = (computations) => {
     const {
-      auth: { user }, docker, classes, dockerStatus,
+      auth: { user }, docker, classes, containerStatus,
     } = this.props;
     const { activeComp, isDeleting, computationToDelete } = this.state;
 
@@ -157,7 +157,7 @@ class ComputationsList extends Component {
                     <Button
                       variant="contained"
                       color="secondary"
-                      disabled={!dockerStatus}
+                      disabled={!containerStatus}
                       onClick={() => this.removeImage(
                         comp.id,
                         comp.computation.dockerImage,
@@ -174,7 +174,7 @@ class ComputationsList extends Component {
                   ) : (
                     <Button
                       variant="contained"
-                      disabled={!dockerStatus}
+                      disabled={!containerStatus}
                       color="secondary"
                       onClick={
                         () => this.handlePullComputations([{
@@ -327,7 +327,7 @@ class ComputationsList extends Component {
 
   render() {
     const {
-      computations, classes, auth, dockerStatus,
+      computations, classes, auth, containerStatus,
     } = this.props;
     const { ownedComputations, otherComputations, showModal } = this.state;
 
@@ -354,7 +354,7 @@ class ComputationsList extends Component {
           <Button
             variant="contained"
             color="primary"
-            disabled={!dockerStatus}
+            disabled={!containerStatus}
             className={classes.downloadAllButton}
             onClick={() => this.handlePullComputations(
               computations.map(comp => ({
@@ -372,7 +372,6 @@ class ComputationsList extends Component {
           && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
         {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
-        {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
         {(!computations || !computations.length) && (
@@ -397,7 +396,7 @@ ComputationsList.defaultProps = {
 };
 
 ComputationsList.propTypes = {
-  dockerStatus: PropTypes.bool.isRequired,
+  containerStatus: PropTypes.bool.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,

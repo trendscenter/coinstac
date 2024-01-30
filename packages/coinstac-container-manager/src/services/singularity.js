@@ -40,7 +40,7 @@ const SingularityService = () => {
           mounts.join(','),
           path.join(imageDirectory, savedImage),
           serviceId,
-          ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : [])
+          ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : []),
         ]
       );
       return new Promise((resolve, reject) => {
@@ -48,9 +48,9 @@ const SingularityService = () => {
         instanceProcess.stdout.on('data', (data) => { stdout += data; });
         instanceProcess.on('error', e => reject(e));
         instanceProcess.on('close', (code) => {
-          // for whatever reason singularity is outputting 
+          // for whatever reason singularity is outputting
           // error info on stdout and info on stderr......
-          if(code !== 0 || stdout) {
+          if (code !== 0 || stdout) {
             error = stdout || stderr;
             utils.logger.error(error);
             State.Running = false;
@@ -192,11 +192,11 @@ const SingularityService = () => {
             conversionProcess.emit('error', new Error(error + stdout + stderr));
           } else {
             removeOldImages(localImage, imageNameWithHash)
-            .then(() => {
-              conversionProcess.emit('end');
-            }).catch((e) => {
-              conversionProcess.emit('error', e);
-            });
+              .then(() => {
+                conversionProcess.emit('end');
+              }).catch((e) => {
+                conversionProcess.emit('error', e);
+              });
           }
         }
       );
@@ -247,7 +247,9 @@ const SingularityService = () => {
           .then((container) => {
             utils.logger.silly(`Starting singularity cointainer: ${serviceId}`);
             utils.logger.silly(`Returning service for ${serviceId}`);
-            const serviceFunction = ServiceFunctionGenerator({ port, compspecVersion: opts.version });
+            const serviceFunction = ServiceFunctionGenerator({
+              port, compspecVersion: opts.version,
+            });
             return { service: serviceFunction, container };
           });
       };

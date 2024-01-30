@@ -38,7 +38,12 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
   }
 
   const { data: usersData } = useQuery(FETCH_ALL_USERS_QUERY,
-    { onError: (error) => { console.error({ error }); } });
+    {
+      onError: (error) => {
+        /* eslint-disable-next-line no-console */
+        console.error({ error });
+      },
+    });
   const [createHeadlessClient, { data: createData, loading: creating }] = useMutation(
     CREATE_HEADLESS_CLIENT_MUTATION,
     {
