@@ -246,6 +246,7 @@ const typeDefs = `
     searchDatasets(searchString: String, subjectGroups: [String], modality: String): [Dataset]
     fetchDataset(id: ID!): Dataset
     getPipelines: DebugString
+    getLatestGitRelease: JSON
   }
 
   type Subscription {

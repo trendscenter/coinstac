@@ -12,6 +12,7 @@ import RunsList from '../common/runs-list';
 import { saveSuspendedRun, deleteSuspendedRun } from '../../state/ducks/suspendedRuns';
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
+import DashboardDocs from './dashboard-docs';
 
 const HOURS_SINCE_ACTIVE = 72;
 
@@ -84,6 +85,7 @@ function DashboardHome({
         suspendPipeline={suspendPipeline}
         resumePipeline={resumePipeline}
       />
+      <DashboardDocs />
     </div>
   );
 }

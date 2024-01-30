@@ -3,6 +3,7 @@ const GraphQLJSON = require('graphql-type-json');
 const axios = require('axios');
 const { get, keys } = require('lodash');
 const Issue = require('github-api/dist/components/Issue');
+const Repository = require('github-api/dist/components/Repository');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
@@ -595,6 +596,28 @@ const resolvers = {
       }
 
       return { info: JSON.stringify(result.data) };
+    },
+    getLatestGitRelease: async () => {
+      const repository = process.env.COINSTAC_REPOSITORY_NAME
+      const auth = {
+        username: process.env.GITHUB_BOT_USERNAME,
+        password: process.env.GITHUB_ACCESS_TOKEN,
+      }
+
+      try {
+        const repo = new Repository(repository, auth);
+        const { data } = await repo.listReleases();
+
+        const publishedReleases = data.filter(release => !release.prerelease)
+
+        if (publishedReleases.length > 0) {
+          return publishedReleases[0]
+        }
+
+        return null
+      } catch (error) {
+        return Boom.notAcceptable('Failed to get latest release');
+      }
     }
   },
   Mutation: {

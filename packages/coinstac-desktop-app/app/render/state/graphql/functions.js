@@ -266,6 +266,11 @@ export const FETCH_HEADLESS_CLIENT = gql`
     ${queries.fetchHeadlessClient}
 `;
 
+export const GET_LATEST_GIT_RELEASE = gql`
+  query getLatestGitRelease
+    ${queries.getLatestGitRelease}
+`;
+
 export const HEADLESS_CLIENT_CHANGED_SUBSCRIPTION = gql`
   subscription headlessClientChanged
     ${queries.headlessClientChanged}
