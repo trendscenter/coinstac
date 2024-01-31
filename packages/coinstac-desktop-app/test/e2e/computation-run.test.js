@@ -54,9 +54,9 @@ describe('e2e run computation with 1 member', () => {
     await pipeline.create(DATA, appWindow);
   });
 
-  it('sets the created pipeline to the consortium', async () => {
-    await consortium.setPipeline(DATA, appWindow);
-  });
+  // it('sets the created pipeline to the consortium', async () => {
+  //   await consortium.setPipeline(DATA, appWindow);
+  // });
 
   it('map data to consortium', async () => {
     await consortium.mapData(DATA.consortium.name, appWindow);

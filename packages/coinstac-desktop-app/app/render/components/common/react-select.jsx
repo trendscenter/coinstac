@@ -4,7 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Select from 'react-select';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import withStyles from '@material-ui/core/styles/withStyles';
 import Typography from '@material-ui/core/Typography';
 import NoSsr from '@material-ui/core/NoSsr';
 import TextField from '@material-ui/core/TextField';
@@ -14,7 +14,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import CancelIcon from '@material-ui/icons/Cancel';
 import { emphasize } from '@material-ui/core/styles/colorManipulator';
 
-const useStyles = makeStyles(theme => ({
+const styles = theme => ({
   root: {
     flexGrow: 1,
   },
@@ -65,7 +65,7 @@ const useStyles = makeStyles(theme => ({
   divider: {
     height: theme.spacing(2),
   },
-}));
+});
 
 function NoOptionsMessage(props) {
   const { selectProps, innerProps, children } = props;
@@ -194,9 +194,7 @@ const components = {
   ValueContainer,
 };
 
-function IntegrationReactSelect({ theme, ...otherProps }) {
-  const classes = useStyles();
-
+function IntegrationReactSelect({ classes, theme, ...otherProps }) {
   const selectStyles = {
     input: base => ({
       ...base,
@@ -226,7 +224,8 @@ function IntegrationReactSelect({ theme, ...otherProps }) {
 }
 
 IntegrationReactSelect.propTypes = {
+  classes: PropTypes.object.isRequired,
   theme: PropTypes.object.isRequired,
 };
 
-export default IntegrationReactSelect;
+export default withStyles(styles, { withTheme: true })(IntegrationReactSelect);
