@@ -211,7 +211,7 @@ class Result extends Component {
     }
 
     if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap
-      && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
+      && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates?.value) {
       covariates = run.pipelineSnapshot.steps[stepsLength - 1]
         .inputMap.covariates.value.map(m => m.name);
     }
