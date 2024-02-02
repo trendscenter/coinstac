@@ -1,45 +1,44 @@
 import { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { ipcRenderer } from 'electron';
-import PropTypes from 'prop-types';
 
 import { notifyError, notifySuccess, notifyInfo } from '../../../state/ducks/notifyAndLog';
 import { saveRunLocally, updateRunLocally } from '../../../state/ducks/runs';
 
-function LocalRunStatusListeners({
-  updateRunLocally, saveRunLocally, notifySuccess, notifyError,
-}) {
+function LocalRunStatusListeners() {
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
-      updateRunLocally(
+    ipcRenderer.on('local-pipeline-state-update', (_, arg) => {
+      dispatch(updateRunLocally(
         arg.run.id,
         { localPipelineState: arg.data }
-      );
+      ));
     });
 
-    ipcRenderer.on('save-local-run', (event, arg) => {
+    ipcRenderer.on('save-local-run', (_, arg) => {
       localStorage.setItem('coinstac-debug', JSON.stringify({ lastRun: { steps: arg.steps, sim: arg.steps[0].inputMap } }));
-      saveRunLocally({
+      dispatch(saveRunLocally({
         ...arg.run,
         status: 'started',
-      }, true);
+      }, true));
     });
 
-    ipcRenderer.on('local-run-complete', (event, arg) => {
-      notifySuccess(`${arg.consName} Pipeline Complete.`);
+    ipcRenderer.on('local-run-complete', (_, arg) => {
+      dispatch(notifySuccess(`${arg.consName} Pipeline Complete.`));
 
-      updateRunLocally(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type });
+      dispatch(updateRunLocally(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type }));
     });
 
-    ipcRenderer.on('local-run-error', (event, arg) => {
+    ipcRenderer.on('local-run-error', (_, arg) => {
       if (arg.run && arg.run.error && arg.run.error.message === 'Pipeline operation suspended by user') {
-        notifyInfo(`${arg.consName} Pipeline suspended.`);
-        updateRunLocally(arg.run.id, { status: 'suspended', type: arg.run.type });
+        dispatch(notifyInfo(`${arg.consName} Pipeline suspended.`));
+        dispatch(updateRunLocally(arg.run.id, { status: 'suspended', type: arg.run.type }));
         return;
       }
 
-      notifyError(`${arg.consName} Pipeline Error.`);
-      updateRunLocally(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
+      dispatch(notifyError(`${arg.consName} Pipeline Error.`));
+      dispatch(updateRunLocally(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type }));
     });
 
     return () => {
@@ -53,18 +52,4 @@ function LocalRunStatusListeners({
   return null;
 }
 
-LocalRunStatusListeners.propTypes = {
-  updateRunLocally: PropTypes.func.isRequired,
-  saveRunLocally: PropTypes.func.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
-};
-
-export default connect(null,
-  {
-    notifyInfo,
-    notifyError,
-    notifySuccess,
-    saveRunLocally,
-    updateRunLocally,
-  })(LocalRunStatusListeners);
+export default LocalRunStatusListeners;

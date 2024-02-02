@@ -14,10 +14,7 @@ function runIsFinished(run) {
   return run.error || run.results;
 }
 
-function RemoteRunsListener({
-  userId,
-  consortia,
-}) {
+function RemoteRunsListener({ userId, consortia }) {
   const localRuns = useSelector(state => state.runs.runs);
   const suspendedRuns = useSelector(state => state.suspendedRuns);
 
