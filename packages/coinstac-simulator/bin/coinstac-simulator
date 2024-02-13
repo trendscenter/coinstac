@@ -165,10 +165,12 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       };
     };
     // hook into the pipeline events
-    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
-    remoteStateEmitter.on('update', (m) => {
-      writeValuesToRow(1, formatUpdateEvent(m));
-    });
+    if (remotePipeline) {
+      const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
+      remoteStateEmitter.on('update', (m) => {
+        writeValuesToRow(1, formatUpdateEvent(m));
+      });
+    }
 
     localPipelines.forEach((pipeline, index) => {
       const { stateEmitter } = pipeline.pipeline;
@@ -231,9 +233,11 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         return formatted;
       };
 
-      const remotePipelineStats = await getStats('simulatorRun', 'remote');
-      const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
-      writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
+      if (remotePipeline) {
+        const remotePipelineStats = await getStats('simulatorRun', 'remote');
+        const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
+        writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
+      }
 
       const localPipelineStatsPromises = [];
 
