@@ -2,12 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import classNames from 'classnames';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Button from '@material-ui/core/Button';
 import CoinstacAbbr from './coinstac-abbr';
 import AutoUpdateListener from './auto-update-listener';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   navButtonsContainer: {
     display: 'flex',
     justifyContent: 'center',
@@ -20,9 +20,11 @@ const styles = theme => ({
   lastNavButton: {
     marginLeft: theme.spacing(2),
   },
-});
+}));
 
-function LayoutNoAuth({ children, classes }) {
+function LayoutNoAuth({ children }) {
+  const classes = useStyles();
+
   return (
     <div className="screen account">
       <div className="screen__content">
@@ -58,7 +60,6 @@ LayoutNoAuth.displayName = 'LayoutNoAuth';
 
 LayoutNoAuth.propTypes = {
   children: PropTypes.node.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(LayoutNoAuth);
+export default LayoutNoAuth;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose, get } from 'lodash';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -11,7 +11,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import { IconButton } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { useMutation } from '@apollo/client';
@@ -33,7 +33,7 @@ import { getGraphQLErrorMessage } from '../../utils/helpers';
 import ListDeleteModal from '../common/list-delete-modal';
 
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   avatarWrapper: {
     display: 'flex',
     alignItems: 'center',
@@ -41,16 +41,19 @@ const styles = () => ({
   checkbox: {
     padding: 0,
   },
-});
+}));
 
-function Permission(props, context) {
-  const {
-    currentUser,
-    users,
-    classes,
-    notifyError,
-    subscribeToUsers,
-  } = props;
+function Permission({
+  users,
+  addUserRole,
+  removeUserRole,
+  subscribeToUsers,
+}, { router }) {
+  const currentUser = useSelector(state => state.auth.user);
+  const dispatch = useDispatch();
+
+  const classes = useStyles();
+
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
@@ -60,7 +63,6 @@ function Permission(props, context) {
   const [deleteUser] = useMutation(DELETE_USER_MUTATION);
 
   useEffect(() => {
-    const { router } = context;
     let unsubscribeUsers;
 
     if (!get(currentUser, 'permissions.roles.admin')) {
@@ -78,19 +80,13 @@ function Permission(props, context) {
 
 
   const logoutUser = () => {
-    const { logout } = props;
-    const { router } = context;
-
-    logout()
+    dispatch(logout())
       .then(() => {
         router.push('/login');
       });
   };
 
   const toggleUserAppRole = (userId, checked, role) => {
-    const {
-      currentUser, addUserRole, removeUserRole, notifyError,
-    } = props;
     const mutation = checked ? addUserRole : removeUserRole;
 
     setIsUpdating(true);
@@ -104,7 +100,7 @@ function Permission(props, context) {
         }
       })
       .catch((error) => {
-        notifyError(getGraphQLErrorMessage(error));
+        dispatch(notifyError(getGraphQLErrorMessage(error)));
       })
       .finally(() => {
         setIsUpdating(false);
@@ -117,7 +113,7 @@ function Permission(props, context) {
     }).then(() => {
       setShowModal(false);
     }).catch((e) => {
-      notifyError(e.message);
+      dispatch(notifyError(e.message));
     });
   };
 
@@ -214,13 +210,9 @@ Permission.contextTypes = {
 };
 
 Permission.propTypes = {
-  currentUser: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   users: PropTypes.array,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
-  logout: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func.isRequired,
 };
 
@@ -241,13 +233,4 @@ const PermissionWithData = compose(
   withApollo
 )(Permission);
 
-const mapStateToProps = ({ auth }) => ({
-  currentUser: auth.user,
-});
-
-const connectedComponent = connect(mapStateToProps, {
-  logout,
-  notifyError,
-})(PermissionWithData);
-
-export default withStyles(styles, { withTheme: true })(connectedComponent);
+export default PermissionWithData;

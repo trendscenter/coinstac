@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useSubscription, useApolloClient } from '@apollo/client';
 import { get } from 'lodash';
 
@@ -14,12 +14,9 @@ import { pullComputations } from '../../../state/ducks/docker';
 /**
  * Pulls computation images automatically once the pipeline is set for a given consortium.
  */
-function PullComputationsListener({
-  userId,
-  notifyInfo,
-  pullComputations,
-  containerStatus,
-}) {
+function PullComputationsListener({ userId, containerStatus }) {
+  const dispatch = useDispatch();
+
   const { data } = useSubscription(CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION);
   const apolloClient = useApolloClient();
 
@@ -55,16 +52,12 @@ function PullComputationsListener({
     });
 
     if (computations.length) {
-      pullComputations({ consortiumId: consortium.id, computations });
-      notifyInfo('Pipeline computations downloading via Docker.');
+      dispatch(pullComputations({ consortiumId: consortium.id, computations }));
+      dispatch(notifyInfo('Pipeline computations downloading via Docker.'));
     }
   }, [consortium]);
 
   return null;
 }
 
-export default connect(null,
-  {
-    notifyInfo,
-    pullComputations,
-  })(PullComputationsListener);
+export default PullComputationsListener;

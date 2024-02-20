@@ -1,8 +1,8 @@
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import React from 'react';
 import { Link } from 'react-router';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
@@ -15,7 +15,7 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MessageIcon from '@material-ui/icons/Message';
 import MemberAvatar from '../common/member-avatar';
 
-const styles = {
+const useStyles = makeStyles(() => ({
   root: {
     display: 'flex',
   },
@@ -36,12 +36,12 @@ const styles = {
     height: '40px',
     marginTop: '5px',
   },
-};
+}));
 
-const UserAccount = (props) => {
-  const {
-    logoutUser, auth, unreadThreadCount, classes,
-  } = props;
+const UserAccount = ({ unreadThreadCount, logoutUser }) => {
+  const auth = useSelector(state => state.auth);
+
+  const classes = useStyles();
 
   if (!auth || !auth.user) {
     return <div className={classes.root} />;
@@ -58,11 +58,7 @@ const UserAccount = (props) => {
         width={40}
       />
       <div className={classes.textContainer}>
-        <List
-          classes={{
-            root: classes.listRoot,
-          }}
-        >
+        <List classes={{ root: classes.listRoot }}>
           <ListItem
             disableGutters
             classes={{
@@ -71,19 +67,14 @@ const UserAccount = (props) => {
           >
             <ListItemText disableTypography>
               <Typography variant="subtitle2" className="user-account-name">
-                { username }
+                {username}
               </Typography>
             </ListItemText>
           </ListItem>
-          <ListItem
-            disableGutters
-            classes={{
-              root: classes.listItemRoot,
-            }}
-          >
+          <ListItem disableGutters classes={{ root: classes.listItemRoot }}>
             <ListItemText disableTypography>
               <Typography variant="caption">
-                { email }
+                {email}
               </Typography>
             </ListItemText>
           </ListItem>
@@ -95,36 +86,28 @@ const UserAccount = (props) => {
             </ListItemIcon>
             <ListItemText
               primary="Messages"
-              classes={{
-                root: classes.listItemButtonTextRoot,
-              }}
+              classes={{ root: classes.listItemButtonTextRoot }}
             />
           </ListItem>
           <ListItem disableGutters button component={Link} to="/dashboard/settings">
             <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText
               primary="Settings"
-              classes={{
-                root: classes.listItemButtonTextRoot,
-              }}
+              classes={{ root: classes.listItemButtonTextRoot }}
             />
           </ListItem>
           <ListItem disableGutters button component={Link} to="/dashboard/issues">
             <ListItemIcon><BugReportIcon /></ListItemIcon>
             <ListItemText
               primary="Submit a bug"
-              classes={{
-                root: classes.listItemButtonTextRoot,
-              }}
+              classes={{ root: classes.listItemButtonTextRoot }}
             />
           </ListItem>
           <ListItem disableGutters button component={Link} to="/login" onClick={logoutUser}>
             <ListItemIcon><ExitToAppIcon /></ListItemIcon>
             <ListItemText
               primary="Log Out"
-              classes={{
-                root: classes.listItemButtonTextRoot,
-              }}
+              classes={{ root: classes.listItemButtonTextRoot }}
             />
           </ListItem>
         </List>
@@ -136,16 +119,8 @@ const UserAccount = (props) => {
 UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
-  auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   unreadThreadCount: PropTypes.number.isRequired,
   logoutUser: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-const connectedComponent = connect(mapStateToProps)(UserAccount);
-
-export default withStyles(styles)(connectedComponent);
+export default UserAccount;

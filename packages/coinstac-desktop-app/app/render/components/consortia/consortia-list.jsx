@@ -129,6 +129,8 @@ class ConsortiaList extends Component {
         localStorage.getItem('HIGHLIGHT_CONSORTIUM'),
       activeTab: 'mine',
       page: 1,
+      errorTitle: '',
+      errorMessage: '',
     };
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');

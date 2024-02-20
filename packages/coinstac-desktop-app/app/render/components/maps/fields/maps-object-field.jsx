@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -8,7 +8,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import JSONInput from 'react-json-editor-ajrm';
 import locale from 'react-json-editor-ajrm/locale/en';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing(1.5),
@@ -21,12 +21,14 @@ const styles = theme => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-});
+}));
 
 
 function MapsObjectField({
-  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+  fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
+  const classes = useStyles();
+
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
@@ -76,7 +78,6 @@ function MapsObjectField({
 }
 
 MapsObjectField.propTypes = {
-  classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
   fieldDescription: PropTypes.object.isRequired,
@@ -87,4 +88,4 @@ MapsObjectField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsObjectField);
+export default MapsObjectField;

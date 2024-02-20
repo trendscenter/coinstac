@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import { appendLogMessage } from '../../../state/ducks/app';
 
-function LogListener({ appendLogMessage }) {
+function LogListener() {
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    ipcRenderer.on('log-message', (event, arg) => {
-      appendLogMessage(arg.data);
+    ipcRenderer.on('log-message', (_, arg) => {
+      dispatch(appendLogMessage(arg.data));
     });
 
     return () => {
@@ -17,6 +19,4 @@ function LogListener({ appendLogMessage }) {
   return null;
 }
 
-export default connect(null, {
-  appendLogMessage,
-})(LogListener);
+export default LogListener;

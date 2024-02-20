@@ -5,10 +5,10 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { get, head, orderBy } from 'lodash';
 import moment from 'moment';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import ThreadAvatar from './thread-avatar';
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   wrapper: {
     display: 'flex',
     marginBottom: 1,
@@ -53,11 +53,13 @@ const styles = () => ({
       fontWeight: 600,
     },
   },
-});
+}));
 
 const ThreadCard = ({
-  classes, isSelected, isUnread, thread, onClick,
+  isSelected, isUnread, thread, onClick,
 }) => {
+  const classes = useStyles();
+
   function getContent() {
     const messages = orderBy(thread.messages, 'date', 'desc');
     const firstMessage = head(messages);
@@ -116,11 +118,10 @@ ThreadCard.defaultProps = {
 };
 
 ThreadCard.propTypes = {
-  classes: PropTypes.object.isRequired,
   isSelected: PropTypes.bool,
   isUnread: PropTypes.bool,
   thread: PropTypes.object.isRequired,
   onClick: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ThreadCard);
+export default ThreadCard;

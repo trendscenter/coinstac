@@ -7,21 +7,27 @@ import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import PipelineStepInputCsvTableRow from './pipeline-step-input-csv-table-row';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   addObjButton: {
     marginBottom: theme.spacing(1),
     marginLeft: theme.spacing(1),
   },
-});
+}));
 
-function PipelineStepInputCsv(props) {
-  const {
-    objKey, objParams, owner, addClientProp, getNewObj, possibleInputs, step,
-    updateStep, classes,
-  } = props;
+function PipelineStepInputCsv({
+  objKey,
+  objParams,
+  owner,
+  addClientProp,
+  getNewObj,
+  possibleInputs,
+  step,
+  updateStep,
+}) {
+  const classes = useStyles();
 
   const objInputMap = step.inputMap[objKey];
 
@@ -37,37 +43,33 @@ function PipelineStepInputCsv(props) {
         <AddIcon />
         {`Add ${objParams.label}`}
       </Button>
-      {
-        objInputMap && objInputMap.value && (
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Data Type</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {
-                objInputMap.value.map((obj, index) => (
-                  <PipelineStepInputCsvTableRow
-                    key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
-                    index={index}
-                    obj={obj}
-                    objKey={objKey}
-                    owner={owner}
-                    possibleInputs={possibleInputs}
-                    objParams={objParams}
-                    getNewObj={getNewObj}
-                    updateStep={updateStep}
-                    step={step}
-                  />
-                ))
-              }
-            </TableBody>
-          </Table>
-        )
-      }
+      {objInputMap && objInputMap.value && (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Data Type</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {objInputMap.value.map((obj, index) => (
+              <PipelineStepInputCsvTableRow
+                key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
+                index={index}
+                obj={obj}
+                objKey={objKey}
+                owner={owner}
+                possibleInputs={possibleInputs}
+                objParams={objParams}
+                getNewObj={getNewObj}
+                updateStep={updateStep}
+                step={step}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   );
 }
@@ -85,7 +87,6 @@ PipelineStepInputCsv.propTypes = {
   updateStep: PropTypes.func.isRequired,
   addClientProp: PropTypes.func.isRequired,
   possibleInputs: PropTypes.array,
-  classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(PipelineStepInputCsv);
+export default PipelineStepInputCsv;

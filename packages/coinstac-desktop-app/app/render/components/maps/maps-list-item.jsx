@@ -8,9 +8,9 @@ import Button from '@material-ui/core/Button';
 import DeleteIcon from '@material-ui/icons/Delete';
 import WarningIcon from '@material-ui/icons/Warning';
 import CheckIcon from '@material-ui/icons/Check';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
@@ -47,7 +47,7 @@ const styles = theme => ({
   button: {
     width: 'fit-content',
   },
-});
+}));
 
 const MapsListItem = ({
   consortium,
@@ -56,69 +56,71 @@ const MapsListItem = ({
   onDelete,
   needsDataMapping,
   dataMapIsComplete,
-  classes,
-}) => (
-  <Paper
-    key={`${consortium.id}-list-item`}
-    className={classes.rootPaper}
-    elevation={10}
-  >
-    <Typography variant="h4">
-      { consortium.name }
-    </Typography>
-    <div className={classes.contentContainer}>
-      {pipeline ? (
-        <>
+}) => {
+  const classes = useStyles();
+
+  return (
+    <Paper
+      key={`${consortium.id}-list-item`}
+      className={classes.rootPaper}
+      elevation={10}
+    >
+      <Typography variant="h4">
+        {consortium.name}
+      </Typography>
+      <div className={classes.contentContainer}>
+        {pipeline ? (
+          <>
+            <Typography className={classes.labelInline}>
+              Active Pipeline:
+            </Typography>
+            <Typography className={classes.value}>
+              {pipeline.name}
+            </Typography>
+          </>
+        ) : (
           <Typography className={classes.labelInline}>
-            Active Pipeline:
+            No active pipeline
           </Typography>
-          <Typography className={classes.value}>
-            { pipeline.name }
-          </Typography>
-        </>
-      ) : (
-        <Typography className={classes.labelInline}>
-          No active pipeline
-        </Typography>
-      ) }
-    </div>
-    {pipeline && (
-      <div className={classes.actions}>
-        <div className={classes.primaryAction}>
-          <Button
-            className={classes.button}
-            variant="contained"
-            color={needsDataMapping ? 'secondary' : 'primary'}
-            component={Link}
-            to={`/dashboard/maps/${consortium.id}`}
-            name={consortium.name}
-          >
-            { needsDataMapping ? 'Map Data to Consortium' : 'Edit Mapped Data' }
-          </Button>
-          { (!needsDataMapping || dataMapIsComplete)
-            ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
-            : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
-          }
-        </div>
-        { canDelete && (
-          <Button
-            className={classes.button}
-            variant="contained"
-            color="secondary"
-            onClick={onDelete(consortium.id)}
-            name={`${consortium.name}-delete`}
-          >
-            Clear Mapping
-            <DeleteIcon />
-          </Button>
-        ) }
+        )}
       </div>
-    )}
-  </Paper>
-);
+      {pipeline && (
+        <div className={classes.actions}>
+          <div className={classes.primaryAction}>
+            <Button
+              className={classes.button}
+              variant="contained"
+              color={needsDataMapping ? 'secondary' : 'primary'}
+              component={Link}
+              to={`/dashboard/maps/${consortium.id}`}
+              name={consortium.name}
+            >
+              {needsDataMapping ? 'Map Data to Consortium' : 'Edit Mapped Data'}
+            </Button>
+            {(!needsDataMapping || dataMapIsComplete)
+              ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
+              : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
+            }
+          </div>
+          {canDelete && (
+            <Button
+              className={classes.button}
+              variant="contained"
+              color="secondary"
+              onClick={onDelete(consortium.id)}
+              name={`${consortium.name}-delete`}
+            >
+              Clear Mapping
+              <DeleteIcon />
+            </Button>
+          )}
+        </div>
+      )}
+    </Paper>
+  );
+};
 
 MapsListItem.propTypes = {
-  classes: PropTypes.object.isRequired,
   consortium: PropTypes.object.isRequired,
   pipeline: PropTypes.object,
   onDelete: PropTypes.func,
@@ -129,7 +131,7 @@ MapsListItem.propTypes = {
 
 MapsListItem.defaultProps = {
   pipeline: null,
-  onDelete: () => {},
+  onDelete: () => { },
 };
 
-export default withStyles(styles)(MapsListItem);
+export default MapsListItem;

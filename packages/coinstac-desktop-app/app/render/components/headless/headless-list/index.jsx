@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { useMutation, useQuery } from '@apollo/client';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import { get } from 'lodash';
 import Typography from '@material-ui/core/Typography';
@@ -18,8 +17,8 @@ import {
   DELETE_HEADLESS_CLIENT_MUTATION,
 } from '../../../state/graphql/functions';
 
-function HeadlessList({ auth }) {
-  const { user } = auth;
+function HeadlessList() {
+  const user = useSelector(state => state.auth.user);
 
   const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, {
     fetchPolicy: 'cache-and-network',
@@ -87,12 +86,4 @@ function HeadlessList({ auth }) {
   );
 }
 
-HeadlessList.propTypes = {
-  auth: PropTypes.object.isRequired,
-};
-
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(HeadlessList);
+export default HeadlessList;

@@ -1,14 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link } from 'react-router';
-import { compose } from 'redux';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import path from 'path';
@@ -21,7 +20,7 @@ import { deleteRun } from '../../state/ducks/runs';
 import ListDeleteModal from './list-delete-modal';
 import { isUserInGroup } from '../../utils/helpers';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
@@ -77,7 +76,7 @@ const styles = theme => ({
   pipelineButton: {
     marginTop: theme.spacing(1),
   },
-});
+}));
 
 function getStateWell(runObject, classes) {
   const OuterNodeRunObject = runObject.localPipelineState;
@@ -86,7 +85,7 @@ function getStateWell(runObject, classes) {
   return (
     <div className={classes.runStateInnerContainer}>
       {OuterNodeRunObject && (
-        <React.Fragment>
+        <>
           <div className={classes.runStateKeyValueContainer}>
             <Typography className={classes.label}>Iteration:</Typography>
             <Typography className={classes.value}>
@@ -100,20 +99,17 @@ function getStateWell(runObject, classes) {
               {OuterNodeRunObject.controllerState}
             </Typography>
           </div>
-        </React.Fragment>
+        </>
+      )}
+      {CentralNodeRunObject && (
+        <div className={classes.runStateKeyValueContainer}>
+          <Typography className={classes.label}>Coinstac Central Server Status:</Typography>
+          <Typography className={classes.value}>
+            {CentralNodeRunObject.controllerState}
+          </Typography>
+        </div>
       )}
       {CentralNodeRunObject
-        && (
-          <div className={classes.runStateKeyValueContainer}>
-            <Typography className={classes.label}>Coinstac Central Server Status:</Typography>
-            <Typography className={classes.value}>
-              {CentralNodeRunObject.controllerState}
-            </Typography>
-          </div>
-        )
-      }
-      {
-        CentralNodeRunObject
         && CentralNodeRunObject.controllerState
         && CentralNodeRunObject.waitingOn
         && (
@@ -122,16 +118,25 @@ function getStateWell(runObject, classes) {
             <Typography className={classes.value}>
               {CentralNodeRunObject.waitingOn}
             </Typography>
-          </div>)
-      }
+          </div>
+        )}
     </div>
   );
 }
 
-function RunItem(props) {
-  const {
-    user, consortium, runObject, classes,
-  } = props;
+function RunItem({
+  consortium,
+  runObject,
+  stopPipeline,
+  suspendPipeline,
+  resumePipeline,
+}) {
+  const appDirectory = useSelector(state => state.auth.appDirectory);
+  const user = useSelector(state => state.auth.user);
+
+  const dispatch = useDispatch();
+
+  const classes = useStyles();
 
   const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
@@ -141,35 +146,29 @@ function RunItem(props) {
   }, [user, consortium]);
 
   const handleStopPipeline = () => {
-    const { stopPipeline } = props;
     stopPipeline();
   };
 
   const handleSuspendPipeline = () => {
-    const { suspendPipeline } = props;
     suspendPipeline();
   };
 
   const handleResumePipeline = () => {
-    const { resumePipeline } = props;
     resumePipeline();
   };
 
   const handleOpenResult = () => {
-    const { runObject, appDirectory } = props;
     const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
 
     shell.openPath(resultDir);
   };
 
-  const deleteRun = () => {
-    const { runObject, deleteRunLocally } = props;
-
+  const handleDeleteRun = () => {
     if (runObject.type === 'decentralized') {
       return deleteRunMutation({ variables: { runId: runObject.id } });
     }
 
-    deleteRunLocally(runObject.id);
+    dispatch(deleteRun(runObject.id));
   };
 
   const {
@@ -186,43 +185,31 @@ function RunItem(props) {
       <div className={classes.titleContainer}>
         <Typography variant="h5">
           {consortium.name}
-          {
-            pipelineSnapshot
-            && <span>{` | ${pipelineSnapshot.name}`}</span>
-          }
+          {pipelineSnapshot && <span>{` | ${pipelineSnapshot.name}`}</span>}
         </Typography>
-        {
-          !endDate && status === 'started'
-          && (
-            <Typography variant="h5">
-              {'Started: '}
-              <TimeAgo timestamp={runObject.startDate / 1000} />
-            </Typography>
-          )
-        }
-        {
-          endDate
-          && (
-            <Typography variant="h5">
-              {'Completed: '}
-              <TimeAgo timestamp={runObject.endDate / 1000} />
-            </Typography>
-          )
-        }
+        {!endDate && status === 'started' && (
+          <Typography variant="h5">
+            {'Started: '}
+            <TimeAgo timestamp={runObject.startDate / 1000} />
+          </Typography>
+        )}
+        {endDate && (
+          <Typography variant="h5">
+            {'Completed: '}
+            <TimeAgo timestamp={runObject.endDate / 1000} />
+          </Typography>
+        )}
       </div>
       <div className={classes.contentContainer}>
-        {
-          status === 'started' && (localPipelineState || remotePipelineState)
-          && (
-            <LinearProgress
-              variant="indeterminate"
-              value={remotePipelineState
-                ? ((remotePipelineState.pipelineStep + 1) / remotePipelineState.totalSteps) * 100
-                : ((localPipelineState.pipelineStep + 1) / localPipelineState.totalSteps) * 100
-              }
-            />
-          )
-        }
+        {status === 'started' && (localPipelineState || remotePipelineState) && (
+          <LinearProgress
+            variant="indeterminate"
+            value={remotePipelineState
+              ? ((remotePipelineState.pipelineStep + 1) / remotePipelineState.totalSteps) * 100
+              : ((localPipelineState.pipelineStep + 1) / localPipelineState.totalSteps) * 100
+            }
+          />
+        )}
         <div>
           <Typography
             className={classes.label}
@@ -236,144 +223,118 @@ function RunItem(props) {
             {status === 'suspended' && <span style={{ color: 'cornflowerblue' }}>Suspended</span>}
             {status === 'error' && <span style={{ color: 'red' }}>Error</span>}
           </Typography>
-          {
-            status === 'needs-map'
-            && (
-              <Button
-                variant="contained"
-                component={Link}
-                href="/dashboard/maps"
-              >
-                Map Now
-              </Button>
-            )
-          }
+          {status === 'needs-map' && (
+            <Button
+              variant="contained"
+              component={Link}
+              href="/dashboard/maps"
+            >
+              Map Now
+            </Button>
+          )}
         </div>
-        {
-          startDate
-          && (
-            <div>
-              <Typography className={classes.label}>
-                Start date:
-              </Typography>
-              <Typography className={classes.value}>
-                {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
-              </Typography>
-            </div>
-          )
-        }
-        {
-          endDate
-          && (
-            <div>
-              <Typography className={classes.label}>
-                End date:
-              </Typography>
-              <Typography className={classes.value}>
-                {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
-              </Typography>
-            </div>
-          )
-        }
-        {
-          clients
-          && (
-            <div>
-              <Typography className={classes.label}>
-                Users:
-              </Typography>
-              <Typography className={classes.value}>
-                {Object.values(clients).join(', ')}
-              </Typography>
-            </div>
-          )
-        }
+        {startDate && (
+          <div>
+            <Typography className={classes.label}>
+              Start date:
+            </Typography>
+            <Typography className={classes.value}>
+              {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
+            </Typography>
+          </div>
+        )}
+        {endDate && (
+          <div>
+            <Typography className={classes.label}>
+              End date:
+            </Typography>
+            <Typography className={classes.value}>
+              {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
+            </Typography>
+          </div>
+        )}
+        {clients && (
+          <div>
+            <Typography className={classes.label}>
+              Users:
+            </Typography>
+            <Typography className={classes.value}>
+              {Object.values(clients).join(', ')}
+            </Typography>
+          </div>
+        )}
         <div className={classes.runStateContainer}>
-          {
-            (localPipelineState || remotePipelineState) && status === 'started'
-            && getStateWell(runObject, classes)
-          }
+          {(localPipelineState || remotePipelineState) && status === 'started'
+            && getStateWell(runObject, classes)}
         </div>
       </div>
       <div className={classes.actionButtons}>
-        {
-          results
-          && (
-            <div className={classes.resultButtons}>
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to={`/dashboard/results/${id}`}
-                className={classes.button}
-              >
-                View Results
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={handleOpenResult}
-              >
-                Open Results
-              </Button>
-            </div>
-          )
-        }
-        {
-          error
-          && (
+        {results && (
+          <div className={classes.resultButtons}>
             <Button
               variant="contained"
+              color="primary"
               component={Link}
               to={`/dashboard/results/${id}`}
               className={classes.button}
             >
-              View Error
+              View Results
             </Button>
-          )
-        }
-        {
-          pipelineSnapshot
-          && (
             <Button
               variant="contained"
-              color="secondary"
-              component={Link}
-              to={`/dashboard/pipelines/snapShot/${pipelineSnapshot.id}`}
-              className={classes.pipelineButton}
+              color="primary"
+              className={classes.button}
+              onClick={handleOpenResult}
             >
-              View Pipeline
+              Open Results
             </Button>
-          )
-        }
-        {
-          status === 'started' && (localPipelineState || remotePipelineState)
-          && (
-            <React.Fragment>
-              {isOwner && (
-                <StatusButtonWrapper>
-                  <Button
-                    variant="contained"
-                    component={Link}
-                    className={classes.button}
-                    onClick={handleStopPipeline}
-                  >
-                    Stop Pipeline
-                  </Button>
-                </StatusButtonWrapper>
-              )}
-              <Button
-                variant="contained"
-                component={Link}
-                className={classes.button}
-                onClick={handleSuspendPipeline}
-              >
-                Suspend Pipeline
-              </Button>
-            </React.Fragment>
-          )
-        }
+          </div>
+        )}
+        {error && (
+          <Button
+            variant="contained"
+            component={Link}
+            to={`/dashboard/results/${id}`}
+            className={classes.button}
+          >
+            View Error
+          </Button>
+        )}
+        {pipelineSnapshot && (
+          <Button
+            variant="contained"
+            color="secondary"
+            component={Link}
+            to={`/dashboard/pipelines/snapShot/${pipelineSnapshot.id}`}
+            className={classes.pipelineButton}
+          >
+            View Pipeline
+          </Button>
+        )}
+        {status === 'started' && (localPipelineState || remotePipelineState) && (
+          <>
+            {isOwner && (
+              <StatusButtonWrapper>
+                <Button
+                  variant="contained"
+                  component={Link}
+                  className={classes.button}
+                  onClick={handleStopPipeline}
+                >
+                  Stop Pipeline
+                </Button>
+              </StatusButtonWrapper>
+            )}
+            <Button
+              variant="contained"
+              component={Link}
+              className={classes.button}
+              onClick={handleSuspendPipeline}
+            >
+              Suspend Pipeline
+            </Button>
+          </>
+        )}
         {status === 'suspended' && (
           <Button
             variant="contained"
@@ -394,7 +355,7 @@ function RunItem(props) {
         </Button>
         <ListDeleteModal
           close={() => { setShowModal(false); }}
-          deleteItem={deleteRun}
+          deleteItem={handleDeleteRun}
           itemName="run"
           show={showModal}
         />
@@ -408,30 +369,14 @@ RunItem.defaultProps = {
   stopPipeline: () => { },
   suspendPipeline: () => { },
   resumePipeline: () => { },
-  deleteRunLocally: () => {},
-  isSuspended: false,
 };
 
 RunItem.propTypes = {
-  appDirectory: PropTypes.string.isRequired,
-  classes: PropTypes.object.isRequired,
   consortium: PropTypes.object.isRequired,
   runObject: PropTypes.object.isRequired,
-  user: PropTypes.object.isRequired,
   stopPipeline: PropTypes.func,
   suspendPipeline: PropTypes.func,
   resumePipeline: PropTypes.func,
-  deleteRunLocally: PropTypes.func,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  appDirectory: auth.appDirectory,
-  user: auth.user,
-});
-
-export default compose(
-  withStyles(styles),
-  connect(mapStateToProps, {
-    deleteRunLocally: deleteRun,
-  })
-)(RunItem);
+export default RunItem;

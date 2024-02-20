@@ -1,10 +1,10 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import path from 'path';
 
-const Iframe = ({
-  appDirectory, run, value, user,
-}) => {
+const Iframe = ({ appDirectory, run, value }) => {
+  const user = useSelector(state => state.auth.user);
+
   const iFrameHeight = '600px';
   let url = '';
   if (typeof value === 'string') {
@@ -47,8 +47,4 @@ const Iframe = ({
   }
 };
 
-const mapStateToProps = ({ auth }) => ({
-  user: auth.user,
-});
-
-export default connect(mapStateToProps)(Iframe);
+export default Iframe;

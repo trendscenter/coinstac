@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import ThreadReply from './thread-reply';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
     width: 'calc(100% - 250px)',
     display: 'flex',
@@ -21,11 +21,13 @@ const styles = theme => ({
   input: {
     width: '100%',
   },
-});
+}));
 
 function ThreadNew({
-  classes, savingStatus, onSend, startingTitle, startingRecipients,
+  savingStatus, onSend, startingTitle, startingRecipients,
 }) {
+  const classes = useStyles();
+
   const [title, setTitle] = useState('');
 
   function handleTitleChange(evt) {
@@ -67,11 +69,10 @@ ThreadNew.defaultProps = {
 };
 
 ThreadNew.propTypes = {
-  classes: PropTypes.object.isRequired,
   savingStatus: PropTypes.string,
   onSend: PropTypes.func.isRequired,
   startingTitle: PropTypes.string,
   startingRecipients: PropTypes.object,
 };
 
-export default withStyles(styles)(ThreadNew);
+export default ThreadNew;

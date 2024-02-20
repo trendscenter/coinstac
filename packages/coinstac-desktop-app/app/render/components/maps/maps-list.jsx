@@ -110,7 +110,8 @@ const mapStateToProps = ({ auth, maps }) => ({
 
 const ComponentWithData = compose(
   graphql(
-    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    {
       props: ({ mutate }) => ({
         updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
           variables: { consortiumId, isMapped },

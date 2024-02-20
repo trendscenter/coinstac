@@ -1,17 +1,15 @@
-/* eslint-disable react/no-array-index-key */
 import React from 'react';
-import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   description: {
     margin: theme.spacing(1, 0),
   },
-});
+}));
 
-function PipelineStepInputDirectory(props) {
-  const { classes } = props;
+function PipelineStepInputDirectory() {
+  const classes = useStyles();
 
   return (
     <div style={{ paddingLeft: 10 }}>
@@ -22,8 +20,4 @@ function PipelineStepInputDirectory(props) {
   );
 }
 
-PipelineStepInputDirectory.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
-
-export default withStyles(styles)(PipelineStepInputDirectory);
+export default PipelineStepInputDirectory;

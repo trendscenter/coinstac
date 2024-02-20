@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import cx from 'classnames';
 import Box from '@material-ui/core/Box';
@@ -15,9 +15,9 @@ import MessageIcon from '@material-ui/icons/Message';
 import useStyles from './result-item.styles';
 import MemberAvatar from '../../common/member-avatar';
 
-function ResultItem({
-  auth, result, onClickDelete, className,
-}) {
+function ResultItem({ result, onClickDelete, className }) {
+  const auth = useSelector(state => state.auth);
+
   const classes = useStyles();
 
   const {
@@ -30,42 +30,42 @@ function ResultItem({
         <Box>
           <Box display="flex">
             {datasetDescription && datasetDescription.Name && (
-              <Typography variant="h5">{ datasetDescription.Name }</Typography>
+              <Typography variant="h5">{datasetDescription.Name}</Typography>
             )}
           </Box>
           {participantsDescription && (
             <Box display="flex">
               <Typography variant="body2" className={classes.label}>Variables:</Typography>
-              <Typography variant="body2">{ Object.keys(participantsDescription).join(', ') }</Typography>
+              <Typography variant="body2">{Object.keys(participantsDescription).join(', ')}</Typography>
             </Box>
           )}
           {otherInfo && (
-            <React.Fragment>
+            <>
               {otherInfo.modality && (
                 <Box display="flex">
                   <Typography variant="body2" className={classes.label}>Modality:</Typography>
-                  <Typography variant="body2">{ otherInfo.modality }</Typography>
+                  <Typography variant="body2">{otherInfo.modality}</Typography>
                 </Box>
               )}
               {otherInfo.subjectGroups && (
                 <Box display="flex">
                   <Typography variant="body2" className={classes.label}>Subject groups:</Typography>
-                  <Typography variant="body2">{ otherInfo.subjectGroups.join(', ') }</Typography>
+                  <Typography variant="body2">{otherInfo.subjectGroups.join(', ')}</Typography>
                 </Box>
               )}
               {otherInfo.numberOfSubjects && (
                 <Box display="flex">
                   <Typography variant="body2" className={classes.label}>Number of subjects:</Typography>
-                  <Typography variant="body2">{ otherInfo.numberOfSubjects }</Typography>
+                  <Typography variant="body2">{otherInfo.numberOfSubjects}</Typography>
                 </Box>
               )}
               {otherInfo.numberOfSessions && (
                 <Box display="flex">
                   <Typography variant="body2" className={classes.label}>Number of sessions:</Typography>
-                  <Typography variant="body2">{ otherInfo.numberOfSessions }</Typography>
+                  <Typography variant="body2">{otherInfo.numberOfSessions}</Typography>
                 </Box>
               )}
-            </React.Fragment>
+            </>
           )}
         </Box>
         <Box display="flex" flexDirection="column" justifyContent="center">
@@ -80,7 +80,7 @@ function ResultItem({
             showDetails
           />
           {auth.user.id === owner.id ? (
-            <React.Fragment>
+            <>
               <Button
                 variant="contained"
                 color="default"
@@ -99,9 +99,9 @@ function ResultItem({
               >
                 Delete
               </Button>
-            </React.Fragment>
+            </>
           ) : (
-            <React.Fragment>
+            <>
               <Button
                 variant="contained"
                 color="secondary"
@@ -121,7 +121,7 @@ function ResultItem({
               >
                 View Details
               </Button>
-            </React.Fragment>
+            </>
           )}
         </Box>
       </Box>
@@ -136,12 +136,7 @@ ResultItem.defaultProps = {
 ResultItem.propTypes = {
   result: PropTypes.object.isRequired,
   className: PropTypes.string,
-  auth: PropTypes.object.isRequired,
   onClickDelete: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(ResultItem);
+export default ResultItem;

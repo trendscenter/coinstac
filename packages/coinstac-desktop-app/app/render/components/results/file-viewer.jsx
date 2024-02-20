@@ -3,8 +3,7 @@
   jsx-a11y/no-static-element-interactions, react/prop-types
 */
 import React from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
@@ -57,7 +56,9 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const FileViewer = ({ fileTree }) => {
+const FileViewer = () => {
+  const fileTree = useSelector(state => state.app.fileTree);
+
   const classes = useStyles();
 
   if (!fileTree || !Array.isArray(fileTree.children) || fileTree.children.length === 0) {
@@ -107,16 +108,4 @@ const FileViewer = ({ fileTree }) => {
   );
 };
 
-FileViewer.propTypes = {
-  fileTree: PropTypes.object,
-};
-
-FileViewer.defaultProps = {
-  fileTree: null,
-};
-
-const mapStateToProps = ({ app }) => ({
-  fileTree: app.fileTree,
-});
-
-export default connect(mapStateToProps)(FileViewer);
+export default FileViewer;
