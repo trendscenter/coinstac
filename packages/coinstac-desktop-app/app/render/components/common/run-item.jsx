@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,6 +19,8 @@ import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
 import { deleteRun } from '../../state/ducks/runs';
 import ListDeleteModal from './list-delete-modal';
 import { isUserInGroup } from '../../utils/helpers';
+
+const fs = require('fs');
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {
@@ -140,6 +142,7 @@ function RunItem({
 
   const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
+  const [logURL, setLogURL] = useState(false);
 
   const isOwner = useMemo(() => {
     return isUserInGroup(user.id, consortium.owners);
@@ -170,6 +173,42 @@ function RunItem({
 
     dispatch(deleteRun(runObject.id));
   };
+
+  const handleLinkClick = (url) => {
+    shell.openExternal(url);
+  };
+
+  useEffect(() => {
+    if ( runObject && appDirectory && !logURL ){
+  
+      const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
+      let file =  resultDir + '/local.log';
+      
+      try {
+        const dirContents = fs.readdirSync(resultDir);
+        let check = dirContents.includes('local.log');
+        if ( check ) {
+          try {
+            const text = fs.readFileSync(file,{ encoding: 'utf8', flag: 'r' });
+            let lines = text.split(/\r?\n/);
+            let found = lines.find((line) => line.includes("Wandb URL: "));
+            found = found.split(": ");
+            let url = found[1];
+            setLogURL(url);
+            return;
+          } catch (e) {
+            return;
+          }
+  
+        }else{
+          return;
+        }
+      } catch (e) {
+        return;
+      }
+    }
+  });
+  
 
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
@@ -263,6 +302,25 @@ function RunItem({
             </Typography>
           </div>
         )}
+        {
+          logURL && typeof logURL === 'string'
+          && (
+            <div>
+              <Typography className={classes.label}>
+                WanDB Log URL:
+              </Typography>
+              <Typography className={classes.value}>
+               <a 
+                href={logURL} 
+                target="_blank" 
+                onClick={() => handleLinkClick(logURL)}
+               >
+                {logURL}
+              </a>
+              </Typography>
+            </div>
+          )
+        }
         <div className={classes.runStateContainer}>
           {(localPipelineState || remotePipelineState) && status === 'started'
             && getStateWell(runObject, classes)}
