@@ -179,34 +179,40 @@ function RunItem({
   };
 
   useEffect(() => {
-    if ( runObject && appDirectory && !logURL ){
+    let timerFunc = setTimeout(() => {
+      if ( runObject && appDirectory && !logURL ){
   
-      const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
-      let file =  resultDir + '/local.log';
-      
-      try {
-        const dirContents = fs.readdirSync(resultDir);
-        let check = dirContents.includes('local.log');
-        if ( check ) {
-          try {
-            const text = fs.readFileSync(file,{ encoding: 'utf8', flag: 'r' });
-            let lines = text.split(/\r?\n/);
-            let found = lines.find((line) => line.includes("Wandb URL: "));
-            found = found.split(": ");
-            let url = found[1];
-            setLogURL(url);
-            return;
-          } catch (e) {
+        const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
+        let file =  resultDir + '/local.log';
+        
+        try {
+          const dirContents = fs.readdirSync(resultDir);
+          let check = dirContents.includes('local.log');
+          if ( check ) {
+            try {
+              const text = fs.readFileSync(file,{ encoding: 'utf8', flag: 'r' });
+              let lines = text.split(/\r?\n/);
+              let found = lines.find((line) => line.includes("Wandb URL: "));
+              found = found.split(": ");
+              let url = found[1];
+              setLogURL(url);
+              return;
+            } catch (e) {
+              return;
+            }
+    
+          }else{
             return;
           }
-  
-        }else{
+        } catch (e) {
           return;
         }
-      } catch (e) {
-        return;
       }
-    }
+    }, 3000);
+
+    if ( logURL ) {
+      clearTimeout(timerFunc);
+    };
   });
   
 

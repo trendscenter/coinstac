@@ -5,7 +5,7 @@ import path from 'path';
 const Iframe = ({ appDirectory, run, value }) => {
   const user = useSelector(state => state.auth.user);
 
-  const iFrameHeight = '600px';
+  const iFrameHeight = '800px';
   let url = '';
   if (typeof value === undefined) {
     url = path.join(appDirectory, 'output', user.id, run.id, 'index.html');
