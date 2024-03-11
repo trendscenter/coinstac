@@ -1,14 +1,15 @@
 /* eslint-disable react/no-array-index-key */
-import React from 'react';
-import PropTypes from 'prop-types';
-import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import AddIcon from '@material-ui/icons/Add';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import PipelineStepInputFilesTableRow from './pipeline-step-input-files-table-row';
 
 const useStyles = makeStyles(theme => ({

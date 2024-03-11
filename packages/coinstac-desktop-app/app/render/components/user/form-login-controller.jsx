@@ -1,15 +1,16 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
 import {
+  checkApiVersion,
+  clearError,
   login,
   setAppDirectory,
   setClientServerURL,
-  checkApiVersion,
-  clearError,
 } from '../../state/ducks/auth';
-import FormLogin from './form-login';
 import LayoutNoauth from '../layout-noauth';
+import FormLogin from './form-login';
 
 class FormLoginController extends Component {
   componentDidMount() {

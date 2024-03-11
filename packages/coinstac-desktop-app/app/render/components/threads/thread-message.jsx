@@ -1,7 +1,8 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { Link } from 'react-router';
+
 import ThreadAvatar from './thread-avatar';
 
 const useStyles = makeStyles(theme => ({

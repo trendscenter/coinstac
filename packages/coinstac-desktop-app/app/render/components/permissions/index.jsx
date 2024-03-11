@@ -1,37 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useMutation } from '@apollo/client';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, get } from 'lodash';
+import { IconButton } from '@material-ui/core';
 import Checkbox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import { IconButton } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { useMutation } from '@apollo/client';
-import MemberAvatar from '../common/member-avatar';
+import { flowRight as compose, get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { logout } from '../../state/ducks/auth';
 import { notifyError } from '../../state/ducks/notifyAndLog';
+import {
+  ADD_USER_ROLE_MUTATION,
+  DELETE_USER_MUTATION,
+  FETCH_ALL_USERS_QUERY,
+  REMOVE_USER_ROLE_MUTATION,
+  USER_CHANGED_SUBSCRIPTION,
+} from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
   userRolesProp,
 } from '../../state/graphql/props';
-import {
-  FETCH_ALL_USERS_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
-  ADD_USER_ROLE_MUTATION,
-  REMOVE_USER_ROLE_MUTATION,
-  DELETE_USER_MUTATION,
-} from '../../state/graphql/functions';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
 import ListDeleteModal from '../common/list-delete-modal';
-
+import MemberAvatar from '../common/member-avatar';
 
 const useStyles = makeStyles(() => ({
   avatarWrapper: {
@@ -77,7 +77,6 @@ function Permission({
       }
     };
   }, []);
-
 
   const logoutUser = () => {
     dispatch(logout())
@@ -226,11 +225,11 @@ const PermissionWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  withApollo
+  withApollo,
 )(Permission);
 
 export default PermissionWithData;

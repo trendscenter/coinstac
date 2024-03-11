@@ -55,7 +55,6 @@ ipcMain.handle('parseCsv', (event, files) => {
   return Promise.all(readPromises);
 });
 
-
 module.exports = {
   manualDirectorySelection(path) {
     return path;

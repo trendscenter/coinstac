@@ -1,9 +1,10 @@
-import { connect } from 'react-redux';
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import axios from 'axios';
-import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import { update } from '../../state/ducks/auth';
+import { notifyError, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import UserEdit from './user-edit';
 
 const {
@@ -152,7 +153,7 @@ class UserAccountController extends Component {
               uploadProgress: progress,
             });
           },
-        }
+        },
       );
 
       this.setState({
@@ -204,11 +205,9 @@ UserAccountController.propTypes = {
   update: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth: { user } }) => {
-  return {
-    user,
-  };
-};
+const mapStateToProps = ({ auth: { user } }) => ({
+  user,
+});
 
 export default connect(mapStateToProps, {
   notifyError,

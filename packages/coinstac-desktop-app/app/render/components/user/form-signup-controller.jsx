@@ -1,15 +1,16 @@
-import { connect } from 'react-redux';
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import FormSignup from './form-signup';
-import LayoutNoauth from '../layout-noauth';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import {
+  checkApiVersion,
   clearError,
   clearUser,
   signUp,
-  checkApiVersion,
 } from '../../state/ducks/auth';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
+import LayoutNoauth from '../layout-noauth';
+import FormSignup from './form-signup';
 
 class FormSignupController extends Component {
   state = {

@@ -1,15 +1,15 @@
+import { useApolloClient, useSubscription } from '@apollo/client';
+import { get } from 'lodash';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useSubscription, useApolloClient } from '@apollo/client';
-import { get } from 'lodash';
 
+import { pullComputations } from '../../../state/ducks/docker';
+import { notifyInfo } from '../../../state/ducks/notifyAndLog';
 import {
   CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
 } from '../../../state/graphql/functions';
-import { notifyInfo } from '../../../state/ducks/notifyAndLog';
-import { pullComputations } from '../../../state/ducks/docker';
 
 /**
  * Pulls computation images automatically once the pipeline is set for a given consortium.

@@ -27,7 +27,6 @@ if (process.env.CI) {
   process.stderr.write = write;
 }
 
-
 const {
   compact, keys, pick, omit,
 } = require('lodash'); // eslint-disable-line no-unused-vars
@@ -226,7 +225,7 @@ loadConfig()
           consortium.runs.forEach(async (run) => {
             const runDirectory = path.join(
               consortiumDirectory,
-              `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`
+              `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`,
             );
 
             if (await !exists(runDirectory)) {
@@ -246,7 +245,6 @@ loadConfig()
                   await fs.promises.mkdir(symlinkDirectory, { recursive: true });
                 }
 
-
                 if (await !exists(symlinkPath)) {
                   await fs.promises.symlink(file, symlinkPath);
                 }
@@ -264,47 +262,40 @@ loadConfig()
         mainWindow.webContents.send('prepare-consortia-files', res);
       });
 
-
       ipcMain.handle('login-init', (event, {
         userId, appDirectory, clientServerURL, token, containerService,
-      }) => {
-        return initializedCore
-          ? Promise.resolve()
-          : configureCore({
-            config,
-            logger,
-            userId,
-            appDirectory,
-            imageDirectory: config.get('singularityDir'),
-            containerService,
-            clientServerURL: clientServerURL || config.get('clientServerURL'),
-            token,
-          })
-            .then((c) => {
-              initializedCore = c;
-              return upsertCoinstacUserDir(c);
-            });
-      });
+      }) => (initializedCore
+        ? Promise.resolve()
+        : configureCore({
+          config,
+          logger,
+          userId,
+          appDirectory,
+          imageDirectory: config.get('singularityDir'),
+          containerService,
+          clientServerURL: clientServerURL || config.get('clientServerURL'),
+          token,
+        })
+          .then((c) => {
+            initializedCore = c;
+            return upsertCoinstacUserDir(c);
+          })));
 
       /**
        * [initializedCore description]
        * @type {[type]}
        */
-      ipcMain.handle('logout', () => {
-        // TODO: hacky way to not get a mqtt reconnn loop
-        // a better way would be to make an actual shutdown fn for pipeline
-        return new Promise((resolve) => {
-          if (!initializedCore) {
-            resolve();
-            return;
-          }
+      ipcMain.handle('logout', () => new Promise((resolve) => {
+        if (!initializedCore) {
+          resolve();
+          return;
+        }
 
-          initializedCore.pipelineManager.mqttClient.end(true, () => {
-            initializedCore = undefined;
-            resolve();
-          });
+        initializedCore.pipelineManager.mqttClient.end(true, () => {
+          initializedCore = undefined;
+          resolve();
         });
-      });
+      }));
 
       ipcMain.handle('set-client-server-url', (event, url) => new Promise((resolve) => {
         initializedCore.setClientServerURL(url);
@@ -376,7 +367,7 @@ loadConfig()
                         error: err.error,
                       },
                       endDate: Date.now(),
-                    }
+                    },
                   ),
                 });
               });
@@ -390,7 +381,7 @@ loadConfig()
 
             ipcFunctions.sendNotification(
               'Pipeline started',
-              `Pipeline ${pipelineName} started on consortia ${consortiumName}`
+              `Pipeline ${pipelineName} started on consortia ${consortiumName}`,
             );
             const authRefresh = setInterval(() => {
               mainWindow.webContents.send('refresh-token');
@@ -403,7 +394,7 @@ loadConfig()
               run.id,
               run.pipelineSteps,
               networkVolume,
-              runState
+              runState,
             )
               .then(({ pipeline, result }) => {
                 // Listen for local pipeline state updates
@@ -418,11 +409,11 @@ loadConfig()
 
                   ipcFunctions.sendNotification(
                     'Pipeline finished',
-                    `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
+                    `Pipeline ${pipelineName} finished on consortia ${consortiumName}`,
                   );
 
                   generateRunProvenance(
-                    initializedCore.clientId, initializedCore.appDirectory, run, consortium
+                    initializedCore.clientId, initializedCore.appDirectory, run, consortium,
                   );
 
                   return initializedCore.unlinkFiles(run.id)
@@ -442,7 +433,7 @@ loadConfig()
 
                     ipcFunctions.sendNotification(
                       'Pipeline stopped',
-                      `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`
+                      `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`,
                     );
 
                     return initializedCore.unlinkFiles(run.id)
@@ -459,7 +450,7 @@ loadConfig()
                                 input: error.input,
                               },
                               endDate: Date.now(),
-                            }
+                            },
                           ),
                         });
                       });
@@ -481,7 +472,7 @@ loadConfig()
                         error: error.error,
                       },
                       endDate: Date.now(),
-                    }
+                    },
                   ),
                 });
               });
@@ -491,7 +482,7 @@ loadConfig()
       async function startPipeline(consortium, dataMappings, pipelineRun, networkVolume, runState) {
         try {
           const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
-            pipelineRun.pipelineSnapshot, dataMappings
+            pipelineRun.pipelineSnapshot, dataMappings,
           );
           const run = {
             ...pipelineRun,
@@ -584,42 +575,33 @@ loadConfig()
     * IPC listener to return a list of all local Docker images
     * @return {Promise<String[]>} An array of all local Docker image names
     */
-      ipcMain.handle('get-all-images', () => {
-        return initializedCore.containerManager.getImages()
-          .then((data) => {
-            return data;
-          })
-          .catch((err) => {
-            logger.error(err);
-            mainWindow.webContents.send('docker-error', {
-              err: {
-                message: err.message,
-                stack: err.stack,
-              },
-            });
+      ipcMain.handle('get-all-images', () => initializedCore.containerManager.getImages()
+        .then(data => data)
+        .catch((err) => {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
           });
-      });
-
+        }));
 
       /**
     * IPC listener to return status of Docker
     * @return {Promise<boolean[]>} Docker running?
     */
-      ipcMain.handle('get-status', () => {
-        return initializedCore.containerManager.getStatus()
-          .then((result) => {
-            return result;
-          })
-          .catch((err) => {
-            logger.error(err);
-            mainWindow.webContents.send('docker-error', {
-              err: {
-                message: err.message,
-                stack: err.stack,
-              },
-            });
+      ipcMain.handle('get-status', () => initializedCore.containerManager.getStatus()
+        .then(result => result)
+        .catch((err) => {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
           });
-      });
+        }));
 
       /**
    * IPC listener to return logs of docker containers
@@ -653,59 +635,57 @@ loadConfig()
     *  associated with the computations being retrieved
     * @return {Promise}
     */
-      ipcMain.handle('download-comps', (event, params) => { // eslint-disable-line no-unused-vars
-        return initializedCore.containerManager
-          .pullImages(params.computations)
-          .then((compStreams) => {
-            let streamsComplete = 0;
+      ipcMain.handle('download-comps', (event, params) => initializedCore.containerManager
+        .pullImages(params.computations)
+        .then((compStreams) => {
+          let streamsComplete = 0;
 
-            compStreams.forEach(({ compId, compName, stream }) => {
-              if (typeof stream.on !== 'function') {
+          compStreams.forEach(({ compId, compName, stream }) => {
+            if (typeof stream.on !== 'function') {
+              const output = [{
+                message: stream.message, status: 'error', statusCode: stream.statusCode, isErr: true,
+              }];
+              mainWindow.webContents.send('docker-out', { output, compId, compName });
+            } else {
+              stream.on('data', (data) => {
+                let output = compact(data.toString().split('\r\n'));
+                output = output.map(JSON.parse);
+                /* these events can be renamed to not refer to docker
+                specifically since we are now supporting Singularity */
+                mainWindow.webContents.send('docker-out', { output, compId, compName });
+              });
+
+              stream.on('end', () => {
+                mainWindow.webContents.send('docker-out',
+                  {
+                    output: [{ id: `${compId}-complete`, status: 'complete' }],
+                    compId,
+                    compName,
+                  });
+
+                streamsComplete += 1;
+
+                if (params.consortiumId && streamsComplete === params.computations.length) {
+                  mainWindow.webContents
+                    .send('docker-pull-complete', params.consortiumId);
+                }
+              });
+
+              stream.on('error', (err) => {
                 const output = [{
-                  message: stream.message, status: 'error', statusCode: stream.statusCode, isErr: true,
+                  message: err.json, status: 'error', statusCode: err.statusCode, isErr: true,
                 }];
                 mainWindow.webContents.send('docker-out', { output, compId, compName });
-              } else {
-                stream.on('data', (data) => {
-                  let output = compact(data.toString().split('\r\n'));
-                  output = output.map(JSON.parse);
-                  /* these events can be renamed to not refer to docker
-                  specifically since we are now supporting Singularity */
-                  mainWindow.webContents.send('docker-out', { output, compId, compName });
-                });
-
-                stream.on('end', () => {
-                  mainWindow.webContents.send('docker-out',
-                    {
-                      output: [{ id: `${compId}-complete`, status: 'complete' }],
-                      compId,
-                      compName,
-                    });
-
-                  streamsComplete += 1;
-
-                  if (params.consortiumId && streamsComplete === params.computations.length) {
-                    mainWindow.webContents
-                      .send('docker-pull-complete', params.consortiumId);
-                  }
-                });
-
-                stream.on('error', (err) => {
-                  const output = [{
-                    message: err.json, status: 'error', statusCode: err.statusCode, isErr: true,
-                  }];
-                  mainWindow.webContents.send('docker-out', { output, compId, compName });
-                });
-              }
-            });
-          })
-          .catch((err) => {
-            const output = [{
-              message: err.json, status: 'error', statusCode: err.statusCode, isErr: true,
-            }];
-            mainWindow.webContents.send('docker-out', { output });
+              });
+            }
           });
-      });
+        })
+        .catch((err) => {
+          const output = [{
+            message: err.json, status: 'error', statusCode: err.statusCode, isErr: true,
+          }];
+          mainWindow.webContents.send('docker-out', { output });
+        }));
 
       /**
      * IPC Listener to open a dialog in Electron
@@ -737,7 +717,7 @@ loadConfig()
         return fileFunctions.showDialog(
           mainWindow,
           dialogFilters,
-          dialogProperties
+          dialogProperties,
         )
           .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore));
       });
@@ -745,15 +725,13 @@ loadConfig()
      * IPC Listener to remove a Docker image
      * @param {String} imgId ID of the image to remove
      */
-      ipcMain.handle('remove-image', (event, { compId, imgId, imgName }) => {
-        return initializedCore.containerManager.removeImage(imgId)
-          .catch((err) => {
-            const output = [{
-              message: err.message, status: 'error', statusCode: err.statusCode, isErr: true,
-            }];
-            mainWindow.webContents.send('docker-out', { output, compId, compName: imgName });
-          });
-      });
+      ipcMain.handle('remove-image', (event, { compId, imgId, imgName }) => initializedCore.containerManager.removeImage(imgId)
+        .catch((err) => {
+          const output = [{
+            message: err.message, status: 'error', statusCode: err.statusCode, isErr: true,
+          }];
+          mainWindow.webContents.send('docker-out', { output, compId, compName: imgName });
+        }));
 
       ipcMain.handle('download-run-assets', async (event,
         {
@@ -799,7 +777,7 @@ loadConfig()
 
               },
               responseType: 'stream',
-            }
+            },
           );
 
           // stream to the correct output directory

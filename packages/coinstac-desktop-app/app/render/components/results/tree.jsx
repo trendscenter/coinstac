@@ -1,5 +1,5 @@
 /*
-eslint-disable no-nested-ternary, no-continue,
+eslint-disable no-nested-ternary, no-continue, no-param-reassign,
 no-restricted-syntax, react/no-unused-state, react/prop-types
 */
 import React, { createRef, PureComponent } from 'react';
@@ -28,7 +28,7 @@ const generateNewTree = (
   {
     buildingTaskTimeout, placeholder, async = false, treeWalker,
   },
-  state
+  state,
 ) => {
   const shouldPreservePreviousState = async && state.records !== undefined;
   const { records: previousRecords } = state;
@@ -50,7 +50,7 @@ const generateNewTree = (
     undefined,
     shouldPreservePreviousState
       ? previousRecords.get(root.data.id)
-      : undefined
+      : undefined,
   );
   records.set(rootRecord.public.data.id, rootRecord);
   meta.set(rootRecord, root);
@@ -102,7 +102,7 @@ const generateNewTree = (
           isTraversingRoot ? undefined : currentRecord,
           shouldPreservePreviousState
             ? previousRecords.get(child.data.id)
-            : undefined
+            : undefined,
         );
         records.set(childRecord.public.data.id, childRecord);
         meta.set(childRecord, child);
@@ -146,7 +146,7 @@ const MAX_FUNCTION_ARGUMENTS = 32768;
 
 const updateExistingTree = (
   { order, records },
-  { opennessState }
+  { opennessState },
 ) => {
   if (typeof opennessState !== 'object') {
     return null;
@@ -162,7 +162,7 @@ const updateExistingTree = (
 
     const {
       open,
-      subtreeCallback = () => {},
+      subtreeCallback = () => { },
     } = typeof opts === 'boolean' ? { open: opts } : opts;
 
     let update;
@@ -281,7 +281,6 @@ const updateExistingTree = (
   };
 };
 
-
 export const createTreeComputer = creatorOptions =>
   // eslint-disable-next-line
   (props, state, options) => options.refresh ? generateNewTree(creatorOptions, props, state) : updateExistingTree(state, options);
@@ -335,14 +334,14 @@ class Tree extends PureComponent {
   }
 
   recomputeTree(
-    state
+    state,
   ) {
     return new Promise((resolve) => {
       this.setState(
         prevState => prevState.computeTree(this.props, prevState, {
           opennessState: state,
         }),
-        resolve
+        resolve,
       );
     });
   }

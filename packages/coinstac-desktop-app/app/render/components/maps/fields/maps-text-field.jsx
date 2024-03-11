@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {
@@ -33,7 +33,6 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-
 function MapsTextField({
   fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
@@ -52,7 +51,7 @@ function MapsTextField({
         fieldType: fieldDescription.type,
         required: fieldDescription.required,
         value,
-      }
+      },
     );
   }
 

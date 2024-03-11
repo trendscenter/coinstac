@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 const { notarize } = require('electron-notarize');
 
 exports.default = async function notarizing(context) {

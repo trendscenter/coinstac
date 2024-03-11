@@ -1,24 +1,24 @@
-import React, { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Link } from 'react-router';
-import { useDispatch, useSelector } from 'react-redux';
-import { shell } from 'electron';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Paper from '@material-ui/core/Paper';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import path from 'path';
+import { shell } from 'electron';
 import moment from 'moment';
+import path from 'path';
+import PropTypes from 'prop-types';
+import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router';
 
+import { deleteRun } from '../../state/ducks/runs';
+import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
+import { isUserInGroup } from '../../utils/helpers';
+import ListDeleteModal from './list-delete-modal';
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
-import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
-import { deleteRun } from '../../state/ducks/runs';
-import ListDeleteModal from './list-delete-modal';
-import { isUserInGroup } from '../../utils/helpers';
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {
@@ -141,9 +141,7 @@ function RunItem({
   const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
 
-  const isOwner = useMemo(() => {
-    return isUserInGroup(user.id, consortium.owners);
-  }, [user, consortium]);
+  const isOwner = useMemo(() => isUserInGroup(user.id, consortium.owners), [user, consortium]);
 
   const handleStopPipeline = () => {
     stopPipeline();
@@ -363,7 +361,6 @@ function RunItem({
     </Paper>
   );
 }
-
 
 RunItem.defaultProps = {
   stopPipeline: () => { },

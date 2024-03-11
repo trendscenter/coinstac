@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import Snackbar from '@material-ui/core/Snackbar';
 import Alert from '@material-ui/lab/Alert';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
 import useStyles from './notification.styles';
 
