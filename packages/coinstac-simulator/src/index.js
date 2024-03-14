@@ -16,9 +16,9 @@ const portscanner = require('portscanner');
  * @return {[type]}                            [description]
  */
 const startRun = ({
-  spec, 
-  runMode = 'local', 
-  clientCount = 1, 
+  spec,
+  runMode = 'local',
+  clientCount = 1,
   operatingDirectory = 'test',
   service = 'docker',
 }) => {
