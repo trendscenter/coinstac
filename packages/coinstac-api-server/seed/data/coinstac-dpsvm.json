@@ -3,28 +3,21 @@
     "name": "Differentially Private Support Vector Machines Demo",
     "id": "dpsvm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter/coinstac-dpsvm",
+    "repository": "https://github.com/trendscenter/coinstac-dpsvm",
     "description": "A test from single shot regresssion",
-    "testData": "tree\/master\/test\/input"
+    "testData": "tree/master/test/input"
   },
   "computation": {
     "type": "docker",
     "dockerImage": "coinstacteam/dpsvm",
-    "command": [
-      "python",
-      "\/computation\/scripts\/local.py"
-    ],
+    "command": ["python", "/computation/scripts/local.py"],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/dpsvm",
-      "command": [
-        "python",
-        "\/computation\/scripts\/remote.py"
-      ]
+      "command": ["python", "/computation/scripts/remote.py"]
     },
     "input": {
-      "covariates":
-      {
+      "covariates": {
         "label": "Covariates",
         "type": "csv",
         "description": "Demographic or medical features (e.g., isControl, sex, age)",
@@ -32,24 +25,21 @@
         "order": 0,
         "source": "member"
       },
-      "data":
-      {
+      "data": {
         "label": "Measurements",
         "type": "freesurfer",
         "items": ["FreeSurfer"],
         "extensions": [["csv", "txt"]],
         "source": "owner"
       },
-      "label":
-      {
+      "label": {
         "label": "Label",
         "description": "The binary label to predict",
         "type": "string",
         "source": "owner",
         "order": 2
       },
-      "model_local":
-      {
+      "model_local": {
         "default": "SVM",
         "label": "Model_local",
         "description": "Binary classification model: SVM / LR",
@@ -57,8 +47,7 @@
         "source": "owner",
         "order": 3
       },
-      "is_private_local":
-      {
+      "is_private_local": {
         "default": true,
         "label": "Is_private_local",
         "description": "Private or public version of model",
@@ -66,8 +55,7 @@
         "source": "owner",
         "order": 4
       },
-      "perturb_method_local":
-      {
+      "perturb_method_local": {
         "default": "objective",
         "label": "Perturb_method_local",
         "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
@@ -75,8 +63,7 @@
         "source": "owner",
         "order": 5
       },
-      "lambda_local":
-      {
+      "lambda_local": {
         "default": 0.01,
         "label": "Lambda_local",
         "description": "Regularization parameter",
@@ -87,8 +74,7 @@
         "source": "owner",
         "order": 6
       },
-      "epsilon_local":
-      {
+      "epsilon_local": {
         "default": 1.0,
         "label": "Epsilon_local",
         "description": "Privacy parameter",
@@ -99,8 +85,7 @@
         "source": "owner",
         "order": 7
       },
-      "huberconst_local":
-      {
+      "huberconst_local": {
         "default": 0.5,
         "label": "Huberconst_local",
         "description": "Constant for huber loss",
@@ -111,8 +96,7 @@
         "source": "owner",
         "order": 8
       },
-      "model_owner":
-      {
+      "model_owner": {
         "default": "SVM",
         "label": "Model_owner",
         "description": "Binary classification model: SVM / LR",
@@ -120,8 +104,7 @@
         "source": "owner",
         "order": 9
       },
-      "is_private_owner":
-      {
+      "is_private_owner": {
         "default": true,
         "label": "Is_private_owner",
         "description": "Private or public version of model",
@@ -129,8 +112,7 @@
         "source": "owner",
         "order": 10
       },
-      "perturb_method_owner":
-      {
+      "perturb_method_owner": {
         "default": "objective",
         "label": "Perturb_method_owner",
         "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
@@ -138,8 +120,7 @@
         "source": "owner",
         "order": 11
       },
-      "lambda_owner":
-      {
+      "lambda_owner": {
         "default": 0.01,
         "label": "Lambda_owner",
         "description": "Regularization parameter",
@@ -150,8 +131,7 @@
         "source": "owner",
         "order": 12
       },
-      "epsilon_owner":
-      {
+      "epsilon_owner": {
         "default": 1.0,
         "label": "Epsilon_owner",
         "description": "Privacy parameter",
@@ -162,8 +142,7 @@
         "source": "owner",
         "order": 13
       },
-      "huberconst_owner":
-      {
+      "huberconst_owner": {
         "default": 0.5,
         "label": "Huberconst_owner",
         "description": "Constant for huber loss",
@@ -174,8 +153,7 @@
         "source": "owner",
         "order": 14
       },
-      "train_split":
-      {
+      "train_split": {
         "default": 0.8,
         "label": "Train Split",
         "description": "Percentage of data used for training at the owner site",

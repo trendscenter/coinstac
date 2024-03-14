@@ -5,6 +5,13 @@ import TextField from '@material-ui/core/TextField';
 function PipelineStepInputTextField({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, { value: objParams.default }),
+    });
+  }
+
   if (!step) {
     return null;
   }
