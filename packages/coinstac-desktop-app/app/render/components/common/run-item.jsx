@@ -9,7 +9,7 @@ import { shell } from 'electron';
 import moment from 'moment';
 import path from 'path';
 import PropTypes from 'prop-types';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router';
 
@@ -19,6 +19,8 @@ import { isUserInGroup } from '../../utils/helpers';
 import ListDeleteModal from './list-delete-modal';
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
+
+const fs = require('fs');
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {
@@ -140,6 +142,7 @@ function RunItem({
 
   const [deleteRunMutation] = useMutation(DELETE_RUN_MUTATION);
   const [showModal, setShowModal] = useState(false);
+  const [logURL, setLogURL] = useState(false);
 
   const isOwner = useMemo(() => isUserInGroup(user.id, consortium.owners), [user, consortium]);
 
@@ -168,6 +171,38 @@ function RunItem({
 
     dispatch(deleteRun(runObject.id));
   };
+
+  const handleLinkClick = (url) => {
+    shell.openExternal(url);
+  };
+
+  useEffect(() => {
+    const timerFunc = setTimeout(() => {
+      if (runObject && appDirectory && !logURL) {
+        const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
+        const file = `${resultDir}/local.log`;
+
+        try {
+          const dirContents = fs.readdirSync(resultDir);
+          const check = dirContents.includes('local.log');
+          if (check) {
+            try {
+              const text = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
+              const lines = text.split(/\r?\n/);
+              let found = lines.find(line => line.includes('Wandb URL: '));
+              found = found.split(': ');
+              const url = found[1];
+              setLogURL(url);
+            } catch (e) { } // eslint-disable-line no-empty
+          }
+        } catch (e) { } // eslint-disable-line no-empty
+      }
+    }, 3000);
+
+    if (logURL) {
+      clearTimeout(timerFunc);
+    }
+  });
 
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
@@ -261,6 +296,25 @@ function RunItem({
             </Typography>
           </div>
         )}
+        {
+          logURL && typeof logURL === 'string'
+          && (
+            <div>
+              <Typography className={classes.label}>
+                WanDB Log URL:
+              </Typography>
+              <Typography className={classes.value}>
+                <a
+                  href={logURL}
+                  target="_blank"
+                  onClick={() => handleLinkClick(logURL)}
+                >
+                  {logURL}
+                </a>
+              </Typography>
+            </div>
+          )
+        }
         <div className={classes.runStateContainer}>
           {(localPipelineState || remotePipelineState) && status === 'started'
             && getStateWell(runObject, classes)}

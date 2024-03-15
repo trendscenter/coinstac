@@ -82,6 +82,7 @@ class Result extends Component {
     selectedTabIndex: 0,
     downloading: false,
     filesExist: false,
+    htmlPath: 'index.html',
   };
 
   componentDidMount() {
@@ -127,6 +128,10 @@ class Result extends Component {
       ));
     } else {
       plotData = run.results;
+    }
+
+    if (run.type === 'iframe' && run.pipelineSnapshot.steps[0].inputMap.results_html_path.value) {
+      this.setState({ htmlPath: run.pipelineSnapshot.steps[0].inputMap.results_html_path.value });
     }
 
     this.setState({
@@ -195,6 +200,7 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
+      htmlPath,
     } = this.state;
     const {
       consortia,
@@ -343,7 +349,7 @@ class Result extends Component {
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name} `}
-                    value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
+                    value={htmlPath}
                     appDirectory={appDirectory}
                     user={user}
                     run={run}

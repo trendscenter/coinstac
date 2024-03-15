@@ -40,20 +40,22 @@ const ComputationIO = ({ compIO }) => {
 
   const classes = useStyles();
 
-  if (!compIO) {
-    return null;
-  }
-
-  const showEdit = auth.user.permissions.roles?.admin
-    || (auth.user.permissions.roles?.author && compIO.submittedBy === auth.user.id);
-
   const [textAreaValue, setTextAreaValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [addComputation] = useMutation(ADD_COMPUTATION_MUTATION);
 
+  const showEdit = auth.user.permissions.roles?.admin
+    || (auth.user.permissions.roles?.author && compIO.submittedBy === auth.user.id);
+
   useEffect(() => {
-    setTextAreaValue(prepareJSON(compIO));
+    if (compIO) {
+      setTextAreaValue(prepareJSON(compIO));
+    }
   }, [compIO]);
+
+  if (!compIO) {
+    return null;
+  }
 
   const updateComputation = async () => {
     try {
