@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import Paper from '@material-ui/core/Paper';
 import { withStyles } from '@material-ui/core/styles';
-import LayoutNoauth from '../layout-noauth';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import { resetPassword } from '../../state/ducks/auth';
+import LayoutNoauth from '../layout-noauth';
 import FormResetPassword from './form-reset-password';
 
 const styles = theme => ({

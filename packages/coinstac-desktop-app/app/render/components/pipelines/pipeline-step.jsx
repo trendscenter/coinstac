@@ -1,22 +1,23 @@
 /* eslint-disable react/no-unused-prop-types */
-import React, { Component } from 'react';
-import { DragSource, DropTarget } from 'react-dnd';
-import PropTypes from 'prop-types';
-import { compose } from 'redux';
 import { graphql } from '@apollo/react-hoc';
-import { capitalize, debounce, isEqual } from 'lodash';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Accordion from '@material-ui/core/Accordion';
-import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionDetails';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ItemTypes from './pipeline-item-types';
-import PipelineStepInput from './pipeline-step-input';
+import { capitalize, debounce, isEqual } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { DragSource, DropTarget } from 'react-dnd';
+import { compose } from 'redux';
+
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
+import ItemTypes from './pipeline-item-types';
+import PipelineStepInput from './pipeline-step-input';
 
 const styles = theme => ({
   pipelineStep: {
@@ -62,12 +63,10 @@ const stepTarget = {
   },
 };
 
-const collectDrag = (connect, monitor) => {
-  return {
-    connectDragSource: connect.dragSource(),
-    isDragging: monitor.isDragging(),
-  };
-};
+const collectDrag = (connect, monitor) => ({
+  connectDragSource: connect.dragSource(),
+  isDragging: monitor.isDragging(),
+});
 
 const collectDrop = connect => ({ connectDropTarget: connect.dropTarget() });
 class PipelineStep extends Component {
@@ -363,7 +362,7 @@ class PipelineStep extends Component {
             {compIO && this.showOutput(10, step.id, compIO.computation.output)}
           </AccordionDetails>
         </Accordion>
-      </div>
+      </div>,
     ));
   }
 }
@@ -410,12 +409,12 @@ const PipelineStepWithData = compose(
     options: ({ previousComputationIds }) => ({
       variables: { computationIds: previousComputationIds },
     }),
-  })
+  }),
 )(PipelineStep);
 
 const componentWithStyles = withStyles(styles)(PipelineStepWithData);
 
 export default compose(
   DropTarget(ItemTypes.COMPUTATION, stepTarget, collectDrop),
-  DragSource(ItemTypes.COMPUTATION, stepSource, collectDrag)
+  DragSource(ItemTypes.COMPUTATION, stepSource, collectDrag),
 )(componentWithStyles);

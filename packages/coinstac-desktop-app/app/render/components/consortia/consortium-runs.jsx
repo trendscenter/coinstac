@@ -1,9 +1,9 @@
+import PropTypes from 'prop-types';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import PropTypes from 'prop-types';
 
-import RunsList from '../common/runs-list';
 import { isUserInGroup } from '../../utils/helpers';
+import RunsList from '../common/runs-list';
 
 const ConsortiumRuns = ({ runs, consortium }) => {
   const auth = useSelector(state => state.auth);

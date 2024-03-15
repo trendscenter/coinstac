@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from 'react';
 import { graphql, withApollo } from '@apollo/react-hoc';
+import Typography from '@material-ui/core/Typography';
+import Alert from '@material-ui/lab/Alert';
 import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Alert from '@material-ui/lab/Alert';
-import Typography from '@material-ui/core/Typography';
-import MapsEditForm from './maps-edit-form';
+
 import { saveDataMapping } from '../../state/ducks/maps';
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import MapsExcludedSubjects from './fields/maps-excluded-subjects';
+import MapsEditForm from './maps-edit-form';
 
 function MapsEdit({
   params, pipelines, consortia, updateConsortiumMappedUsers,
@@ -33,14 +34,12 @@ function MapsEdit({
     setPipeline(pipeline);
 
     const consortiumDataMap = maps.find(
-      m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId
+      m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId,
     );
 
-
     if (consortiumDataMap) {
-      const excluded = consortiumDataMap.map.reduce((prev, curr) => {
-        return prev.concat(curr.excludedSubjectsArray);
-      }, []);
+      const excluded = consortiumDataMap.map
+        .reduce((prev, curr) => prev.concat(curr.excludedSubjectsArray), []);
       setExcludedSubjects(excluded.filter(Boolean));
       setDataMap(consortiumDataMap.dataMap);
     }
@@ -59,11 +58,11 @@ function MapsEdit({
   async function commitSaveDataMap(e) {
     e.preventDefault();
 
-    const unfulfilledArr = Object.keys(pipeline.steps[0].inputMap).reduce((memo, item) => {
+    const unfulfilledArr = Object.keys(pipeline.steps[0].inputMap).reduce((acc, item) => {
       if (pipeline.steps[0].inputMap[item]?.fulfilled === false) {
-        memo[item] = pipeline.steps[0].inputMap[item];
+        acc[item] = pipeline.steps[0].inputMap[item];
       }
-      return memo;
+      return acc;
     }, {});
 
     const undef = [];
@@ -137,9 +136,9 @@ const ComponentWithData = compose(
           variables: { consortiumId, isMapped },
         }),
       }),
-    }
+    },
   ),
-  withApollo
+  withApollo,
 )(MapsEdit);
 
 export default ComponentWithData;

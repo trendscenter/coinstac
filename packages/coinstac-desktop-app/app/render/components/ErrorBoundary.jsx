@@ -2,11 +2,11 @@ import {
   Box, Button, Paper, TextField,
 } from '@material-ui/core';
 import axios from 'axios';
-import React, { useState } from 'react';
-import { ipcRenderer, clipboard } from 'electron';
+import { clipboard, ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
-import { API_TOKEN_KEY } from '../state/ducks/auth';
+import React, { useState } from 'react';
 
+import { API_TOKEN_KEY } from '../state/ducks/constants';
 
 class ErrorBoundary extends React.Component {
   static propTypes = {
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
   copyErrorDetails = () => {
     const { error, errorInfo } = this.state;
     clipboard.writeText(
-      `${error.toString()} \n ${errorInfo.componentStack}`
+      `${error.toString()} \n ${errorInfo.componentStack}`,
     );
   };
 
@@ -36,7 +36,7 @@ class ErrorBoundary extends React.Component {
 
   openBugReportGithub = () => {
     window.open(
-      'https://github.com/trendscenter/coinstac/issues/new?assignees=&labels=&template=bug_report.md&title='
+      'https://github.com/trendscenter/coinstac/issues/new?assignees=&labels=&template=bug_report.md&title=',
     );
   };
 
@@ -134,9 +134,7 @@ export function BugReport(props) {
 
   const handleSubmit = () => {
     const { apiServer } = window.config;
-    const API_URL = `${apiServer.protocol}//${apiServer.hostname}${
-      apiServer.port ? `:${apiServer.port}` : ''
-    }${apiServer.pathname ? `${apiServer.pathname}` : '/graphql'}`;
+    const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname ? `${apiServer.pathname}` : '/graphql'}`;
     const authToken = getAuthToken();
 
     axios({

@@ -43,12 +43,8 @@ function isAMatch(variable, column) {
 }
 
 function findMatchInVariables(variables, column) {
-  const matches = variables.filter((variable) => {
-    variable = variable.toLowerCase();
-    column = column.toLowerCase();
-
-    return isAMatch(variable, column);
-  });
+  const matches = variables
+    .filter(variable => isAMatch(variable.toLowerCase(), column.toLowerCase()));
 
   return matches.length > 0 ? matches[0] : null;
 }

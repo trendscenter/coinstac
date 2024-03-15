@@ -1,13 +1,13 @@
+import path from 'path';
 import React from 'react';
 import { useSelector } from 'react-redux';
-import path from 'path';
 
 const Iframe = ({ appDirectory, run, value }) => {
   const user = useSelector(state => state.auth.user);
 
   const iFrameHeight = '800px';
   let url = '';
-  if (typeof value === undefined) {
+  if (typeof value === 'undefined') {
     url = path.join(appDirectory, 'output', user.id, run.id, 'index.html');
     return (
       <div>

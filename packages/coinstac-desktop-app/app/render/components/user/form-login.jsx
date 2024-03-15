@@ -1,17 +1,18 @@
-import React, { useMemo, useState } from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router';
-import Paper from '@material-ui/core/Paper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Paper from '@material-ui/core/Paper';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import TextField from '@material-ui/core/TextField';
 import { useFormik } from 'formik';
+import PropTypes from 'prop-types';
+import React, { useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import * as Yup from 'yup';
-import FormStartupDirectory from './form-startup-directory';
+
 import { EXPIRED_TOKEN, PASSWORD_EXPIRED } from '../../utils/error-codes';
+import FormStartupDirectory from './form-startup-directory';
 
 const validationSchema = Yup.object().shape({
   username: Yup.string().required('Required'),
@@ -65,7 +66,6 @@ const FormLogin = ({
       });
     },
   });
-
 
   const toggleStartupDirectoryDialog = () => {
     setIsStartupDirectoryDialogOpen(prevState => !prevState);

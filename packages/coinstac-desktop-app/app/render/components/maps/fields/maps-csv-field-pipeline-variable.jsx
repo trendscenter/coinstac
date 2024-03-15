@@ -1,11 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
-import CancelIcon from '@material-ui/icons/Cancel';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
+import CancelIcon from '@material-ui/icons/Cancel';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef } from 'react';
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {

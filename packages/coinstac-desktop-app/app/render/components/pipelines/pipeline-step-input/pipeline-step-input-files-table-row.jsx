@@ -1,11 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 import update from 'immutability-helper';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 class PipelineStepInputFilesTableRow extends React.Component {
   constructor(props) {
@@ -27,7 +27,7 @@ class PipelineStepInputFilesTableRow extends React.Component {
       inputMap: getNewObj(
         'type',
         value,
-        index
+        index,
       ),
     });
 

@@ -1,6 +1,6 @@
-import React from 'react';
-import red from '@material-ui/core/colors/red';
 import grey from '@material-ui/core/colors/grey';
+import red from '@material-ui/core/colors/red';
+import React from 'react';
 import { ValidatorComponent } from 'react-material-ui-form-validator';
 import ReactMde from 'react-mde';
 import * as Showdown from 'showdown';

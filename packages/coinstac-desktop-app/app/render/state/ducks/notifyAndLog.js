@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import {
   ERROR,
-  WARNING,
   INFO,
   SUCCESS,
+  WARNING,
 } from '../../utils/notification-severity-codes';
 
 const INITIAL_STATE = {
@@ -68,7 +68,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         notifications: state.notifications.filter(
-          notification => notification.id !== action.notificationId
+          notification => notification.id !== action.notificationId,
         ),
       };
     default:

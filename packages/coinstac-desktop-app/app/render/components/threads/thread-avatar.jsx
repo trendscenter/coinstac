@@ -1,9 +1,9 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { get, toUpper } from 'lodash';
 import Avatar from '@material-ui/core/Avatar';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import classNames from 'classnames';
+import { get, toUpper } from 'lodash';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 const useStyles = makeStyles(theme => ({
   wrapper: {
@@ -41,7 +41,7 @@ const ThreadAvatar = ({
         className={
           classNames(
             className || classes.avatar,
-            { sender: isSender, receiver: !isSender }
+            { sender: isSender, receiver: !isSender },
           )
         }
       >

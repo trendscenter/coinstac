@@ -1,12 +1,13 @@
 import Box from '@material-ui/core/Box';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import Typography from '@material-ui/core/Typography';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import React, { useState } from 'react';
-import UserAccounts from '../user-accounts';
+
 import Permissions from '../permissions';
 import PipelineStates from '../pipeline-states';
+import UserAccounts from '../user-accounts';
 
 const useStyles = makeStyles(theme => ({
   title: {

@@ -1,11 +1,12 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events,
   jsx-a11y/no-static-element-interactions */
-import React from 'react';
-import PropTypes from 'prop-types';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import classNames from 'classnames';
 import { get, head, orderBy } from 'lodash';
 import moment from 'moment';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import ThreadAvatar from './thread-avatar';
 
 const useStyles = makeStyles(() => ({

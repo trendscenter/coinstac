@@ -1,11 +1,11 @@
+import { useMutation } from '@apollo/client';
+import { ipcRenderer } from 'electron';
+import { startsWith } from 'lodash';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useMutation } from '@apollo/client';
-import { startsWith } from 'lodash';
-import { ipcRenderer } from 'electron';
 
-import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import { updateDockerOutput } from '../../../state/ducks/docker';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import { UPDATE_USER_CONSORTIUM_STATUS_MUTATION } from '../../../state/graphql/functions';
 
 const DOCKER_IGNORABLE_MESSAGES = [
@@ -40,7 +40,7 @@ function DockerEventsListeners() {
       const { message } = arg.err;
 
       const shouldNotify = DOCKER_IGNORABLE_MESSAGES.filter(
-        startString => startsWith(message, startString)
+        startString => startsWith(message, startString),
       ).length === 0;
 
       if (shouldNotify) {

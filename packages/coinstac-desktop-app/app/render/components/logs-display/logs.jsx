@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
+import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import { clipboard, ipcRenderer } from 'electron';
+import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
-import { clipboard, ipcRenderer } from 'electron';
 
 const styles = theme => ({
   pageTitle: {
@@ -37,9 +37,7 @@ const styles = theme => ({
 });
 
 class Logs extends Component {
-  getWrapper = () => {
-    return document.getElementById('logs-wrapper');
-  }
+  getWrapper = () => document.getElementById('logs-wrapper')
 
   handleScrollToTop = () => {
     this.getWrapper().scrollTop = 0;

@@ -1,5 +1,6 @@
 'use strict';
 
+/* eslint-disable import/no-extraneous-dependencies */
 const pify = require('util').promisify;
 const CoinstacClient = require('coinstac-client-core');
 const rimraf = require('rimraf');

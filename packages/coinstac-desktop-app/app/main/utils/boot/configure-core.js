@@ -18,7 +18,7 @@ module.exports = function configureCore({
       containerService,
       clientServerURL,
       token,
-    }
+    },
   );
 
   const core = new CoinstacClientCore(coreConfiguration);

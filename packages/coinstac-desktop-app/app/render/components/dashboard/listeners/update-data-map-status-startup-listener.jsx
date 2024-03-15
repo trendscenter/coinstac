@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
 import { useMutation } from '@apollo/client';
+import { useEffect, useRef } from 'react';
+
 import { UPDATE_CONSORTIA_MAPPED_USERS_MUTATION } from '../../../state/graphql/functions';
 
 /**

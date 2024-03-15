@@ -1,6 +1,7 @@
+import { ipcRenderer } from 'electron';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { ipcRenderer } from 'electron';
+
 import { appendLogMessage } from '../../../state/ducks/app';
 
 function LogListener() {

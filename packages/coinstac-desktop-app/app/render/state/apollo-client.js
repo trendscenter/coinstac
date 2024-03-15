@@ -1,14 +1,15 @@
-import { ipcRenderer } from 'electron';
 import {
-  ApolloClient, InMemoryCache, ApolloLink, HttpLink, split, concat,
+  ApolloClient, ApolloLink, concat,
+  HttpLink, InMemoryCache, split,
 } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { getMainDefinition } from '@apollo/client/utilities';
-import { onError } from '@apollo/client/link/error';
+import { ipcRenderer } from 'electron';
 import { useState } from 'react';
 
-import { API_TOKEN_KEY } from './ducks/auth';
 import { EXPIRED_TOKEN } from '../utils/error-codes';
+import { API_TOKEN_KEY } from './ducks/constants';
 
 function getAuthToken() {
   // get the authentication token from local storage if it exists
@@ -32,9 +33,7 @@ function getApolloClient() {
     uri: `${SUB_URL}/graphql`,
     options: {
       reconnect: true,
-      connectionParams: () => {
-        return { authToken: token ? token.token : '' };
-      },
+      connectionParams: () => ({ authToken: token ? token.token : '' }),
     },
   });
 
@@ -62,7 +61,7 @@ function getApolloClient() {
       return kind === 'OperationDefinition' && operation === 'subscription';
     },
     wsLink,
-    concat(authMiddleware, httpLink)
+    concat(authMiddleware, httpLink),
   );
 
   return {
@@ -85,7 +84,6 @@ function getApolloClient() {
   };
 }
 
-
 // partial solution from https://gist.github.com/tehpsalmist/d440b873c7465751dd829b5716d7ca81
 const useApolloClient = () => {
   // store the initial client in State
@@ -99,6 +97,5 @@ const useApolloClient = () => {
     return setClient(newClient);
   }];
 };
-
 
 export default useApolloClient;

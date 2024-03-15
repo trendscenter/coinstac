@@ -11,20 +11,21 @@ import { flowRight as compose, get } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import MemberAvatar from '../../common/member-avatar';
+
 import { logout } from '../../../state/ducks/auth';
 import { notifyError } from '../../../state/ducks/notifyAndLog';
 import {
-  FETCH_ALL_USERS_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
   ADD_USER_ROLE_MUTATION,
+  FETCH_ALL_USERS_QUERY,
   REMOVE_USER_ROLE_MUTATION,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../../state/graphql/functions';
 import {
   getAllAndSubProp,
   userRolesProp,
 } from '../../../state/graphql/props';
 import { getGraphQLErrorMessage } from '../../../utils/helpers';
+import MemberAvatar from '../../common/member-avatar';
 
 const useStyles = makeStyles(() => ({
   avatarWrapper: {
@@ -66,7 +67,6 @@ function Permission({
       }
     };
   }, []);
-
 
   const logoutUser = () => {
     dispatch(logout())
@@ -186,11 +186,11 @@ const PermissionWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  withApollo
+  withApollo,
 )(Permission);
 
 export default PermissionWithData;

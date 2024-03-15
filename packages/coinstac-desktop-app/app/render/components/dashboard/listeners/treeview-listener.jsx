@@ -1,6 +1,7 @@
+import { ipcRenderer } from 'electron';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { ipcRenderer } from 'electron';
+
 import { setConsortiaFileTree } from '../../../state/ducks/app';
 import { buildTree, generateInitalFileTree } from '../../../utils/helpers';
 

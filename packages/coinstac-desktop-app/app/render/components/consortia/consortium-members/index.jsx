@@ -1,22 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
-import { useDispatch } from 'react-redux';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import Divider from '@material-ui/core/Divider';
-import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormGroup from '@material-ui/core/FormGroup';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 
+import { applyAsyncLoading } from '../../../state/ducks/loading';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import {
   SAVE_CONSORTIUM_ACTIVE_MEMBERS_MUTATION,
 } from '../../../state/graphql/functions';
-import { applyAsyncLoading } from '../../../state/ducks/loading';
-import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
-
 import useStyles from './consortium-members.styles';
 
 function ConsortiumMembers({
@@ -120,7 +119,7 @@ function ConsortiumMembers({
                         onChange={
                           toggleActiveMember(
                             headlessMemberId,
-                            activePipeline.headlessMembers[headlessMemberId]
+                            activePipeline.headlessMembers[headlessMemberId],
                           )
                         }
                         name={headlessMemberId}

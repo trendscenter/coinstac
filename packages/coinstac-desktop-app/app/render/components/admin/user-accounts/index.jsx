@@ -1,3 +1,4 @@
+import { useMutation } from '@apollo/client';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
@@ -10,21 +11,21 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
-import { useMutation } from '@apollo/client';
 import { flowRight as compose, get, omit } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import MemberAvatar from '../../common/member-avatar';
-import { notifySuccess, notifyError } from '../../../state/ducks/notifyAndLog';
+
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import {
-  FETCH_ALL_USERS_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
   DELETE_USER_MUTATION,
+  FETCH_ALL_USERS_QUERY,
   SAVE_USER_MUTATION,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../../state/graphql/functions';
 import { getAllAndSubProp } from '../../../state/graphql/props';
 import ListDeleteModal from '../../common/list-delete-modal';
+import MemberAvatar from '../../common/member-avatar';
 import UserModal from './user-modal';
 
 const useStyles = makeStyles(() => ({
@@ -130,47 +131,45 @@ function UserAccounts({
             </TableRow>
           </TableHead>
           <TableBody>
-            {users && users.map((user) => {
-              return (
-                <TableRow key={`${user.id}-row`}>
-                  <TableCell>
-                    <div className={classes.avatarWrapper}>
-                      <MemberAvatar
-                        id={user.id}
-                        name={user.username}
-                        width={30}
-                      />
-                      <span>{user.username}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {user.name}
-                  </TableCell>
-                  <TableCell>
-                    {user.email}
-                  </TableCell>
-                  <TableCell>
-                    {user.institution}
-                  </TableCell>
-                  <TableCell>
-                    {currentUser.id !== user.id && (
-                      <>
-                        <IconButton
-                          onClick={() => setUserToSave(user)}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => setUserToDelete(user)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+            {users && users.map(user => (
+              <TableRow key={`${user.id}-row`}>
+                <TableCell>
+                  <div className={classes.avatarWrapper}>
+                    <MemberAvatar
+                      id={user.id}
+                      name={user.username}
+                      width={30}
+                    />
+                    <span>{user.username}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {user.name}
+                </TableCell>
+                <TableCell>
+                  {user.email}
+                </TableCell>
+                <TableCell>
+                  {user.institution}
+                </TableCell>
+                <TableCell>
+                  {currentUser.id !== user.id && (
+                    <>
+                      <IconButton
+                        onClick={() => setUserToSave(user)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => setUserToDelete(user)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </Box>
@@ -210,9 +209,9 @@ const PermissionWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
-  withApollo
+  withApollo,
 )(UserAccounts);
 
 export default PermissionWithData;

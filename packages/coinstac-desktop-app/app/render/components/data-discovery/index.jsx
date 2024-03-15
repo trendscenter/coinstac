@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import { Link } from 'react-router';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
@@ -9,20 +6,22 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import Autocomplete from '@material-ui/lab/Autocomplete';
-import Skeleton from '@material-ui/lab/Skeleton';
 import AddIcon from '@material-ui/icons/Add';
 import SearchIcon from '@material-ui/icons/Search';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import Skeleton from '@material-ui/lab/Skeleton';
+import { get } from 'lodash';
+import React, { useState } from 'react';
+import { Link } from 'react-router';
 
-import useStyles from './data-discovery.styles';
-import ResultItem from './result-item';
-import ListDeleteModal from '../common/list-delete-modal';
 import {
-  SEARCH_DATASETS_QUERY,
   DELETE_DATASET_MUTATION,
   FETCH_ALL_DATASETS_SUBJECT_GROUPS_QUERY,
+  SEARCH_DATASETS_QUERY,
 } from '../../state/graphql/functions';
-
+import ListDeleteModal from '../common/list-delete-modal';
+import useStyles from './data-discovery.styles';
+import ResultItem from './result-item';
 
 const DATASET_MODALITY_OPTIONS = ['sMRI', 'fMRI', 'dMRI', 'pMRI'];
 

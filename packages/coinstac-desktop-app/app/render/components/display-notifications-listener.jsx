@@ -1,9 +1,8 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import Notification from './notification';
-
 import { dequeueNotification } from '../state/ducks/notifyAndLog';
+import Notification from './notification';
 
 function DisplayNotificationsListener() {
   const notifications = useSelector(state => state.notifications.notifications);

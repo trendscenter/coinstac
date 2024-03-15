@@ -1,16 +1,16 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import TableRow from '@material-ui/core/TableRow';
-import TableCell from '@material-ui/core/TableCell';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import Typography from '@material-ui/core/Typography';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 import InfoIcon from '@material-ui/icons/Info';
 import update from 'immutability-helper';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 const VAULT_USER_SUGGESTED_FIELD_TOOLTIP = `
   This field is present on the vault users with this name. If you delete this field, the vault user won't be able to provide
@@ -37,7 +37,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
       inputMap: getNewObj(
         'type',
         value,
-        index
+        index,
       ),
     });
 
@@ -131,7 +131,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
             && (
               <Typography variant="subtitle1">
                 Variable:
-                  {` ${possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].label}`}
+                {` ${possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].label}`}
               </Typography>
             )
           }

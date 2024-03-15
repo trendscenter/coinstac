@@ -1,18 +1,19 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import AppBar from '@material-ui/core/AppBar';
 import Paper from '@material-ui/core/Paper';
+import { withStyles } from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
-import { withStyles } from '@material-ui/core/styles';
-import LayoutNoauth from '../layout-noauth';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import {
-  sendPasswordResetEmail,
   resetForgotPassword,
+  sendPasswordResetEmail,
 } from '../../state/ducks/auth';
-import FormSendEmail from './form-send-email';
+import LayoutNoauth from '../layout-noauth';
 import FormForgotPassword from './form-forgot-password';
+import FormSendEmail from './form-send-email';
 
 const styles = theme => ({
   paper: {

@@ -6,7 +6,7 @@ function useEntityListSubscription(
   query,
   subscriptionName,
   variables,
-  refetchFunc
+  refetchFunc,
 ) {
   useEffect(() => {
     const unsubscribe = subscriptionFunc({

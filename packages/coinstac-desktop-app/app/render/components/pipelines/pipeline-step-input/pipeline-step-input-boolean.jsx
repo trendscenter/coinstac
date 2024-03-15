@@ -1,6 +1,6 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import Checkbox from '@material-ui/core/Checkbox';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputBoolean({
   objKey, objParams, owner, updateStep, getNewObj, step,
@@ -10,7 +10,7 @@ function PipelineStepInputBoolean({
       ...step,
       inputMap: getNewObj(
         objKey,
-        { value: objParams.default }
+        { value: objParams.default },
       ),
     });
   }

@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
-import Typography from '@material-ui/core/Typography';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 
+import { isUserInGroup } from '../../utils/helpers';
 import RunsList from '../common/runs-list';
 import FileViewer from './file-viewer';
-import { isUserInGroup } from '../../utils/helpers';
 
 const ResultsList = ({ runs, consortia }) => {
   const [selectedTab, setSelectedTab] = useState(0);

@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const mkdirp = pify(require('mkdirp'));

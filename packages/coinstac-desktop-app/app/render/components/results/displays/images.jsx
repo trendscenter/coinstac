@@ -1,17 +1,17 @@
 /* eslint-disable react/no-find-dom-node, no-unused-vars */
-import React, { Component } from 'react';
-import { ipcRenderer } from 'electron';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import { ipcRenderer } from 'electron';
 import path from 'path';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
-import { notifySuccess, notifyError } from '../../../state/ducks/notifyAndLog';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
@@ -119,7 +119,7 @@ class Images extends Component {
               className="canvas"
               width="1600"
               height={height}
-            />
+            />,
           );
         });
       }

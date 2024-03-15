@@ -37,7 +37,7 @@ function getErrorLogger(logName, className) {
     maybeAddOutput(
       JSON.stringify(serializeError(error), null, 2).replace(/\\n/g, '\n'),
       logName,
-      `error ${className}`
+      `error ${className}`,
     );
   };
 }
@@ -57,20 +57,20 @@ loadConfig()
 
     /* eslint-disable no-console */
     console.log(
-      `Reading logs: ${targets.map(({ filename }) => filename).toString()}`
+      `Reading logs: ${targets.map(({ filename }) => filename).toString()}`,
     );
     /* eslint-enable no-console */
 
     return Promise.all(targets.map(target => access(target.filename).then(
       () => Object.assign({}, target, { exists: true }),
-      () => Object.assign({}, target, { exists: false })
+      () => Object.assign({}, target, { exists: false }),
     )));
   })
   .then(targets => Promise.all(targets.reduce((memo, target) => (
     target.exists
       ? memo.concat(
         readLastLines.read(target.filename, 50)
-          .then(lines => Object.assign({}, target, { lines }))
+          .then(lines => Object.assign({}, target, { lines })),
       )
       : memo
   ), [])))

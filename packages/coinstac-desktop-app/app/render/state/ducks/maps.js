@@ -1,9 +1,10 @@
-/* eslint-disable no-case-declarations */
-import { dirname, basename } from 'path';
+/* eslint-disable no-case-declarations, no-param-reassign */
 import isEqual from 'lodash/isEqual';
+import { basename, dirname } from 'path';
+
+import { getAllUnfulfilledPipelineInputs } from '../../utils/helpers';
 import { applyAsyncLoading } from './loading';
 import { startRun } from './runs';
-import { getAllUnfulfilledPipelineInputs } from '../../utils/helpers';
 
 const fs = require('fs');
 const path = require('path');
@@ -100,7 +101,7 @@ export const saveDataMapping = applyAsyncLoading(
             Object.keys(csvData).forEach((subjFile) => {
               const subjRelPath = path.relative(
                 baseDirectory,
-                path.resolve(baseDirectory, subjFile)
+                path.resolve(baseDirectory, subjFile),
               );
               value[subjRelPath] = {};
 
@@ -111,7 +112,7 @@ export const saveDataMapping = applyAsyncLoading(
                   const csvColumn = mappedData.maps[mappedColumnName];
 
                   value[subjRelPath][mappedColumnName] = castData[covarType.type](
-                    csvData[subjFile][csvColumn]
+                    csvData[subjFile][csvColumn],
                   );
                 });
                 filesArray.push(subjFile);
@@ -176,13 +177,13 @@ export const saveDataMapping = applyAsyncLoading(
     const { runs } = getState();
 
     const runAwaitingDataMap = runs.runsAwaitingDataMap.find(
-      run => run.consortiumId === consortium.id && run.pipelineSnapshot.id === pipeline.id
+      run => run.consortiumId === consortium.id && run.pipelineSnapshot.id === pipeline.id,
     );
 
     if (runAwaitingDataMap) {
       dispatch(startRun(runAwaitingDataMap, consortium));
     }
-  }
+  },
 );
 
 // Called when a pipeline is edited to update the map status accordingly
@@ -191,7 +192,7 @@ export const updateMapStatus = applyAsyncLoading(
     const { maps } = getState();
 
     const currentMap = maps.consortiumDataMappings.find(
-      m => m.consortiumId === consortiumId && m.pipelineId === pipeline.id
+      m => m.consortiumId === consortiumId && m.pipelineId === pipeline.id,
     );
 
     if (!currentMap) return;
@@ -253,7 +254,7 @@ export const updateMapStatus = applyAsyncLoading(
         complete: unfulfilledInputsAreEqual,
       },
     }));
-  }
+  },
 );
 
 export const deleteDataMapping = applyAsyncLoading(
@@ -265,7 +266,7 @@ export const deleteDataMapping = applyAsyncLoading(
         pipelineId,
       },
     }));
-  }
+  },
 );
 
 export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
@@ -274,7 +275,7 @@ export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
       type: DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM,
       payload: consortiumId,
     }));
-  }
+  },
 );
 
 export default function reducer(state = INITIAL_STATE, action) {

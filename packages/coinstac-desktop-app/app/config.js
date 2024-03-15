@@ -9,9 +9,7 @@ const home = require('os').homedir;
 
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
-const fileExists = (fPath) => {
-  return access(fPath).then(() => true, () => false);
-};
+const fileExists = fPath => access(fPath).then(() => true, () => false);
 
 const coinstacHome = path.join(home(), '.coinstac');
 

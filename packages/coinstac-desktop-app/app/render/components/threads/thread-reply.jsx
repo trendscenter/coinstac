@@ -1,18 +1,19 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { omit } from 'lodash';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import FormControl from '@material-ui/core/FormControl';
 import InputBase from '@material-ui/core/InputBase';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
-import ThreadAvatar from './thread-avatar';
-import { ThreadContext } from './context';
+import Tooltip from '@material-ui/core/Tooltip';
+import classNames from 'classnames';
+import { omit } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+
 import CustomSelect from '../common/react-select';
+import { ThreadContext } from './context';
+import ThreadAvatar from './thread-avatar';
 
 const BootstrapInput = withStyles(theme => ({
   root: {
@@ -203,7 +204,7 @@ class ThreadReply extends Component {
     const { value } = evt.target;
     this.setState(Object.assign(
       { action: value },
-      value === 'none' && { selectedConsortium: 'none' }
+      value === 'none' && { selectedConsortium: 'none' },
     ));
   }
 
@@ -261,7 +262,7 @@ class ThreadReply extends Component {
             id: selectedResult,
           },
         },
-      })
+      }),
     );
 
     onSend(data);
@@ -311,7 +312,7 @@ class ThreadReply extends Component {
           className={
             classNames(
               classes.replyButton,
-              { disabled: !!error || savingStatus === 'pending' }
+              { disabled: !!error || savingStatus === 'pending' },
             )
           }
           onClick={this.handleSend}

@@ -1,22 +1,22 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose } from 'lodash';
-import ReactJson from 'react-json-view';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
 import { services } from 'coinstac-common';
 import { ipcRenderer } from 'electron';
+import { flowRight as compose } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import ReactJson from 'react-json-view';
+import { connect } from 'react-redux';
+
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
 import { saveDocumentProp } from '../../state/graphql/props';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
-
 
 const styles = theme => ({
   topMargin: {
@@ -158,9 +158,9 @@ ComputationSubmission.propTypes = {
 const ComputationSubmissionWithAlert = compose(
   graphql(
     ADD_COMPUTATION_MUTATION,
-    saveDocumentProp('addComputation', 'computationSchema')
+    saveDocumentProp('addComputation', 'computationSchema'),
   ),
-  withApollo
+  withApollo,
 )(ComputationSubmission);
 
 const connectedComponent = connect(null, {

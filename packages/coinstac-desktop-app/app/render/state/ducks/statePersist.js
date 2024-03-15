@@ -1,10 +1,10 @@
 /* eslint-disable import/prefer-default-export */
-import { dirname, join } from 'path';
 import { deepParseJson } from 'deep-parse-json';
-import { REHYDRATE, createMigrate } from 'redux-persist';
+import { dirname, join } from 'path';
+import { createMigrate, REHYDRATE } from 'redux-persist';
 
 import localDBMigrations from '../migrations';
-import { API_TOKEN_KEY, setUser } from './auth';
+import { API_TOKEN_KEY } from './constants';
 
 let electronStore;
 let persistConfig;
@@ -13,9 +13,13 @@ let storePersistor;
 // Increment this version by one everytime the persisted store must undergo a migration
 export const CURRENT_PERSISTED_STORE_VERSION = 2;
 
+export const SET_USER = 'SET_USER';
+
 export const CLEAR_STATE = 'CLEAR_STATE';
 
 export const clearState = state => ({ type: CLEAR_STATE, payload: state });
+
+export const setUser = user => ({ type: SET_USER, payload: user });
 
 function init(store, config, persistor) {
   electronStore = store;
@@ -62,7 +66,7 @@ const clearUserState = () => (dispatch) => {
 };
 
 export {
+  clearUserState,
   init,
   loadUserState,
-  clearUserState,
 };

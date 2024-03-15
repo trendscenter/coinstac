@@ -1,12 +1,13 @@
 import { useLazyQuery, useMutation } from '@apollo/client';
-import Typography from '@material-ui/core/Typography';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import { Button, Card } from '@material-ui/core';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import { get } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import ReactJson from 'react-json-view';
 import { useSelector } from 'react-redux';
+
 import { GET_PIPELINES_QUERY, STOP_RUN_MUTATION } from '../../../state/graphql/functions';
 
 const useStyles = makeStyles(() => ({
@@ -38,7 +39,6 @@ const PipelineStates = (_, { router }) => {
   const pipelinesData = data?.getPipelines?.info ? JSON.parse(data.getPipelines.info) : {};
 
   const { activePipelines } = pipelinesData;
-
 
   return (
     <>

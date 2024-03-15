@@ -1,10 +1,10 @@
 import { difference, reduce, values } from 'lodash';
-import React from 'react';
+import moment from 'moment';
 import PropTypes from 'prop-types';
-import { Label, Button } from 'react-bootstrap';
+import React from 'react';
+import { Button, Label } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { LinkContainer } from 'react-router-bootstrap';
-import moment from 'moment';
 
 // import ConsortiumResultMeta from './consortium/consortium-result-meta';
 

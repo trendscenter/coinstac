@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import ReactFauxDOM from 'react-faux-dom';
 
 export default () => import('d3').then((d3) => {
@@ -89,7 +89,7 @@ export default () => import('d3').then((d3) => {
         .data(color.domain())
         .enter().append('g')
         .attr('class', 'legend')
-        .attr('transform', (d, i) => { return `translate(20,${i * 25})`; });
+        .attr('transform', (d, i) => `translate(20,${i * 25})`);
 
       legend.append('rect')
         .attr('x', width - 18)
@@ -102,22 +102,18 @@ export default () => import('d3').then((d3) => {
         .attr('y', 9)
         .attr('dy', '.35em')
         .style('text-anchor', 'end')
-        .text((d) => { return d; });
+        .text(d => d);
       // Draw the box plot vertical lines
       g.selectAll('.verticalLines')
         .data(boxPlotData)
         .enter()
         .append('line')
-        .attr('x1', (datum) => {
-          return xScale(datum.key) + (barWidth / 2);
-        })
+        .attr('x1', datum => xScale(datum.key) + (barWidth / 2))
         .attr('y1', (datum) => {
           const whisker = datum.whiskers[0];
           return yScale(whisker);
         })
-        .attr('x2', (datum) => {
-          return xScale(datum.key) + (barWidth / 2);
-        })
+        .attr('x2', datum => xScale(datum.key) + (barWidth / 2))
         .attr('y2', (datum) => {
           const whisker = datum.whiskers[1];
           return yScale(whisker);
@@ -136,39 +132,33 @@ export default () => import('d3').then((d3) => {
           const height = yScale(quartiles[2]) - yScale(quartiles[0]);
           return height;
         })
-        .attr('x', (datum) => {
-          return xScale(datum.key);
-        })
-        .attr('y', (datum) => {
-          return yScale(datum.quartile[0]);
-        })
-        .attr('fill', (datum) => {
-          return datum.color;
-        })
+        .attr('x', datum => xScale(datum.key))
+        .attr('y', datum => yScale(datum.quartile[0]))
+        .attr('fill', datum => datum.color)
         .attr('stroke', '#000')
         .attr('stroke-width', 1);
       // Now render all the horizontal lines at once - the whiskers and the median
       const horizontalLineConfigs = [
         // Top whisker
         {
-          x1: (datum) => { return xScale(datum.key); },
-          y1: (datum) => { return yScale(datum.whiskers[0]); },
-          x2: (datum) => { return xScale(datum.key) + barWidth; },
-          y2: (datum) => { return yScale(datum.whiskers[0]); },
+          x1: datum => xScale(datum.key),
+          y1: datum => yScale(datum.whiskers[0]),
+          x2: datum => xScale(datum.key) + barWidth,
+          y2: datum => yScale(datum.whiskers[0]),
         },
         // Median line
         {
-          x1: (datum) => { return xScale(datum.key); },
-          y1: (datum) => { return yScale(datum.quartile[1]); },
-          x2: (datum) => { return xScale(datum.key) + barWidth; },
-          y2: (datum) => { return yScale(datum.quartile[1]); },
+          x1: datum => xScale(datum.key),
+          y1: datum => yScale(datum.quartile[1]),
+          x2: datum => xScale(datum.key) + barWidth,
+          y2: datum => yScale(datum.quartile[1]),
         },
         // Bottom whisker
         {
-          x1: (datum) => { return xScale(datum.key); },
-          y1: (datum) => { return yScale(datum.whiskers[1]); },
-          x2: (datum) => { return xScale(datum.key) + barWidth; },
-          y2: (datum) => { return yScale(datum.whiskers[1]); },
+          x1: datum => xScale(datum.key),
+          y1: datum => yScale(datum.whiskers[1]),
+          x2: datum => xScale(datum.key) + barWidth,
+          y2: datum => yScale(datum.whiskers[1]),
         },
       ];
       for (let i = 0; i < horizontalLineConfigs.length; i += 1) {

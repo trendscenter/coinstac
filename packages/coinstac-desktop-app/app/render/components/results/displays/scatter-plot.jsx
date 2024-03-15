@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import ReactFauxDOM from 'react-faux-dom';
 
 export default () => import('d3').then((d3) => {
@@ -39,8 +39,8 @@ export default () => import('d3').then((d3) => {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-      x.domain(d3.extent(plotData, (p) => { return p.x; })).nice();
-      y.domain(d3.extent(plotData, (p) => { return p.y; })).nice();
+      x.domain(d3.extent(plotData, p => p.x)).nice();
+      y.domain(d3.extent(plotData, p => p.y)).nice();
 
       svg.append('g')
         .attr('class', 'x axis')
@@ -73,15 +73,15 @@ export default () => import('d3').then((d3) => {
         .enter().append('circle')
         .attr('class', 'dot')
         .attr('r', 4.5)
-        .attr('cx', (p) => { return x(p.x); })
-        .attr('cy', (p) => { return y(p.y); })
-        .style('fill', (p) => { return color(p.name); });
+        .attr('cx', p => x(p.x))
+        .attr('cy', p => y(p.y))
+        .style('fill', p => color(p.name));
 
       const legend = svg.selectAll('.legend')
         .data(color.domain())
         .enter().append('g')
         .attr('class', 'legend')
-        .attr('transform', (d, i) => { return `translate(0,${i * 20})`; });
+        .attr('transform', (d, i) => `translate(0,${i * 20})`);
 
       legend.append('rect')
         .attr('x', width - 18)
@@ -94,7 +94,7 @@ export default () => import('d3').then((d3) => {
         .attr('y', 9)
         .attr('dy', '.35em')
         .style('text-anchor', 'end')
-        .text((d) => { return d; });
+        .text(d => d);
       return el.toReact();
     }
 

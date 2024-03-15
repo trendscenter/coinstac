@@ -1,8 +1,8 @@
+import { ipcRenderer } from 'electron';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { ipcRenderer } from 'electron';
 
-import { notifyError, notifySuccess, notifyInfo } from '../../../state/ducks/notifyAndLog';
+import { notifyError, notifyInfo, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import { saveRunLocally, updateRunLocally } from '../../../state/ducks/runs';
 
 function LocalRunStatusListeners() {
@@ -12,7 +12,7 @@ function LocalRunStatusListeners() {
     ipcRenderer.on('local-pipeline-state-update', (_, arg) => {
       dispatch(updateRunLocally(
         arg.run.id,
-        { localPipelineState: arg.data }
+        { localPipelineState: arg.data },
       ));
     });
 

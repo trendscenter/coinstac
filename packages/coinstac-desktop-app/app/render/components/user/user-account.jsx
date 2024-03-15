@@ -1,18 +1,19 @@
-import { useSelector } from 'react-redux';
-import React from 'react';
-import { Link } from 'react-router';
-import PropTypes from 'prop-types';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import Badge from '@material-ui/core/Badge';
-import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import SettingsIcon from '@material-ui/icons/Settings';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import BugReportIcon from '@material-ui/icons/BugReport';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MessageIcon from '@material-ui/icons/Message';
+import SettingsIcon from '@material-ui/icons/Settings';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router';
+
 import MemberAvatar from '../common/member-avatar';
 
 const useStyles = makeStyles(() => ({

@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
 import { ipcRenderer } from 'electron';
+import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+
 import { notifyWarning } from '../../../state/ducks/notifyAndLog';
 
 function NotificationsListener() {

@@ -1,31 +1,32 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
+import { graphql, withApollo } from '@apollo/react-hoc';
+import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
-import TextField from '@material-ui/core/TextField';
-import CheckIcon from '@material-ui/icons/Check';
-import Switch from '@material-ui/core/Switch';
-import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, get } from 'lodash';
-import Button from '@material-ui/core/Button';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
-import { updatePasswordProps } from '../../state/graphql/props';
-import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import Switch from '@material-ui/core/Switch';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import CheckIcon from '@material-ui/icons/Check';
+import classNames from 'classnames';
+import { flowRight as compose, get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+import { connect } from 'react-redux';
+
 import {
   setClientCoreUrlAsync,
+  setContainerService,
   setNetworkVolume,
   toggleTutorial,
-  setContainerService,
 } from '../../state/ducks/auth';
-import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { notifyError, notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
+import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { updatePasswordProps } from '../../state/graphql/props';
 import UserEditController from './user-edit-controller';
 
 const styles = theme => ({
@@ -114,7 +115,7 @@ class Settings extends Component {
     ValidatorForm.addValidationRule(
       'isPasswordMatch',
       // eslint-disable-next-line react/destructuring-assignment
-      value => value === this.state.newPassword
+      value => value === this.state.newPassword,
     );
   }
 
@@ -414,9 +415,9 @@ Settings.contextTypes = {
 const ComponentWithData = compose(
   graphql(
     UPDATE_PASSWORD_MUTATION,
-    updatePasswordProps('updatePassword')
+    updatePasswordProps('updatePassword'),
   ),
-  withApollo
+  withApollo,
 )(Settings);
 
 const mapStateToProps = ({ auth }) => ({

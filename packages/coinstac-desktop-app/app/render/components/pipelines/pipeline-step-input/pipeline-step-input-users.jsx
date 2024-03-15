@@ -1,5 +1,6 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+import React from 'react';
+
 import Select from '../../common/react-select';
 
 function calculateSelectOutputValue(value, isMulti) {
@@ -41,7 +42,7 @@ function PipelineStepInputUsers({
         ...step,
         inputMap: getNewObj(
           objKey,
-          calculateSelectOutputValue(value)
+          calculateSelectOutputValue(value),
         ),
       })}
     />

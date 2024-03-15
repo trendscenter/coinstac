@@ -1,24 +1,24 @@
-import React, { useMemo, useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { Link } from 'react-router';
-import { useDispatch, useSelector } from 'react-redux';
-import { shell } from 'electron';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Paper from '@material-ui/core/Paper';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import path from 'path';
+import { shell } from 'electron';
 import moment from 'moment';
+import path from 'path';
+import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router';
 
+import { deleteRun } from '../../state/ducks/runs';
+import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
+import { isUserInGroup } from '../../utils/helpers';
+import ListDeleteModal from './list-delete-modal';
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
-import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
-import { deleteRun } from '../../state/ducks/runs';
-import ListDeleteModal from './list-delete-modal';
-import { isUserInGroup } from '../../utils/helpers';
 
 const fs = require('fs');
 
@@ -144,9 +144,7 @@ function RunItem({
   const [showModal, setShowModal] = useState(false);
   const [logURL, setLogURL] = useState(false);
 
-  const isOwner = useMemo(() => {
-    return isUserInGroup(user.id, consortium.owners);
-  }, [user, consortium]);
+  const isOwner = useMemo(() => isUserInGroup(user.id, consortium.owners), [user, consortium]);
 
   const handleStopPipeline = () => {
     stopPipeline();
@@ -179,42 +177,32 @@ function RunItem({
   };
 
   useEffect(() => {
-    let timerFunc = setTimeout(() => {
-      if ( runObject && appDirectory && !logURL ){
-  
+    const timerFunc = setTimeout(() => {
+      if (runObject && appDirectory && !logURL) {
         const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
-        let file =  resultDir + '/local.log';
-        
+        const file = `${resultDir}/local.log`;
+
         try {
           const dirContents = fs.readdirSync(resultDir);
-          let check = dirContents.includes('local.log');
-          if ( check ) {
+          const check = dirContents.includes('local.log');
+          if (check) {
             try {
-              const text = fs.readFileSync(file,{ encoding: 'utf8', flag: 'r' });
-              let lines = text.split(/\r?\n/);
-              let found = lines.find((line) => line.includes("Wandb URL: "));
-              found = found.split(": ");
-              let url = found[1];
+              const text = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
+              const lines = text.split(/\r?\n/);
+              let found = lines.find(line => line.includes('Wandb URL: '));
+              found = found.split(': ');
+              const url = found[1];
               setLogURL(url);
-              return;
-            } catch (e) {
-              return;
-            }
-    
-          }else{
-            return;
+            } catch (e) { } // eslint-disable-line no-empty
           }
-        } catch (e) {
-          return;
-        }
+        } catch (e) { } // eslint-disable-line no-empty
       }
     }, 3000);
 
-    if ( logURL ) {
+    if (logURL) {
       clearTimeout(timerFunc);
-    };
+    }
   });
-  
 
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
@@ -316,13 +304,13 @@ function RunItem({
                 WanDB Log URL:
               </Typography>
               <Typography className={classes.value}>
-               <a 
-                href={logURL} 
-                target="_blank" 
-                onClick={() => handleLinkClick(logURL)}
-               >
-                {logURL}
-              </a>
+                <a
+                  href={logURL}
+                  target="_blank"
+                  onClick={() => handleLinkClick(logURL)}
+                >
+                  {logURL}
+                </a>
               </Typography>
             </div>
           )
@@ -427,7 +415,6 @@ function RunItem({
     </Paper>
   );
 }
-
 
 RunItem.defaultProps = {
   stopPipeline: () => { },

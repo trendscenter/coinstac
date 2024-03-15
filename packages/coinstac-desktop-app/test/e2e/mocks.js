@@ -13,6 +13,7 @@ module.exports = (dialog) => {
       count = 1;
   }
 
+  // eslint-disable-next-line no-param-reassign
   dialog.showOpenDialog = (window, opts, cb) => {
     const testFile = path.join(__dirname, `../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
     cb([testFile]);

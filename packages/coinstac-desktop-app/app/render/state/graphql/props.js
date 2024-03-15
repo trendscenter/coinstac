@@ -1,5 +1,6 @@
 import update from 'immutability-helper';
 import { filter, get, keys } from 'lodash';
+
 import {
   FETCH_ALL_CONSORTIA_QUERY,
 } from './functions';
@@ -98,31 +99,29 @@ export const userProp = document => ({
 
     return opts;
   },
-  props: (props) => {
-    return {
-      currentUser: props.data.fetchUser,
-      subscribeToUser: () => {
-        const userId = get(props, 'ownProps.auth.user.id');
-        const variables = { userId };
+  props: props => ({
+    currentUser: props.data.fetchUser,
+    subscribeToUser: () => {
+      const userId = get(props, 'ownProps.auth.user.id');
+      const variables = { userId };
 
-        return props.data.subscribeToMore({
-          document,
-          variables,
-          updateQuery: (prevResult, { subscriptionData: { data } }) => {
-            if (data.userChanged.delete) {
-              return { fetchUser: null };
-            }
-            return {
-              fetchUser: {
-                ...prevResult.fetchUser,
-                ...data.userChanged,
-              },
-            };
-          },
-        });
-      },
-    };
-  },
+      return props.data.subscribeToMore({
+        document,
+        variables,
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          if (data.userChanged.delete) {
+            return { fetchUser: null };
+          }
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
+        },
+      });
+    },
+  }),
 });
 
 export const userRunProp = document => ({
@@ -136,46 +135,42 @@ export const userRunProp = document => ({
 
     return opts;
   },
-  props: (props) => {
-    return {
-      remoteRuns: filter(props.data.fetchAllUserRuns, (run) => {
-        return (!keys(run).includes('remotePipelineState') || !!run.remotePipelineState);
-      }),
-      subscribeToUserRuns: () => {
-        const userId = get(props, 'ownProps.auth.user.id');
-        const variables = userId ? { userId } : {};
+  props: props => ({
+    remoteRuns: filter(props.data.fetchAllUserRuns, run => (!keys(run).includes('remotePipelineState') || !!run.remotePipelineState)),
+    subscribeToUserRuns: () => {
+      const userId = get(props, 'ownProps.auth.user.id');
+      const variables = userId ? { userId } : {};
 
-        return props.data.subscribeToMore({
-          document,
-          variables,
-          updateQuery: (prevResult, { subscriptionData: { data } }) => {
-            const { userRunChanged } = data;
+      return props.data.subscribeToMore({
+        document,
+        variables,
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          const { userRunChanged } = data;
 
-            const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === userRunChanged.id);
+          const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === userRunChanged.id);
 
-            if (userRunChanged.delete) {
-              return {
-                fetchAllUserRuns:
-                  prevResult.fetchAllUserRuns.filter(obj => obj.id !== userRunChanged.id),
-              };
-            } if (index !== -1) {
-              return {
-                fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
-                  $splice: [
-                    [index, 1, userRunChanged],
-                  ],
-                }),
-              };
-            }
-
+          if (userRunChanged.delete) {
             return {
-              fetchAllUserRuns: [...prevResult.fetchAllUserRuns, userRunChanged],
+              fetchAllUserRuns:
+                  prevResult.fetchAllUserRuns.filter(obj => obj.id !== userRunChanged.id),
             };
-          },
-        });
-      },
-    };
-  },
+          } if (index !== -1) {
+            return {
+              fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                $splice: [
+                  [index, 1, userRunChanged],
+                ],
+              }),
+            };
+          }
+
+          return {
+            fetchAllUserRuns: [...prevResult.fetchAllUserRuns, userRunChanged],
+          };
+        },
+      });
+    },
+  }),
 });
 
 export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscription, query) => ({
@@ -223,86 +218,72 @@ export const resultsProp = {
   }),
 };
 
-export const removeDocFromTableProp = (docId, mutation, query, dataQuery) => {
-  return {
-    props: ({ mutate }) => ({
-      [mutation]: theId => mutate({
-        variables: { [docId]: theId },
-        update: (store, { data }) => {
-          const d = store.readQuery({ query });
-          const index = d[dataQuery].findIndex(con => con.id === data[mutation].id);
-          if (index > -1) {
-            d[dataQuery].splice(index, 1);
-          }
-          store.writeQuery({ query, data: d });
-        },
-      }),
+export const removeDocFromTableProp = (docId, mutation, query, dataQuery) => ({
+  props: ({ mutate }) => ({
+    [mutation]: theId => mutate({
+      variables: { [docId]: theId },
+      update: (store, { data }) => {
+        const d = store.readQuery({ query });
+        const index = d[dataQuery].findIndex(con => con.id === data[mutation].id);
+        if (index > -1) {
+          d[dataQuery].splice(index, 1);
+        }
+        store.writeQuery({ query, data: d });
+      },
     }),
-  };
-};
+  }),
+});
 
-export const saveDocumentProp = (funcName, objVar) => {
-  return {
-    props: ({ mutate }) => ({
-      [funcName]: obj => mutate({
-        variables: { [objVar]: obj },
-      }),
+export const saveDocumentProp = (funcName, objVar) => ({
+  props: ({ mutate }) => ({
+    [funcName]: obj => mutate({
+      variables: { [objVar]: obj },
     }),
-  };
-};
+  }),
+});
 
-export const userRolesProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: (userId, table, doc, role, roleType) => mutate({
-        variables: {
-          userId, table, doc, role, roleType,
-        },
-      }),
+export const userRolesProp = name => ({
+  props: ({ mutate }) => ({
+    [name]: (userId, table, doc, role, roleType) => mutate({
+      variables: {
+        userId, table, doc, role, roleType,
+      },
     }),
-  };
-};
+  }),
+});
 
-export const consortiumSaveActivePipelineProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: (consortiumId, activePipelineId) => mutate({
-        variables: { consortiumId, activePipelineId },
-      }),
+export const consortiumSaveActivePipelineProp = name => ({
+  props: ({ mutate }) => ({
+    [name]: (consortiumId, activePipelineId) => mutate({
+      variables: { consortiumId, activePipelineId },
     }),
-  };
-};
+  }),
+});
 
-export const updatePasswordProps = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ currentPassword, newPassword }) => mutate({
-        variables: { currentPassword, newPassword },
-      }),
+export const updatePasswordProps = name => ({
+  props: ({ mutate }) => ({
+    [name]: ({ currentPassword, newPassword }) => mutate({
+      variables: { currentPassword, newPassword },
     }),
-  };
-};
+  }),
+});
 
-export const saveMessageProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({
+export const saveMessageProp = name => ({
+  props: ({ mutate }) => ({
+    [name]: ({
+      threadId, title, content, recipients, action,
+    }) => mutate({
+      variables: {
         threadId, title, content, recipients, action,
-      }) => mutate({
-        variables: {
-          threadId, title, content, recipients, action,
-        },
-      }),
+      },
     }),
-  };
-};
+  }),
+});
 
-export const setReadMessageProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ threadId, userId }) => mutate({
-        variables: { threadId, userId },
-      }),
+export const setReadMessageProp = name => ({
+  props: ({ mutate }) => ({
+    [name]: ({ threadId, userId }) => mutate({
+      variables: { threadId, userId },
     }),
-  };
-};
+  }),
+});

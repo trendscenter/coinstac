@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import PropTypes from 'prop-types';
 import moment from 'moment';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from 'react';
 
 function useInterval(callback, delay) {
   const savedCallback = useRef();

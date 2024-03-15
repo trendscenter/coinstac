@@ -1,9 +1,10 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
-import ThreadReply from './thread-reply';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import ThreadMessages from './thread-messages';
+import ThreadReply from './thread-reply';
 
 const useStyles = makeStyles(theme => ({
   wrapper: {

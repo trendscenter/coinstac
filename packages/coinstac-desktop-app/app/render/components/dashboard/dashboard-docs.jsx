@@ -1,12 +1,13 @@
 import { useQuery } from '@apollo/client';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Divider from '@material-ui/core/Divider';
 import Link from '@material-ui/core/Link';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import { shell } from 'electron';
 import moment from 'moment';
 import React, { useMemo } from 'react';
+
 import { GET_LATEST_GIT_RELEASE } from '../../state/graphql/functions';
 
 const useStyles = makeStyles(theme => ({

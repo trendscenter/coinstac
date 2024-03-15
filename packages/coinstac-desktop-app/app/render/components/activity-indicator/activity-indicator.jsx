@@ -1,8 +1,8 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-
 import './activity-indicator.css';
+
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 const ActivityIndicator = ({ visible }) => (
   <ul
