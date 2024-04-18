@@ -137,6 +137,7 @@ const queries = {
           compspecVersion
           repository
           description
+          preprocess
         }
         computation {
           display
