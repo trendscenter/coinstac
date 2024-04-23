@@ -193,8 +193,10 @@ const SingularityService = () => {
           } else {
             removeOldImages(localImage, imageNameWithHash)
               .then(() => {
+                conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('end');
               }).catch((e) => {
+                conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('error', e);
               });
           }
