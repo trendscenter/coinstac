@@ -1,6 +1,6 @@
 {
   "name": "coinstac-vault-client",
-  "version": "6.8.3",
+  "version": "6.8.6",
   "description": "",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -15,8 +15,8 @@
   "dependencies": {
     "@apollo/client": "^3.3.20",
     "axios": "^1.6.0",
-    "coinstac-client-core": "^6.8.3",
-    "coinstac-graphql-schema": "^6.8.1",
+    "coinstac-client-core": "^6.8.6",
+    "coinstac-graphql-schema": "^6.8.6",
     "cross-fetch": "^3.0.6",
     "csv-reader": "^1.0.7",
     "graphql": "^15.5.0",
