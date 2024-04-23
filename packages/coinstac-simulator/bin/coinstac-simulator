@@ -77,8 +77,9 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages, getStats } = require('coinstac-container-manager'); // eslint-disable-line import/order
+const { pullImages, getStats, setServiceProvider } = require('coinstac-container-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
+setServiceProvider(program.service || 'docker');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
