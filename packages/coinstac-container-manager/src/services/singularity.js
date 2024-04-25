@@ -33,11 +33,12 @@ const SingularityService = () => {
           'instance',
           'start',
           '--containall',
+          '--writable-tmpfs',
           '-e',
           '--env',
           `PYTHONUNBUFFERED=1,COINSTAC_PORT=${port}`,
           '-B',
-          mounts.join(','),
+          `${mounts.join(',')},/tmp:/tmp:rw`, // mnt local tmp for spm fix
           path.join(imageDirectory, savedImage),
           serviceId,
           ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : []),
@@ -193,8 +194,10 @@ const SingularityService = () => {
           } else {
             removeOldImages(localImage, imageNameWithHash)
               .then(() => {
+                conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('end');
               }).catch((e) => {
+                conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('error', e);
               });
           }
