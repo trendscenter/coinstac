@@ -7,7 +7,7 @@ const Iframe = ({ appDirectory, run, value }) => {
 
   const iFrameHeight = '800px';
   let url = '';
-  if (typeof value === undefined) {
+  if (typeof value === 'undefined') {
     url = path.join(appDirectory, 'output', user.id, run.id, 'index.html');
     return (
       <div>

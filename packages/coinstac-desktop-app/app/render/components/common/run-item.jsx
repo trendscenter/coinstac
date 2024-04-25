@@ -179,42 +179,32 @@ function RunItem({
   };
 
   useEffect(() => {
-    let timerFunc = setTimeout(() => {
-      if ( runObject && appDirectory && !logURL ){
-  
+    const timerFunc = setTimeout(() => {
+      if (runObject && appDirectory && !logURL) {
         const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
-        let file =  resultDir + '/local.log';
-        
+        const file = `${resultDir}/local.log`;
+
         try {
           const dirContents = fs.readdirSync(resultDir);
-          let check = dirContents.includes('local.log');
-          if ( check ) {
+          const check = dirContents.includes('local.log');
+          if (check) {
             try {
-              const text = fs.readFileSync(file,{ encoding: 'utf8', flag: 'r' });
-              let lines = text.split(/\r?\n/);
-              let found = lines.find((line) => line.includes("Wandb URL: "));
-              found = found.split(": ");
-              let url = found[1];
+              const text = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
+              const lines = text.split(/\r?\n/);
+              const found = lines.find(line => line.includes('Wandb URL: ')).split(': ');
+              const url = found[1];
               setLogURL(url);
-              return;
-            } catch (e) {
-              return;
-            }
-    
-          }else{
-            return;
+            } catch (e) { } // eslint-disable-line
           }
-        } catch (e) {
-          return;
-        }
+        } catch (e) { } // eslint-disable-line
       }
     }, 3000);
 
-    if ( logURL ) {
+    if (logURL) {
       clearTimeout(timerFunc);
-    };
+    }
   });
-  
+
 
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
@@ -316,13 +306,14 @@ function RunItem({
                 WanDB Log URL:
               </Typography>
               <Typography className={classes.value}>
-               <a 
-                href={logURL} 
-                target="_blank" 
-                onClick={() => handleLinkClick(logURL)}
-               >
-                {logURL}
-              </a>
+                <a
+                  href={logURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => handleLinkClick(logURL)}
+                >
+                  {logURL}
+                </a>
               </Typography>
             </div>
           )

@@ -28,7 +28,7 @@ const config = {
     'electron',
     'fs',
     'path'
-  ),
+  ).filter(e => e !== 'jsoneditor-react'),
   module: {
     rules: [{
       test: /\.css$/,

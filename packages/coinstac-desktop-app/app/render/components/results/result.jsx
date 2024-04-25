@@ -81,7 +81,7 @@ class Result extends Component {
     selectedTabIndex: 0,
     downloading: false,
     filesExist: false,
-    htmlPath: 'index.html'
+    htmlPath: 'index.html',
   };
 
   componentDidMount() {
@@ -201,7 +201,7 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
-      htmlPath
+      htmlPath,
     } = this.state;
     const {
       consortia,
