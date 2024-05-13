@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import AddIcon from '@material-ui/icons/Add';
 import Button from '@material-ui/core/Button';
+import Box from '@material-ui/core/Box';
 import Table from '@material-ui/core/Table';
 import TableHead from '@material-ui/core/TableHead';
 import TableBody from '@material-ui/core/TableBody';
@@ -14,6 +15,10 @@ const useStyles = makeStyles(theme => ({
   addObjButton: {
     marginBottom: theme.spacing(1),
     marginLeft: theme.spacing(1),
+  },
+  tableContainer: {
+    maxHeight: 320,
+    overflowY: 'scroll',
   },
 }));
 
@@ -43,33 +48,35 @@ function PipelineStepInputCsv({
         <AddIcon />
         {`Add ${objParams.label}`}
       </Button>
-      {objInputMap && objInputMap.value && (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Data Type</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {objInputMap.value.map((obj, index) => (
-              <PipelineStepInputCsvTableRow
-                key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
-                index={index}
-                obj={obj}
-                objKey={objKey}
-                owner={owner}
-                possibleInputs={possibleInputs}
-                objParams={objParams}
-                getNewObj={getNewObj}
-                updateStep={updateStep}
-                step={step}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <Box className={classes.tableContainer}>
+        {objInputMap && objInputMap.value && (
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Data Type</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {objInputMap.value.map((obj, index) => (
+                <PipelineStepInputCsvTableRow
+                  key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
+                  index={index}
+                  obj={obj}
+                  objKey={objKey}
+                  owner={owner}
+                  possibleInputs={possibleInputs}
+                  objParams={objParams}
+                  getNewObj={getNewObj}
+                  updateStep={updateStep}
+                  step={step}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Box>
     </div>
   );
 }
