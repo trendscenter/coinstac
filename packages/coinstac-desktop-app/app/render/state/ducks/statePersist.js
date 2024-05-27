@@ -33,7 +33,7 @@ const loadUserState = (user, authTokenData) => async (dispatch) => {
   dispatch(setUser(user));
 };
 
-const syncRootPersist = async (consortia, dispatch) => {
+const syncRootPersist = consortia => async (dispatch) => {
   const liveConsortiaIds = consortia.filter(item => !item.delete).map(item => item.id);
   const data = await persistConfig.storage.getItem('persist:root');
   storePersistor.persist();

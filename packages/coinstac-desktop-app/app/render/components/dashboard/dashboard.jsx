@@ -120,7 +120,7 @@ function Dashboard({
 
   useEffect(() => {
     if (consortia) {
-      syncRootPersist(consortia, dispatch);
+      dispatch(syncRootPersist(consortia));
     }
   }, [consortia]);
 
