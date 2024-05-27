@@ -51,6 +51,7 @@ import TreeviewListener from './listeners/treeview-listener';
 import useStartInitialRuns from '../runs/effects/useStartInitialRuns';
 import useStartDecentralizedRun from '../runs/effects/useStartDecentralizedRun';
 import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
+import { syncRootPersist } from '../../state/ducks/statePersist';
 
 function Dashboard({
   children,
@@ -116,6 +117,12 @@ function Dashboard({
   const computations = get(computationData, 'fetchAllComputations');
   const pipelines = get(pipelinesData, 'fetchAllPipelines');
   const threads = get(threadsData, 'fetchAllThreads');
+
+  useEffect(() => {
+    if (consortia) {
+      syncRootPersist(consortia, dispatch);
+    }
+  }, [consortia]);
 
   const containerStatus = useContainerStatus();
 

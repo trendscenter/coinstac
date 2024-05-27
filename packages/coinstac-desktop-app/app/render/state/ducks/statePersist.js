@@ -1,3 +1,4 @@
+/* eslint-disable import/no-cycle */
 /* eslint-disable import/prefer-default-export */
 import { dirname, join } from 'path';
 import { deepParseJson } from 'deep-parse-json';
@@ -27,28 +28,49 @@ const loadUserState = (user, authTokenData) => async (dispatch) => {
   const electronStoreFolder = dirname(electronStore.path);
   electronStore.path = join(electronStoreFolder, `local-db-${user.id}.json`);
 
+  localStorage.setItem(API_TOKEN_KEY, JSON.stringify(authTokenData));
+
+  dispatch(setUser(user));
+};
+
+const syncRootPersist = async (consortia, dispatch) => {
+  const liveConsortiaIds = consortia.filter(item => !item.delete).map(item => item.id);
   const data = await persistConfig.storage.getItem('persist:root');
   storePersistor.persist();
 
   // Rehydrate is done only once by redux-persist, so we do it manually
   // for hydrating state on consecutive logins
-  if (data) {
+  if (data && liveConsortiaIds) {
     const parsedState = deepParseJson(data);
 
     const migrate = createMigrate(localDBMigrations, { debug: true });
 
     const migratedState = await migrate(parsedState, CURRENT_PERSISTED_STORE_VERSION);
 
+    const runs = migratedState?.runs?.runs ?? [];
+    const localRuns = migratedState?.runs?.localRuns ?? [];
+    const runsAwaitingDataMap = migratedState?.runs?.runsAwaitingDataMap ?? [];
+
+    const liveRuns = runs.filter(item => liveConsortiaIds.includes(item.consortiumId));
+    const liveLocalRuns = localRuns.filter(item => liveConsortiaIds.includes(item.consortiumId));
+    const liveRunsAwaitingDataMap = runsAwaitingDataMap.filter(
+      item => liveConsortiaIds.includes(item.consortiumId)
+    );
+
     dispatch({
       type: REHYDRATE,
       key: 'root',
-      payload: migratedState,
+      payload: {
+        ...migratedState,
+        runs: {
+          ...migratedState.runs,
+          runs: liveRuns,
+          localRuns: liveLocalRuns,
+          runsAwaitingDataMap: liveRunsAwaitingDataMap,
+        },
+      },
     });
   }
-
-  localStorage.setItem(API_TOKEN_KEY, JSON.stringify(authTokenData));
-
-  dispatch(setUser(user));
 };
 
 const clearUserState = () => (dispatch) => {
@@ -65,4 +87,5 @@ export {
   init,
   loadUserState,
   clearUserState,
+  syncRootPersist,
 };
