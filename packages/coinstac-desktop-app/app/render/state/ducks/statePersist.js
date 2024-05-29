@@ -33,42 +33,23 @@ const loadUserState = (user, authTokenData) => async (dispatch) => {
   dispatch(setUser(user));
 };
 
-const syncRootPersist = consortia => async (dispatch) => {
-  const liveConsortiaIds = consortia.filter(item => !item.delete).map(item => item.id);
+const syncRootPersist = () => async (dispatch) => {
   const data = await persistConfig.storage.getItem('persist:root');
   storePersistor.persist();
 
   // Rehydrate is done only once by redux-persist, so we do it manually
   // for hydrating state on consecutive logins
-  if (data && liveConsortiaIds) {
+  if (data) {
     const parsedState = deepParseJson(data);
 
     const migrate = createMigrate(localDBMigrations, { debug: true });
 
     const migratedState = await migrate(parsedState, CURRENT_PERSISTED_STORE_VERSION);
 
-    const runs = migratedState?.runs?.runs ?? [];
-    const localRuns = migratedState?.runs?.localRuns ?? [];
-    const runsAwaitingDataMap = migratedState?.runs?.runsAwaitingDataMap ?? [];
-
-    const liveRuns = runs.filter(item => liveConsortiaIds.includes(item.consortiumId));
-    const liveLocalRuns = localRuns.filter(item => liveConsortiaIds.includes(item.consortiumId));
-    const liveRunsAwaitingDataMap = runsAwaitingDataMap.filter(
-      item => liveConsortiaIds.includes(item.consortiumId)
-    );
-
     dispatch({
       type: REHYDRATE,
       key: 'root',
-      payload: {
-        ...migratedState,
-        runs: {
-          ...migratedState.runs,
-          runs: liveRuns,
-          localRuns: liveLocalRuns,
-          runsAwaitingDataMap: liveRunsAwaitingDataMap,
-        },
-      },
+      payload: migratedState,
     });
   }
 };

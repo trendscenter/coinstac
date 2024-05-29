@@ -119,10 +119,8 @@ function Dashboard({
   const threads = get(threadsData, 'fetchAllThreads');
 
   useEffect(() => {
-    if (consortia) {
-      dispatch(syncRootPersist(consortia));
-    }
-  }, [consortia]);
+    dispatch(syncRootPersist(consortia));
+  }, []);
 
   const containerStatus = useContainerStatus();
 
