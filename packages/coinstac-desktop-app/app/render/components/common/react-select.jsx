@@ -1,18 +1,18 @@
 /* eslint-disable react/prop-types, react/jsx-handler-names */
 
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import Select from 'react-select';
-import withStyles from '@material-ui/core/styles/withStyles';
-import Typography from '@material-ui/core/Typography';
-import NoSsr from '@material-ui/core/NoSsr';
-import TextField from '@material-ui/core/TextField';
-import Paper from '@material-ui/core/Paper';
 import Chip from '@material-ui/core/Chip';
 import MenuItem from '@material-ui/core/MenuItem';
-import CancelIcon from '@material-ui/icons/Cancel';
+import NoSsr from '@material-ui/core/NoSsr';
+import Paper from '@material-ui/core/Paper';
 import { emphasize } from '@material-ui/core/styles/colorManipulator';
+import withStyles from '@material-ui/core/styles/withStyles';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import CancelIcon from '@material-ui/icons/Cancel';
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Select from 'react-select';
 
 const styles = theme => ({
   root: {
@@ -36,7 +36,7 @@ const styles = theme => ({
   chipFocused: {
     backgroundColor: emphasize(
       theme.palette.type === 'light' ? theme.palette.grey[300] : theme.palette.grey[700],
-      0.08
+      0.08,
     ),
   },
   chipDisabled: {

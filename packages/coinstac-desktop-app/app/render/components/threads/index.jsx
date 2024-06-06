@@ -1,37 +1,38 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, find } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogActions from '@material-ui/core/DialogActions';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import ThreadList from './thread-list';
-import ThreadContent from './thread-content';
-import ThreadNew from './thread-new';
-import { ThreadContext } from './context';
+import Typography from '@material-ui/core/Typography';
+import { find, flowRight as compose } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
+import { pullComputations } from '../../state/ducks/docker';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import {
-  getAllAndSubProp,
-  saveMessageProp,
-  setReadMessageProp,
-  consortiaMembershipProp,
-} from '../../state/graphql/props';
-import {
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_USERS_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   SAVE_MESSAGE_MUTATION,
   SET_READ_MESSAGE_MUTATION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
-import { pullComputations } from '../../state/ducks/docker';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import {
+  consortiaMembershipProp,
+  getAllAndSubProp,
+  saveMessageProp,
+  setReadMessageProp,
+} from '../../state/graphql/props';
+import { ThreadContext } from './context';
+import ThreadContent from './thread-content';
+import ThreadList from './thread-list';
+import ThreadNew from './thread-new';
 
 const styles = theme => ({
   wrapper: {
@@ -115,8 +116,8 @@ class Threads extends Component {
     this.setState(
       Object.assign(
         { openDialog: !openDialog },
-        threadId && { selectedThread: threadId }
-      )
+        threadId && { selectedThread: threadId },
+      ),
     );
   }
 
@@ -134,7 +135,7 @@ class Threads extends Component {
         creatingNewThread && {
           creatingNewThread: false,
           selectedThread: id,
-        }
+        },
       ));
     }).catch(() => {
       this.setState({
@@ -289,28 +290,28 @@ Threads.propTypes = {
 const ThreadsWithData = compose(
   graphql(
     SAVE_MESSAGE_MUTATION,
-    saveMessageProp('saveMessage')
+    saveMessageProp('saveMessage'),
   ),
   graphql(
     SET_READ_MESSAGE_MUTATION,
-    setReadMessageProp('setReadMessage')
+    setReadMessageProp('setReadMessage'),
   ),
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
     USER_CHANGED_SUBSCRIPTION,
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',
     'fetchAllConsortia',
     'subscribeToConsortia',
-    'consortiumChanged'
+    'consortiumChanged',
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
-  withApollo
+  withApollo,
 )(Threads);
 
 const mapStateToProps = ({ auth }) => ({

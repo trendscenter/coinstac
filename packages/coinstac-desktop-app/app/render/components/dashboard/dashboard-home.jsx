@@ -1,16 +1,16 @@
 /* eslint-disable react/no-array-index-key */
 
-import React from 'react';
-import { ipcRenderer } from 'electron';
-import PropTypes from 'prop-types';
-import { useDispatch, useSelector } from 'react-redux';
+import Divider from '@material-ui/core/Divider';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
+import { ipcRenderer } from 'electron';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { deleteSuspendedRun, saveSuspendedRun } from '../../state/ducks/suspendedRuns';
 import RunsList from '../common/runs-list';
-import { saveSuspendedRun, deleteSuspendedRun } from '../../state/ducks/suspendedRuns';
-import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
 import DashboardDocs from './dashboard-docs';
 
@@ -60,7 +60,7 @@ function DashboardHome({
       && m.pipelineId === consortium.activePipelineId);
     if (!dataMapping) {
       dispatch(
-        notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`)
+        notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`),
       );
       return;
     }

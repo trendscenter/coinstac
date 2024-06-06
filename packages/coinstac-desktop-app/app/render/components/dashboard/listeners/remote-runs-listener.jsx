@@ -1,14 +1,15 @@
-import { useEffect, useRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { useQuery, useSubscription } from '@apollo/client';
 import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
+import { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { FETCH_ALL_USER_RUNS_QUERY, USER_RUN_CHANGED_SUBSCRIPTION } from '../../../state/graphql/functions';
-import {
-  loadLocalRuns, saveRunLocally, updateRunLocally, deleteRun,
-} from '../../../state/ducks/runs';
 import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
+import {
+  deleteRun,
+  loadLocalRuns, saveRunLocally, updateRunLocally,
+} from '../../../state/ducks/runs';
+import { FETCH_ALL_USER_RUNS_QUERY, USER_RUN_CHANGED_SUBSCRIPTION } from '../../../state/graphql/functions';
 
 function runIsFinished(run) {
   return run.error || run.results;

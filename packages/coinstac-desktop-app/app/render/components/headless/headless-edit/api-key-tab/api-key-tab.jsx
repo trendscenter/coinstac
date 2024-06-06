@@ -1,20 +1,19 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 import JSONInput from 'react-json-editor-ajrm';
 import locale from 'react-json-editor-ajrm/locale/en';
-
-import useStyles from './api-key-tab.styles';
 
 import {
   GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION,
 } from '../../../../state/graphql/functions';
+import useStyles from './api-key-tab.styles';
 
 function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
   const classes = useStyles();
@@ -29,7 +28,7 @@ function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
     GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION,
     {
       onCompleted: onSubmitComplete,
-    }
+    },
   );
 
   async function generateApiKey() {

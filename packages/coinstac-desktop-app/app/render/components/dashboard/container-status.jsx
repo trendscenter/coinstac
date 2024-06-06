@@ -1,10 +1,10 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */
-import React from 'react';
-import capitalize from 'lodash/capitalize';
-import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import Tooltip from '@material-ui/core/Tooltip';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Tooltip from '@material-ui/core/Tooltip';
+import classNames from 'classnames';
+import capitalize from 'lodash/capitalize';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 import DockerImage from '../../../../img/icons/docker.svg';
 import SingularityImage from '../../../../img/icons/singularity.svg';
@@ -79,7 +79,7 @@ function ContainerStatus({
         <span
           className={classNames(
             classes.button,
-            containerService === 'docker' && classes.buttonActive
+            containerService === 'docker' && classes.buttonActive,
           )}
         >
           <img src={DockerImage} alt="docker" className={classes.icon} />
@@ -88,7 +88,7 @@ function ContainerStatus({
         <span
           className={classNames(
             classes.button,
-            containerService === 'singularity' && classes.buttonActive
+            containerService === 'singularity' && classes.buttonActive,
           )}
         >
           <img src={SingularityImage} alt="singularity" className={classes.icon} />

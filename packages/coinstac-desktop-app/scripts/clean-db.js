@@ -1,5 +1,7 @@
 'use strict';
 
+/* eslint-disable import/no-extraneous-dependencies */
+
 // find ~/.coinstac/* ! -name computations -maxdepth 0 -exec rm -rf '{}' \\;
 
 const pify = require('util').promisify;
@@ -20,17 +22,13 @@ pify(fs.readdir)(dir)
   .then(files => Promise.all(files.map((file) => {
     const fullPath = path.join(dir, file);
 
-    return statAsync(fullPath).then((stats) => {
-      return stats.isDirectory() && file !== 'computations'
-        ? fullPath
-        : undefined;
-    });
+    return statAsync(fullPath).then(stats => (stats.isDirectory() && file !== 'computations'
+      ? fullPath
+      : undefined));
   })))
   .then(compact)
-  .then(fullPaths => Promise.all(fullPaths.map((fullPath) => {
-    return rimrafAsync(fullPath).then(() => {
-      console.log(`Removed ${fullPath}`);
-    });
-  })))
+  .then(fullPaths => Promise.all(fullPaths.map(fullPath => rimrafAsync(fullPath).then(() => {
+    console.log(`Removed ${fullPath}`);
+  }))))
   .catch(console.error);
 /* eslint-enable no-console */

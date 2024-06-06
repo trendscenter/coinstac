@@ -1,17 +1,16 @@
-import React, { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { graphql } from '@apollo/react-hoc';
-import { Link } from 'react-router';
 import Box from '@material-ui/core/Box';
 import Fab from '@material-ui/core/Fab';
+import { makeStyles } from '@material-ui/core/styles';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import { makeStyles } from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
-import ListItem from '../common/list-item';
-import ListDeleteModal from '../common/list-delete-modal';
+import React, { useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router';
+
 import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   DELETE_PIPELINE_MUTATION,
@@ -21,6 +20,8 @@ import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
 import { hasPipelineAccess, isPipelineOwner } from '../../utils/helpers';
+import ListDeleteModal from '../common/list-delete-modal';
+import ListItem from '../common/list-item';
 
 const useStyles = makeStyles(theme => ({
   button: {
@@ -138,7 +139,6 @@ const PipelinesList = ({ pipelines, deletePipeline }) => {
   );
 };
 
-
 PipelinesList.propTypes = {
   pipelines: PropTypes.array,
   deletePipeline: PropTypes.func.isRequired,
@@ -153,7 +153,7 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
     'pipelineId',
     'deletePipeline',
     FETCH_ALL_PIPELINES_QUERY,
-    'fetchAllPipelines'
+    'fetchAllPipelines',
   ))(PipelinesList);
 
 export default PipelinesListWithData;

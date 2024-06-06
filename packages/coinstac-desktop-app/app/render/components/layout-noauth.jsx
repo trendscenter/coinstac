@@ -1,11 +1,12 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router';
-import classNames from 'classnames';
-import makeStyles from '@material-ui/core/styles/makeStyles';
 import Button from '@material-ui/core/Button';
-import CoinstacAbbr from './coinstac-abbr';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { Link } from 'react-router';
+
 import AutoUpdateListener from './auto-update-listener';
+import CoinstacAbbr from './coinstac-abbr';
 
 const useStyles = makeStyles(theme => ({
   navButtonsContainer: {

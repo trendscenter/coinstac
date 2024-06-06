@@ -1,16 +1,17 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router';
-import Joyride from 'react-joyride';
-import Paper from '@material-ui/core/Paper';
-import Divider from '@material-ui/core/Divider';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import Typography from '@material-ui/core/Typography';
+import Paper from '@material-ui/core/Paper';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
+import React, { useMemo, useState } from 'react';
+import Joyride from 'react-joyride';
+import { Link } from 'react-router';
+
 import { TUTORIAL_STEPS } from '../../constants';
 
 const useStyles = makeStyles(theme => ({
@@ -52,9 +53,8 @@ function ConsortiumPipeline({
 }) {
   const classes = useStyles();
 
-  const activePipeline = useMemo(() => {
-    return pipelines.find(p => p.id === consortium.activePipelineId);
-  }, [pipelines, consortium]);
+  const activePipeline = useMemo(() => pipelines
+    .find(p => p.id === consortium.activePipelineId), [pipelines, consortium]);
 
   const [ownedPipelines, sharedPipelines] = useMemo(() => {
     const owned = pipelines.filter(p => p.owningConsortium === consortium.id);

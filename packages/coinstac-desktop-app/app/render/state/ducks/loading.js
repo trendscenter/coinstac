@@ -1,6 +1,8 @@
 /*
  * @module actions/loading
  */
+import omit from 'lodash/omit';
+
 let asyncLoadingCallCount = 0;
 
 const LOADING_START = 'LOADING_START';
@@ -48,8 +50,14 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
 export default function reducer(state = { wip: {}, isLoading: false }, action) {
   switch (action.type) {
     case LOADING_START:
-      state.wip[action.key] = true; // work-in-progress
-      return Object.assign({}, state, { isLoading: true });
+      return {
+        ...state,
+        wip: {
+          ...state.wip,
+          [action.key]: true,
+        },
+        isLoading: true,
+      };
     case LOADING_FINISH:
       if (!state.wip || !state.wip[action.key]) {
         throw new ReferenceError([
@@ -57,8 +65,14 @@ export default function reducer(state = { wip: {}, isLoading: false }, action) {
           `${action.key}, however no such key was previously loading`,
         ].join(' '));
       }
-      delete state.wip[action.key];
-      return Object.assign({}, state, { isLoading: !!Object.keys(state.wip).length });
+
+      // eslint-disable-next-line no-case-declarations
+      const wip = omit(state.wip, [action.key]);
+      return {
+        ...state,
+        wip,
+        isLoading: !!Object.keys(wip).length,
+      };
     default:
       return state;
   }

@@ -1,10 +1,10 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 import MapsBooleanField from './fields/maps-boolean-field';
 import MapsCsvField from './fields/maps-csv-field';
@@ -118,7 +118,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'files':
@@ -129,7 +129,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'directory':
@@ -140,7 +140,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'number':
@@ -151,7 +151,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'string':
@@ -162,7 +162,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'boolean':
@@ -173,7 +173,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 case 'object':
@@ -184,7 +184,7 @@ function MapsEditForm({
                       fieldDataMap={dataMap[inputKey]}
                       fieldDescription={fieldDescription}
                       onChange={onChange}
-                    />
+                    />,
                   );
                   return;
                 default:

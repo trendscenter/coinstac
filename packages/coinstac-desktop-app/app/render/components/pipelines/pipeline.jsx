@@ -1,17 +1,4 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
-import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { DragDropContext, DropTarget } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
-import NumberFormat from 'react-number-format';
-import shortid from 'shortid';
-import {
-  isEqual, isEmpty, get, omit,
-} from 'lodash';
-import update from 'immutability-helper';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -19,10 +6,9 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Fade from '@material-ui/core/Fade';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Grid from '@material-ui/core/Grid';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -31,45 +17,59 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
+import { withStyles } from '@material-ui/core/styles';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import DeleteIcon from '@material-ui/icons/Delete';
-import InfoIcon from '@material-ui/icons/Info';
 import HelpOutlineIcon from '@material-ui/icons/HelpOutlined';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import InfoIcon from '@material-ui/icons/Info';
+import update from 'immutability-helper';
+import {
+  get, isEmpty, isEqual, omit,
+} from 'lodash';
 import memoize from 'memoize-one';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { DragDropContext, DropTarget } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
+import Joyride from 'react-joyride';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+import NumberFormat from 'react-number-format';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import shortid from 'shortid';
 
+import { TUTORIAL_STEPS } from '../../constants';
+import { tutorialChange } from '../../state/ducks/auth';
+import { updateMapStatus } from '../../state/ducks/maps';
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
+import {
+  FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_HEADLESS_CLIENTS,
+  FETCH_ALL_PIPELINES_QUERY,
+  FETCH_ALL_USERS_QUERY,
+  FETCH_PIPELINE_QUERY,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
+  SAVE_PIPELINE_MUTATION,
+  USER_CHANGED_SUBSCRIPTION,
+} from '../../state/graphql/functions';
+import {
+  consortiumSaveActivePipelineProp,
+  getAllAndSubProp,
+  getDocumentByParam,
+  saveDocumentProp,
+} from '../../state/graphql/props';
+import {
+  getGraphQLErrorMessage,
+  isPipelineOwner,
+  isUserInGroup,
+} from '../../utils/helpers';
 import ListDeleteModal from '../common/list-delete-modal';
 import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
-import {
-  FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_PIPELINE_QUERY,
-  SAVE_PIPELINE_MUTATION,
-  SAVE_ACTIVE_PIPELINE_MUTATION,
-  FETCH_ALL_USERS_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_HEADLESS_CLIENTS,
-  FETCH_ALL_PIPELINES_QUERY,
-} from '../../state/graphql/functions';
-import {
-  getDocumentByParam,
-  saveDocumentProp,
-  consortiumSaveActivePipelineProp,
-  getAllAndSubProp,
-} from '../../state/graphql/props';
-import { tutorialChange } from '../../state/ducks/auth';
-import { updateMapStatus } from '../../state/ducks/maps';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import {
-  isPipelineOwner,
-  getGraphQLErrorMessage,
-  isUserInGroup,
-} from '../../utils/helpers';
-import { TUTORIAL_STEPS } from '../../constants';
+import PipelineStep from './pipeline-step';
 import vaultDescriptions from './vault-descriptions.json';
 
 const VAULT_USERS_TOOLTIP = `Vault users are persistent nodes that can run some pipelines. If you add one or more vault users,
@@ -146,7 +146,7 @@ class Pipeline extends Component {
 
           return true;
         });
-    }
+    },
   );
 
   constructor(props) {
@@ -230,7 +230,7 @@ class Pipeline extends Component {
           if (nextProps.consortia.length && other.owningConsortium) {
             this.setConsortium();
           }
-        }
+        },
       );
     }
 
@@ -285,7 +285,6 @@ class Pipeline extends Component {
       pipelines,
       consortia,
     } = this.props;
-
 
     const pipeline = pipelines.find(p => p.id === params.pipelineId);
 
@@ -438,7 +437,7 @@ class Pipeline extends Component {
           }
 
           return { [key]: { ...movedStep.inputMap[key] } };
-        })
+        }),
       ),
     });
 
@@ -655,17 +654,17 @@ class Pipeline extends Component {
     }
 
     const cloudComputations = Object.keys(headlessMembers)
-      .reduce((cloudComputations, headlessMemberId) => {
+      .reduce((acc, headlessMemberId) => {
         const headlessClientConfig = availableHeadlessClients
           .find(client => client.id === headlessMemberId);
 
         if (headlessClientConfig) {
           Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
-            cloudComputations[compId] = true;
+            acc[compId] = true;
           });
         }
 
-        return cloudComputations;
+        return acc;
       }, {});
 
     const filteredComputations = orderedComputations
@@ -1064,7 +1063,7 @@ class Pipeline extends Component {
             </DialogContentText>
           </DialogContent>
         </Dialog>
-      </div>
+      </div>,
     );
   }
 }
@@ -1110,7 +1109,7 @@ const PipelineWithData = compose(
   graphql(FETCH_PIPELINE_QUERY, getDocumentByParam(
     'pipelineId',
     'activePipeline',
-    'fetchPipeline'
+    'fetchPipeline',
   )),
   graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
@@ -1119,20 +1118,20 @@ const PipelineWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(FETCH_ALL_HEADLESS_CLIENTS, {
     props: ({ data: { fetchAllHeadlessClients } }) => ({
       availableHeadlessClients: fetchAllHeadlessClients,
     }),
-  })
+  }),
 )(Pipeline);
 
 const PipelineWithAlert = compose(
   connect(mapStateToProps),
   DragDropContext(HTML5Backend),
   DropTarget(ItemTypes.COMPUTATION, computationTarget, collect),
-  withApollo
+  withApollo,
 )(PipelineWithData);
 
 const connectedComponent = connect(mapStateToProps, {

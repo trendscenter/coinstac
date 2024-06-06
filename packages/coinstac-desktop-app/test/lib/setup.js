@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, import/no-extraneous-dependencies */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
