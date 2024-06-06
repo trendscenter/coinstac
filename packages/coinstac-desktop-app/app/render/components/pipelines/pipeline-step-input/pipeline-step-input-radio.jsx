@@ -7,6 +7,13 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 function PipelineStepInputRadio({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, { value: objParams.default }),
+    });
+  }
+
   return (
     <RadioGroup
       disabled={!owner}

@@ -15,7 +15,7 @@ const logger = winston.createLogger({
 
 axios.defaults.baseURL = `${config.protocol}://${config.apiServer}:${config.port}${config.path}`;
 
-const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess }}}';
+const query = 'query fetchAllComputations($preprocess: Boolean) {fetchAllComputations(preprocess: $preprocess) {id, computation {type, dockerImage, command, input}, meta {  id,name,preprocess,compspecVersion }}}';
 
 async function getIdToken(username, password) {
   try {
