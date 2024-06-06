@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 import update from 'immutability-helper';
 import uniq from 'lodash/uniq';
 import values from 'lodash/values';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+
 import useOnUpdateEffect from '../../../hooks/useOnUpdateEffect';
 import Select from '../../common/react-select';
 import freesurferDataOptions from '../freesurfer-data-options.json';
@@ -27,7 +28,7 @@ const PipelineStepInputFreesurferTableRow = ({
   const [anchorEl, setAnchorEl] = useState(null);
   const [freeSurferOptions, setFreeSurferOptions] = useState([]);
   const [freeSurferDataOptions, setFreeSurferDataOptions] = useState(
-    freesurferDataOptions.freesurferROIs
+    freesurferDataOptions.freesurferROIs,
   );
   const [file, setFile] = useState(null);
   const [inputKey, setInputKey] = useState(Date.now());
@@ -83,13 +84,12 @@ const PipelineStepInputFreesurferTableRow = ({
       inputMap: getNewObj(
         'type',
         value,
-        index
+        index,
       ),
     });
 
     setAnchorEl(null);
   };
-
 
   const selectInterest = (value, index) => {
     let v = [];
@@ -136,9 +136,8 @@ const PipelineStepInputFreesurferTableRow = ({
 
   const handleFileReset = () => {
     setInputKey({ date: Date.now() });
-    const freeSurferOptions = freesurferDataOptions.freesurferROIs.map((val) => {
-      return { label: val, value: val };
-    });
+    const freeSurferOptions = freesurferDataOptions.freesurferROIs
+      .map(val => ({ label: val, value: val }));
     setFreeSurferOptions(freeSurferOptions);
     setFile(null);
   };

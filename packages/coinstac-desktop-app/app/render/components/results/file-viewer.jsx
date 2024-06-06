@@ -2,15 +2,16 @@
   eslint-disable jsx-a11y/click-events-have-key-events,
   jsx-a11y/no-static-element-interactions, react/prop-types
 */
-import React from 'react';
-import { useSelector } from 'react-redux';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import AutoSizer from 'react-virtualized-auto-sizer';
+
 import VariableSizeTree from './variable-size-tree';
 
 const nodeStyle = {
@@ -89,7 +90,7 @@ const FileViewer = () => {
       for (let i = 0; i < parentMeta.node.children.length; i += 1) {
         yield getNodeData(
           parentMeta.node.children[i],
-          parentMeta.nestingLevel + 1
+          parentMeta.nestingLevel + 1,
         );
       }
     }

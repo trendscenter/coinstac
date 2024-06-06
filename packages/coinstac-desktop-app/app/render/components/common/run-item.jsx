@@ -1,24 +1,31 @@
-import React, { useMemo, useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import classNames from 'classnames';
+import { shell } from 'electron';
 import PropTypes from 'prop-types';
 import path from 'path';
+import { flowRight as compose } from 'lodash';
 import moment from 'moment';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
-import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
+import {
+  DELETE_RUN_MUTATION,
+  FETCH_ALL_USERS_QUERY,
+  USER_CHANGED_SUBSCRIPTION,
+} from '../../state/graphql/functions';
 import { deleteRun } from '../../state/ducks/runs';
 import ListDeleteModal from './list-delete-modal';
 import { isUserInGroup } from '../../utils/helpers';
+import { getAllAndSubProp } from '../../state/graphql/props';
 
 const fs = require('fs');
 
@@ -80,9 +87,19 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function getStateWell(runObject, classes) {
+function getStateWell(runObject, users, classes) {
   const OuterNodeRunObject = runObject.localPipelineState;
   const CentralNodeRunObject = runObject.remotePipelineState;
+
+  const getUserNames = () => {
+    if (!CentralNodeRunObject.waitingOn) {
+      return '';
+    }
+
+    return users.map(user => user.username)
+      .filter(username => CentralNodeRunObject.waitingOn.includes(username))
+      .join(',');
+  };
 
   return (
     <div className={classes.runStateInnerContainer}>
@@ -118,7 +135,7 @@ function getStateWell(runObject, classes) {
           <div className={classes.runStateKeyValueContainer}>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {CentralNodeRunObject.waitingOn}
+              {getUserNames()}
             </Typography>
           </div>
         )}
@@ -132,6 +149,7 @@ function RunItem({
   stopPipeline,
   suspendPipeline,
   resumePipeline,
+  users,
 }) {
   const appDirectory = useSelector(state => state.auth.appDirectory);
   const user = useSelector(state => state.auth.user);
@@ -144,9 +162,7 @@ function RunItem({
   const [showModal, setShowModal] = useState(false);
   const [logURL, setLogURL] = useState(false);
 
-  const isOwner = useMemo(() => {
-    return isUserInGroup(user.id, consortium.owners);
-  }, [user, consortium]);
+  const isOwner = useMemo(() => isUserInGroup(user.id, consortium.owners), [user, consortium]);
 
   const handleStopPipeline = () => {
     stopPipeline();
@@ -191,12 +207,13 @@ function RunItem({
             try {
               const text = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
               const lines = text.split(/\r?\n/);
-              const found = lines.find(line => line.includes('Wandb URL: ')).split(': ');
+              let found = lines.find(line => line.includes('Wandb URL: '));
+              found = found.split(': ');
               const url = found[1];
               setLogURL(url);
-            } catch (e) { } // eslint-disable-line
+            } catch (e) { } // eslint-disable-line no-empty
           }
-        } catch (e) { } // eslint-disable-line
+        } catch (e) { } // eslint-disable-line no-empty
       }
     }, 3000);
 
@@ -204,7 +221,6 @@ function RunItem({
       clearTimeout(timerFunc);
     }
   });
-
 
   const {
     id, startDate, endDate, status, localPipelineState, remotePipelineState,
@@ -320,7 +336,7 @@ function RunItem({
         }
         <div className={classes.runStateContainer}>
           {(localPipelineState || remotePipelineState) && status === 'started'
-            && getStateWell(runObject, classes)}
+            && getStateWell(runObject, users, classes)}
         </div>
       </div>
       <div className={classes.actionButtons}>
@@ -419,11 +435,11 @@ function RunItem({
   );
 }
 
-
 RunItem.defaultProps = {
   stopPipeline: () => { },
   suspendPipeline: () => { },
   resumePipeline: () => { },
+  users: [],
 };
 
 RunItem.propTypes = {
@@ -432,6 +448,18 @@ RunItem.propTypes = {
   stopPipeline: PropTypes.func,
   suspendPipeline: PropTypes.func,
   resumePipeline: PropTypes.func,
+  users: PropTypes.array,
 };
 
-export default RunItem;
+const RunItemWithUsers = compose(
+  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    USER_CHANGED_SUBSCRIPTION,
+    'users',
+    'fetchAllUsers',
+    'subscribeToUsers',
+    'userChanged'
+  )),
+  withApollo
+)(RunItem);
+
+export default RunItemWithUsers;

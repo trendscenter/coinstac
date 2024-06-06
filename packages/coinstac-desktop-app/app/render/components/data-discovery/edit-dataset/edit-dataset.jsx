@@ -1,8 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
 import { useLazyQuery, useMutation } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -11,10 +7,14 @@ import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import Skeleton from '@material-ui/lab/Skeleton';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { FETCH_DATASET_QUERY, SAVE_DATASET_MUTATION } from '../../../state/graphql/functions';
-import JsonField from './json-field';
 import useStyles from './edit-dataset.styles';
+import JsonField from './json-field';
 
 function EditDataset({ params }) {
   const auth = useSelector(state => state.auth);
@@ -78,7 +78,7 @@ function EditDataset({ params }) {
     {
       onCompleted: onSubmitComplete,
       onError: onSubmitError,
-    }
+    },
   );
 
   useEffect(() => {

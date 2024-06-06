@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { useLazyQuery } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
-import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import Typography from '@material-ui/core/Typography';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 
 import { FETCH_HEADLESS_CLIENT } from '../../../state/graphql/functions';
-import GeneralDataTab from './general-data-tab/general-data-tab';
 import ApiKeyTab from './api-key-tab';
+import GeneralDataTab from './general-data-tab/general-data-tab';
 
 const TABS = {
   generalData: 'general',

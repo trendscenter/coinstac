@@ -1,10 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import PropTypes from 'prop-types';
+import React from 'react';
 
-function makeNumberRange(min, max, step) {
+function makeNumberRange(initialMin, max, step) {
   const range = [];
+  let min = initialMin;
 
   while (parseFloat(min) <= parseFloat(max)) {
     range.push(min);
@@ -41,7 +42,7 @@ function PipelineStepInputRange({
           objKey,
           event.target.value
             ? { value: event.target.value }
-            : 'DELETE_VAR'
+            : 'DELETE_VAR',
         ),
       })}
       value={value}

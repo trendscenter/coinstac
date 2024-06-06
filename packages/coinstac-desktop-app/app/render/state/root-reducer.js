@@ -1,15 +1,16 @@
-import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
+import { combineReducers } from 'redux';
+
 import app from './ducks/app';
 import auth from './ducks/auth';
 import docker from './ducks/docker';
 import loading from './ducks/loading';
 import localRunResults from './ducks/localRunResults';
 import maps from './ducks/maps';
-import createRunsReducer from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
-import suspendedRuns from './ducks/suspendedRuns';
+import createRunsReducer from './ducks/runs';
 import { CLEAR_STATE } from './ducks/statePersist';
+import suspendedRuns from './ducks/suspendedRuns';
 
 function rootReducer(persistStorage) {
   const appReducer = combineReducers({
@@ -27,10 +28,10 @@ function rootReducer(persistStorage) {
 
   return (state, action) => {
     if (action.type === CLEAR_STATE) {
-      state = {
+      return appReducer({
         ...state,
         ...action.payload,
-      };
+      }, action);
     }
 
     return appReducer(state, action);

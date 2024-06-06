@@ -1,36 +1,36 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import Joyride from 'react-joyride';
-import PropTypes from 'prop-types';
+import { graphql } from '@apollo/react-hoc';
+import { withStyles } from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
-import { graphql } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Joyride from 'react-joyride';
+import { connect } from 'react-redux';
 
-import ConsortiumAbout from './consortium-about';
-import ConsortiumPipeline from './consortium-pipeline';
-import ConsortiumMembers from './consortium-members';
-import ConsortiumRuns from './consortium-runs';
-import { updateUserPerms, tutorialChange } from '../../state/ducks/auth';
-import {
-  getAllAndSubProp,
-  saveDocumentProp,
-  userRolesProp,
-  consortiumSaveActivePipelineProp,
-} from '../../state/graphql/props';
+import { TUTORIAL_STEPS } from '../../constants';
+import { tutorialChange, updateUserPerms } from '../../state/ducks/auth';
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import {
   ADD_USER_ROLE_MUTATION,
   FETCH_ALL_USERS_QUERY,
   REMOVE_USER_ROLE_MUTATION,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
-  SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import {
+  consortiumSaveActivePipelineProp,
+  getAllAndSubProp,
+  saveDocumentProp,
+  userRolesProp,
+} from '../../state/graphql/props';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
-import { TUTORIAL_STEPS } from '../../constants';
+import ConsortiumAbout from './consortium-about';
+import ConsortiumMembers from './consortium-members';
+import ConsortiumPipeline from './consortium-pipeline';
+import ConsortiumRuns from './consortium-runs';
 
 const styles = theme => ({
   title: {
@@ -102,9 +102,9 @@ class ConsortiumTabs extends Component {
 
       if (remoteConsortium && prevRemoteConsortium && (
         Object.keys(prevRemoteConsortium.members).length
-          !== Object.keys(remoteConsortium.members).length
+        !== Object.keys(remoteConsortium.members).length
         || Object.keys(prevRemoteConsortium.owners).length
-          !== Object.keys(remoteConsortium.owners).length
+        !== Object.keys(remoteConsortium.owners).length
       )) {
         const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
 
@@ -377,12 +377,12 @@ const ConsortiumTabsWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline'))
+  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
 )(ConsortiumTabs);
 
 const connectedComponent = connect(
@@ -392,7 +392,7 @@ const connectedComponent = connect(
     notifyError,
     updateUserPerms,
     tutorialChange,
-  }
+  },
 )(ConsortiumTabsWithData);
 
 export default withStyles(styles)(connectedComponent);

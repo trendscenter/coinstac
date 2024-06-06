@@ -1,9 +1,9 @@
 import { ipcRenderer } from 'electron';
 import { persistReducer } from 'redux-persist';
 
-import { saveLocalRunResult } from './localRunResults';
-import { notifyInfo, notifyError } from './notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../utils/helpers';
+import { saveLocalRunResult } from './localRunResults';
+import { notifyError, notifyInfo } from './notifyAndLog';
 
 /**
  * We currently merge local runs and remote runs in a redux store. The local runs are persisted
@@ -71,6 +71,7 @@ export const saveRunLocally = (run, isNew = false) => (dispatch, getState) => {
 
     if (!isNew && !(run.id in localRunResults)) return;
 
+    // eslint-disable-next-line no-param-reassign
     run = {
       ...run,
       ...localRunResults[run.id],
@@ -187,7 +188,7 @@ function reducer(state = INITIAL_STATE, action) {
         ...state,
         runs: state.runs.filter(run => run.id !== action.payload.runId),
         runsAwaitingDataMap:
-          state.runsAwaitingDataMap.filter((run) => { return run.id !== action.payload.runId; }),
+          state.runsAwaitingDataMap.filter(run => run.id !== action.payload.runId),
         localRuns: state.localRuns.filter(run => run.id !== action.payload.runId),
       };
     }

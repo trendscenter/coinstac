@@ -1,10 +1,10 @@
-import { connect } from 'react-redux';
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
-import { logout } from '../../state/ducks/auth';
-import UserAccount from './user-account';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
+import { logout } from '../../state/ducks/auth';
+import { notifyError, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
+import UserAccount from './user-account';
 
 class UserAccountController extends Component {
   logoutUser = (evt) => {

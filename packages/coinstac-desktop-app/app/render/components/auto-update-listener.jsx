@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import { ipcRenderer } from 'electron';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Typography from '@material-ui/core/Typography';
-import { styled } from '@material-ui/core/styles';
 import Box from '@material-ui/core/Box';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import { styled } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import { ipcRenderer } from 'electron';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
 
 const StyledLinearProgress = styled(LinearProgress)(() => ({
   height: 10,
@@ -59,7 +59,7 @@ function AutoUpdateListener() {
           <LinearProgressWithLabel variant="determinate" value={progress} />
         </Box>
       )
-    }
+      }
     </div>
   );
 }

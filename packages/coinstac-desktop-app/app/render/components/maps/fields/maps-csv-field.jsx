@@ -1,20 +1,21 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Alert from '@material-ui/lab/Alert';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Tooltip from '@material-ui/core/Tooltip';
-import InfoIcon from '@material-ui/icons/Info';
 import red from '@material-ui/core/colors/red';
+import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@material-ui/core/styles';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
+import InfoIcon from '@material-ui/icons/Info';
+import Alert from '@material-ui/lab/Alert';
+import PropTypes from 'prop-types';
+import React from 'react';
 import dragula from 'react-dragula';
+
+import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
+import { readCsvFreesurferFiles } from '../../../utils/helpers';
 import FilePicker from '../../common/file-picker';
 import MapsCsvFieldCsvHeader from './maps-csv-field-csv-header';
 import MapsCsvFieldPipelineVariable from './maps-csv-field-pipeline-variable';
-import { readCsvFreesurferFiles } from '../../../utils/helpers';
-import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
 
 const styles = theme => ({
   rootPaper: {
@@ -352,7 +353,7 @@ class MapsCsvField extends React.Component {
                           unmapField={
                             (pipelineFieldName, columnName) => this.unmapField(
                               pipelineFieldName,
-                              columnName
+                              columnName,
                             )
                           }
                         />

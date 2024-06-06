@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import makeStyles from '@material-ui/core/styles/makeStyles';
-import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Switch from '@material-ui/core/Switch';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
 const useStyles = makeStyles(theme => ({
   rootPaper: {
@@ -21,7 +21,6 @@ const useStyles = makeStyles(theme => ({
     alignItems: 'center',
   },
 }));
-
 
 function MapsBooleanField({
   fieldName, fieldDataMap, fieldDescription, onChange,

@@ -1,8 +1,3 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { useSelector } from 'react-redux';
-import { Link } from 'react-router';
-import cx from 'classnames';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
@@ -11,9 +6,14 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import MessageIcon from '@material-ui/icons/Message';
+import cx from 'classnames';
+import PropTypes from 'prop-types';
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router';
 
-import useStyles from './result-item.styles';
 import MemberAvatar from '../../common/member-avatar';
+import useStyles from './result-item.styles';
 
 function ResultItem({ result, onClickDelete, className }) {
   const auth = useSelector(state => state.auth);

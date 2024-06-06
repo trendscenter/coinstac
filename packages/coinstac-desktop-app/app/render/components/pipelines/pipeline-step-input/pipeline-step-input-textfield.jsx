@@ -1,6 +1,6 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputTextField({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,

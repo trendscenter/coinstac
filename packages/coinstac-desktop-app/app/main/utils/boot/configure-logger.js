@@ -41,7 +41,7 @@ async function configureLogger(config) {
         winston.format.timestamp(),
         winston.format.printf(({
           level, message, timestamp,
-        }) => `${timestamp} { message: ${message}, level: ${level} }`)
+        }) => `${timestamp} { message: ${message}, level: ${level} }`),
       ),
       transports: [
         new winston.transports.Console(),

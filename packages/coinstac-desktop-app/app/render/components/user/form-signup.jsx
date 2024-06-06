@@ -1,12 +1,13 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
+import Paper from '@material-ui/core/Paper';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import TextField from '@material-ui/core/TextField';
 import classNames from 'classnames';
 import { useFormik } from 'formik';
+import PropTypes from 'prop-types';
+import React from 'react';
 import * as Yup from 'yup';
+
 import { PASSWORD_PATTERN } from '../../constants';
 
 const validationSchema = Yup.object().shape({
