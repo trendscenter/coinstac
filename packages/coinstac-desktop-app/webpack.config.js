@@ -27,8 +27,8 @@ const config = {
     Object.keys(pkg.devDependencies),
     'electron',
     'fs',
-    'path',
-  ),
+    'path'
+  ).filter(e => e !== 'jsoneditor-react'),
   module: {
     rules: [{
       test: /\.css$/,
