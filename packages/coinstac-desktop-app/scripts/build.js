@@ -1,6 +1,7 @@
 /* eslint-disable no-console, import/no-extraneous-dependencies */
 const fs = require('fs').promises;
 const electronBuilder = require('electron-builder');
+const config = require('../electron-builder.config');
 
 const { NODE_ENV, DEPLOY } = process.env;
 
@@ -18,7 +19,7 @@ if (NODE_ENV === 'production' && DEPLOY) {
   buildConfig.mac = ['zip'];
   buildConfig.linux = ['zip'];
 }
-
+const finalConfig = Object.assign({ config }, buildConfig, { publish: DEPLOY ? 'always' : 'never' });
 fs.rename('./config/local.json', './config/local-build-copy.json')
   .catch((e) => {
     if (e.code !== 'ENOENT') {
@@ -29,7 +30,7 @@ fs.rename('./config/local.json', './config/local-build-copy.json')
     console.log(`Creating ${process.env.LOCAL_CONFIG || NODE_ENV} build`);
     return fs.copyFile(`./config/local-${process.env.LOCAL_CONFIG || NODE_ENV}.json`, './config/local.json');
   })
-  .then(() => electronBuilder.build(Object.assign({}, buildConfig, { publish: DEPLOY ? 'always' : 'never' })))
+  .then(() => electronBuilder.build(finalConfig))
   .then(() => fs.rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
     if (err.code !== 'ENOENT') console.error('Build failed with:', err);

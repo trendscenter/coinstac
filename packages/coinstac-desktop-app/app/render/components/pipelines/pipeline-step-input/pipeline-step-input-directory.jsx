@@ -1,6 +1,7 @@
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
-import React from 'react';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
 const useStyles = makeStyles(theme => ({
   description: {
@@ -8,8 +9,17 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function PipelineStepInputDirectory() {
+function PipelineStepInputDirectory({
+  objKey, updateStep, getNewObj, step,
+}) {
   const classes = useStyles();
+
+  useEffect(() => {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, {}),
+    });
+  }, []);
 
   return (
     <div style={{ paddingLeft: 10 }}>
@@ -19,5 +29,12 @@ function PipelineStepInputDirectory() {
     </div>
   );
 }
+
+PipelineStepInputDirectory.propTypes = {
+  objKey: PropTypes.string.isRequired,
+  step: PropTypes.object.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
+};
 
 export default PipelineStepInputDirectory;

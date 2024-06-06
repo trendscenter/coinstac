@@ -77,8 +77,9 @@ if (program.loglevel) {
 // require after LOGLEVEL set
 const sim = require('../src/');
 const compUpload = require('../src/comspec-upload');
-const { pullImages, getStats } = require('coinstac-container-manager'); // eslint-disable-line import/order
+const { pullImages, getStats, setServiceProvider } = require('coinstac-container-manager'); // eslint-disable-line import/order
 const { fetchPreprocessComputations, createInputMap, prepareDirectory } = require('../src/preprocess');
+setServiceProvider(program.service || 'docker');
 
 async function runPipeline(pipelineSpec, operatingDirectory) {
   /* eslint-disable no-console */
@@ -165,10 +166,12 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
       };
     };
     // hook into the pipeline events
-    const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
-    remoteStateEmitter.on('update', (m) => {
-      writeValuesToRow(1, formatUpdateEvent(m));
-    });
+    if (remotePipeline) {
+      const remoteStateEmitter = remotePipeline.pipeline.stateEmitter;
+      remoteStateEmitter.on('update', (m) => {
+        writeValuesToRow(1, formatUpdateEvent(m));
+      });
+    }
 
     localPipelines.forEach((pipeline, index) => {
       const { stateEmitter } = pipeline.pipeline;
@@ -231,9 +234,11 @@ async function runPipeline(pipelineSpec, operatingDirectory) {
         return formatted;
       };
 
-      const remotePipelineStats = await getStats('simulatorRun', 'remote');
-      const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
-      writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
+      if (remotePipeline) {
+        const remotePipelineStats = await getStats('simulatorRun', 'remote');
+        const formattedRemotePipelineStats = formatContainerStats(remotePipelineStats);
+        writeValuesToRow(1, { 'pipeline\nName': 'remote', ...formattedRemotePipelineStats });
+      }
 
       const localPipelineStatsPromises = [];
 
@@ -361,9 +366,9 @@ const promptGenerateAndPreprocess = async () => {
     await Promise.all(
       pullStreams.map((obj) => {
         return new Promise((resolve, reject) => {
-          if (typeof obj.stream.pipe === 'function') {
-            obj.stream.pipe(process.stdout);
+          if (obj.stream) {
             obj.stream
+              .on('data', (data) => { console.log(data.toString()) })
               .on('end', () => { resolve(); })
               .on('error', (error) => { reject(error); });
           } else {

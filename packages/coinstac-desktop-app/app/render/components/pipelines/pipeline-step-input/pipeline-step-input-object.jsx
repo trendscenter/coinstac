@@ -6,7 +6,7 @@ import locale from 'react-json-editor-ajrm/locale/en';
 function PipelineStepInputObject({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
 }) {
-  if (!step.inputMap[objKey] && 'default' in objParams && owner) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
     updateStep({
       ...step,
       inputMap: getNewObj(objKey, { value: objParams.default }),

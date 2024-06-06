@@ -18,6 +18,13 @@ function makeNumberRange(initialMin, max, step) {
 function PipelineStepInputRange({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, { value: objParams.default }),
+    });
+  }
+
   if (!step || !objParams.min || !objParams.max || !objParams.step) {
     return null;
   }

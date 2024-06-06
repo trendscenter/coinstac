@@ -316,7 +316,12 @@ class PipelineStepInput extends Component {
             )
           }
           {objParams.type === 'directory' && (
-            <PipelineStepInputDirectory />
+            <PipelineStepInputDirectory
+              objKey={objKey}
+              updateStep={updateStep}
+              getNewObj={this.getNewObj}
+              step={step}
+            />
           )}
           {
             objParams.type === 'string' && (

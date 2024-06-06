@@ -6,6 +6,13 @@ import React from 'react';
 function PipelineStepInputSelect({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, { value: objParams.default }),
+    });
+  }
+
   if (!step || !objParams.values) {
     return null;
   }
