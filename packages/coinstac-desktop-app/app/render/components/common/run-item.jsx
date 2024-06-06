@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import makeStyles from '@material-ui/core/styles/makeStyles';
