@@ -2,7 +2,6 @@ import { useMutation } from '@apollo/client';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -14,16 +13,8 @@ import PropTypes from 'prop-types';
 import path from 'path';
 import { flowRight as compose } from 'lodash';
 import moment from 'moment';
-import path from 'path';
-import PropTypes from 'prop-types';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router';
 
-import { deleteRun } from '../../state/ducks/runs';
-import { DELETE_RUN_MUTATION } from '../../state/graphql/functions';
-import { isUserInGroup } from '../../utils/helpers';
-import ListDeleteModal from './list-delete-modal';
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
 import {
