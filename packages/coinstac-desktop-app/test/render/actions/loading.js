@@ -1,6 +1,8 @@
 'use strict';
 
+/* eslint-disable import/no-extraneous-dependencies */
 import test from 'tape';
+
 import * as ld from '../../../app/render/state/ducks/loading';
 
 test('applyAsyncLoading properly wraps and dispatches', (t) => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { VariableSizeList } from 'react-window';
+
 import Tree, { createTreeComputer } from './tree';
 
 export const createBasicRecord = (pub, parent = null) => ({
@@ -21,7 +22,7 @@ const computeTree = createTreeComputer({
     data,
     { recomputeTree, resetAfterId },
     parent,
-    previousRecord
+    previousRecord,
   ) => {
     const record = createBasicRecord(
       {
@@ -40,7 +41,7 @@ const computeTree = createTreeComputer({
           [data.id]: state,
         }),
       },
-      parent
+      parent,
     );
 
     return record;

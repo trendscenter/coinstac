@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import TextField from '@material-ui/core/TextField';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+
 import ThreadReply from './thread-reply';
 
 const useStyles = makeStyles(theme => ({

@@ -1,19 +1,19 @@
-import React, { useMemo, useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import LinearProgress from '@material-ui/core/LinearProgress';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import classNames from 'classnames';
+import { shell } from 'electron';
 import PropTypes from 'prop-types';
 import path from 'path';
 import { flowRight as compose } from 'lodash';
 import moment from 'moment';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import StatusButtonWrapper from './status-button-wrapper';
 import TimeAgo from './time-ago';
@@ -162,9 +162,7 @@ function RunItem({
   const [showModal, setShowModal] = useState(false);
   const [logURL, setLogURL] = useState(false);
 
-  const isOwner = useMemo(() => {
-    return isUserInGroup(user.id, consortium.owners);
-  }, [user, consortium]);
+  const isOwner = useMemo(() => isUserInGroup(user.id, consortium.owners), [user, consortium]);
 
   const handleStopPipeline = () => {
     stopPipeline();
@@ -209,12 +207,13 @@ function RunItem({
             try {
               const text = fs.readFileSync(file, { encoding: 'utf8', flag: 'r' });
               const lines = text.split(/\r?\n/);
-              const found = lines.find(line => line.includes('Wandb URL: ')).split(': ');
+              let found = lines.find(line => line.includes('Wandb URL: '));
+              found = found.split(': ');
               const url = found[1];
               setLogURL(url);
-            } catch (e) { } // eslint-disable-line
+            } catch (e) { } // eslint-disable-line no-empty
           }
-        } catch (e) { } // eslint-disable-line
+        } catch (e) { } // eslint-disable-line no-empty
       }
     }, 3000);
 
@@ -435,7 +434,6 @@ function RunItem({
     </Paper>
   );
 }
-
 
 RunItem.defaultProps = {
   stopPipeline: () => { },

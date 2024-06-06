@@ -1,12 +1,12 @@
-import React from 'react';
 import { useQuery } from '@apollo/client';
-import { get } from 'lodash';
-import Avatar from 'react-avatar';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import DoneIcon from '@material-ui/icons/Done';
-import makeStyles from '@material-ui/core/styles/makeStyles';
+import classNames from 'classnames';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Avatar from 'react-avatar';
 
 import {
   FETCH_USER_QUERY,

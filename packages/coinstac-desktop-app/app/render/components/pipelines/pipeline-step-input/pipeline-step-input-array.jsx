@@ -1,7 +1,7 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputArray({
   objKey, objParams, owner, updateStep, getNewObj, getSelectList, step,
@@ -16,7 +16,7 @@ function PipelineStepInputArray({
           objKey,
           event.target.value
             ? { value: getSelectList(step.inputMap[objKey].value, event.target.value) }
-            : 'DELETE_VAR'
+            : 'DELETE_VAR',
         ),
       })}
       value={

@@ -1,29 +1,30 @@
-import React, { Component, Suspense } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { compose } from 'redux';
-import { DragDropContext } from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
 import MBox from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Paper from '@material-ui/core/Paper';
-import Tabs from '@material-ui/core/Tabs';
+import { withStyles } from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import moment from 'moment';
 import { ipcRenderer, shell } from 'electron';
+import moment from 'moment';
 import path from 'path';
-import Table from './displays/result-table';
-import Images from './displays/images';
-import String from './displays/string';
+import PropTypes from 'prop-types';
+import React, { Component, Suspense } from 'react';
+import { DragDropContext } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+
+import { API_TOKEN_KEY } from '../../state/ducks/constants';
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
-import { API_TOKEN_KEY } from '../../state/ducks/auth';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import Images from './displays/images';
+import Table from './displays/result-table';
+import String from './displays/string';
 
 const Box = React.lazy(() => import('./displays/box-plot'));
 const Scatter = React.lazy(() => import('./displays/scatter-plot'));
@@ -81,7 +82,7 @@ class Result extends Component {
     selectedTabIndex: 0,
     downloading: false,
     filesExist: false,
-    htmlPath: 'index.html'
+    htmlPath: 'index.html',
   };
 
   componentDidMount() {
@@ -189,9 +190,7 @@ class Result extends Component {
     }
   }
 
-  renderError = (errors) => {
-    return errors.split('\n').map(elem => <div key={elem}>{elem}</div>);
-  }
+  renderError = errors => errors.split('\n').map(elem => <div key={elem}>{elem}</div>)
 
   render() {
     const {
@@ -201,7 +200,7 @@ class Result extends Component {
       computationOutput,
       downloading,
       filesExist,
-      htmlPath
+      htmlPath,
     } = this.state;
     const {
       consortia,
@@ -477,13 +476,11 @@ Result.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, runs: { runs } }) => {
-  return { auth, runs };
-};
+const mapStateToProps = ({ auth, runs: { runs } }) => ({ auth, runs });
 
 const connectedComponent = compose(
   connect(mapStateToProps, { notifySuccess, notifyError }),
-  DragDropContext(HTML5Backend)
+  DragDropContext(HTML5Backend),
 )(Result);
 
 export default withStyles(styles)(connectedComponent);
