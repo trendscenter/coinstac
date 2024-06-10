@@ -4,10 +4,9 @@ import { dirname, join } from 'path';
 import { createMigrate, REHYDRATE } from 'redux-persist';
 
 import localDBMigrations from '../migrations';
+import { electronStore, storage } from '../storage';
 import { API_TOKEN_KEY } from './constants';
 
-let electronStore;
-let persistConfig;
 let storePersistor;
 
 // Increment this version by one everytime the persisted store must undergo a migration
@@ -21,9 +20,7 @@ export const clearState = state => ({ type: CLEAR_STATE, payload: state });
 
 export const setUser = user => ({ type: SET_USER, payload: user });
 
-function init(store, config, persistor) {
-  electronStore = store;
-  persistConfig = config;
+function init(persistor) {
   storePersistor = persistor;
 }
 
@@ -31,21 +28,31 @@ const loadUserState = (user, authTokenData) => async (dispatch) => {
   const electronStoreFolder = dirname(electronStore.path);
   electronStore.path = join(electronStoreFolder, `local-db-${user.id}.json`);
 
-  const data = await persistConfig.storage.getItem('persist:root');
+  const rootData = await storage.getItem('persist:root');
   storePersistor.persist();
 
   // Rehydrate is done only once by redux-persist, so we do it manually
   // for hydrating state on consecutive logins
-  if (data) {
-    const parsedState = deepParseJson(data);
-
-    const migrate = createMigrate(localDBMigrations, { debug: true });
-
-    const migratedState = await migrate(parsedState, CURRENT_PERSISTED_STORE_VERSION);
+  if (rootData) {
+    const parsedState = deepParseJson(rootData);
 
     dispatch({
       type: REHYDRATE,
       key: 'root',
+      payload: parsedState,
+    });
+  }
+
+  const runsData = await storage.getItem('persist:runs');
+
+  if (runsData) {
+    const parsedState = deepParseJson(runsData);
+    const migrate = createMigrate(localDBMigrations, { debug: true });
+    const migratedState = await migrate(parsedState, CURRENT_PERSISTED_STORE_VERSION);
+
+    dispatch({
+      type: REHYDRATE,
+      key: 'runs',
       payload: migratedState,
     });
   }

@@ -7,35 +7,20 @@
  * @{@link  https://github.com/rackt/redux/blob/master/examples/real-world/store/configureStore.js}
  */
 import { applyMiddleware, createStore } from 'redux';
-import { persistReducer, persistStore } from 'redux-persist';
-import autoMergeLevel1 from 'redux-persist/lib/stateReconciler/autoMergeLevel1';
-import createElectronStorage from 'redux-persist-electron-storage';
+import { persistStore } from 'redux-persist';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 
-import { CURRENT_PERSISTED_STORE_VERSION, init as initPersistStateReducer } from './ducks/statePersist';
+import { init as initPersistStateReducer } from './ducks/statePersist';
 import rootReducer from './root-reducer';
 
-const ElectronStore = require('electron-store');
-
-const electronStore = new ElectronStore();
-
-const persistConfig = {
-  key: 'root',
-  storage: createElectronStorage({ electronStore }),
-  whitelist: ['maps', 'localRunResults', 'suspendedRuns', 'runs'],
-  stateReconciler: autoMergeLevel1,
-  version: CURRENT_PERSISTED_STORE_VERSION,
-};
-
 export default function configureStore() {
-  const persistedReducer = persistReducer(persistConfig, rootReducer(persistConfig.storage));
   const middleware = [
     thunkMiddleware,
     promiseMiddleware,
   ];
   const store = createStore(
-    persistedReducer,
+    rootReducer,
     applyMiddleware.apply(
       this,
       middleware,
@@ -44,7 +29,7 @@ export default function configureStore() {
 
   const persistor = persistStore(store, { manualPersist: true });
 
-  initPersistStateReducer(electronStore, persistConfig, persistor);
+  initPersistStateReducer(persistor);
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers

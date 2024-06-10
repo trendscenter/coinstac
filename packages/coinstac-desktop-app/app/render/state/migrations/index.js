@@ -3,7 +3,7 @@ import { get } from 'lodash';
 const migrations = {
   1: (state) => {
     // Add observers property to local runs
-    const localRuns = get(state, 'runs.localRuns', [])
+    const localRuns = get(state, 'localRuns', [])
       .map(localRun => ({
         ...localRun,
         observers: localRuns.clients,
@@ -11,15 +11,12 @@ const migrations = {
 
     return {
       ...state,
-      runs: {
-        ...state.runs,
-        localRuns,
-      },
+      localRuns,
     };
   },
   2: (state) => {
     // Add observers property to local runs
-    const localRuns = get(state, 'runs.localRuns', [])
+    const localRuns = get(state, 'localRuns', [])
       .map(localRun => ({
         ...localRun,
         shouldUploadAssets: false,
@@ -28,10 +25,7 @@ const migrations = {
 
     return {
       ...state,
-      runs: {
-        ...state.runs,
-        localRuns,
-      },
+      localRuns,
     };
   },
 };

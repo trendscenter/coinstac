@@ -2,6 +2,7 @@ import { ipcRenderer } from 'electron';
 import { persistReducer } from 'redux-persist';
 
 import { pipelineNeedsDataMapping } from '../../utils/helpers';
+import { storage } from '../storage';
 import { saveLocalRunResult } from './localRunResults';
 import { notifyError, notifyInfo } from './notifyAndLog';
 
@@ -197,12 +198,10 @@ function reducer(state = INITIAL_STATE, action) {
   }
 }
 
-export default function createReducer(persistStorage) {
-  const runsPersistConfig = {
-    key: 'runs',
-    storage: persistStorage,
-    whitelist: ['localRuns'],
-  };
+const runsPersistConfig = {
+  key: 'runs',
+  storage,
+  whitelist: ['localRuns', 'runsAwaitingDataMap'],
+};
 
-  return persistReducer(runsPersistConfig, reducer);
-}
+export default persistReducer(runsPersistConfig, reducer);
