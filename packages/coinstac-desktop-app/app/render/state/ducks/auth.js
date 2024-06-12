@@ -2,16 +2,14 @@ import axios from 'axios';
 import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
+
+import { API_TOKEN_KEY } from './constants';
 import { applyAsyncLoading } from './loading';
-import { notifySuccess, notifyError } from './notifyAndLog';
+import { notifyError, notifySuccess } from './notifyAndLog';
 import { clearUserState, loadUserState } from './statePersist';
 
 const { apiServer } = window.config;
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
-const byteArray = new Uint8Array(16);
-window.crypto.getRandomValues(byteArray);
-const base64String = btoa(String.fromCharCode(...new Uint8Array(byteArray)));
-export const API_TOKEN_KEY = `id_token_${base64String}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -141,7 +139,7 @@ export const refreshToken = async () => {
     const auth = await axios.post(
       `${API_URL}/authenticateByToken`,
       null,
-      { headers: { Authorization: `Bearer ${token.token}` } }
+      { headers: { Authorization: `Bearer ${token.token}` } },
     );
     const user = { ...auth.data.user, label: auth.data.user.id };
     const tokenData = {
@@ -172,7 +170,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   return axios.post(
     `${API_URL}/authenticateByToken`,
     null,
-    { headers: { Authorization: `Bearer ${token.token}` } }
+    { headers: { Authorization: `Bearer ${token.token}` } },
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
@@ -226,10 +224,10 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
     if (err.response) {
-      const { statusCode } = getErrorDetail(err);
+      const { statusCode, message } = getErrorDetail(err);
 
       if (statusCode === 401) {
-        dispatch(setError('Username and/or Password Incorrect'));
+        dispatch(setError(message));
       } else {
         dispatch(setError('An unexpected error has occurred'));
       }
@@ -295,7 +293,7 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
     throw err;
   }));
 
-export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+export const resetForgotPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetForgotPassword`, payload)
   .then(() => {
     dispatch(notifySuccess('Reset password successfully'));
   })
@@ -305,16 +303,23 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
     throw err;
   }));
 
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Reset password successfully'));
+  })
+  .catch((err) => {
+    const { message } = getErrorDetail(err);
+    dispatch(notifyError(message || 'Failed to reset password'));
+    throw err;
+  }));
 
-export const setContainerService = applyAsyncLoading(containerService => (dispatch) => {
-  return ipcRenderer.invoke('set-container-service', containerService)
-    .then(() => {
-      dispatch({
-        type: SET_CONTAINER_SERVICE,
-        payload: containerService,
-      });
+export const setContainerService = applyAsyncLoading(containerService => dispatch => ipcRenderer.invoke('set-container-service', containerService)
+  .then(() => {
+    dispatch({
+      type: SET_CONTAINER_SERVICE,
+      payload: containerService,
     });
-});
+  }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
   const { locationStacks, isTutorialHidden, tutorialSteps } = state;

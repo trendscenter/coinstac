@@ -1,8 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { useLazyQuery, useMutation } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -11,12 +7,18 @@ import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
 import Skeleton from '@material-ui/lab/Skeleton';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 
 import { FETCH_DATASET_QUERY, SAVE_DATASET_MUTATION } from '../../../state/graphql/functions';
-import JsonField from './json-field';
 import useStyles from './edit-dataset.styles';
+import JsonField from './json-field';
 
-function EditDataset({ params, auth }) {
+function EditDataset({ params }) {
+  const auth = useSelector(state => state.auth);
+
   const { datasetId } = params;
 
   const classes = useStyles();
@@ -76,7 +78,7 @@ function EditDataset({ params, auth }) {
     {
       onCompleted: onSubmitComplete,
       onError: onSubmitError,
-    }
+    },
   );
 
   useEffect(() => {
@@ -191,20 +193,20 @@ function EditDataset({ params, auth }) {
             <Box marginLeft={2} display="flex" alignItems="center">
               {(submitting) && <CircularProgress size={20} />}
               {submitCompleted && (
-                <React.Fragment>
+                <>
                   <CheckCircleIcon className={classes.successIcon} />
                   <Typography variant="body2" className={classes.statusMessage}>
                     Data saved
                   </Typography>
-                </React.Fragment>
+                </>
               )}
               {submitError && (
-                <React.Fragment>
+                <>
                   <ErrorIcon color="error" />
                   <Typography color="error" variant="body2" className={classes.statusMessage}>
-                    { submitError }
+                    {submitError}
                   </Typography>
-                </React.Fragment>
+                </>
               )}
             </Box>
           </Box>
@@ -216,11 +218,6 @@ function EditDataset({ params, auth }) {
 
 EditDataset.propTypes = {
   params: PropTypes.object.isRequired,
-  auth: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(EditDataset);
+export default EditDataset;

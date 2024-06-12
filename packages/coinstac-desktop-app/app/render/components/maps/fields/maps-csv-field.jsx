@@ -1,18 +1,21 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import Tooltip from '@material-ui/core/Tooltip';
-import InfoIcon from '@material-ui/icons/Info';
 import red from '@material-ui/core/colors/red';
+import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@material-ui/core/styles';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
+import InfoIcon from '@material-ui/icons/Info';
+import Alert from '@material-ui/lab/Alert';
+import PropTypes from 'prop-types';
+import React from 'react';
 import dragula from 'react-dragula';
+
+import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
+import { readCsvFreesurferFiles } from '../../../utils/helpers';
 import FilePicker from '../../common/file-picker';
 import MapsCsvFieldCsvHeader from './maps-csv-field-csv-header';
 import MapsCsvFieldPipelineVariable from './maps-csv-field-pipeline-variable';
-import { readCsvFreesurferFiles } from '../../../utils/helpers';
-import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
 
 const styles = theme => ({
   rootPaper: {
@@ -49,6 +52,9 @@ const styles = theme => ({
   },
   errorMessage: {
     color: red[400],
+  },
+  alert: {
+    marginBottom: theme.spacing(1),
   },
 });
 
@@ -152,6 +158,37 @@ class MapsCsvField extends React.Component {
     readFiles();
   }
 
+  getUnmappedFieldsWarningMessage = () => {
+    const { field, fieldDataMap } = this.props;
+
+    if (!fieldDataMap) {
+      return 'All fields are unmapped.';
+    }
+
+    const unmappedFields = field.value
+      .map(pipelineVariable => pipelineVariable.name)
+      .filter(name => !fieldDataMap.maps[name]);
+
+    if (unmappedFields.length === 0) {
+      return null;
+    }
+
+    if (unmappedFields.length === field.value.length) {
+      return 'All fields are unmapped.';
+    }
+
+    if (unmappedFields.length === 1) {
+      return `${unmappedFields[0]} is unmapped.`;
+    }
+
+    if (unmappedFields.length === 2) {
+      return `${unmappedFields.join(', ')} are unmapped.`;
+    }
+
+    return `${unmappedFields.slice(0, unmappedFields.length - 1).join(', ')}
+      and ${unmappedFields[unmappedFields.length - 1]} are unmapped.`;
+  }
+
   setInitialState(fieldDataMap) {
     if (fieldDataMap.files) {
       this.setSelectedFiles(fieldDataMap.files);
@@ -239,6 +276,8 @@ class MapsCsvField extends React.Component {
 
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
 
+    const unmappedFieldsWarningMessage = this.getUnmappedFieldsWarningMessage();
+
     return (
       <div>
         <Typography variant="h4" className={classes.header}>
@@ -255,7 +294,7 @@ class MapsCsvField extends React.Component {
         />
         {
           selectedFiles.length > 0 && (
-            <React.Fragment>
+            <>
               <Typography variant="h5" className={classes.subtitle}>
                 Map CSV columns to pipeline variables
               </Typography>
@@ -286,9 +325,20 @@ class MapsCsvField extends React.Component {
                   </Typography>
                 )
               }
+              {unmappedFieldsWarningMessage && (
+                <Alert severity="error" className={classes.alert}>
+                  { unmappedFieldsWarningMessage }
+                </Alert>
+              )}
               <Grid container spacing={6}>
-                <Grid item xs={12} md={6}>
-                  <div>
+                <Grid item xs={12}>
+                  <MapsCsvFieldCsvHeader
+                    remainingHeader={remainingHeader}
+                    registerDraggableContainer={container => drake.containers.push(container)}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Box display="flex" flexDirection="column" gridGap={16}>
                     <Typography variant="h6" className={classes.capitalize}>
                       { `Pipeline ${fieldName}` }
                     </Typography>
@@ -303,22 +353,16 @@ class MapsCsvField extends React.Component {
                           unmapField={
                             (pipelineFieldName, columnName) => this.unmapField(
                               pipelineFieldName,
-                              columnName
+                              columnName,
                             )
                           }
                         />
                       ))
                     }
-                  </div>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <MapsCsvFieldCsvHeader
-                    remainingHeader={remainingHeader}
-                    registerDraggableContainer={container => drake.containers.push(container)}
-                  />
+                  </Box>
                 </Grid>
               </Grid>
-            </React.Fragment>
+            </>
           )
         }
       </div>

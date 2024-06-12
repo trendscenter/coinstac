@@ -24,8 +24,8 @@ function parse() {
     if (opts.webpack) {
       console.log('booting webpack-dev-server');
       const wpds = spawn('node', ['webpack-dev-server.js', '--development']);
-      wpds.stdout.on('data', (data) => {
-        data = data.toString();
+      wpds.stdout.on('data', (payload) => {
+        let data = payload.toString();
         // don't fill the screen with useful build information. scan for it,
         // summarize it instead
         const builtRegex = /.*(\[(built|not cacheable)]|\{0\}).*[\r\n]/gm;

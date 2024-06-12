@@ -10,11 +10,13 @@ function cleanRemoteResponse(fn) {
     if (args.length && isFunction(args[lastNdx])) {
       const cb = args[lastNdx];
       const pojocb = (err, rslt) => {
-        if (rslt) {
-          rslt = isObject(rslt) ? JSON.parse(JSON.stringify(rslt)) : rslt;
+        if (rslt && isObject(rslt)) {
+          return cb(err, JSON.parse(JSON.stringify(rslt)));
         }
+
         return cb(err, rslt);
       };
+      // eslint-disable-next-line no-param-reassign
       args[lastNdx] = pojocb;
     }
     return fn.apply(this, args);

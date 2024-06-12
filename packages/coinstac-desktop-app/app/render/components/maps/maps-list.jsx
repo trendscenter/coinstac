@@ -1,16 +1,17 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
+import Grid from '@material-ui/core/Grid';
+import Typography from '@material-ui/core/Typography';
 import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
-import MapsListItem from './maps-list-item';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import { deleteDataMapping } from '../../state/ducks/maps';
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
+import MapsListItem from './maps-list-item';
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
@@ -110,15 +111,16 @@ const mapStateToProps = ({ auth, maps }) => ({
 
 const ComponentWithData = compose(
   graphql(
-    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    {
       props: ({ mutate }) => ({
         updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
           variables: { consortiumId, isMapped },
         }),
       }),
-    }
+    },
   ),
-  withApollo
+  withApollo,
 )(MapsList);
 
 export default connect(mapStateToProps, {

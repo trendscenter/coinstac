@@ -1,9 +1,10 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { get, orderBy } from 'lodash';
 import { withStyles } from '@material-ui/core/styles';
-import ThreadCard from './thread-card';
+import { get, orderBy } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+
 import { ThreadContext } from './context';
+import ThreadCard from './thread-card';
 
 const styles = theme => ({
   wrapper: {

@@ -1,11 +1,11 @@
+import { useQuery } from '@apollo/client';
+import get from 'lodash/get';
+import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useQuery } from '@apollo/client';
-import PropTypes from 'prop-types';
-import get from 'lodash/get';
 
-import { isUserInGroup } from '../../../utils/helpers';
 import { FETCH_ALL_CONSORTIA_QUERY } from '../../../state/graphql/functions';
+import { isUserInGroup } from '../../../utils/helpers';
 
 function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);

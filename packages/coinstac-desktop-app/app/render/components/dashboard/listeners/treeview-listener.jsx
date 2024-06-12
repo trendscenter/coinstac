@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
-import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+
 import { setConsortiaFileTree } from '../../../state/ducks/app';
 import { buildTree, generateInitalFileTree } from '../../../utils/helpers';
 
 function TreeviewListener({
-  userId, appDirectory, runs, consortia, setConsortiaFileTree,
+  userId, appDirectory, runs, consortia,
 }) {
+  const dispatch = useDispatch();
+
   const getFileTree = () => {
     ipcRenderer.send('prepare-consortia-files', {
       userId,
@@ -18,8 +21,8 @@ function TreeviewListener({
   useEffect(() => {
     getFileTree();
 
-    ipcRenderer.on('prepare-consortia-files', (event, nodes) => {
-      setConsortiaFileTree(buildTree(nodes));
+    ipcRenderer.on('prepare-consortia-files', (_, nodes) => {
+      dispatch(setConsortiaFileTree(buildTree(nodes)));
     });
 
     return () => {
@@ -41,6 +44,4 @@ TreeviewListener.defaultProps = {
   consortia: [],
 };
 
-export default connect(null, {
-  setConsortiaFileTree,
-})(TreeviewListener);
+export default TreeviewListener;

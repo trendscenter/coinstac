@@ -1,11 +1,17 @@
-import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import React from 'react';
+import { useSelector } from 'react-redux';
+
 import MapsList from './maps-list';
 
 function Maps({
-  auth, consortia, pipelines, runs, routeParams,
+  consortia,
+  pipelines,
+  runs,
+  routeParams,
 }) {
+  const auth = useSelector(state => state.auth);
+
   return (
     <MapsList
       auth={auth}
@@ -18,15 +24,10 @@ function Maps({
 }
 
 Maps.propTypes = {
-  auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   routeParams: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(Maps);
+export default Maps;

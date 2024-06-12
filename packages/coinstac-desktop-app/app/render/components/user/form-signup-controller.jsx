@@ -1,15 +1,16 @@
-import { connect } from 'react-redux';
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import FormSignup from './form-signup';
-import LayoutNoauth from '../layout-noauth';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+
 import {
+  checkApiVersion,
   clearError,
   clearUser,
   signUp,
-  checkApiVersion,
 } from '../../state/ducks/auth';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
+import LayoutNoauth from '../layout-noauth';
+import FormSignup from './form-signup';
 
 class FormSignupController extends Component {
   state = {
@@ -43,26 +44,6 @@ class FormSignupController extends Component {
    */
   onSubmit = (formData) => {
     const { signUp, notifySuccess } = this.props;
-
-    let error;
-
-    if (!formData.name) {
-      error = 'Name required';
-    } else if (!formData.username) {
-      error = 'Username required';
-    } else if (!formData.email) {
-      error = 'Email required';
-    } else if (!formData.password) {
-      error = 'Password required';
-    } else if (formData.password.length < 8) {
-      error = 'Password must be at least 8 characters long';
-    } else if (!formData.institution) {
-      error = 'Institution required';
-    }
-
-    if (error) {
-      return this.handleSignupError(error);
-    }
 
     this.setState({ error: null });
 

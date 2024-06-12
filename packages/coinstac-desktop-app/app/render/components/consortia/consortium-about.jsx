@@ -1,27 +1,28 @@
-import React, { Component } from 'react';
-import Joyride from 'react-joyride';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
-import Typography from '@material-ui/core/Typography';
 import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { withStyles } from '@material-ui/core/styles';
+import Switch from '@material-ui/core/Switch';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import { withStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
 import DeleteIcon from '@material-ui/icons/Delete';
-import PropTypes from 'prop-types';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
-import memoize from 'memoize-one';
 import { omit } from 'lodash';
-import Select from '../common/react-select';
+import memoize from 'memoize-one';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Joyride from 'react-joyride';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+
+import { TUTORIAL_STEPS } from '../../constants';
 import MemberAvatar from '../common/member-avatar';
+import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
   textField: {
@@ -39,7 +40,7 @@ class ConsortiumAbout extends Component {
   };
 
   mapUsers = memoize(
-    users => (users ? users.map(user => ({ label: user.username, value: user.id })) : null)
+    users => (users ? users.map(user => ({ label: user.username, value: user.id })) : null),
   );
 
   filterSelectedUsers = memoize(
@@ -49,9 +50,9 @@ class ConsortiumAbout extends Component {
       }
 
       return allUsers.filter(user => selectedUsers.findIndex(
-        selectedUser => selectedUser.id === user.value
+        selectedUser => selectedUser.id === user.value,
       ) === -1);
-    }
+    },
   );
 
   handleTextFieldChange = name => (event) => {
@@ -265,14 +266,14 @@ class ConsortiumAbout extends Component {
                         owner && (
                           <TableCell>
                             {user.id !== consUser.id && (
-                            <Button
-                              variant="contained"
-                              color="default"
-                              onClick={() => this.removeMember(consUser)}
-                            >
+                              <Button
+                                variant="contained"
+                                color="default"
+                                onClick={() => this.removeMember(consUser)}
+                              >
                               Remove
-                              <DeleteIcon />
-                            </Button>
+                                <DeleteIcon />
+                              </Button>
                             )}
                           </TableCell>
                         )
@@ -286,7 +287,7 @@ class ConsortiumAbout extends Component {
         }
         {!isTutorialHidden && (
           <Joyride
-            steps={STEPS.consortiumAbout}
+            steps={TUTORIAL_STEPS.consortiumAbout}
             continuous
             disableScrollParentFix
             callback={tutorialChange}

@@ -1,11 +1,12 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
-import ThreadReply from './thread-reply';
-import ThreadMessages from './thread-messages';
+import PropTypes from 'prop-types';
+import React from 'react';
 
-const styles = theme => ({
+import ThreadMessages from './thread-messages';
+import ThreadReply from './thread-reply';
+
+const useStyles = makeStyles(theme => ({
   wrapper: {
     width: 'calc(100% - 250px)',
     display: 'flex',
@@ -19,18 +20,20 @@ const styles = theme => ({
     fontWeight: 600,
     padding: `${theme.spacing(2)}px 0`,
   },
-});
+}));
 
 const ThreadContent = ({
-  classes, savingStatus, thread, onSend, onJoinConsortium,
+  savingStatus, thread, onSend, onJoinConsortium,
 }) => {
+  const classes = useStyles();
+
   function renderContent() {
     if (!thread) {
       return null;
     }
 
     return (
-      <Fragment>
+      <>
         <Typography variant="h5" className={classes.title}>
           {thread.title}
         </Typography>
@@ -45,7 +48,7 @@ const ThreadContent = ({
           savingStatus={savingStatus}
           onSend={onSend}
         />
-      </Fragment>
+      </>
     );
   }
 
@@ -61,11 +64,10 @@ ThreadContent.defaultProps = {
 };
 
 ThreadContent.propTypes = {
-  classes: PropTypes.object.isRequired,
   savingStatus: PropTypes.string.isRequired,
   thread: PropTypes.object,
   onJoinConsortium: PropTypes.func.isRequired,
   onSend: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ThreadContent);
+export default ThreadContent;

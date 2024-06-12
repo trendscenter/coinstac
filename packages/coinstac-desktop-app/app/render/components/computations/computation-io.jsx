@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import PropTypes from 'prop-types';
 import { graphql, useMutation } from '@apollo/react-hoc';
-import ReactJson from 'react-json-view';
-import { withStyles } from '@material-ui/core/styles';
 import { Button, TextareaAutosize } from '@material-ui/core';
-import { connect } from 'react-redux';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import PropTypes from 'prop-types';
+import React, { useEffect, useState } from 'react';
+import ReactJson from 'react-json-view';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import { ADD_COMPUTATION_MUTATION, FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
     marginTop: theme.spacing(1),
   },
@@ -18,7 +19,7 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
   },
-});
+}));
 
 const prepareJSON = (info) => {
   const compSpecDbObject = JSON.parse(JSON.stringify(info));
@@ -33,23 +34,28 @@ const prepareJSON = (info) => {
   return JSON.stringify(compSpecDbObject, null, 4);
 };
 
-const ComputationIO = ({
-  compIO, classes, notifySuccess, notifyError, auth,
-}) => {
-  if (!compIO) {
-    return null;
-  }
+const ComputationIO = ({ compIO }) => {
+  const auth = useSelector(state => state.auth);
+  const dispatch = useDispatch();
 
-  const showEdit = auth.user.permissions.roles?.admin
-    || (auth.user.permissions.roles?.author && compIO.submittedBy === auth.user.id);
+  const classes = useStyles();
 
   const [textAreaValue, setTextAreaValue] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [addComputation] = useMutation(ADD_COMPUTATION_MUTATION);
 
+  const showEdit = auth.user.permissions.roles?.admin
+    || (auth.user.permissions.roles?.author && compIO.submittedBy === auth.user.id);
+
   useEffect(() => {
-    setTextAreaValue(prepareJSON(compIO));
+    if (compIO) {
+      setTextAreaValue(prepareJSON(compIO));
+    }
   }, [compIO]);
+
+  if (!compIO) {
+    return null;
+  }
 
   const updateComputation = async () => {
     try {
@@ -58,10 +64,10 @@ const ComputationIO = ({
         variables: { computationSchema: val },
       });
 
-      notifySuccess('Compspec updated');
+      dispatch(notifySuccess('Compspec updated'));
       setIsEditing(false);
     } catch (error) {
-      notifyError(error.message);
+      dispatch(notifyError(error.message));
     }
   };
 
@@ -113,20 +119,8 @@ ComputationIO.defaultProps = {
 
 ComputationIO.propTypes = {
   compIO: PropTypes.object,
-  classes: PropTypes.object.isRequired,
-  notifyError: PropTypes.func.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
-  auth: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
 const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
-const ComputationIOWithAlert = connect(
-  mapStateToProps,
-  { notifySuccess, notifyError }
-)(ComputationIOWithData);
 
-export default withStyles(styles)(ComputationIOWithAlert);
+export default ComputationIOWithData;

@@ -1,7 +1,7 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
 import update from 'immutability-helper';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputSet({
   objKey, owner, isFromCache, updateStep, getNewObj, step,

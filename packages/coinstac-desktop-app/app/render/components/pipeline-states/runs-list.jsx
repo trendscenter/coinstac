@@ -1,6 +1,7 @@
-import React from 'react';
 import PropTypes from 'prop-types';
-import RunItem from '../../common/run-item';
+import React from 'react';
+
+import RunItem from '../common/run-item';
 
 const RunsList = ({
   consortia,
@@ -28,7 +29,7 @@ const RunsList = ({
 );
 
 RunsList.defaultProps = {
-  stopPipeline: () => {},
+  stopPipeline: () => { },
 };
 
 RunsList.propTypes = {

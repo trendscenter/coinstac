@@ -1,12 +1,19 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import Radio from '@material-ui/core/Radio';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Radio from '@material-ui/core/Radio';
+import RadioGroup from '@material-ui/core/RadioGroup';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputRadio({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && objParams?.default && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, { value: objParams.default }),
+    });
+  }
+
   return (
     <RadioGroup
       disabled={!owner}

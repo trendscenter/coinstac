@@ -1,18 +1,18 @@
-import React from 'react';
 import { useQuery } from '@apollo/client';
-import { get } from 'lodash';
-import Avatar from 'react-avatar';
-import PropTypes from 'prop-types';
-import cx from 'classnames';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
 import DoneIcon from '@material-ui/icons/Done';
-import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Avatar from 'react-avatar';
 
 import {
   FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   avatarWrapper: {
     display: 'inline-block',
     margin: theme.spacing(1),
@@ -34,7 +34,7 @@ const styles = theme => ({
     right: -5,
     top: -5,
   },
-});
+}));
 
 function MemberAvatar({
   id,
@@ -42,34 +42,45 @@ function MemberAvatar({
   consRole,
   showDetails,
   width,
-  classes,
   className,
   ready,
 }) {
+  const classes = useStyles();
+
   const { data } = useQuery(FETCH_USER_QUERY, {
     variables: { userId: id },
-    onError: (error) => { console.error({ error }); },
+    onError: (error) => {
+      /* eslint-disable-next-line no-console */
+      console.error({ error });
+    },
   });
 
   const user = get(data, 'fetchUser');
 
   return (
-    <div key={`${name}-avatar`} className={cx(classes.avatarWrapper, className)}>
-      {user && user.photo
-        ? <Avatar name={name} size={width} src={user.photo} round />
-        : <Avatar name={name} size={width} round />}
-      {
-        consRole && showDetails
-        && <Typography variant="subtitle2" className={classes.text}>{consRole}</Typography>
-      }
-      {
-        showDetails
-        && <Typography variant="caption" className={classes.text}>{name}</Typography>
-      }
-      {
-        ready
-        && <DoneIcon className={classes.mark} />
-      }
+    <div key={`${name}-avatar`} className={classNames(classes.avatarWrapper, className)}>
+      {user?.photo ? (
+        <Avatar name={name} size={width} src={user.photo} round />
+      ) : (
+        <Avatar name={name} size={width} round />
+      )}
+      {consRole && showDetails && (
+        <Typography
+          variant="subtitle2"
+          className={classes.text}
+        >
+          {consRole}
+        </Typography>
+      )}
+      {showDetails && (
+        <Typography
+          variant="caption"
+          className={classes.text}
+        >
+          {name}
+        </Typography>
+      )}
+      {ready && <DoneIcon className={classes.mark} />}
     </div>
   );
 }
@@ -77,7 +88,6 @@ function MemberAvatar({
 MemberAvatar.propTypes = {
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
-  classes: PropTypes.object.isRequired,
   consRole: PropTypes.string,
   ready: PropTypes.bool,
   showDetails: PropTypes.bool,
@@ -92,4 +102,4 @@ MemberAvatar.defaultProps = {
   className: null,
 };
 
-export default withStyles(styles)(MemberAvatar);
+export default MemberAvatar;

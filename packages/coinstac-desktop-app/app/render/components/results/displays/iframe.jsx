@@ -1,12 +1,29 @@
-import React from 'react';
-import { connect } from 'react-redux';
 import path from 'path';
+import React from 'react';
+import { useSelector } from 'react-redux';
 
-const Iframe = ({
-  appDirectory, run, value, user,
-}) => {
-  const iFrameHeight = '600px';
+const Iframe = ({ appDirectory, run, value }) => {
+  const user = useSelector(state => state.auth.user);
+
+  const iFrameHeight = '800px';
   let url = '';
+  if (typeof value === 'undefined') {
+    url = path.join(appDirectory, 'output', user.id, run.id, 'index.html');
+    return (
+      <div>
+        <div>
+          <iframe
+            style={{ width: '100%', height: iFrameHeight }}
+            src={url}
+            title="iframe"
+            width="100%"
+            height={iFrameHeight}
+            frameBorder="0"
+          />
+        </div>
+      </div>
+    );
+  }
   if (typeof value === 'string') {
     url = path.join(appDirectory, 'output', user.id, run.id, value);
     return (
@@ -47,8 +64,4 @@ const Iframe = ({
   }
 };
 
-const mapStateToProps = ({ auth }) => ({
-  user: auth.user,
-});
-
-export default connect(mapStateToProps)(Iframe);
+export default Iframe;

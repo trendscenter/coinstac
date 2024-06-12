@@ -1,24 +1,33 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import TextField from '@material-ui/core/TextField';
-import CheckIcon from '@material-ui/icons/Check';
-import Switch from '@material-ui/core/Switch';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, get } from 'lodash';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/core/styles';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
-import { updatePasswordProps } from '../../state/graphql/props';
-import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setNetworkVolume, toggleTutorial, setContainerService } from '../../state/ducks/auth';
-import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import Switch from '@material-ui/core/Switch';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import CheckIcon from '@material-ui/icons/Check';
+import classNames from 'classnames';
+import { flowRight as compose, get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+import { connect } from 'react-redux';
+
+import {
+  setClientCoreUrlAsync,
+  setContainerService,
+  setNetworkVolume,
+  toggleTutorial,
+} from '../../state/ducks/auth';
+import { notifyError, notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
+import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { updatePasswordProps } from '../../state/graphql/props';
 import UserEditController from './user-edit-controller';
-import { FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
 
 const styles = theme => ({
   pageTitle: {
@@ -31,15 +40,14 @@ const styles = theme => ({
   removeDataTitle: {
     marginBottom: theme.spacing(1),
   },
-  updatePasswordTitle: {
-    marginTop: theme.spacing(5),
-    marginBottom: theme.spacing(1),
-  },
   sectionTitle: {
     marginBottom: theme.spacing(1),
   },
   topMargin: {
     marginTop: theme.spacing(4),
+  },
+  bottomMargin: {
+    marginBottom: theme.spacing(6),
   },
   rightMargin: {
     marginRight: theme.spacing(2),
@@ -107,7 +115,7 @@ class Settings extends Component {
     ValidatorForm.addValidationRule(
       'isPasswordMatch',
       // eslint-disable-next-line react/destructuring-assignment
-      value => value === this.state.newPassword
+      value => value === this.state.newPassword,
     );
   }
 
@@ -299,7 +307,7 @@ class Settings extends Component {
           />
         </div>
 
-        <Typography variant="h5" className={classes.updatePasswordTitle}>
+        <Typography variant="h5" className={classes.topMargin}>
           Update Password
         </Typography>
         <ValidatorForm
@@ -359,23 +367,25 @@ class Settings extends Component {
             {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
           </div>
         </ValidatorForm>
-        <Typography variant="h5">
+
+        <Typography variant="h5" className={classes.topMargin}>
           Container Service
         </Typography>
-        <FormControl fullWidth>
-          <InputLabel id="container-service-label">Container Service</InputLabel>
-          <Select
-            labelId="container-service-label"
-            id="container-service-select"
-            value={containerService}
-            label="Container Service"
-            onChange={this.handleSelectContainerService}
-          >
-            <MenuItem value="docker">Docker</MenuItem>
-            <MenuItem value="singularity">Singularity</MenuItem>
-          </Select>
-        </FormControl>
-
+        <div className={classes.bottomMargin}>
+          <FormControl fullWidth>
+            <InputLabel id="container-service-label">Container Service</InputLabel>
+            <Select
+              labelId="container-service-label"
+              id="container-service-select"
+              value={containerService}
+              label="Container Service"
+              onChange={this.handleSelectContainerService}
+            >
+              <MenuItem value="docker">Docker</MenuItem>
+              <MenuItem value="singularity">Singularity</MenuItem>
+            </Select>
+          </FormControl>
+        </div>
       </div>
     );
   }
@@ -405,9 +415,9 @@ Settings.contextTypes = {
 const ComponentWithData = compose(
   graphql(
     UPDATE_PASSWORD_MUTATION,
-    updatePasswordProps('updatePassword')
+    updatePasswordProps('updatePassword'),
   ),
-  withApollo
+  withApollo,
 )(Settings);
 
 const mapStateToProps = ({ auth }) => ({

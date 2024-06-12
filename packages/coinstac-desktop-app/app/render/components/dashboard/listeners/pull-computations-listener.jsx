@@ -1,32 +1,29 @@
-import { useEffect } from 'react';
-import { connect } from 'react-redux';
-import { useSubscription, useApolloClient } from '@apollo/client';
+import { useApolloClient, useSubscription } from '@apollo/client';
 import { get } from 'lodash';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 
+import { pullComputations } from '../../../state/ducks/docker';
+import { notifyInfo } from '../../../state/ducks/notifyAndLog';
 import {
   CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
 } from '../../../state/graphql/functions';
-import { notifyInfo } from '../../../state/ducks/notifyAndLog';
-import { pullComputations } from '../../../state/ducks/docker';
 
 /**
  * Pulls computation images automatically once the pipeline is set for a given consortium.
  */
-function PullComputationsListener({
-  userId,
-  notifyInfo,
-  pullComputations,
-  dockerStatus,
-}) {
+function PullComputationsListener({ userId, containerStatus }) {
+  const dispatch = useDispatch();
+
   const { data } = useSubscription(CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION);
   const apolloClient = useApolloClient();
 
   const consortium = get(data, 'consortiumPipelineChanged');
 
   useEffect(() => {
-    if (!consortium || !(userId in consortium.activeMembers) || !dockerStatus) return;
+    if (!consortium || !(userId in consortium.activeMembers) || !containerStatus) return;
 
     const pipelineData = apolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const computationData = apolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
@@ -55,16 +52,12 @@ function PullComputationsListener({
     });
 
     if (computations.length) {
-      pullComputations({ consortiumId: consortium.id, computations });
-      notifyInfo('Pipeline computations downloading via Docker.');
+      dispatch(pullComputations({ consortiumId: consortium.id, computations }));
+      dispatch(notifyInfo('Pipeline computations downloading via Docker.'));
     }
   }, [consortium]);
 
   return null;
 }
 
-export default connect(null,
-  {
-    notifyInfo,
-    pullComputations,
-  })(PullComputationsListener);
+export default PullComputationsListener;

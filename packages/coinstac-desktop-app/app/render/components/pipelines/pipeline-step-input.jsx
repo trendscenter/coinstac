@@ -1,26 +1,27 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import Typography from '@material-ui/core/Typography';
-import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
+import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@material-ui/core/Typography';
 import InfoIcon from '@material-ui/icons/Info';
-import PipelineStepInputTextField from './pipeline-step-input/pipeline-step-input-textfield';
-import PipelineStepInputNumberTextField from './pipeline-step-input/pipeline-step-input-number-textfield';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+
 import PipelineStepInputArray from './pipeline-step-input/pipeline-step-input-array';
-import PipelineStepInputSet from './pipeline-step-input/pipeline-step-input-set';
+import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-boolean';
+import PipelineStepInputCsv from './pipeline-step-input/pipeline-step-input-csv';
+import PipelineStepInputDirectory from './pipeline-step-input/pipeline-step-input-directory';
+import PipelineStepInputFiles from './pipeline-step-input/pipeline-step-input-files';
+import PipelineStepInputFreesurfer from './pipeline-step-input/pipeline-step-input-freesurfer';
 import PipelineStepInputMatrix from './pipeline-step-input/pipeline-step-input-matrix';
+import PipelineStepInputNumberTextField from './pipeline-step-input/pipeline-step-input-number-textfield';
+import PipelineStepInputObject from './pipeline-step-input/pipeline-step-input-object';
+import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
 import PipelineStepInputRange from './pipeline-step-input/pipeline-step-input-range';
 import PipelineStepInputSelect from './pipeline-step-input/pipeline-step-input-select';
-import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
-import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-boolean';
+import PipelineStepInputSet from './pipeline-step-input/pipeline-step-input-set';
+import PipelineStepInputTextField from './pipeline-step-input/pipeline-step-input-textfield';
 import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-users';
-import PipelineStepInputCsv from './pipeline-step-input/pipeline-step-input-csv';
-import PipelineStepInputFreesurfer from './pipeline-step-input/pipeline-step-input-freesurfer';
-import PipelineStepInputFiles from './pipeline-step-input/pipeline-step-input-files';
-import PipelineStepInputDirectory from './pipeline-step-input/pipeline-step-input-directory';
-import PipelineStepInputObject from './pipeline-step-input/pipeline-step-input-object';
 
 const styles = theme => ({
   pipelineStep: {
@@ -67,7 +68,7 @@ class PipelineStepInput extends Component {
   }
 
   getNewObj(
-    prop, value, clientPropIndex, isValueArray
+    prop, value, clientPropIndex, isValueArray,
   ) { // eslint-disable-line class-methods-use-this
     const {
       objKey, objParams, possibleInputs, step: { inputMap },
@@ -113,11 +114,8 @@ class PipelineStepInput extends Component {
     if (isValueArray) {
       const newValue = value;
 
-      if (inputCopy[objKey].value[clientPropIndex][prop]) {
-        value = [...inputCopy[objKey].value[clientPropIndex][prop]];
-      } else {
-        value = [];
-      }
+      // eslint-disable-next-line no-param-reassign
+      value = [...(inputCopy[objKey].value[clientPropIndex][prop] || [])];
 
       const index = value.indexOf(newValue);
       if (index > -1) {
@@ -318,7 +316,12 @@ class PipelineStepInput extends Component {
             )
           }
           {objParams.type === 'directory' && (
-            <PipelineStepInputDirectory />
+            <PipelineStepInputDirectory
+              objKey={objKey}
+              updateStep={updateStep}
+              getNewObj={this.getNewObj}
+              step={step}
+            />
           )}
           {
             objParams.type === 'string' && (

@@ -1,11 +1,12 @@
-import { useRef, useEffect } from 'react';
+/* eslint-disable no-console */
 import { useLazyQuery, useQuery } from '@apollo/client';
 import { get } from 'lodash';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { FETCH_ALL_USER_RUNS_QUERY, FETCH_ALL_CONSORTIA_QUERY } from '../../../state/graphql/functions';
 import { startRun } from '../../../state/ducks/runs';
 import { selectSuspendedRunsStates } from '../../../state/ducks/suspendedRuns';
+import { FETCH_ALL_CONSORTIA_QUERY, FETCH_ALL_USER_RUNS_QUERY } from '../../../state/graphql/functions';
 
 /*
  * This effect checks if there are runs that must be started locally when the app first starts.

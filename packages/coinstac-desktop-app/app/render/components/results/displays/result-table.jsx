@@ -1,13 +1,13 @@
 /* eslint-disable react/no-array-index-key, no-useless-escape */
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import { withStyles } from '@material-ui/core/styles';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { v4 as uuid } from 'uuid';
 
 const styles = () => ({
@@ -67,26 +67,31 @@ function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
     const cols = [];
     // eslint-disable-next-line
-    output.map((o, ind) => {
-      o = parseFloat(o).toFixed(4);
+    output.map((elem, ind) => {
+      let o = parseFloat(elem).toFixed(4);
       if (parseFloat(o) === 0) {
         o = 0;
       } else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
         o = parseFloat(o).toExponential(4);
       }
       cols.push(
-        <td key={`value-${o}-${ind}`} style={{border: 'none', paddingLeft: 0}}>
+        <td key={`value-${o}-${ind}`} style={{ border: 'none', paddingLeft: 0 }}>
           {`${o} `}
-        </td>
+        </td>,
       );
     });
     return cols;
-  } if (!isNaN(output) && typeof output !== 'boolean') { // eslint-disable-line no-restricted-globals
+  }
+
+  if (!isNaN(output) && typeof output !== 'boolean') { // eslint-disable-line no-restricted-globals
     if (output === 0) {
-      output = 0;
-    } else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
+      return output;
+    }
+
+    if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
       return parseFloat(output).toExponential(4);
     }
+
     return output;
   }
 
@@ -128,18 +133,18 @@ class TableResult extends Component {
     const tableContents = [];
     if (heading) {
       tableContents.push(
-        <h3 style={{ marginLeft }} key={heading}>{clients[heading] || heading}</h3>
+        <h3 style={{ marginLeft }} key={heading}>{clients[heading] || heading}</h3>,
       );
     }
 
     if (rawData) {
       tableContents.push(
-        <div>{JSON.stringify(data)}</div>
+        <div>{JSON.stringify(data)}</div>,
       );
     } else if ((table && table.subtables && Array.isArray(data))) {
       data.forEach((d) => {
         tableContents.push(
-          this.makeTable(clients, table, d, outputProps, null, marginLeft + 10)
+          this.makeTable(clients, table, d, outputProps, null, marginLeft + 10),
         );
         tableContents.push(<hr key={uuid()} style={{ borderTop: '1px solid black' }} />);
       });
@@ -158,8 +163,8 @@ class TableResult extends Component {
             data[t.source],
             outputProps.items[t.source],
             heading,
-            marginLeft + 10
-          )
+            marginLeft + 10,
+          ),
         );
       });
     } else if (table && table.subtables && table.subtables === 'by-key') {
@@ -171,8 +176,8 @@ class TableResult extends Component {
             keyValPair[1],
             outputProps,
             keyValPair[0],
-            marginLeft + 10
-          )
+            marginLeft + 10,
+          ),
         );
       });
     } else if (!table || (table && !table.subtables)) {
@@ -198,6 +203,7 @@ class TableResult extends Component {
       if (heading.includes('Global')) {
         // do nothing
       } else {
+        // eslint-disable-next-line no-param-reassign
         heading = `Local - ${clients[heading] || heading}`;
       }
 
@@ -214,31 +220,16 @@ class TableResult extends Component {
                   <TableRow>
                     <TableCell style={styles.theading}>{heading}</TableCell>
                     {
-                      labels.map((label, index) => {
-                        return (
-                          <TableCell key={`${index}-table-label`} className="text-nowrap">
-                            &beta;
-                            {`${index} (${label})`}
-                          </TableCell>
-                        );
-                      })
+                      labels.map((label, index) => (
+                        <TableCell key={`${index}-table-label`} className="text-nowrap">
+                          &beta;
+                          {`${index} (${label})`}
+                        </TableCell>
+                      ))
                     }
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(data)
-                    && data.map((d, index) => {
-                      return (
-                        <TableRow key={`${heading}-${index}-objects-row`}>
-                          {keys.map(key => (
-                            <TableCell key={`${heading}-${index}-${key[0]}-column`}>
-                              {parseTableColumnOutput(d[key[0]])}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      );
-                    })
-                  }
                   {!Array.isArray(data)
                     && keyValPairs.map((pair) => {
                       if (typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
@@ -263,7 +254,7 @@ class TableResult extends Component {
           }
           <Table
             key={`${heading}-table-numbers`}
-            style={{ marginLeft, width: '60%' }}
+            style={{ marginLeft, width: '40%' }}
           >
             {
               Array.isArray(data)
@@ -277,21 +268,10 @@ class TableResult extends Component {
             }
             <TableBody>
               {
-                Array.isArray(data) && data.map((d, index) => {
-                  return (
-                    <TableRow key={`${index}-objects-row`}>
-                      {keys.map(key => (
-                        <TableCell key={`${key[0]}-column`}>
-                          {parseTableColumnOutput(d[key[0]])}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              }
-              {
                 !Array.isArray(data) && keyValPairs.map((pair) => {
-                  return (
+                  if ((data.covariate_labels && typeof pair[1] !== 'object' && pair[0] !== 'covariate_labels')
+                    || (!data.covariate_labels && pair[0] !== 'covariate_labels')) {
+                    return (
                       <TableRow key={`${pair[0]}-numbers-row`}>
                         <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
                           {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
@@ -300,12 +280,15 @@ class TableResult extends Component {
                           {parseTableColumnOutput(pair[1])}
                         </TableCell>
                       </TableRow>
-                  )
+                    );
+                  }
+
+                  return null;
                 })
               }
             </TableBody>
           </Table>
-        </div>
+        </div>,
       );
     }
 
@@ -335,7 +318,7 @@ class TableResult extends Component {
             plotData[t.source],
             computationOutput[t.source],
             computationOutput[t.source].label,
-            0
+            0,
           ))}
         {!tables && plotData.testData && this.makeTable(clients, null, plotData.testData, null, 'Test Data', 0)}
         {!tables && !plotData.testData

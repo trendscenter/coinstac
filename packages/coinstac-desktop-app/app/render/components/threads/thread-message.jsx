@@ -1,10 +1,11 @@
-import React from 'react';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import PropTypes from 'prop-types';
+import React from 'react';
 import { Link } from 'react-router';
-import { withStyles } from '@material-ui/core/styles';
+
 import ThreadAvatar from './thread-avatar';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
     padding: theme.spacing(2),
@@ -44,9 +45,11 @@ const styles = theme => ({
     alignItems: 'center',
     padding: `${theme.spacing(1) / 2}px 0`,
   },
-});
+}));
 
-const ThreadMessage = ({ classes, message, joinConsortium }) => {
+const ThreadMessage = ({ message, joinConsortium }) => {
+  const classes = useStyles();
+
   const {
     sender, recipients, content, action,
   } = message;
@@ -102,9 +105,8 @@ const ThreadMessage = ({ classes, message, joinConsortium }) => {
 };
 
 ThreadMessage.propTypes = {
-  classes: PropTypes.object.isRequired,
   message: PropTypes.object.isRequired,
   joinConsortium: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(ThreadMessage);
+export default ThreadMessage;

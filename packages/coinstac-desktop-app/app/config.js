@@ -9,11 +9,9 @@ const home = require('os').homedir;
 
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
-const fileExists = (fPath) => {
-  return access(fPath).then(() => true, () => false);
-};
+const fileExists = fPath => access(fPath).then(() => true, () => false);
 
-const   coinstacHome = path.join(home(), '.coinstac');
+const coinstacHome = path.join(home(), '.coinstac');
 
 const conf = convict({
   env: {
@@ -68,7 +66,7 @@ const conf = convict({
   singularityDir: path.join(coinstacHome, 'singularityImages'),
   clientServerURL: '',
   version: app.getVersion(),
-  containerService: 'docker'
+  containerService: 'docker',
 });
 
 module.exports = function loadConfig() {

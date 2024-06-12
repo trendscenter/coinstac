@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
 import { useQuery, useSubscription } from '@apollo/client';
 import { get } from 'lodash';
-import { useSelector, useDispatch } from 'react-redux';
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { FETCH_ALL_CONSORTIA_QUERY, RUN_STARTED_SUBSCRIPTION } from '../../../state/graphql/functions';
 import { startRun } from '../../../state/ducks/runs';
+import { FETCH_ALL_CONSORTIA_QUERY, RUN_STARTED_SUBSCRIPTION } from '../../../state/graphql/functions';
 
 /**
  * This effect starts decentralized runs based on the RUN_STARTED_SUBSCRIPTION.
@@ -18,7 +18,12 @@ function useStartDecentralizedRun() {
   const auth = useSelector(state => state.auth);
 
   const { data } = useQuery(FETCH_ALL_CONSORTIA_QUERY,
-    { onError: (error) => { console.error({ error }); } });
+    {
+      onError: (error) => {
+        /* eslint-disable-next-line no-console */
+        console.error({ error });
+      },
+    });
   const { data: runSubData } = useSubscription(RUN_STARTED_SUBSCRIPTION, {
     variables: {
       userId: auth.user.id,

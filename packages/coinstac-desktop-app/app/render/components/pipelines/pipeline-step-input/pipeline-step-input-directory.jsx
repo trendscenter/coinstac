@@ -1,17 +1,25 @@
-/* eslint-disable react/no-array-index-key */
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   description: {
     margin: theme.spacing(1, 0),
   },
-});
+}));
 
-function PipelineStepInputDirectory(props) {
-  const { classes } = props;
+function PipelineStepInputDirectory({
+  objKey, updateStep, getNewObj, step,
+}) {
+  const classes = useStyles();
+
+  useEffect(() => {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, {}),
+    });
+  }, []);
 
   return (
     <div style={{ paddingLeft: 10 }}>
@@ -23,7 +31,10 @@ function PipelineStepInputDirectory(props) {
 }
 
 PipelineStepInputDirectory.propTypes = {
-  classes: PropTypes.object.isRequired,
+  objKey: PropTypes.string.isRequired,
+  step: PropTypes.object.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(PipelineStepInputDirectory);
+export default PipelineStepInputDirectory;

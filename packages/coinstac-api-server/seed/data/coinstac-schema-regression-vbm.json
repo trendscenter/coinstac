@@ -1,99 +1,116 @@
 {
   "meta": {
-    "name": "Regression - VBM",
-    "id": "regression-vbm",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm",
-    "description": "Decentralized Regression for Voxel-based Morphometry",
-    "testData": "tree\/master\/test\/input"
+      "name": "Regression - VBM",
+      "id": "regression-vbm",
+      "version": "v1.0.0",
+      "compspecVersion": 2,
+      "repository": "https://github.com/trendscenter/coinstac-regression-vbm",
+      "description": "Input data type:SMRI data Nifiti files. Format: CSV (in COINSTAC format with SMRI nifti files). Source data is not shared with other sites. Emulates local Ridge regression normal equation with closed form solution,  with data from various sites pooled together. Dependent variable values are read from all the voxels in the Structural MRI nifti files. Covariates and dependent variables are sent to the private secure aggregator node and beta coefficient's are calculated and sent to local sites.  Simplest and fastest form of regression. Click VIEW GITHUB PROJECT PAGE above and download from the test/local0/simulatorRun directory.",
+      "preprocess": null
   },
   "computation": {
-    "type": "docker",
-    "dockerImage": "coinstacteam/regression-vbm",
-    "command": [
-      "python",
-      "\/computation\/scripts\/local.py"
-    ],
-    "remote": {
+      "display": {
+          "type": "images"
+      },
+      "input": {
+          "lambda": {
+              "default": 0,
+              "label": "Lambda",
+              "tooltip": "Regularization parameter",
+              "max": 1,
+              "min": 0,
+              "step": 0.05,
+              "type": "number",
+              "source": "owner"
+          },
+          "threshold": {
+              "default": 0.2,
+              "label": "Masking threshold (grey matter)",
+              "max": 1,
+              "min": 0,
+              "type": "number",
+              "source": "owner"
+          },
+          "voxel_size": {
+              "default": 4,
+              "label": "Voxel Size (mm)",
+              "tooltip": "Sub-sampling value",
+              "max": 6,
+              "min": 0,
+              "step": 0.5,
+              "type": "number",
+              "source": "owner"
+          },
+          "covariates": {
+              "label": "Covariates",
+              "type": "csv",
+              "items": [
+                  "boolean",
+                  "number",
+                  "string"
+              ],
+              "source": "member",
+              "extensions": [
+                  "csv",
+                  "txt"
+              ]
+          },
+          "reference_columns": {
+              "label": "Covariate reference column(s)",
+              "default": {
+                  "reference_column_name": "reference_value"
+              },
+              "type": "object",
+              "source": "owner"
+          },
+          "data": {
+              "label": "Data",
+              "type": "freesurfer",
+              "items": [
+                  "NiFTI"
+              ],
+              "source": "owner"
+          }
+      },
+      "output": {
+          "avg_beta_vector": {
+              "label": "Avg Beta Vector",
+              "type": "array"
+          },
+          "beta_vector_local": {
+              "label": "Beta Vector Local",
+              "type": "array"
+          },
+          "r_2_global": {
+              "label": "R2 Global",
+              "type": "number"
+          },
+          "ts_global": {
+              "label": "TS Global",
+              "type": "array"
+          },
+          "ps_global": {
+              "label": "PS Global",
+              "type": "number"
+          },
+          "dof_global": {
+              "label": "DOF Global",
+              "type": "array"
+          }
+      },
       "type": "docker",
       "dockerImage": "coinstacteam/regression-vbm",
       "command": [
-        "python",
-        "\/computation\/scripts\/remote.py"
-      ]
-    },
-    "input": {
-      "lambda":
-      {
-        "default": 0,
-        "label": "Lambda",
-        "max": 1,
-        "min": 0,
-        "step": 0.05,
-        "type": "number",
-        "source": "owner"
-      },
-      "threshold":
-      {
-        "default": 0.2,
-        "label": "Masking threshold",
-        "max": 1,
-        "min": 0,
-        "type": "number",
-        "source": "owner"
-      },
-      "voxel_size":
-      {
-        "default": 4,
-        "label": "Voxel Size",
-        "max": 6,
-        "min": 0,
-        "step": 0.5,
-        "type": "number",
-        "source": "owner"
-      },
-      "covariates": {
-        "label": "Covariates",
-        "type": "csv",
-        "items": ["boolean", "number", "string"],
-        "source": "member",
-        "extensions": ["csv", "txt"]
-      },
-      "data": {
-        "label": "Data",
-        "type": "freesurfer",
-        "items": ["NiFTI"],
-        "source": "owner"
+          "python",
+          "/computation/scripts/local.py"
+      ],
+      "remote": {
+          "type": "docker",
+          "dockerImage": "coinstacteam/regression-vbm",
+          "command": [
+              "python",
+              "/computation/scripts/remote.py"
+          ]
       }
-    },
-    "output": {
-      "avg_beta_vector": {
-        "label": "Avg Beta Vector",
-        "type": "array"
-      },
-      "beta_vector_local": {
-        "label": "Beta Vector Local",
-        "type": "array"
-      },
-      "r_2_global": {
-        "label": "R2 Global",
-        "type": "number"
-      },
-      "ts_global": {
-        "label": "TS Global",
-        "type": "array"
-      },
-      "ps_global": {
-        "label": "PS Global",
-        "type": "number"
-      },
-      "dof_global": {
-        "label": "DOF Global",
-        "type": "array"
-      }
-    },
-    "display": {
-      "type": "images"
-    }
   }
 }

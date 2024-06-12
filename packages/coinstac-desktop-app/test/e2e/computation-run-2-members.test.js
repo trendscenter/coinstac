@@ -1,4 +1,10 @@
-const { screenshot, setup, cleanup } = require('../lib/setup');
+const {
+  setup,
+  beforeHandler,
+  afterHandler,
+  beforeEachHandler,
+  afterEachHandler,
+} = require('../lib/setup');
 const user = require('../lib/user');
 const { USER_1, USER_2 } = require('../lib/constants');
 const consortia = require('../lib/consortia');
@@ -22,13 +28,16 @@ let appWindow1;
 let appWindow2;
 
 describe('e2e run computation with 2 members', () => {
-  afterEach(screenshot);
-
   before(async () => {
     [appWindow1, appWindow2] = await setup(2);
+    beforeHandler();
   });
 
-  after(cleanup);
+  after(afterHandler);
+
+  beforeEach(beforeEachHandler);
+
+  afterEach(afterEachHandler);
 
   it('displays the correct title', async () => {
     await appWindow1.title().should.eventually.equal('COINSTAC');
@@ -48,10 +57,6 @@ describe('e2e run computation with 2 members', () => {
 
   it('creates a pipeline', async () => {
     await pipeline.create(DATA, appWindow1);
-  });
-
-  it('sets the created pipeline to the consortium', async () => {
-    await consortia.setPipeline(DATA, appWindow1);
   });
 
   it('joins a consortium', async () => {

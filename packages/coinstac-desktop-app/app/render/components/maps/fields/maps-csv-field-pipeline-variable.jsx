@@ -1,17 +1,15 @@
-import React, { useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import CancelIcon from '@material-ui/icons/Cancel';
-import { withStyles } from '@material-ui/core/styles';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef } from 'react';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
-    marginTop: theme.spacing(1.5),
-    minWidth: '250px',
-    display: 'inline-flex',
+    display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -19,9 +17,9 @@ const styles = theme => ({
     paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
-    flex: '1 0 auto',
     marginLeft: theme.spacing(0.5),
-    maxWidth: '80px',
+    minWidth: '80px',
+    width: 'fit-content',
   },
   dropZone: {
     flex: '1 0 auto',
@@ -42,11 +40,17 @@ const styles = theme => ({
     width: '1.5rem',
     height: '1.5rem',
   },
-});
+}));
 
 function MapsCsvFieldPipelineVariable({
-  name, mappedColumn, unmapField, registerDraggableContainer, classes, dataType,
+  name,
+  mappedColumn,
+  unmapField,
+  registerDraggableContainer,
+  dataType,
 }) {
+  const classes = useStyles();
+
   const ref = useRef(null);
 
   useEffect(() => {
@@ -57,10 +61,24 @@ function MapsCsvFieldPipelineVariable({
     <div>
       <div className={classNames('drop-panel', classes.rootPaper)}>
         <div>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: mappedColumn ? 'black' : 'red',
+            }}
+            className={classes.title}
+          >
             {name}
           </Typography>
-          <Typography style={{ fontWeight: '500', fontSize: '1rem', color: 'green' }} className={classes.title}>
+          <Typography
+            style={{
+              fontWeight: '500',
+              fontSize: '1rem',
+              color: 'green',
+            }}
+            className={classes.title}
+          >
             {`${dataType}`}
           </Typography>
         </div>
@@ -72,20 +90,18 @@ function MapsCsvFieldPipelineVariable({
               ref={ref => registerDraggableContainer(ref)}
               style={mappedColumn ? { display: 'none' } : {}}
             />
-            {
-              mappedColumn && (
-                <div className="card-draggable">
-                  <FileCopyIcon className={classes.fileIcon} />
-                  {mappedColumn}
-                  <IconButton
-                    className={classes.closeButton}
-                    onClick={() => unmapField(name, mappedColumn)}
-                  >
-                    <CancelIcon />
-                  </IconButton>
-                </div>
-              )
-            }
+            {mappedColumn && (
+              <div className="card-draggable">
+                <FileCopyIcon className={classes.fileIcon} />
+                {mappedColumn}
+                <IconButton
+                  className={classes.closeButton}
+                  onClick={() => unmapField(name, mappedColumn)}
+                >
+                  <CancelIcon />
+                </IconButton>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -98,7 +114,6 @@ MapsCsvFieldPipelineVariable.defaultProps = {
 };
 
 MapsCsvFieldPipelineVariable.propTypes = {
-  classes: PropTypes.object.isRequired,
   name: PropTypes.string.isRequired,
   dataType: PropTypes.string.isRequired,
   mappedColumn: PropTypes.any,
@@ -106,4 +121,4 @@ MapsCsvFieldPipelineVariable.propTypes = {
   registerDraggableContainer: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(MapsCsvFieldPipelineVariable);
+export default MapsCsvFieldPipelineVariable;
