@@ -29,8 +29,8 @@ const fmri = require('./data/coinstac-fmri.json');
 const pLink = require('./data/coinstac-plink.json');
 
 const decentralized = require('./data/coinstac-decentralized-test.json');
-const transfer = require('./data/coinstac-file-transfer-test');
-const stress = require('./data/coinstac-file-stress-test');
+const transfer = require('./data/coinstac-file-transfer-test.json');
+const stress = require('./data/coinstac-file-stress-test.json');
 const decentralizedError = require('./data/coinstac-decentralized-error.json');
 const enigmaSans = require('./data/coinstac-enigma-sans.json');
 const local = require('./data/coinstac-local-test.json');
@@ -861,6 +861,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -886,6 +887,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -911,6 +913,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -936,6 +939,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -961,6 +965,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   await helperFunctions.createUser({
@@ -982,6 +987,7 @@ async function populateUsers() {
         author: false,
       },
     },
+    passwordChangedAt: new Date(),
   }, password);
 
   const adminPassword = await helperFunctions.hashPassword(process.argv[3]
@@ -1007,6 +1013,7 @@ async function populateUsers() {
       [CONSORTIA_IDS[0]]: 'none',
       [CONSORTIA_IDS[1]]: 'none',
     },
+    passwordChangedAt: new Date(),
   }, adminPassword);
 }
 

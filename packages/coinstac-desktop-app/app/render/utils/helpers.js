@@ -1,12 +1,21 @@
 import { ipcRenderer } from 'electron';
 import {
-  get, indexOf, setWith, take, values, keys,
+  get, indexOf, keys,
+  setWith, take, values,
 } from 'lodash';
-
 import { v4 as uuidv4 } from 'uuid'; // eslint-disable-line
 
 export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
+}
+
+export function isPipelineMember(permissions, owningConsortium) {
+  return indexOf(permissions.consortia[owningConsortium], 'member') !== -1;
+}
+
+export function hasPipelineAccess(permissions, owningConsortium) {
+  return isPipelineOwner(permissions, owningConsortium)
+    || isPipelineMember(permissions, owningConsortium);
 }
 
 export function pipelineNeedsDataMapping(pipeline) {
@@ -34,46 +43,34 @@ export function getAllUnfulfilledPipelineInputs(pipeline) {
     return [];
   }
 
-  const reducedInputs = pipeline.steps.reduce((unfulfilledInputs, step) => {
+  const reducedInputs = pipeline.steps.reduce((acc, step) => {
     Object.keys(step.inputMap).forEach((inputMapKey) => {
       if (step.inputMap[inputMapKey].fulfilled) {
         return;
       }
 
-      unfulfilledInputs[inputMapKey] = step.inputMap[inputMapKey];
+      acc[inputMapKey] = step.inputMap[inputMapKey];
     });
 
-    return unfulfilledInputs;
+    return acc;
   }, {});
 
   return reducedInputs;
 }
 
-export const isAdmin = (user) => {
-  return get(user, 'permissions.roles.admin', false);
-};
+export const isAdmin = user => get(user, 'permissions.roles.admin', false);
 
-export const isAuthor = (user) => {
-  return get(user, 'permissions.roles.author', false);
-};
+export const isAuthor = user => get(user, 'permissions.roles.author', false);
 
-export const isAllowedForComputationChange = (user) => {
-  return isAdmin(user) || isAuthor(user);
-};
+export const isAllowedForComputationChange = user => isAdmin(user) || isAuthor(user);
 
-export const isOwnerOfAnyHeadlessClient = (user) => {
-  return Object.keys(get(user, 'permissions.headlessClients', {})).length > 0;
-};
+export const isOwnerOfAnyHeadlessClient = user => Object.keys(get(user, 'permissions.headlessClients', {})).length > 0;
 
-export const getGraphQLErrorMessage = (error, defaultMessag) => {
-  return get(error, 'graphQLErrors.0.message', defaultMessag);
-};
+export const getGraphQLErrorMessage = (error, defaultMessag) => get(error, 'graphQLErrors.0.message', defaultMessag);
 
-export const isUserInGroup = (userId, groupArr) => {
-  return Array.isArray(groupArr)
-    ? groupArr.findIndex(user => user === userId)
-    : userId in groupArr;
-};
+export const isUserInGroup = (userId, groupArr) => (Array.isArray(groupArr)
+  ? groupArr.findIndex(user => user === userId)
+  : userId in groupArr);
 
 export const isUserOnlyOwner = (userId, owners = {}) => {
   const userIds = Object.keys(owners);
@@ -122,7 +119,6 @@ export const buildTree = (nodes) => {
     }
   });
 
-
   const root = {
     id: 'root',
     name: 'root',
@@ -160,18 +156,16 @@ export const buildTree = (nodes) => {
   return res;
 };
 
-export const generateInitalFileTree = (consortia, runs) => {
-  return consortia.map((consortium) => {
-    const consortiumRuns = runs.filter(
-      run => run.consortiumId === consortium.id && !!run.endDate
-    ).map(run => ({
-      id: run.id, pipelineName: run.pipelineSnapshot.name, endDate: Number(run.endDate),
-    }));
+export const generateInitalFileTree = (consortia, runs) => consortia.map((consortium) => {
+  const consortiumRuns = runs.filter(
+    run => run.consortiumId === consortium.id && !!run.endDate,
+  ).map(run => ({
+    id: run.id, pipelineName: run.pipelineSnapshot.name, endDate: Number(run.endDate),
+  }));
 
-    return {
-      id: consortium.id,
-      name: consortium.name,
-      runs: consortiumRuns,
-    };
-  });
-};
+  return {
+    id: consortium.id,
+    name: consortium.name,
+    runs: consortiumRuns,
+  };
+});

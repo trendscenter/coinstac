@@ -1,10 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import FilePicker from '../../common/file-picker';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing(1.5),
@@ -17,11 +18,13 @@ const styles = theme => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-});
+}));
 
 function MapsDirectoryField({
-  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+  fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
+  const classes = useStyles();
+
   function setSelectedDirectory(selected) {
     if (!selected || !selected.length) {
       return;
@@ -50,7 +53,6 @@ function MapsDirectoryField({
 }
 
 MapsDirectoryField.propTypes = {
-  classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
   fieldDescription: PropTypes.object.isRequired,
@@ -61,4 +63,4 @@ MapsDirectoryField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsDirectoryField);
+export default MapsDirectoryField;

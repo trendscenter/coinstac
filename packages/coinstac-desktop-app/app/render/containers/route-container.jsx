@@ -1,17 +1,17 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 
 export default class RouteContainer extends Component { // eslint-disable-line
   render() {
     const {
-      children, computations, consortia, pipelines, runs, dockerStatus,
+      children, computations, consortia, pipelines, runs, containerStatus,
     } = this.props;
     const childrenWithProps = React.cloneElement(children, {
       computations,
       consortia,
       pipelines,
       runs,
-      dockerStatus,
+      containerStatus,
     });
 
     return (
@@ -28,7 +28,7 @@ RouteContainer.propTypes = {
   consortia: PropTypes.array,
   pipelines: PropTypes.array,
   runs: PropTypes.array,
-  dockerStatus: PropTypes.bool,
+  containerStatus: PropTypes.bool,
 };
 
 RouteContainer.defaultProps = {
@@ -37,5 +37,5 @@ RouteContainer.defaultProps = {
   consortia: [],
   pipelines: [],
   runs: [],
-  dockerStatus: false,
+  containerStatus: false,
 };

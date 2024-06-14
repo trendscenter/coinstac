@@ -1,3 +1,4 @@
+// eslint-disable-next-line func-names
 export default function (state) {
   switch (state) {
     case undefined:

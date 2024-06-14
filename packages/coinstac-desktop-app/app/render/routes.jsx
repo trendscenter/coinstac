@@ -5,34 +5,36 @@
  * @{@link  https://github.com/rackt/react-router}
  */
 import React from 'react';
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
+import { IndexRedirect, IndexRoute, Route } from 'react-router';
+
+import Admin from './components/admin/admin';
 import App from './components/app';
-import ComputationsListContainer from './components/computations/computations-list-container';
 import ComputationSubmission from './components/computations/computation-submission';
+import ComputationsListContainer from './components/computations/computations-list-container';
 import ConsortiaList from './components/consortia/consortia-list';
 import ConsortiumTabs from './components/consortia/consortium-tabs';
 import Dashboard from './components/dashboard/dashboard';
 import DashboardHome from './components/dashboard/dashboard-home';
-import RouteContainer from './containers/route-container';
-import Login from './components/user/form-login-controller';
-import Signup from './components/user/form-signup-controller';
-import ForgotPassword from './components/user/form-password-controller';
-import Maps from './components/maps/maps';
-import MapsEdit from './components/maps/maps-edit';
-import PipelinesList from './components/pipelines/pipelines-list';
-import Pipeline from './components/pipelines/pipeline';
-import ResultsList from './components/results/results-list';
-import Result from './components/results/result';
-import Settings from './components/user/settings';
-import Issues from './components/issues';
-import Threads from './components/threads';
-import Logs from './components/logs-display/logs';
-import Papaya from './components/papaya';
-import HeadlessList from './components/headless/headless-list';
-import HeadlessEdit from './components/headless/headless-edit';
 import DataDiscovery from './components/data-discovery';
 import EditDataset from './components/data-discovery/edit-dataset';
-import Admin from './components/admin/admin';
+import HeadlessEdit from './components/headless/headless-edit';
+import HeadlessList from './components/headless/headless-list';
+import Issues from './components/issues';
+import Logs from './components/logs-display/logs';
+import Maps from './components/maps/maps';
+import MapsEdit from './components/maps/maps-edit';
+import Papaya from './components/papaya';
+import Pipeline from './components/pipelines/pipeline';
+import PipelinesList from './components/pipelines/pipelines-list';
+import Result from './components/results/result';
+import ResultsList from './components/results/results-list';
+import Threads from './components/threads';
+import ForgotPassword from './components/user/form-forgot-password-controller';
+import Login from './components/user/form-login-controller';
+import ResetPassword from './components/user/form-reset-password-controller';
+import Signup from './components/user/form-signup-controller';
+import Settings from './components/user/settings';
+import RouteContainer from './containers/route-container';
 // import UserAccounts from './components/admin/user-accounts';
 // import Permissions from './components/admin/permissions';
 // import PipelineStates from './components/admin/pipeline-states';
@@ -43,6 +45,7 @@ export default (
     <Route path="login" component={Login} />
     <Route path="signup" component={Signup} />
     <Route path="forgot-password" component={ForgotPassword} />
+    <Route path="reset-password" component={ResetPassword} />
     <Route path="dashboard" component={Dashboard}>
       <IndexRoute component={DashboardHome} />
       <Route path="consortia" component={RouteContainer}>

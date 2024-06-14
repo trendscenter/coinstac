@@ -1,14 +1,16 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
+
 import {
+  checkApiVersion,
+  clearError,
   login,
   setAppDirectory,
   setClientServerURL,
-  checkApiVersion,
 } from '../../state/ducks/auth';
-import FormLogin from './form-login';
 import LayoutNoauth from '../layout-noauth';
+import FormLogin from './form-login';
 
 class FormLoginController extends Component {
   componentDidMount() {
@@ -20,6 +22,11 @@ class FormLoginController extends Component {
 
   componentDidUpdate() {
     this.checkForUser();
+  }
+
+  componentWillUnmount() {
+    const { clearError } = this.props;
+    clearError();
   }
 
   checkForUser = () => {
@@ -53,7 +60,7 @@ class FormLoginController extends Component {
         <FormLogin
           auth={auth}
           loading={loading}
-          submit={this.submit}
+          onSubmit={this.submit}
           changeAppDirectory={this.changeAppDirectory}
           changeClientServerURL={this.changeClientServerURL}
         />
@@ -75,6 +82,7 @@ FormLoginController.propTypes = {
   login: PropTypes.func.isRequired,
   setAppDirectory: PropTypes.func.isRequired,
   setClientServerURL: PropTypes.func.isRequired,
+  clearError: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, loading }) => ({
@@ -86,4 +94,5 @@ export default connect(mapStateToProps, {
   setAppDirectory,
   setClientServerURL,
   checkApiVersion,
+  clearError,
 })(FormLoginController);

@@ -1,39 +1,40 @@
-import React, { Component, Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
 import { graphql } from '@apollo/react-hoc';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Fab from '@material-ui/core/Fab';
 import Paper from '@material-ui/core/Paper';
+import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import { shell } from 'electron';
-import ListDeleteModal from '../common/list-delete-modal';
-import {
-  FETCH_ALL_COMPUTATIONS_QUERY,
-  REMOVE_COMPUTATION_MUTATION,
-} from '../../state/graphql/functions';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
+
 import {
   getDockerImages,
   pullComputations,
   removeImage,
 } from '../../state/ducks/docker';
 import {
-  notifySuccess,
   notifyError,
+  notifySuccess,
 } from '../../state/ducks/notifyAndLog';
+import {
+  FETCH_ALL_COMPUTATIONS_QUERY,
+  REMOVE_COMPUTATION_MUTATION,
+} from '../../state/graphql/functions';
 import { removeDocFromTableProp } from '../../state/graphql/props';
 import {
   getGraphQLErrorMessage,
   isAdmin,
-  isAuthor,
   isAllowedForComputationChange,
+  isAuthor,
 } from '../../utils/helpers';
+import ListDeleteModal from '../common/list-delete-modal';
 import ComputationIO from './computation-io';
 
 const MAX_LENGTH_COMPUTATIONS = 5;
@@ -118,7 +119,7 @@ class ComputationsList extends Component {
 
   getTable = (computations) => {
     const {
-      auth: { user }, docker, classes, dockerStatus,
+      auth: { user }, docker, classes, containerStatus,
     } = this.props;
     const { activeComp, isDeleting, computationToDelete } = this.state;
 
@@ -157,11 +158,11 @@ class ComputationsList extends Component {
                     <Button
                       variant="contained"
                       color="secondary"
-                      disabled={!dockerStatus}
+                      disabled={!containerStatus}
                       onClick={() => this.removeImage(
                         comp.id,
                         comp.computation.dockerImage,
-                        compLocalImage.id
+                        compLocalImage.id,
                       )}
                     >
                       Remove Image (
@@ -174,7 +175,7 @@ class ComputationsList extends Component {
                   ) : (
                     <Button
                       variant="contained"
-                      disabled={!dockerStatus}
+                      disabled={!containerStatus}
                       color="secondary"
                       onClick={
                         () => this.handlePullComputations([{
@@ -225,11 +226,11 @@ class ComputationsList extends Component {
                       {isDeletingComputation ? (
                         <CircularProgress size={15} />
                       ) : (
-                        <Fragment>
+                        <>
                           Delete
                           {' '}
                           <DeleteIcon />
-                        </Fragment>
+                        </>
                       )}
                     </Button>
                   )}
@@ -327,7 +328,7 @@ class ComputationsList extends Component {
 
   render() {
     const {
-      computations, classes, auth, dockerStatus,
+      computations, classes, auth, containerStatus,
     } = this.props;
     const { ownedComputations, otherComputations, showModal } = this.state;
 
@@ -354,14 +355,14 @@ class ComputationsList extends Component {
           <Button
             variant="contained"
             color="primary"
-            disabled={!dockerStatus}
+            disabled={!containerStatus}
             className={classes.downloadAllButton}
             onClick={() => this.handlePullComputations(
               computations.map(comp => ({
                 img: comp.computation.dockerImage,
                 compId: comp.id,
                 compName: comp.meta.name,
-              }))
+              })),
             )}
           >
             Download All
@@ -372,7 +373,6 @@ class ComputationsList extends Component {
           && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
         {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
-        {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
         {(!computations || !computations.length) && (
@@ -397,7 +397,7 @@ ComputationsList.defaultProps = {
 };
 
 ComputationsList.propTypes = {
-  dockerStatus: PropTypes.bool.isRequired,
+  containerStatus: PropTypes.bool.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
@@ -420,8 +420,8 @@ const ComputationsListWithData = graphql(
     'computationId',
     'removeComputation',
     FETCH_ALL_COMPUTATIONS_QUERY,
-    'fetchAllComputations'
-  )
+    'fetchAllComputations',
+  ),
 )(ComputationsList);
 
 const connectedComponent = connect(mapStateToProps, {

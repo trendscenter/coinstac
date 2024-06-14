@@ -18,9 +18,8 @@ const ServiceFunctionGenerator = ({
     mode,
     command,
   }) => {
-
     let wsProm;
-    
+
     switch (compspecVersion) {
       case 1: {
         const serviceCommand = JSON.stringify({
@@ -66,7 +65,7 @@ const ServiceFunctionGenerator = ({
             ws.on('error', (e) => {
               reject(e);
             });
-            
+
             let stdout = '';
             let stderr = '';
             let outfin = false;
@@ -121,7 +120,7 @@ const ServiceFunctionGenerator = ({
                   break;
                 default:
               }
-            }); 
+            });
           }).then((output) => {
             utils.logger.debug('Container service call finished');
             if (output.code !== 0) {
@@ -252,13 +251,13 @@ const ServiceFunctionGenerator = ({
               throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
             }
             return output.stdout;
-          })
+          });
         });
         break;
       default:
         throw new Error('Invalid compspeccompspecVersion');
     }
-    
+
     // promise fullfilled by container output
     return wsProm;
   };

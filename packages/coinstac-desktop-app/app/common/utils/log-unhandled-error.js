@@ -1,10 +1,11 @@
+/* eslint-disable no-console */
 const mkdirpSync = require('mkdirp').sync;
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
 const unfinishedBootLog = {
-  error(content) { console.error(content); }, // eslint-disable-line no-console
+  error(content) { console.error(content); },
 };
 const logLocations = {
   darwin: 'Library/Logs/coinstac/',
@@ -14,13 +15,9 @@ const logLocations = {
   win32: 'coinstac/',
 };
 
-const getCurrentDate = () => {
-  return new Date().toISOString();
-};
+const getCurrentDate = () => new Date().toISOString();
 
-const getLogMessage = ({ message, level }) => {
-  return `${getCurrentDate()} { message: ${message}, level: ${level} }`;
-};
+const getLogMessage = ({ message, level }) => `${getCurrentDate()} { message: ${message}, level: ${level} }`;
 
 /**
  * returns a function to use for pre-boot error logging based on file
@@ -30,16 +27,14 @@ const getLogMessage = ({ message, level }) => {
 const unhandledBootLogger = () => {
   const logLocation = path.join(
     process.env.HOME || process.env.TEMP,
-    logLocations[process.platform]
+    logLocations[process.platform],
   );
   const logFilePath = path.join(logLocation, 'coinstac-boot-error-log.txt');
-  const consoleLogger = (data) => {
-    return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
-  };
+  const consoleLogger = data => console.error(getLogMessage({ message: data, level: 'error' }));
 
   if (process.env.NODE_ENV === 'development') {
-    console.error( // eslint-disable-line no-console
-      getLogMessage({ message: 'boot error logging to file disabled', level: 'warning' })
+    console.error(
+      getLogMessage({ message: 'boot error logging to file disabled', level: 'warning' }),
     );
     return consoleLogger;
   }
@@ -49,24 +44,21 @@ const unhandledBootLogger = () => {
 
     const fileLogger = (data) => {
       if (process.env.NODE_ENV === 'development') {
-        return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
+        return console.error(getLogMessage({ message: data, level: 'error' }));
       }
       return fs.appendFileSync(logFilePath, getLogMessage({ message: `${data}${os.EOL}`, level: 'error' }));
     };
     return fileLogger;
   } catch (err) {
     // can't open file for writes, try to log to console
-    console.error( // eslint-disable-line no-console
-      getLogMessage({ message: 'boot error logging to file disabled', level: 'error' })
+    console.error(
+      getLogMessage({ message: 'boot error logging to file disabled', level: 'error' }),
     );
-    /* eslint-disable no-console */
+
     getLogMessage({ message: err, level: 'error' });
     getLogMessage({ message: err.stack, level: 'error' });
-    /* eslint-enable no-console */
 
-    const consoleLogger = (data) => {
-      return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
-    };
+    const consoleLogger = data => console.error(getLogMessage({ message: data, level: 'error' }));
     return consoleLogger;
   }
 };
@@ -78,7 +70,6 @@ const unhandledBootLogger = () => {
  * @returns {undefined}
  */
 module.exports = function logUnhandledError(opts, logr) {
-  opts = opts || {};
   const errorLogger = unhandledBootLogger();
   const logger = logr || errorLogger || unfinishedBootLog;
   return (err) => {

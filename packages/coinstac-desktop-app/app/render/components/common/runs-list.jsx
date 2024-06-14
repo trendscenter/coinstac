@@ -1,7 +1,7 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import RunItem from './run-item';
 
 const RunsList = ({
@@ -11,40 +11,38 @@ const RunsList = ({
   stopPipeline,
   suspendPipeline,
   resumePipeline,
-}) => {
-  return (
-    <div>
-      {runs.map((run) => {
-        const consortium = consortia.find(con => con.id === run.consortiumId);
+}) => (
+  <div>
+    {runs.map((run) => {
+      const consortium = consortia.find(con => con.id === run.consortiumId);
 
-        if (!consortium) {
-          return null;
-        }
+      if (!consortium) {
+        return null;
+      }
 
-        return (
-          <RunItem
-            key={`${run.id}-list-item`}
-            runObject={run}
-            consortium={consortium}
-            stopPipeline={stopPipeline(run.id)}
-            suspendPipeline={suspendPipeline(run.id)}
-            resumePipeline={resumePipeline(run)}
-          />
-        );
-      })}
-      {!runs.length && noRunMessage && (
-        <Typography variant="body2">
-          { noRunMessage }
-        </Typography>
-      )}
-    </div>
-  );
-};
+      return (
+        <RunItem
+          key={`${run.id}-list-item`}
+          runObject={run}
+          consortium={consortium}
+          stopPipeline={stopPipeline(run.id)}
+          suspendPipeline={suspendPipeline(run.id)}
+          resumePipeline={resumePipeline(run)}
+        />
+      );
+    })}
+    {!runs.length && noRunMessage && (
+      <Typography variant="body2">
+        {noRunMessage}
+      </Typography>
+    )}
+  </div>
+);
 
 RunsList.defaultProps = {
-  stopPipeline: () => {},
-  suspendPipeline: () => {},
-  resumePipeline: () => {},
+  stopPipeline: () => { },
+  suspendPipeline: () => { },
+  resumePipeline: () => { },
 };
 
 RunsList.propTypes = {
@@ -56,8 +54,4 @@ RunsList.propTypes = {
   resumePipeline: PropTypes.func,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(RunsList);
+export default RunsList;

@@ -6,7 +6,7 @@ const { app } = require('electron');
 
 function humanize(str) {
   let string = str;
-  if (str.indexOf('_') > -1){
+  if (str.indexOf('_') > -1) {
     const frags = str.split('_');
     for (let i = 0; i < frags.length; i += 1) {
       frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
@@ -27,8 +27,7 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
 
   doc.font(path.join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'resources/fonts/Roboto-Regular.ttf')); // Embed font that support UTF-8 encoding
 
-  if (localItems && localItems.length > 0){
-
+  if (localItems && localItems.length > 0) {
     doc.fontSize(24).text('Local Stats', 10, 10);
 
     doc.fontSize(20).text(`Local stats - ${humanize(firstLocalStat)}`, 10, 60);
@@ -52,11 +51,9 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
       }
     });
     doc.addPage();
-
   }
 
-  if (globalItems && globalItems.length > 0){
-
+  if (globalItems && globalItems.length > 0) {
     doc.fontSize(24).text('Global Stats', 10, 10);
 
     doc.fontSize(20).text(`Global stats - ${humanize(firstGlobalStat)}`, 10, 60);
@@ -77,7 +74,6 @@ function generateResultsPdf(title, localItems, globalItems, resultsPath, saveDir
           valign: 'center',
         });
     });
-
   }
 
   return doc.end();

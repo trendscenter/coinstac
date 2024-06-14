@@ -30,9 +30,9 @@ export default function reducer(state = INITIAL_STATE, action) {
     case DELETE_SUSPENDED_RUN:
       return Object.keys(state)
         .filter(runId => runId !== action.payload.runId)
-        .reduce((aggregate, runId) => {
-          aggregate[runId] = state[runId];
-          return aggregate;
+        .reduce((acc, runId) => {
+          acc[runId] = state[runId];
+          return acc;
         }, {});
     default:
       return state;

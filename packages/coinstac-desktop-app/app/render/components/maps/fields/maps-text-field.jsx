@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing(1.5),
@@ -31,12 +31,13 @@ const styles = theme => ({
     fontSize: '0.75rem',
     color: 'red',
   },
-});
-
+}));
 
 function MapsTextField({
-  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+  fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
+  const classes = useStyles();
+
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
@@ -50,7 +51,7 @@ function MapsTextField({
         fieldType: fieldDescription.type,
         required: fieldDescription.required,
         value,
-      }
+      },
     );
   }
 
@@ -68,7 +69,7 @@ function MapsTextField({
         {fieldDescription.label}
         {fieldDescription.required ? (
           <span className={classes.required}>
-              (Input Required)
+            (Input Required)
           </span>) : ''}
       </Typography>
       <TextField
@@ -86,18 +87,17 @@ function MapsTextField({
               onChange={e => defaultHandler(e)}
               value={useDefault}
             />
-        )}
+          )}
           label={
             <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
-        }
+          }
         />)
-    }
+      }
     </div>
   );
 }
 
 MapsTextField.propTypes = {
-  classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
   fieldDescription: PropTypes.object.isRequired,
@@ -108,4 +108,4 @@ MapsTextField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsTextField);
+export default MapsTextField;

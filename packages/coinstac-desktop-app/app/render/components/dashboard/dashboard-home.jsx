@@ -1,21 +1,22 @@
 /* eslint-disable react/no-array-index-key */
 
-import React from 'react';
+import Divider from '@material-ui/core/Divider';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import Divider from '@material-ui/core/Divider';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
+import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { deleteSuspendedRun, saveSuspendedRun } from '../../state/ducks/suspendedRuns';
 import RunsList from '../common/runs-list';
-import { saveSuspendedRun, deleteSuspendedRun } from '../../state/ducks/suspendedRuns';
-import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import useSelectRunsOfInterest from '../runs/effects/useSelectRunsOfInterest';
+import DashboardDocs from './dashboard-docs';
 
 const HOURS_SINCE_ACTIVE = 72;
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   pageTitle: {
     marginBottom: theme.spacing(2),
   },
@@ -23,42 +24,52 @@ const styles = theme => ({
     marginBottom: theme.spacing(2),
     marginTop: theme.spacing(2),
   },
-});
+}));
 
 const stopPipeline = (pipelineId, runId) => () => {
   ipcRenderer.send('stop-pipeline', { pipelineId, runId });
 };
 
 function DashboardHome({
-  consortia, maps, user, suspendedRuns, saveSuspendedRun, deleteSuspendedRun,
-  networkVolume, classes, notifyError, notifyInfo,
+  consortia,
 }) {
+  const maps = useSelector(state => state.maps.consortiumDataMappings);
+  const user = useSelector(state => state.auth.user);
+  const networkVolume = useSelector(state => state.auth.networkVolume);
+  const suspendedRuns = useSelector(state => state.suspendedRuns);
+
+  const dispatch = useDispatch();
+
+  const classes = useStyles();
+
   const filteredRuns = useSelectRunsOfInterest(HOURS_SINCE_ACTIVE);
 
   const suspendPipeline = runId => async () => {
     const runSaveState = await ipcRenderer.invoke('suspend-pipeline', { runId });
-    saveSuspendedRun(runId, runSaveState);
+    dispatch(saveSuspendedRun(runId, runSaveState));
   };
 
   const resumePipeline = run => () => {
     const consortium = consortia.find(c => c.id === run.consortiumId);
     if (!consortium) {
-      notifyError('Consortium no longer exists for pipeline run.');
+      dispatch(notifyError('Consortium no longer exists for pipeline run.'));
       return;
     }
 
     const dataMapping = maps.find(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId);
     if (!dataMapping) {
-      notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`);
+      dispatch(
+        notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`),
+      );
       return;
     }
 
     const runState = suspendedRuns[run.id];
 
-    deleteSuspendedRun(run.id);
+    dispatch(deleteSuspendedRun(run.id));
 
-    notifyInfo(`Pipeline Starting for ${consortium.name}.`);
+    dispatch(notifyInfo(`Pipeline Starting for ${consortium.name}.`));
 
     ipcRenderer.send('start-pipeline', {
       consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume, runState,
@@ -84,6 +95,7 @@ function DashboardHome({
         suspendPipeline={suspendPipeline}
         resumePipeline={resumePipeline}
       />
+      <DashboardDocs />
     </div>
   );
 }
@@ -93,38 +105,7 @@ DashboardHome.defaultProps = {
 };
 
 DashboardHome.propTypes = {
-  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  maps: PropTypes.array.isRequired,
-  user: PropTypes.object.isRequired,
-  networkVolume: PropTypes.bool.isRequired,
-  suspendedRuns: PropTypes.object.isRequired,
-  saveSuspendedRun: PropTypes.func.isRequired,
-  deleteSuspendedRun: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({
-  auth: { user, networkVolume },
-  runs: { runs },
-  maps: { consortiumDataMappings },
-  suspendedRuns,
-}) {
-  return {
-    runs,
-    user,
-    maps: consortiumDataMappings,
-    networkVolume,
-    suspendedRuns,
-  };
-}
-
-const connectedComponent = connect(mapStateToProps, {
-  saveSuspendedRun,
-  deleteSuspendedRun,
-  notifyInfo,
-  notifyError,
-})(DashboardHome);
-
-export default withStyles(styles)(connectedComponent);
+export default DashboardHome;

@@ -1,7 +1,7 @@
 import { graphql, withApollo } from '@apollo/react-hoc';
 import Checkbox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -10,23 +10,24 @@ import TableRow from '@material-ui/core/TableRow';
 import { flowRight as compose, get } from 'lodash';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
-import { connect } from 'react-redux';
-import MemberAvatar from '../../common/member-avatar';
+import { useDispatch, useSelector } from 'react-redux';
+
 import { logout } from '../../../state/ducks/auth';
 import { notifyError } from '../../../state/ducks/notifyAndLog';
 import {
-  FETCH_ALL_USERS_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
   ADD_USER_ROLE_MUTATION,
+  FETCH_ALL_USERS_QUERY,
   REMOVE_USER_ROLE_MUTATION,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../../state/graphql/functions';
 import {
   getAllAndSubProp,
   userRolesProp,
 } from '../../../state/graphql/props';
 import { getGraphQLErrorMessage } from '../../../utils/helpers';
+import MemberAvatar from '../../common/member-avatar';
 
-const styles = () => ({
+const useStyles = makeStyles(() => ({
   avatarWrapper: {
     display: 'flex',
     alignItems: 'center',
@@ -34,21 +35,24 @@ const styles = () => ({
   checkbox: {
     padding: 0,
   },
-});
+}));
 
-function Permission(props, context) {
-  const {
-    currentUser,
-    users,
-    classes,
-    subscribeToUsers,
-  } = props;
+function Permission({
+  users,
+  addUserRole,
+  removeUserRole,
+  subscribeToUsers,
+}, { router }) {
+  const currentUser = useSelector(state => state.auth.user);
+  const dispatch = useDispatch();
+
   const [isUpdating, setIsUpdating] = useState();
   const [userId, setUserId] = useState(null);
   const [role, setRole] = useState(null);
 
+  const classes = useStyles();
+
   useEffect(() => {
-    const { router } = context;
     let unsubscribeUsers;
 
     if (!get(currentUser, 'permissions.roles.admin')) {
@@ -64,21 +68,14 @@ function Permission(props, context) {
     };
   }, []);
 
-
   const logoutUser = () => {
-    const { logout } = props;
-    const { router } = context;
-
-    logout()
+    dispatch(logout())
       .then(() => {
         router.push('/login');
       });
   };
 
   const toggleUserAppRole = (userId, checked, role) => {
-    const {
-      currentUser, addUserRole, removeUserRole, notifyError,
-    } = props;
     const mutation = checked ? addUserRole : removeUserRole;
 
     setIsUpdating(true);
@@ -92,7 +89,7 @@ function Permission(props, context) {
         }
       })
       .catch((error) => {
-        notifyError(getGraphQLErrorMessage(error));
+        dispatch(notifyError(getGraphQLErrorMessage(error)));
       })
       .finally(() => {
         setIsUpdating(false);
@@ -173,13 +170,9 @@ Permission.contextTypes = {
 };
 
 Permission.propTypes = {
-  currentUser: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   users: PropTypes.array,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
-  logout: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
   subscribeToUsers: PropTypes.func.isRequired,
 };
 
@@ -193,20 +186,11 @@ const PermissionWithData = compose(
     'users',
     'fetchAllUsers',
     'subscribeToUsers',
-    'userChanged'
+    'userChanged',
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  withApollo
+  withApollo,
 )(Permission);
 
-const mapStateToProps = ({ auth }) => ({
-  currentUser: auth.user,
-});
-
-const connectedComponent = connect(mapStateToProps, {
-  logout,
-  notifyError,
-})(PermissionWithData);
-
-export default withStyles(styles, { withTheme: true })(connectedComponent);
+export default PermissionWithData;

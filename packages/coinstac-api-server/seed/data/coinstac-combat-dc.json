@@ -1,45 +1,73 @@
 {
   "meta": {
-    "name": "Decentralized Combat",
-    "id": "coinstac-combatdc",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-combat",
-    "description": "Decentralized Combat Test",
-    "testData": "tree/ridge-combat/test/input"
+      "name": "Decentralized Combat",
+      "id": "coinstac-combatdc",
+      "version": "v1.0.0",
+      "compspecVersion": null,
+      "repository": "https://github.com/trendscenter/coinstac-combat",
+      "description": "Input data type: CSV. Decentralized Combat for harmonizing data across various sites.",
+      "preprocess": null
   },
   "computation": {
-    "type": "docker",
-    "dockerImage": "coinstacteam/coinstac-combatdc",
-    "command": [
-      "python",
-      "\/computation\/local.py"
-    ],
-    "remote": {
+      "display": {
+          "type": "table"
+      },
+      "input": {
+          "data_file": {
+              "label": "Data File",
+              "type": "files",
+              "items": [
+                  "Files"
+              ],
+              "extensions": [
+                  [
+                      "csv"
+                  ]
+              ],
+              "order": 0,
+              "source": "member"
+          },
+          "covariate_file": {
+              "label": "Covariate File",
+              "type": "files",
+              "items": [
+                  "Files"
+              ],
+              "extensions": [
+                  [
+                      "csv"
+                  ]
+              ],
+              "order": 1,
+              "source": "member"
+          },
+          "hidden": {
+              "label": " ",
+              "type": "hidden",
+              "source": "owner",
+              "default": " ",
+              "order": 3
+          }
+      },
+      "output": {
+          "hyperparameters": {
+              "type": "array",
+              "label": "Decentralized hypermeters"
+          }
+      },
       "type": "docker",
       "dockerImage": "coinstacteam/coinstac-combatdc",
       "command": [
-        "python",
-        "\/computation\/remote.py"
-      ]
-    },
-   "input": {
-     "data": {
-       "label": "File Path",
-       "type": "directory",
-       "items": ["File Path"],
-       "default": "",
-       "source": "member",
-       "order": 0
-     }
-    },
-    "output": {
-      "hyperparameters": {
-        "type": "array",
-        "label": "Decentralized hypermeters"
+          "python",
+          "/computation/local.py"
+      ],
+      "remote": {
+          "type": "docker",
+          "dockerImage": "coinstacteam/coinstac-combatdc",
+          "command": [
+              "python",
+              "/computation/remote.py"
+          ]
       }
-    },
-    "display": {
-      "type": "table"
-    }
   }
 }

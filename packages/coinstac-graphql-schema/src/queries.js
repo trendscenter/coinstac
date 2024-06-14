@@ -137,6 +137,7 @@ const queries = {
           compspecVersion
           repository
           description
+          preprocess
         }
         computation {
           display
@@ -257,6 +258,11 @@ const queries = {
     getPipelines {
       info
     }
+  }
+  `,
+  getLatestGitRelease: `
+  {
+    getLatestGitRelease
   }
   `,
 };

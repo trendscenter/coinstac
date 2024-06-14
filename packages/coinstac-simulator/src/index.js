@@ -16,7 +16,11 @@ const portscanner = require('portscanner');
  * @return {[type]}                            [description]
  */
 const startRun = ({
-  spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
+  spec,
+  runMode = 'local',
+  clientCount = 1,
+  operatingDirectory = 'test',
+  service = 'docker',
 }) => {
   return new Promise((resolve, reject) => {
     portscanner.findAPortNotInUse(1883, 2001, '127.0.0.1')
@@ -50,6 +54,7 @@ const startRun = ({
           mqttRemotePort: mqttPort,
           mqttRemoteProtocol: 'mqtt:',
         });
+        remoteManager.containerManager.setServiceProvider(service);
         pipelines.remote = {
           manager: remoteManager,
           pipeline: remoteManager.startPipeline({
@@ -72,6 +77,7 @@ const startRun = ({
           mqttRemotePort: mqttPort,
           operatingDirectory: path.resolve(operatingDirectory),
         });
+        localPipelineManager.containerManager.setServiceProvider(service);
         pipelines.locals.push({
           manager: localPipelineManager,
           pipeline: localPipelineManager.startPipeline({

@@ -1,13 +1,5 @@
 /* eslint-disable no-console */
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, trim } from 'lodash';
-import axios from 'axios';
-import classNames from 'classnames';
-import Dropzone from 'react-dropzone';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,24 +8,33 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Icon from '@material-ui/core/Icon';
 import InputLabel from '@material-ui/core/InputLabel';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import axios from 'axios';
+import classNames from 'classnames';
+import { flowRight as compose, trim } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Dropzone from 'react-dropzone';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+import { connect } from 'react-redux';
+
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import {
   CREATE_ISSUE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   saveDocumentProp,
 } from '../../state/graphql/props';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 import MarkdownValidator from './markdown-validator';
 
 const {
   CLOUDINARY_UPLOAD_PRESET,
-  CLOUDINARY_API_KEY,
-  CLOUDINARY_API_SECRET,
+  // CLOUDINARY_API_KEY,
+  // CLOUDINARY_API_SECRET,
   CLOUDINARY_UPLOAD_URL,
-  CLOUDINARY_DELETE_URL,
+  // CLOUDINARY_DELETE_URL,
 } = process.env;
 
 const styles = theme => ({
@@ -249,18 +250,21 @@ class Issue extends Component {
       });
   }
 
+  /* eslint-disable-next-line */
   removeImage = async (imageId) => {
     // const date = new Date();
     // const timestamp = date.getTime();
     // const hash = crypto.createHash('sha1');
-    // const sign = hash.update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
-    //
+    // const sign = hash
+    //   .update(`public_id=${imageId}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`)
+    //   .digest('hex');
+
     // const fd = new FormData();
     // fd.append('public_id', imageId);
     // fd.append('api_key', CLOUDINARY_API_KEY);
     // fd.append('timestamp', timestamp);
     // fd.append('signature', sign);
-    //
+
     // axios.post(CLOUDINARY_DELETE_URL, fd)
     //   .then(() => {
     //     const { screenshots } = this.state;
@@ -419,9 +423,8 @@ Issue.propTypes = {
 
 const IssueWithData = compose(
   graphql(CREATE_ISSUE_MUTATION, saveDocumentProp('createIssue', 'issue')),
-  withApollo
+  withApollo,
 )(Issue);
-
 
 const mapStateToProps = ({ app }) => ({
   logs: app.logs,

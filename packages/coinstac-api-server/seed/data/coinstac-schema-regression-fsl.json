@@ -1,135 +1,169 @@
 {
   "meta": {
-    "name": "Regression - FreeSurfer Volumes",
-    "id": "regression-fsl",
-    "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-fsl",
-    "description": "Decentralized Regression for Brain Volumetric Data",
-    "testData": "tree\/master\/test\/input"
+      "name": "Regression - FreeSurfer Volumes",
+      "id": "regression-fsl",
+      "version": "v1.0.0",
+      "compspecVersion": 2,
+      "repository": "https://github.com/trendscenter/coinstac-regression-fsl",
+      "description": "Input data type:Brain volumetric measurements. Format: CSV (in COINSTAC format Input data type:Brain volumetric measurements. Format: CSV (in COINSTAC format with Freesurfer aseg*.txt files). Source data is not shared with other sites. Emulates local regression normal equation with closed form solution,  with data from various sites pooled together. Covariates and dependent variables are sent to the private secure aggregator node and beta coefficient's are calculated and sent to local sites.  Simplest and fastest form of regression. Click VIEW GITHUB PROJECT PAGE above and download from the test/local0/simulatorRun directory.",
+      "preprocess": null
   },
   "computation": {
-    "type": "docker",
-    "dockerImage": "coinstacteam/regression-fsl",
-    "command": [
-      "python",
-      "\/computation\/scripts\/local.py"
-    ],
-    "remote": {
+      "display": [
+          {
+              "type": "table",
+              "tables": [
+                  {
+                      "source": "regressions",
+                      "subtables": [
+                          {
+                              "source": "global_stats",
+                              "subtitle": "ROI"
+                          },
+                          {
+                              "source": "local_stats",
+                              "subtitle": "ROI",
+                              "subtables": "by-key"
+                          }
+                      ]
+                  }
+              ]
+          }
+      ],
+      "input": {
+          "dummy_encoding_reference_order": {
+              "type": "select",
+              "label": "Preferred column value for dummy encoding",
+              "default": "sorted_first",
+              "values": [
+                  "sorted_first",
+                  "sorted_last",
+                  "most_frequent",
+                  "least_frequent",
+                  "custom"
+              ],
+              "source": "owner",
+              "tooltip": "This will be used for selecting the column value in dummy encoding for all the categorical columns"
+          },
+          "reference_columns": {
+              "label": "Custom dummy encoding value for columns",
+              "conditional": {
+                  "variable": "dummy_encoding_reference_order",
+                  "value": "custom"
+              },
+              "type": "object",
+              "source": "owner",
+              "tooltip": "Provided column name, value pairs (atleast one) will be used as reference for dummy encoding. Any categorical columns that are missing will use the default sorted order. For example: { \"reference_column_name\": \"reference_value\" }"
+          },
+          "lambda": {
+              "default": 0,
+              "label": "Lambda",
+              "max": 1,
+              "min": 0,
+              "step": 0.05,
+              "type": "number",
+              "source": "owner"
+          },
+          "covariates": {
+              "label": "Covariates",
+              "type": "csv",
+              "items": [
+                  "boolean",
+                  "number",
+                  "string"
+              ],
+              "source": "member"
+          },
+          "data": {
+              "label": "Data",
+              "type": "freesurfer",
+              "items": [
+                  "FreeSurfer"
+              ],
+              "extensions": [
+                  "csv",
+                  "txt"
+              ],
+              "source": "owner"
+          }
+      },
+      "output": {
+          "regressions": {
+              "label": "Regressions",
+              "type": "array",
+              "items": {
+                  "global_stats": {
+                      "label": "Global Stats",
+                      "type": "object",
+                      "items": {
+                          "avg_beta_vector": {
+                              "label": "Avg Beta Vector",
+                              "type": "array"
+                          },
+                          "r2_global": {
+                              "label": "R2 Global",
+                              "type": "number"
+                          },
+                          "ts_global": {
+                              "label": "TS Global",
+                              "type": "array"
+                          },
+                          "ps_global": {
+                              "label": "PS Global",
+                              "type": "number"
+                          },
+                          "dof_global": {
+                              "label": "DOF Global",
+                              "type": "array"
+                          }
+                      }
+                  },
+                  "local_stats": {
+                      "label": "Local Stats",
+                      "type": "object",
+                      "items": {
+                          "beta": {
+                              "label": "Beta",
+                              "type": "array"
+                          },
+                          "pval": {
+                              "label": "PVal",
+                              "type": "array"
+                          },
+                          "rsquared": {
+                              "label": "R Squared",
+                              "type": "number"
+                          },
+                          "sse": {
+                              "label": "SSE",
+                              "type": "number"
+                          },
+                          "tval": {
+                              "label": "TVal",
+                              "type": "array"
+                          }
+                      }
+                  },
+                  "ROI": {
+                      "label": "Region of Interest",
+                      "type": "string"
+                  }
+              }
+          }
+      },
       "type": "docker",
       "dockerImage": "coinstacteam/regression-fsl",
       "command": [
-        "python",
-        "\/computation\/scripts\/remote.py"
-      ]
-    },
-    "input": {
-      "lambda": {
-        "default": 0,
-        "label": "Lambda",
-        "max": 1,
-        "min": 0,
-        "step": 0.05,
-        "type": "number",
-        "source": "owner"
-      },
-      "covariates": {
-        "label": "Covariates",
-        "type": "csv",
-        "items": ["boolean", "number"],
-        "source": "member"
-      },
-      "data": {
-        "label": "Data",
-        "type": "freesurfer",
-        "items": ["FreeSurfer"],
-        "extensions": ["csv", "txt"],
-        "source": "owner"
+          "python",
+          "/computation/scripts/local.py"
+      ],
+      "remote": {
+          "type": "docker",
+          "dockerImage": "coinstacteam/regression-fsl",
+          "command": [
+              "python",
+              "/computation/scripts/remote.py"
+          ]
       }
-    },
-    "output": {
-      "regressions": {
-        "label": "Regressions",
-        "type": "array",
-        "items": {
-          "global_stats": {
-            "label": "Global Stats",
-            "type": "object",
-            "items": {
-              "avg_beta_vector": {
-                "label": "Avg Beta Vector",
-                "type": "array"
-              },
-              "r2_global": {
-                "label": "R2 Global",
-                "type": "number"
-              },
-              "ts_global": {
-                "label": "TS Global",
-                "type": "array"
-              },
-              "ps_global": {
-                "label": "PS Global",
-                "type": "number"
-              },
-              "dof_global": {
-                "label": "DOF Global",
-                "type": "array"
-              }
-            }
-          },
-          "local_stats": {
-            "label": "Local Stats",
-            "type": "object",
-            "items": {
-              "beta": {
-                "label": "Beta",
-                "type": "array"
-              },
-              "pval": {
-                "label": "PVal",
-                "type": "array"
-              },
-              "rsquared": {
-                "label": "R Squared",
-                "type": "number"
-              },
-              "sse": {
-                "label": "SSE",
-                "type": "number"
-              },
-              "tval": {
-                "label": "TVal",
-                "type": "array"
-              }
-            }
-          },
-          "ROI": {
-            "label": "Region of Interest",
-            "type": "string"
-          }
-        }
-      }
-    },
-    "display": [
-      {
-        "type": "table",
-        "tables": [
-          {
-            "source": "regressions",
-            "subtables": [
-              {
-                "source": "global_stats",
-                "subtitle": "ROI"
-              },
-              {
-                "source": "local_stats",
-                "subtitle": "ROI",
-                "subtables": "by-key"
-              }
-            ]
-          }
-        ]
-      }
-    ]
   }
 }

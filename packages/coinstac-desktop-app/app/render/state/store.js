@@ -7,14 +7,14 @@
  * @{@link  https://github.com/rackt/redux/blob/master/examples/real-world/store/configureStore.js}
  */
 import { applyMiddleware, createStore } from 'redux';
+import { persistReducer, persistStore } from 'redux-persist';
+import autoMergeLevel1 from 'redux-persist/lib/stateReconciler/autoMergeLevel1';
+import createElectronStorage from 'redux-persist-electron-storage';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
-import { persistStore, persistReducer } from 'redux-persist';
-import createElectronStorage from 'redux-persist-electron-storage';
-import autoMergeLevel1 from 'redux-persist/lib/stateReconciler/autoMergeLevel1';
 
+import { CURRENT_PERSISTED_STORE_VERSION, init as initPersistStateReducer } from './ducks/statePersist';
 import rootReducer from './root-reducer';
-import { init as initPersistStateReducer, CURRENT_PERSISTED_STORE_VERSION } from './ducks/statePersist';
 
 const ElectronStore = require('electron-store');
 
@@ -38,8 +38,8 @@ export default function configureStore() {
     persistedReducer,
     applyMiddleware.apply(
       this,
-      middleware
-    )
+      middleware,
+    ),
   );
 
   const persistor = persistStore(store, { manualPersist: true });

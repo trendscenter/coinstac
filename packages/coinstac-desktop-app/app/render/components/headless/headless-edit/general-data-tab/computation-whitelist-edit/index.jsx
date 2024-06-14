@@ -1,17 +1,17 @@
-import React, { useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { useQuery } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import InfoIcon from '@material-ui/icons/Info';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useMemo, useState } from 'react';
 
-import Select from '../../../../common/react-select';
-import ComputationWhitelistEditItem from './computation-whitelist-edit-item';
-import useStyles from './computation-whitelist-edit.styles';
 import { FETCH_ALL_COMPUTATIONS_QUERY } from '../../../../../state/graphql/functions';
+import Select from '../../../../common/react-select';
+import useStyles from './computation-whitelist-edit.styles';
+import ComputationWhitelistEditItem from './computation-whitelist-edit-item';
 
 function ComputationWhitelistEdit({
   computationWhitelist,
@@ -25,14 +25,17 @@ function ComputationWhitelistEdit({
   const classes = useStyles();
 
   const { data: computationsData } = useQuery(FETCH_ALL_COMPUTATIONS_QUERY, {
-    onError: (error) => { console.error({ error }); },
+    onError: (error) => {
+      /* eslint-disable-next-line no-console */
+      console.error({ error });
+    },
   });
 
   const computations = get(computationsData, 'fetchAllComputations');
 
-  const computationsDict = computations.reduce((aggr, comp) => {
-    aggr[comp.id] = comp;
-    return aggr;
+  const computationsDict = computations.reduce((acc, comp) => {
+    acc[comp.id] = comp;
+    return acc;
   }, {});
 
   const computationOptions = useMemo(() => {
