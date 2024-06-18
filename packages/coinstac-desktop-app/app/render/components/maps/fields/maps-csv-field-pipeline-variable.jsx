@@ -1,13 +1,13 @@
-import React, { useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
 import CancelIcon from '@material-ui/icons/Cancel';
-import { withStyles } from '@material-ui/core/styles';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import PropTypes from 'prop-types';
+import React, { useEffect, useRef } from 'react';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -40,11 +40,17 @@ const styles = theme => ({
     width: '1.5rem',
     height: '1.5rem',
   },
-});
+}));
 
 function MapsCsvFieldPipelineVariable({
-  name, mappedColumn, unmapField, registerDraggableContainer, classes, dataType,
+  name,
+  mappedColumn,
+  unmapField,
+  registerDraggableContainer,
+  dataType,
 }) {
+  const classes = useStyles();
+
   const ref = useRef(null);
 
   useEffect(() => {
@@ -84,20 +90,18 @@ function MapsCsvFieldPipelineVariable({
               ref={ref => registerDraggableContainer(ref)}
               style={mappedColumn ? { display: 'none' } : {}}
             />
-            {
-              mappedColumn && (
-                <div className="card-draggable">
-                  <FileCopyIcon className={classes.fileIcon} />
-                  {mappedColumn}
-                  <IconButton
-                    className={classes.closeButton}
-                    onClick={() => unmapField(name, mappedColumn)}
-                  >
-                    <CancelIcon />
-                  </IconButton>
-                </div>
-              )
-            }
+            {mappedColumn && (
+              <div className="card-draggable">
+                <FileCopyIcon className={classes.fileIcon} />
+                {mappedColumn}
+                <IconButton
+                  className={classes.closeButton}
+                  onClick={() => unmapField(name, mappedColumn)}
+                >
+                  <CancelIcon />
+                </IconButton>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -110,7 +114,6 @@ MapsCsvFieldPipelineVariable.defaultProps = {
 };
 
 MapsCsvFieldPipelineVariable.propTypes = {
-  classes: PropTypes.object.isRequired,
   name: PropTypes.string.isRequired,
   dataType: PropTypes.string.isRequired,
   mappedColumn: PropTypes.any,
@@ -118,4 +121,4 @@ MapsCsvFieldPipelineVariable.propTypes = {
   registerDraggableContainer: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(MapsCsvFieldPipelineVariable);
+export default MapsCsvFieldPipelineVariable;

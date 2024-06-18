@@ -1,59 +1,60 @@
-import React, { Component, Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
-import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { ipcRenderer } from 'electron';
-import classNames from 'classnames';
-import {
-  get, orderBy, flowRight as compose, debounce,
-} from 'lodash';
 import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
 import Grid from '@material-ui/core/Grid';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import Pagination from '@material-ui/lab/Pagination';
-import Tabs from '@material-ui/core/Tabs';
+import { withStyles } from '@material-ui/core/styles';
 import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import TextField from '@material-ui/core/TextField';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
-import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
-import { withStyles } from '@material-ui/core/styles';
+import Pagination from '@material-ui/lab/Pagination';
+import classNames from 'classnames';
+import { ipcRenderer } from 'electron';
+import {
+  debounce,
+  flowRight as compose, get, orderBy,
+} from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component, Fragment } from 'react';
+import Joyride from 'react-joyride';
+import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import { v4 as uuid } from 'uuid';
 
-import MemberAvatar from '../common/member-avatar';
-import ListItem from '../common/list-item';
-import ListDeleteModal from '../common/list-delete-modal';
+import { TUTORIAL_STEPS } from '../../constants';
 import { tutorialChange } from '../../state/ducks/auth';
-import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { pullComputations } from '../../state/ducks/docker';
+import { finish, start } from '../../state/ducks/loading';
+import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
+import { notifyError, notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
+import { startRun } from '../../state/ducks/runs';
 import {
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
-  FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
+  FETCH_USERS_ONLINE_STATUS,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   SAVE_ACTIVE_PIPELINE_MUTATION,
-  FETCH_USERS_ONLINE_STATUS,
   USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
+  consortiumSaveActivePipelineProp,
   removeDocFromTableProp,
   saveDocumentProp,
-  consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyError, notifyWarning } from '../../state/ducks/notifyAndLog';
-import { start, finish } from '../../state/ducks/loading';
-import { startRun } from '../../state/ducks/runs';
 import { isUserInGroup, isUserOnlyOwner, pipelineNeedsDataMapping } from '../../utils/helpers';
-import { TUTORIAL_STEPS } from '../../constants';
 import ErrorDialog from '../common/error-dialog';
+import ListDeleteModal from '../common/list-delete-modal';
+import ListItem from '../common/list-item';
+import MemberAvatar from '../common/member-avatar';
 
 const PAGE_SIZE = 10;
 
@@ -129,6 +130,8 @@ class ConsortiaList extends Component {
         localStorage.getItem('HIGHLIGHT_CONSORTIUM'),
       activeTab: 'mine',
       page: 1,
+      errorTitle: '',
+      errorMessage: '',
     };
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
@@ -257,7 +260,7 @@ class ConsortiaList extends Component {
         >
           {pipeline?.name || 'None'}
         </Typography>
-      </div>
+      </div>,
     );
 
     const consortiumUsers = Object.keys(consortium.owners)
@@ -269,7 +272,7 @@ class ConsortiaList extends Component {
           .filter(userId => !(userId in consortium.owners))
           .map(userId => ({
             id: userId, name: consortium.members[userId], owner: false, member: true,
-          }))
+          })),
       );
 
     const avatars = consortiumUsers
@@ -307,13 +310,11 @@ class ConsortiaList extends Component {
               .join(', ')}
           </Typography>
         </Grid>
-      </Grid>
+      </Grid>,
     );
 
     if ((owner || member) && consortium.activePipelineId && !needsDataMapping) {
-      const isPipelineRunning = runs.filter((run) => {
-        return run.consortiumId === consortium.id && run.status === 'started';
-      }).length > 0;
+      const isPipelineRunning = runs.filter(run => run.consortiumId === consortium.id && run.status === 'started').length > 0;
 
       if ((owner && isPipelineDecentralized && Object.keys(consortium.activeMembers).length > 0)
         || (!isPipelineDecentralized && auth.user.id in consortium.activeMembers)) {
@@ -329,7 +330,7 @@ class ConsortiaList extends Component {
               >
                 Start Pipeline
               </Button>
-            </Tooltip>
+            </Tooltip>,
           );
         } else {
           actions.push(
@@ -340,7 +341,7 @@ class ConsortiaList extends Component {
               onClick={() => this.debouncedStartPipeline(consortium)}
             >
               Start Pipeline
-            </Button>
+            </Button>,
           );
         }
       }
@@ -354,7 +355,7 @@ class ConsortiaList extends Component {
             onClick={this.stopPipeline(consortium.activePipelineId)}
           >
             Stop Pipeline
-          </Button>
+          </Button>,
         );
       }
     } else if (owner && !consortium.activePipelineId) {
@@ -368,7 +369,7 @@ class ConsortiaList extends Component {
             color="secondary"
             className={classes.button}
             onClick={event => this.handleSetActivePipelineOnConsortium(
-              event, consortium, consortiumPipelines.length === 0
+              event, consortium, consortiumPipelines.length === 0,
             )}
           >
             Set Active Pipeline
@@ -391,7 +392,7 @@ class ConsortiaList extends Component {
               ))
             }
           </Menu>
-        </Fragment>
+        </Fragment>,
       );
     } else if (owner && consortium.activePipelineId) {
       actions.push(
@@ -402,11 +403,11 @@ class ConsortiaList extends Component {
           color="secondary"
           className={classes.button}
           onClick={event => this.handleUnsetActivePipelineOnConsortium(
-            event, consortium
+            event, consortium,
           )}
         >
           Unset Active Pipeline
-        </Button>
+        </Button>,
       );
     }
 
@@ -421,7 +422,7 @@ class ConsortiaList extends Component {
           className={classes.button}
         >
           Map Local Data
-        </Button>
+        </Button>,
       );
     }
 
@@ -436,7 +437,7 @@ class ConsortiaList extends Component {
           to={`dashboard/consortia/${consortium.id}/2`}
         >
           Set Active Members
-        </Button>
+        </Button>,
       );
     }
 
@@ -451,7 +452,7 @@ class ConsortiaList extends Component {
           onClick={() => this.leaveConsortium(consortium.id)}
         >
           Leave Consortium
-        </Button>
+        </Button>,
       );
     }
 
@@ -466,7 +467,7 @@ class ConsortiaList extends Component {
           onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
         >
           Join Consortium
-        </Button>
+        </Button>,
       );
     }
 
@@ -515,7 +516,7 @@ class ConsortiaList extends Component {
             isUserInGroup(user.id, consortium.members),
             isUserInGroup(user.id, consortium.owners),
             isUserOnlyOwner(user.id, consortium.owners),
-            consortium
+            consortium,
           )
         }
         itemRoute="/dashboard/consortia"
@@ -540,9 +541,7 @@ class ConsortiaList extends Component {
 
     const presentRun = runs
       .filter(run => run.consortiumId === consortiumId)
-      .reduce((prev, curr) => {
-        return prev.startDate > curr.startDate ? prev : curr;
-      });
+      .reduce((prev, curr) => (prev.startDate > curr.startDate ? prev : curr));
 
     if (presentRun) {
       ipcRenderer.send('suspend-pipeline', { runId: presentRun.id });
@@ -613,9 +612,8 @@ class ConsortiaList extends Component {
     return () => {
       const { runs } = this.props;
 
-      const presentRun = runs.reduce((prev, curr) => {
-        return prev.startDate > curr.startDate ? prev : curr;
-      });
+      const presentRun = runs
+        .reduce((prev, curr) => (prev.startDate > curr.startDate ? prev : curr));
       const runId = presentRun.id;
 
       ipcRenderer.send('stop-pipeline', { pipelineId, runId });
@@ -879,7 +877,7 @@ const ConsortiaListWithData = compose(
     'consortiumId',
     'deleteConsortiumById',
     FETCH_ALL_CONSORTIA_QUERY,
-    'fetchAllConsortia'
+    'fetchAllConsortia',
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
@@ -889,13 +887,13 @@ const ConsortiaListWithData = compose(
       usersOnlineStatus: props.data.fetchUsersOnlineStatus,
       subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({
         document: USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION,
-        updateQuery: (_, { subscriptionData: { data } }) => {
-          return { fetchUsersOnlineStatus: data.usersOnlineStatusChanged };
-        },
+        updateQuery: (_, { subscriptionData: { data } }) => ({
+          fetchUsersOnlineStatus: data.usersOnlineStatusChanged,
+        }),
       }),
     }),
   }),
-  withApollo
+  withApollo,
 )(ConsortiaList);
 
 export default withStyles(styles)(
@@ -910,5 +908,5 @@ export default withStyles(styles)(
       tutorialChange,
       startLoading: start,
       finishLoading: finish,
-    })(ConsortiaListWithData)
+    })(ConsortiaListWithData),
 );

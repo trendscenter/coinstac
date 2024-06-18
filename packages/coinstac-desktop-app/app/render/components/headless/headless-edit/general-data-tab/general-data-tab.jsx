@@ -1,7 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { useMutation, useQuery } from '@apollo/client';
-import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -9,14 +6,17 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
+import { get } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import Select from '../../../common/react-select';
-import ComputationWhitelistEdit from './computation-whitelist-edit';
 import {
-  FETCH_ALL_USERS_QUERY,
   CREATE_HEADLESS_CLIENT_MUTATION,
+  FETCH_ALL_USERS_QUERY,
   UPDATE_HEADLESS_CLIENT_MUTATION,
 } from '../../../../state/graphql/functions';
+import Select from '../../../common/react-select';
+import ComputationWhitelistEdit from './computation-whitelist-edit';
 import useStyles from './general-data.styles';
 
 function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
@@ -49,14 +49,14 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
     {
       onCompleted: onSubmitComplete,
       onError: onSubmitError,
-    }
+    },
   );
   const [updateHeadlessClient, { loading: updating }] = useMutation(
     UPDATE_HEADLESS_CLIENT_MUTATION,
     {
       onCompleted: onSubmitComplete,
       onError: onSubmitError,
-    }
+    },
   );
 
   useEffect(() => {
@@ -112,9 +112,9 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
   };
 
   function setOwners(value) {
-    const ownersObj = value.reduce((aggr, user) => {
-      aggr[user.value] = user.label;
-      return aggr;
+    const ownersObj = value.reduce((acc, user) => {
+      acc[user.value] = user.label;
+      return acc;
     }, {});
 
     setFormData(prev => ({
@@ -152,9 +152,9 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
     setFormData((prev) => {
       const newCompWhitelist = Object.keys(prev.computationWhitelist)
         .filter(key => key !== compId)
-        .reduce((aggr, key) => {
-          aggr[key] = prev.computationWhitelist[key];
-          return aggr;
+        .reduce((acc, key) => {
+          acc[key] = prev.computationWhitelist[key];
+          return acc;
         }, {});
 
       return {
@@ -207,16 +207,16 @@ function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
         <Box marginLeft={2} display="flex" alignItems="center">
           {(creating || updating) && <CircularProgress size={20} />}
           {submitCompleted && (
-            <React.Fragment>
+            <>
               <CheckCircleIcon className={classes.successIcon} />
               Data saved
-            </React.Fragment>
+            </>
           )}
           {submitError && (
-            <React.Fragment>
+            <>
               <ErrorIcon color="error" />
               {submitError}
-            </React.Fragment>
+            </>
           )}
         </Box>
       </Box>

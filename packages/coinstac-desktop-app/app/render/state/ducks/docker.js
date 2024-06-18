@@ -1,6 +1,7 @@
 'use strict';
 
 import { ipcRenderer } from 'electron';
+
 import { applyAsyncLoading } from './loading';
 import { notifyError, notifySuccess } from './notifyAndLog';
 
@@ -90,7 +91,7 @@ export default function reducer(state = INITIAL_STATE, action) {
           elemIndex = outputCopy.findIndex(currentOut => newOut.id === currentOut.id);
         } else if (newOut.id && newOut.id === 'latest') {
           elemIndex = outputCopy.findIndex(
-            currentOut => newOut.id === currentOut.id && newOut.status === currentOut.status
+            currentOut => newOut.id === currentOut.id && newOut.status === currentOut.status,
           );
         }
 

@@ -1,39 +1,40 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import JSONInput from 'react-json-editor-ajrm';
-import locale from 'react-json-editor-ajrm/locale/en';
+import { JsonEditor } from 'jsoneditor-react';
 
 function PipelineStepInputObject({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
 }) {
-  if (!step.inputMap[objKey] && 'default' in objParams && owner) {
-    updateStep({
-      ...step,
-      inputMap: getNewObj(objKey, { value: objParams.default }),
-    });
-  }
+  useEffect(() => {
+    if (!step.inputMap[objKey] && objParams?.default && owner) {
+      updateStep({
+        ...step,
+        inputMap: getNewObj(objKey, { value: objParams.default }),
+      });
+    }
+  }, []);
 
   if (!step) {
     return null;
   }
 
+  const value = step.inputMap[objKey]?.value || objParams.default;
+
+  const handleChange = (value) => {
+    if (!owner || isFromCache) {
+      return;
+    }
+
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, value ? { value } : 'DELETE_VAR'),
+    });
+  };
+
   return (
-    <JSONInput
-      disabled={!owner || isFromCache}
-      name={`step-${objKey}`}
-      onChange={value => updateStep({
-        ...step,
-        inputMap: getNewObj(objKey, value ? { value: value.jsObject } : 'DELETE_VAR'),
-      })}
-      placeholder={
-        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-          ? step.inputMap[objKey].value
-          : objParams.default
-      }
-      id={`step-${objKey}`}
-      locale={locale}
-      height="250px"
-      theme="light_mitsuketa_tribute"
+    <JsonEditor
+      value={value}
+      onChange={handleChange}
     />
   );
 }

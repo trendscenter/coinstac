@@ -1,0 +1,6 @@
+{
+  "extends": "@istanbuljs/nyc-config-babel",
+  "all": true,
+  "check-coverage": true,
+  "extension": [".js", ".jsx"]
+}

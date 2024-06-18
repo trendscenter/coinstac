@@ -44,7 +44,7 @@ module.exports = {
       {
         filters,
         properties,
-      }
+      },
     );
   },
 
@@ -63,7 +63,7 @@ module.exports = {
         {
           properties: ['openDirectory', 'openFile', 'multiSelections'],
         },
-        files => resolve(files || [])
+        files => resolve(files || []),
       );
     })
       .then(core.projects.getFileStats)

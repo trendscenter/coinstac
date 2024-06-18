@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
-import { connect } from 'react-redux';
 import { useMutation } from '@apollo/client';
-import { startsWith } from 'lodash';
 import { ipcRenderer } from 'electron';
-import PropTypes from 'prop-types';
+import { startsWith } from 'lodash';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 
-import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import { updateDockerOutput } from '../../../state/ducks/docker';
+import { notifyError, notifySuccess } from '../../../state/ducks/notifyAndLog';
 import { UPDATE_USER_CONSORTIUM_STATUS_MUTATION } from '../../../state/graphql/functions';
 
 const DOCKER_IGNORABLE_MESSAGES = [
@@ -17,35 +16,35 @@ const DOCKER_IGNORABLE_MESSAGES = [
   'connect ENOENT',
 ];
 
-function DockerEventsListeners({
-  updateDockerOutput, notifySuccess, notifyError,
-}) {
+function DockerEventsListeners() {
+  const dispatch = useDispatch();
+
   const [updateUserConsortiumStatus] = useMutation(UPDATE_USER_CONSORTIUM_STATUS_MUTATION);
 
   useEffect(() => {
-    ipcRenderer.on('docker-out', (_event, arg) => {
-      updateDockerOutput(arg);
+    ipcRenderer.on('docker-out', (_, arg) => {
+      dispatch(updateDockerOutput(arg));
     });
 
-    ipcRenderer.on('docker-pull-complete', (event, arg) => {
+    ipcRenderer.on('docker-pull-complete', (_, arg) => {
       updateUserConsortiumStatus({
         variables: {
           consortiumId: arg,
           status: 'pipeline-computations-downloaded',
         },
       });
-      notifySuccess(`${arg} Pipeline Computations Downloaded`);
+      dispatch(notifySuccess(`${arg} Pipeline Computations Downloaded`));
     });
 
-    ipcRenderer.on('docker-error', (event, arg) => {
+    ipcRenderer.on('docker-error', (_, arg) => {
       const { message } = arg.err;
 
       const shouldNotify = DOCKER_IGNORABLE_MESSAGES.filter(
-        startString => startsWith(message, startString)
+        startString => startsWith(message, startString),
       ).length === 0;
 
       if (shouldNotify) {
-        notifyError(`Docker Error: ${message}`);
+        dispatch(notifyError(`Docker Error: ${message}`));
       }
     });
 
@@ -59,13 +58,4 @@ function DockerEventsListeners({
   return null;
 }
 
-DockerEventsListeners.propTypes = {
-  updateDockerOutput: PropTypes.func.isRequired,
-};
-
-export default connect(null,
-  {
-    notifyError,
-    notifySuccess,
-    updateDockerOutput,
-  })(DockerEventsListeners);
+export default DockerEventsListeners;

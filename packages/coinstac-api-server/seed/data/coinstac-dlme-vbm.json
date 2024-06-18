@@ -1,151 +1,158 @@
 {
-   "meta":{
-      "name":"Decentralized Linear Mixed Effects Model - VBM",
-      "id":"dlme-vbm",
-      "version":"v1.0.0",
-      "repository":"https:\/\/github.com\/trendscenter\/coinstc-LME-VBM",
-      "description":"Decentralized linear mixed effects model for VBM/NiFTI data"
+   "meta": {
+       "name": "Decentralized Linear Mixed Effects Model - VBM",
+       "id": "dlme-vbm",
+       "version": "v1.0.0",
+       "compspecVersion": null,
+       "repository": "https://github.com/trendscenter/coinstc-LME-VBM",
+       "description": "Input data type: SMRI VBM pre-processed NiFTI data",
+       "preprocess": null
    },
-   "computation":{
-      "type":"docker",
-      "dockerImage":"coinstacteam/dlme-vbm",
-      "command":[
-         "python",
-         "\/computation\/scripts\/local.py"
-      ],
-      "remote":{
-         "type":"docker",
-         "dockerImage":"coinstacteam/dlme-vbm",
-         "command":[
-            "python",
-            "\/computation\/scripts\/remote.py"
-         ]
-      },
-      "input":{
-         "covariates":{
-            "label":"Covariates",
-            "type":"csv",
-            "items": ["boolean", "number", "string"],
-            "source":"member",
-            "order":0
-         },
-         "data":{
-            "label":"Data",
-            "type":"freesurfer",
-            "items":[
-               "NiFTI"
-            ],
-            "extensions":[
-               "csv",
-               "txt"
-            ],
-            "source":"owner",
-            "order":1
-         },
-         "contrasts":{
-            "label":"contrasts",
-            "type":"object",
-            "default":[
-               {
-                  "name":{
-                     "value":"contrast1"
-                  },
-                  "vector":{
-                     "value":[
-                        1,
-                        0,
-                        0,
-                        0
-                     ]
-                  }
-               },
-               {
-                  "name":{
-                     "value":"contrast2"
-                  },
-                  "vector":{
-                     "value":[
-                        0,
-                        1,
-                        0,
-                        0
-                     ]
-                  }
-               },
-               {
-                  "name":{
-                     "value":"contrast3"
-                  },
-                  "vector":{
-                     "value":[
-                        0,
-                        0,
-                        1,
-                        0
-                     ]
-                  }
-               },
-               {
-                  "name":{
-                     "value":"contrast4"
-                  },
-                  "vector":{
-                     "value":[
-                        [
-                           1,
-                           0,
-                           0,
-                           0
-                        ],
-                        [
-                           0,
-                           1,
-                           0,
-                           0
-                        ],
-                        [
-                           0,
-                           1,
-                           0,
-                           0
-                        ],
-                        [
-                           0,
-                           0,
-                           0,
-                           1
-                        ]
-                     ]
-                  }
-               }
-            ],
-            "source":"owner",
-            "order":2
-         },
-         "mask_threshold":{
-            "label":"mask_threshold",
-            "type":"number",
-            "source":"owner",
-            "default":0.05,
-            "order":3
-         },
-         "voxel_size":{
-            "label":"voxel_size",
-            "type":"number",
-            "source":"owner",
-            "default":2,
-            "order":4
-         }
-      },
-      "output":{
-         "global_result_images":{
-            "label":"global_result_images",
-            "type":"array"
-         },
-         "local_result_images":{
-            "label":"global_result_images",
-            "type":"array"
-         }
-      }
+   "computation": {
+       "display": null,
+       "input": {
+           "covariates": {
+               "label": "Covariates",
+               "type": "csv",
+               "items": [
+                   "boolean",
+                   "number",
+                   "string"
+               ],
+               "source": "member",
+               "order": 0
+           },
+           "data": {
+               "label": "Data",
+               "type": "freesurfer",
+               "items": [
+                   "NiFTI"
+               ],
+               "extensions": [
+                   "csv",
+                   "txt"
+               ],
+               "source": "owner",
+               "order": 1
+           },
+           "contrasts": {
+               "label": "contrasts",
+               "type": "object",
+               "default": [
+                   {
+                       "name": {
+                           "value": "contrast1"
+                       },
+                       "vector": {
+                           "value": [
+                               1,
+                               0,
+                               0,
+                               0
+                           ]
+                       }
+                   },
+                   {
+                       "name": {
+                           "value": "contrast2"
+                       },
+                       "vector": {
+                           "value": [
+                               0,
+                               1,
+                               0,
+                               0
+                           ]
+                       }
+                   },
+                   {
+                       "name": {
+                           "value": "contrast3"
+                       },
+                       "vector": {
+                           "value": [
+                               0,
+                               0,
+                               1,
+                               0
+                           ]
+                       }
+                   },
+                   {
+                       "name": {
+                           "value": "contrast4"
+                       },
+                       "vector": {
+                           "value": [
+                               [
+                                   1,
+                                   0,
+                                   0,
+                                   0
+                               ],
+                               [
+                                   0,
+                                   1,
+                                   0,
+                                   0
+                               ],
+                               [
+                                   0,
+                                   1,
+                                   0,
+                                   0
+                               ],
+                               [
+                                   0,
+                                   0,
+                                   0,
+                                   1
+                               ]
+                           ]
+                       }
+                   }
+               ],
+               "source": "owner",
+               "order": 2
+           },
+           "mask_threshold": {
+               "label": "mask_threshold",
+               "type": "number",
+               "source": "owner",
+               "default": 0.05,
+               "order": 3
+           },
+           "voxel_size": {
+               "label": "voxel_size",
+               "type": "number",
+               "source": "owner",
+               "default": 2,
+               "order": 4
+           }
+       },
+       "output": {
+           "global_result_images": {
+               "label": "global_result_images",
+               "type": "array"
+           },
+           "local_result_images": {
+               "label": "global_result_images",
+               "type": "array"
+           }
+       },
+       "type": "docker",
+       "dockerImage": "coinstacteam/dlme-vbm",
+       "command": [
+           "python",
+           "/computation/scripts/local.py"
+       ],
+       "remote": {
+           "type": "docker",
+           "dockerImage": "coinstacteam/dlme-vbm",
+           "command": [
+               "python",
+               "/computation/scripts/remote.py"
+           ]
+       }
    }
 }

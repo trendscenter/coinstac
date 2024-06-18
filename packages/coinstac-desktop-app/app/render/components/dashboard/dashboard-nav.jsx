@@ -1,29 +1,30 @@
-import React, { Fragment } from 'react';
-import PropTypes from 'prop-types';
-import { Link } from 'react-router';
-import Joyride from 'react-joyride';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import HomeIcon from '@material-ui/icons/Home';
-import StorageIcon from '@material-ui/icons/Storage';
-import ViewListIcon from '@material-ui/icons/ViewList';
-import ListAltIcon from '@material-ui/icons/ListAlt';
 import AssignmentIcon from '@material-ui/icons/Assignment';
-import EqualizerIcon from '@material-ui/icons/Equalizer';
-import DescriptionIcon from '@material-ui/icons/Description';
 import CloudIcon from '@material-ui/icons/Cloud';
+import DescriptionIcon from '@material-ui/icons/Description';
+import EqualizerIcon from '@material-ui/icons/Equalizer';
+import HomeIcon from '@material-ui/icons/Home';
 import LanguageIcon from '@material-ui/icons/Language';
+import ListAltIcon from '@material-ui/icons/ListAlt';
+import StorageIcon from '@material-ui/icons/Storage';
 import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
-import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
+import ViewListIcon from '@material-ui/icons/ViewList';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Joyride from 'react-joyride';
+import { Link } from 'react-router';
+
 import { TUTORIAL_STEPS } from '../../constants';
+import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 
 const DashboardNav = ({
   user, hasRunOfInterestInProgress, isTutorialHidden, tutorialChange,
 }, { router }) => (
-  <Fragment>
+  <>
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
@@ -78,7 +79,7 @@ const DashboardNav = ({
         callback={tutorialChange}
       />
     )}
-  </Fragment>
+  </>
 );
 
 DashboardNav.propTypes = {

@@ -1,11 +1,12 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
-import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 import update from 'immutability-helper';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import Select from '../../common/react-select';
 import freesurferDataOptions from '../freesurfer-data-options.json';
 
@@ -40,7 +41,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
       inputMap: getNewObj(
         'type',
         value,
-        index
+        index,
       ),
     });
 
@@ -82,9 +83,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
 
     rois.unshift('All Interests');
 
-    const freeSurferOptions = rois.map((val) => {
-      return { label: val, value: val };
-    });
+    const freeSurferOptions = rois.map(val => ({ label: val, value: val }));
 
     this.setState({ freeSurferOptions });
   }
@@ -98,9 +97,8 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
 
   handleFileReset = () => {
     this.setState({ inputKey: Date.now() });
-    const freeSurferOptions = freesurferDataOptions.freesurferROIs.map((val) => {
-      return { label: val, value: val };
-    });
+    const freeSurferOptions = freesurferDataOptions.freesurferROIs
+      .map(val => ({ label: val, value: val }));
     this.setState({ freeSurferOptions });
     this.setState({ file: '' });
   }

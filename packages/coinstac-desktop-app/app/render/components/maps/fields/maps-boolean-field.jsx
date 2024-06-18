@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Switch from '@material-ui/core/Switch';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useState } from 'react';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing(1.5),
@@ -20,12 +20,13 @@ const styles = theme => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-});
-
+}));
 
 function MapsBooleanField({
-  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+  fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
+  const classes = useStyles();
+
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
@@ -70,7 +71,6 @@ function MapsBooleanField({
 }
 
 MapsBooleanField.propTypes = {
-  classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
   fieldDescription: PropTypes.object.isRequired,
@@ -81,4 +81,4 @@ MapsBooleanField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsBooleanField);
+export default MapsBooleanField;

@@ -1,13 +1,13 @@
+import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
+import DeleteIcon from '@material-ui/icons/Delete';
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
-import PropTypes from 'prop-types';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import DeleteIcon from '@material-ui/icons/Delete';
-import { withStyles } from '@material-ui/core/styles';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     padding: theme.spacing(2),
     marginTop: theme.spacing(2),
@@ -57,7 +57,7 @@ const styles = theme => ({
     marginTop: '-1rem',
     lineHeight: '2',
   },
-});
+}));
 
 function ListItem({
   owner,
@@ -70,9 +70,10 @@ function ListItem({
   linkButtonText,
   linkButtonColor,
   deleteButtonText,
-  classes,
   hideDetailButton,
 }) {
+  const classes = useStyles();
+
   if (!itemObject) {
     return null;
   }
@@ -86,16 +87,14 @@ function ListItem({
     >
       <div className={classes.titleContainer}>
         <Typography variant="h5" className={highlight ? classes.highlight : ''}>
-          { itemObject.name }
+          {itemObject.name}
         </Typography>
-        {
-          itemOptions.owner && <Typography className={classes.ownerBadge}>Owner</Typography>
-        }
+        {itemOptions.owner && <Typography className={classes.ownerBadge}>Owner</Typography>}
       </div>
       <Typography variant="body2" className={classes.description}>
-        { itemObject.description }
+        {itemObject.description}
       </Typography>
-      { itemOptions.text }
+      {itemOptions.text}
       <div className={classes.listItemActions}>
         <div className={classes.listItemActionsPrimary}>
           {!hideDetailButton && (
@@ -107,26 +106,24 @@ function ListItem({
               name={itemObject.name}
               className={classes.button}
             >
-              { linkButtonText || 'View Details' }
+              {linkButtonText || 'View Details'}
             </Button>
           )}
-          { itemOptions.actions }
+          {itemOptions.actions}
         </div>
-        {
-          deleteItem && (owner || canDelete) && (
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={deleteItem(itemObject.id)}
-              name={`${itemObject.name}-delete`}
-              className={classes.deleteButton}
-            >
-              { deleteButtonText || 'Delete' }
-              <DeleteIcon />
-            </Button>
-          )
-        }
-        { itemOptions.status }
+        {deleteItem && (owner || canDelete) && (
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={deleteItem(itemObject.id)}
+            name={`${itemObject.name}-delete`}
+            className={classes.deleteButton}
+          >
+            {deleteButtonText || 'Delete'}
+            <DeleteIcon />
+          </Button>
+        )}
+        {itemOptions.status}
       </div>
     </Paper>
   );
@@ -146,7 +143,6 @@ ListItem.defaultProps = {
 
 ListItem.propTypes = {
   canDelete: PropTypes.bool,
-  classes: PropTypes.object.isRequired,
   deleteButtonText: PropTypes.string,
   highlight: PropTypes.bool,
   itemObject: PropTypes.object.isRequired,
@@ -159,4 +155,4 @@ ListItem.propTypes = {
   deleteItem: PropTypes.func,
 };
 
-export default withStyles(styles)(ListItem);
+export default ListItem;

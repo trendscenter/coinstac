@@ -1,25 +1,24 @@
-import React, { useState } from 'react';
-import PropTypes from 'prop-types';
 import { useMutation, useQuery } from '@apollo/client';
-import { connect } from 'react-redux';
-import { Link } from 'react-router';
-import { get } from 'lodash';
-import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
+import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
+import { get } from 'lodash';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router';
 
-import ListItem from '../../common/list-item';
-import ListDeleteModal from '../../common/list-delete-modal';
-import useEntityListSubscription from '../../../utils/effects/use-entity-list-subscription';
-import { isAdmin } from '../../../utils/helpers';
 import {
+  DELETE_HEADLESS_CLIENT_MUTATION,
   FETCH_ACCESSIBLE_HEADLESS_CLIENTS,
   HEADLESS_CLIENT_CHANGED_SUBSCRIPTION,
-  DELETE_HEADLESS_CLIENT_MUTATION,
 } from '../../../state/graphql/functions';
+import useEntityListSubscription from '../../../utils/effects/use-entity-list-subscription';
+import { isAdmin } from '../../../utils/helpers';
+import ListDeleteModal from '../../common/list-delete-modal';
+import ListItem from '../../common/list-item';
 
-function HeadlessList({ auth }) {
-  const { user } = auth;
+function HeadlessList() {
+  const user = useSelector(state => state.auth.user);
 
   const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, {
     fetchPolicy: 'cache-and-network',
@@ -87,12 +86,4 @@ function HeadlessList({ auth }) {
   );
 }
 
-HeadlessList.propTypes = {
-  auth: PropTypes.object.isRequired,
-};
-
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
-
-export default connect(mapStateToProps)(HeadlessList);
+export default HeadlessList;

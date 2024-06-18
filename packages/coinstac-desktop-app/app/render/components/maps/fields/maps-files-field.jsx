@@ -1,10 +1,11 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React from 'react';
+
 import FilePicker from '../../common/file-picker';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   rootPaper: {
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
@@ -22,11 +23,13 @@ const styles = theme => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-});
+}));
 
 function MapsFilesField({
-  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+  fieldName, fieldDataMap, fieldDescription, onChange,
 }) {
+  const classes = useStyles();
+
   function setSelectedFiles(selectedFiles) {
     onChange(fieldName, { fieldType: fieldDescription.type, files: selectedFiles });
   }
@@ -65,7 +68,6 @@ function MapsFilesField({
 }
 
 MapsFilesField.propTypes = {
-  classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
   fieldDescription: PropTypes.object.isRequired,
@@ -76,4 +78,4 @@ MapsFilesField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsFilesField);
+export default MapsFilesField;

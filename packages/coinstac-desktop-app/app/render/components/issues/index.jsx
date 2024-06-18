@@ -1,13 +1,5 @@
 /* eslint-disable no-console */
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import { graphql, withApollo } from '@apollo/react-hoc';
-import { flowRight as compose, trim } from 'lodash';
-import axios from 'axios';
-import classNames from 'classnames';
-import Dropzone from 'react-dropzone';
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
@@ -16,15 +8,24 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Icon from '@material-ui/core/Icon';
 import InputLabel from '@material-ui/core/InputLabel';
-import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import axios from 'axios';
+import classNames from 'classnames';
+import { flowRight as compose, trim } from 'lodash';
+import PropTypes from 'prop-types';
+import React, { Component } from 'react';
+import Dropzone from 'react-dropzone';
+import { TextValidator, ValidatorForm } from 'react-material-ui-form-validator';
+import { connect } from 'react-redux';
+
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 import {
   CREATE_ISSUE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   saveDocumentProp,
 } from '../../state/graphql/props';
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 import MarkdownValidator from './markdown-validator';
 
@@ -422,9 +423,8 @@ Issue.propTypes = {
 
 const IssueWithData = compose(
   graphql(CREATE_ISSUE_MUTATION, saveDocumentProp('createIssue', 'issue')),
-  withApollo
+  withApollo,
 )(Issue);
-
 
 const mapStateToProps = ({ app }) => ({
   logs: app.logs,

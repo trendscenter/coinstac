@@ -85,7 +85,7 @@ const getStatus = () => {
  * @return {Object} Docker stats object
  */
 const getStats = async (runId, userId) => {
-  if (!services[`${runId}-${userId}`]) {
+  if (!services[`${runId}-${userId}`] || globalServiceProvider !== 'docker') {
     return null;
   }
   await services[`${runId}-${userId}`].service;

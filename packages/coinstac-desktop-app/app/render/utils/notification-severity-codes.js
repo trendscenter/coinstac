@@ -5,7 +5,7 @@ const SUCCESS = 'success';
 
 export {
   ERROR,
-  WARNING,
   INFO,
   SUCCESS,
+  WARNING,
 };

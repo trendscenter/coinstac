@@ -28,7 +28,7 @@ const config = {
     'electron',
     'fs',
     'path'
-  ),
+  ).filter(e => e !== 'jsoneditor-react'),
   module: {
     rules: [{
       test: /\.css$/,
@@ -130,7 +130,7 @@ if (process.env.NODE_ENV === 'development') {
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
   );
 
   /**
