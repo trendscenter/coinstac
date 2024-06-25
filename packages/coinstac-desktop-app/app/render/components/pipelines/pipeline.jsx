@@ -619,25 +619,31 @@ class Pipeline extends Component {
 
     this.setState({ savingStatus: 'pending' });
 
+    const payload = {
+      ...pipeline,
+      owner: user.id,
+      steps: pipeline.steps.map(step => ({
+        id: step.id,
+        computations: step.computations.map(comp => comp.id),
+        inputMap: step.inputMap,
+        dataMeta: step.dataMeta,
+        controller: {
+          id: step.controller.id,
+          type: step.controller.type,
+          options: step.controller.options,
+        },
+      })),
+    };
+
+    if (Object.keys(payload).includes('error')) {
+      delete payload.error;
+    }
+
     try {
-      const { data } = await savePipeline({
-        ...pipeline,
-        owner: user.id,
-        steps: pipeline.steps.map(step => ({
-          id: step.id,
-          computations: step.computations.map(comp => comp.id),
-          inputMap: step.inputMap,
-          dataMeta: step.dataMeta,
-          controller: {
-            id: step.controller.id,
-            type: step.controller.type,
-            options: step.controller.options,
-          },
-        })),
-      });
+      const { data } = await savePipeline(payload);
 
       const { savePipeline: { __typename, ...other } } = data;
-      const newPipeline = { ...pipeline, ...other };
+      const newPipeline = { ...payload, ...other };
 
       this.setState({
         pipeline: newPipeline,
