@@ -1,6 +1,6 @@
 import TextField from '@material-ui/core/TextField';
 import PropTypes from 'prop-types';
-import React, { useEffect } from 'react';
+import React from 'react';
 
 function PipelineStepInputNumberTextField({
   objKey,
@@ -11,21 +11,6 @@ function PipelineStepInputNumberTextField({
   getNewObj,
   step,
 }) {
-  useEffect(() => {
-    if (
-      !step.inputMap[objKey]
-      && objParams?.default !== undefined
-      && objParams?.default !== null
-      && objParams?.default !== ''
-      && owner
-    ) {
-      updateStep({
-        ...step,
-        inputMap: getNewObj(objKey, { value: Number(objParams.default) }),
-      });
-    }
-  }, []);
-
   if (!step) {
     return null;
   }

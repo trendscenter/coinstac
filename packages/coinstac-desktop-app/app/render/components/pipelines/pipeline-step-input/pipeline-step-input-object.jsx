@@ -1,19 +1,10 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { JsonEditor } from 'jsoneditor-react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 function PipelineStepInputObject({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
 }) {
-  useEffect(() => {
-    if (!step.inputMap[objKey] && objParams?.default && owner) {
-      updateStep({
-        ...step,
-        inputMap: getNewObj(objKey, { value: objParams.default }),
-      });
-    }
-  }, []);
-
   if (!step) {
     return null;
   }

@@ -136,6 +136,20 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
   />
 );
 
+const getDefaultMapFromComputation = (computation) => {
+  if (!computation?.input) {
+    return {};
+  }
+
+  return Object.keys(computation.input).reduce((acc, key) => {
+    const { value } = computation.input[key];
+    if (value !== undefined && value !== null) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+};
+
 class Pipeline extends Component {
   mapHeadlessUsers = memoize(
     (users, pipeline) => {
@@ -336,7 +350,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: {},
+            inputMap: getDefaultMapFromComputation(computation),
           },
         ],
       },
@@ -544,9 +558,14 @@ class Pipeline extends Component {
           Object.keys(input).forEach((key) => {
             const { type, label } = input[key];
 
+            if (inputMap[key] === undefined) {
+              errorMessages.push(`Missing value for ${label}`);
+              return;
+            }
+
             const value = inputMap[key]?.value;
 
-            if (!value) {
+            if (type !== 'files' && (value === undefined || value === null)) {
               errorMessages.push(`Missing value for ${label}`);
               return;
             }
@@ -585,7 +604,7 @@ class Pipeline extends Component {
               return;
             }
 
-            if (!inputMap[key]?.fulfilled) {
+            if (type !== 'files' && !inputMap[key]?.fulfilled) {
               errorMessages.push(`Missing fields for ${label}`);
             }
           });
