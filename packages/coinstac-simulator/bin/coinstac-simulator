@@ -37,13 +37,13 @@ program
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output] or ./coinstac for preprocessing')
   .option('-t, --showinput', ' on errors show comp input that computation failed with')
   .option('-e, --debug', ' enter debug mode, displays extra info including input')
-  .option('-p, --pipeline [path]', ' give a pipeline file to run a full pipeline from, working dir used is first comp listed')
+  .option('-p, --pipelineSpec [path]', ' path to pipeline spec file to run preprocessing run from, skipping prompts')
   .option('-u, --upload', ' upload computation spec')
   .option('--username [username]', ' username for uploads')
   .option('--password [password]', ' password for uploads')
   .option('--loglevel [level]', ' enter info, debug, and silly log levels')
   .option('--service [service]', 'container service, either singularity or docker, defaults to docker')
-  .option('--preprocess', 'preprocess');
+  .option('--preprocess', 'preprocess'); 
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -321,9 +321,8 @@ const upload = async () => {
   return compUpload.compspecUpload(program.username, program.password, logger);
 };
 
-const promptGenerateAndPreprocess = async () => {
+const promptGenerateAndPreprocess = async (baseDir) => {
   const pipelineSpecPath = './pipelineSpec.json';
-  const baseDir = path.join(program.directory || '', 'coinstac/');
   let rawSpec;
   let pipelineSpec;
   let specError;
@@ -531,9 +530,17 @@ const pipelineSpecFulfillPipelineOption = async () => {
 };
 
 if (program.preprocess) {
+  const baseDir = path.join(program.directory || '', 'coinstac/');
   (async () => {
     try {
-      await promptGenerateAndPreprocess();
+      debugger
+      if (program.pipelineSpec) {
+        const spec = parseJson(fs.readFileSync(program.pipelineSpec));
+        logger.info('Running pipeline with provided pipeline spec');
+        await startPreprocessRun(spec, baseDir);
+      } else {
+        await promptGenerateAndPreprocess(baseDir);
+      }
       process.exit();
     } catch (error) {
       logger.error(error.message);
