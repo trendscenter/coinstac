@@ -533,7 +533,6 @@ if (program.preprocess) {
   const baseDir = path.join(program.directory || '', 'coinstac/');
   (async () => {
     try {
-      debugger
       if (program.pipelineSpec) {
         const spec = parseJson(fs.readFileSync(program.pipelineSpec));
         logger.info('Running pipeline with provided pipeline spec');
