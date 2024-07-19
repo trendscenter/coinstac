@@ -1,6 +1,6 @@
 {
   "name": "coinstac-server",
-  "version": "6.8.9",
+  "version": "6.8.10",
   "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
@@ -39,7 +39,7 @@
     "chalk": "4.1.2",
     "coinstac-container-manager": "^6.8.7",
     "coinstac-graphql-schema": "^6.8.6",
-    "coinstac-pipeline": "^6.8.9",
+    "coinstac-pipeline": "^6.8.10",
     "commander": "^6.1.0"
   },
   "devDependencies": {
