@@ -26,6 +26,8 @@ singularity build -F --fix-perms $WORK_PATH.sif $WORK_PATH
 
 mv $WORK_PATH.sif $IMAGE_PATH.sif
 
+rm -rf $WORK_PATH
+
 code=$?
 if [ $code != 0 ]; then
   >&2 echo "After build 2"
