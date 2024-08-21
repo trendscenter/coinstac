@@ -60,6 +60,52 @@ const createPipeline = async ({
   }).should.eventually.not.equal(null);
 };
 
+const createMsrCSVPipeline = async ({
+  consortium,
+  pipeline,
+  computation,
+}, app) => {
+  // Go to create pipeline page
+  await app.click('a:has-text("Pipelines")');
+
+  await app.click('a[name="create-pipeline-button"]', { timeout: EXIST_TIMEOUT });
+
+  // Assert
+  await app.waitForSelector('h4:has-text("Pipeline Creation")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  }).should.eventually.not.equal(null);
+
+  // Create pipeline
+  await app.fill('#name', pipeline.name);
+  await app.fill('#description', pipeline.description);
+
+  await app.click('#pipelineconsortia', { timeout: EXIST_TIMEOUT });
+  await app.click(`#consortium-menu li:has-text("${consortium.name}")`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('#computation-dropdown', { timeout: EXIST_TIMEOUT });
+  await app.click(`#computation-menu li:has-text("${computation.name}")`, { timeout: EXIST_TIMEOUT });
+
+  await app.click('.pipeline-step', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Data CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Local Covariates")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Covariate CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
+
+  // Assert
+  await app.waitForSelector('div:has-text("Pipeline Saved")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  }).should.eventually.not.equal(null);
+};
+
 module.exports = {
   create: createPipeline,
+  createMsrCSVPipeline,
 };

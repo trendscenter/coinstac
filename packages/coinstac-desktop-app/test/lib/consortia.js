@@ -149,7 +149,31 @@ const mapDataToConsortium = async (consortiumName, app) => {
   }).should.eventually.not.equal(null);
 };
 
-const runComputation = async ({ consortium, pipeline }, app) => {
+const mapDataToConsortiumMsrCSV = async (consortiumName, app) => {
+  await app.click('a:has-text("Map")', { timeout: EXIST_TIMEOUT });
+
+  await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
+
+  await app.locator(':nth-match(:text("Select File(s)"), 1)').click();
+
+  await app.locator(':nth-match(:text("Select File(s)"), 2)').click();
+
+  await app.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
+
+  // Assert
+  app.waitForSelector('button:has-text("Start Pipeline")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  }).should.eventually.not.equal(null);
+};
+
+const runComputation = async (
+  { consortium, pipeline },
+  app,
+  computationTimeout = COMPUTATION_TIMEOUT,
+) => {
   try {
     await app.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
@@ -172,7 +196,7 @@ const runComputation = async ({ consortium, pipeline }, app) => {
   }).should.eventually.not.equal(null);
 
   // Display results
-  await app.click('div.run-item-paper:first-child a:has-text("View Results")', { timeout: COMPUTATION_TIMEOUT });
+  await app.click('div.run-item-paper:first-child a:has-text("View Results")', { timeout: computationTimeout });
 
   // Assert
   await Promise.all([
@@ -211,6 +235,7 @@ module.exports = {
   setPipeline,
   join: joinConsortium,
   mapData: mapDataToConsortium,
+  mapDataToConsortiumMsrCSV,
   runComputation,
   delete: deleteConsortium,
 };
