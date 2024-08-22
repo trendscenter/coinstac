@@ -10,6 +10,7 @@ const dlmeVBM = require('./data/coinstac-dlme-vbm.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
+const rCSV = require('./data/coinstac-regression-csv.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm.json');
 const msrCSV = require('./data/coinstac-msr-csv.json');
@@ -21,6 +22,7 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl.json');
 
 const gica = require('./data/coinstac-gica-pipeline.json');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline.json');
+const dsbm = require('./data/coinstac-dsbm.json');
 const dpsvm = require('./data/coinstac-dpsvm.json');
 const dinunet = require('./data/coinstac-dinunet.json');
 const dinunetGPU = require('./data/coinstac-dinunet-gpu.json');
@@ -43,7 +45,7 @@ const CONSORTIA_IDS = generateUniqueIDs(2);
 
 const PIPELINE_IDS = generateUniqueIDs(4);
 
-const COMPUTATION_IDS = generateUniqueIDs(28);
+const COMPUTATION_IDS = generateUniqueIDs(29);
 
 const USER_IDS = generateUniqueIDs(6);
 
@@ -61,26 +63,28 @@ async function populateComputations() {
     { ...vbm, submittedBy: 'author', _id: COMPUTATION_IDS[5] },
     { ...gica, submittedBy: 'author', _id: COMPUTATION_IDS[6] },
     { ...ddfnc, submittedBy: 'author', _id: COMPUTATION_IDS[7] },
-    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
-    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
-    { ...dsneMS, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
-    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
-    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
-    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
-    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
-    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
-    { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
-    { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
-    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
-    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[19] },
-    { ...brainageFNC, submittedBy: 'author', _id: COMPUTATION_IDS[20] },
-    { ...pLink, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
-    { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
-    { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
-    { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
-    { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
-    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
-    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[27] },
+    { ...dsbm, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
+    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
+    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
+    { ...rCSV, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
+    { ...dsneMS, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
+    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
+    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
+    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
+    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
+    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
+    { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
+    { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[19] },
+    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[20] },
+    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
+    { ...brainageFNC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
+    { ...pLink, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
+    { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
+    { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
+    { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
+    { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[27] },
+    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[28] },
+    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[29] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {

@@ -12,7 +12,7 @@ function mockFileDialog() {
   const { TEST_INSTANCE } = process.env;
   let testFilePath;
 
-  if (TEST_INSTANCE === 'test-msr-csv') {
+  if (['test-msr-csv', 'test-regression-csv'].includes(TEST_INSTANCE)) {
     testFilePath = mockFileDialogCalled === 0
       ? process.env.DATA_FILE_PATH : process.env.COVARIATE_FILE_PATH;
     mockFileDialogCalled += 1;
