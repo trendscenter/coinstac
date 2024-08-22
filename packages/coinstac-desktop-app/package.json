@@ -27,7 +27,7 @@
     "deep-parse-json": "^1.0.1",
     "electron-default-menu": "^1.0.1",
     "electron-store": "^8.0.1",
-    "electron-updater": "^4.6.1",
+    "electron-updater": "^6.3.0",
     "form-data": "^4.0.0",
     "formik": "^2.2.9",
     "fuse.js": "^6.6.2",
