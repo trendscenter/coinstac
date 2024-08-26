@@ -22,13 +22,15 @@ const DATA = {
     description: 'e2e-pipeline-description-single',
   },
   computation: {
-    name: 'Regression (Multishot) - FreeSurfer Volumes',
+    name: 'Regression - VBM',
   },
 };
 
-describe('e2e run msr-fsl computation', () => {
+describe('e2e run regression-vbm computation', () => {
   before(async () => {
-    appWindow = await setup();
+    appWindow = await setup(1, {
+      instanceData: [{ appId: 'regression-vbm' }],
+    });
     beforeHandler();
   });
 
@@ -51,7 +53,7 @@ describe('e2e run msr-fsl computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.create(DATA, appWindow);
+    await pipeline.createRegressionVBMPipeline(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
@@ -59,7 +61,7 @@ describe('e2e run msr-fsl computation', () => {
   });
 
   it('runs a computation', async () => {
-    await consortium.runComputation(DATA, appWindow);
+    await consortium.runRegressionVBMComputation(DATA, appWindow, 360000);
   });
 
   it('deletes consortium', async () => {

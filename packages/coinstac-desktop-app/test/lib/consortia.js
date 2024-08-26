@@ -169,8 +169,8 @@ const mapDataToConsortiumMsrCSV = async (consortiumName, app) => {
   }).should.eventually.not.equal(null);
 };
 
-const runComputation = async (
-  { consortium, pipeline },
+const runComputationBasic = async (
+  { consortium },
   app,
   computationTimeout = COMPUTATION_TIMEOUT,
 ) => {
@@ -197,10 +197,42 @@ const runComputation = async (
 
   // Display results
   await app.click('div.run-item-paper:first-child a:has-text("View Results")', { timeout: computationTimeout });
+};
+
+const runComputation = async (
+  data,
+  app,
+  computationTimeout = COMPUTATION_TIMEOUT,
+) => {
+  await runComputationBasic(data, app, computationTimeout);
+
+  const { consortium, pipeline } = data;
 
   // Assert
   await Promise.all([
     app.waitForSelector('h3:has-text("Regressions")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+    app.waitForSelector(`h6:has-text("Results: ${consortium.name} | ${pipeline.name}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+  ]);
+};
+
+const runRegressionVBMComputation = async (
+  data,
+  app,
+  computationTimeout = COMPUTATION_TIMEOUT,
+) => {
+  await runComputationBasic(data, app, computationTimeout);
+
+  const { consortium, pipeline } = data;
+
+  // Assert
+  await Promise.all([
+    app.waitForSelector('h4:has-text("Local stats")', {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null),
@@ -237,5 +269,6 @@ module.exports = {
   mapData: mapDataToConsortium,
   mapDataToConsortiumMsrCSV,
   runComputation,
+  runRegressionVBMComputation,
   delete: deleteConsortium,
 };
