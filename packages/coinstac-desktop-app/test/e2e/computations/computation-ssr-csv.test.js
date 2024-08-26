@@ -1,14 +1,15 @@
-const consortium = require('../lib/consortia');
-const pipeline = require('../lib/pipeline');
+const path = require('path');
+const consortium = require('../../lib/consortia');
+const pipeline = require('../../lib/pipeline');
 const {
   setup,
   afterHandler,
   afterEachHandler,
   beforeHandler,
   beforeEachHandler,
-} = require('../lib/setup');
-const user = require('../lib/user');
-const { USER_1 } = require('../lib/constants');
+} = require('../../lib/setup');
+const user = require('../../lib/user');
+const { USER_1 } = require('../../lib/constants');
 
 let appWindow;
 
@@ -22,13 +23,25 @@ const DATA = {
     description: 'e2e-pipeline-description-single',
   },
   computation: {
-    name: 'Regression (Multishot) - FreeSurfer Volumes',
+    name: 'Regression (Singleshot) - CSV',
   },
 };
 
-describe('e2e run msr-fsl computation', () => {
+describe('e2e run ssr-csv computation', () => {
   before(async () => {
-    appWindow = await setup();
+    appWindow = await setup(1, {
+      instanceData: [{ appId: 'ssr-csv' }],
+      env: {
+        DATA_FILE_PATH: path.join(
+          __dirname,
+          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
+        ),
+        COVARIATE_FILE_PATH: path.join(
+          __dirname,
+          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
+        ),
+      },
+    });
     beforeHandler();
   });
 
@@ -51,15 +64,18 @@ describe('e2e run msr-fsl computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.create(DATA, appWindow);
+    await pipeline.createRegressionCSVPipeline(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
-    await consortium.mapData(DATA.consortium.name, appWindow);
+    await consortium.mapDataToConsortiumRegressionCSV(
+      DATA.consortium.name,
+      appWindow,
+    );
   });
 
   it('runs a computation', async () => {
-    await consortium.runComputation(DATA, appWindow);
+    await consortium.runComputation(DATA, appWindow, 360000);
   });
 
   it('deletes consortium', async () => {

@@ -1,15 +1,15 @@
 const path = require('path');
-const consortium = require('../lib/consortia');
-const pipeline = require('../lib/pipeline');
+const consortium = require('../../lib/consortia');
+const pipeline = require('../../lib/pipeline');
 const {
   setup,
   afterHandler,
   afterEachHandler,
   beforeHandler,
   beforeEachHandler,
-} = require('../lib/setup');
-const user = require('../lib/user');
-const { USER_1 } = require('../lib/constants');
+} = require('../../lib/setup');
+const user = require('../../lib/user');
+const { USER_1 } = require('../../lib/constants');
 
 let appWindow;
 
@@ -23,22 +23,22 @@ const DATA = {
     description: 'e2e-pipeline-description-single',
   },
   computation: {
-    name: 'Regression (Multishot) - CSV',
+    name: 'Regression - CSV',
   },
 };
 
-describe('e2e run msr-csv computation', () => {
+describe('e2e run regression-csv computation', () => {
   before(async () => {
     appWindow = await setup(1, {
-      instanceData: [{ appId: 'msr-csv' }],
+      instanceData: [{ appId: 'regression-csv' }],
       env: {
         DATA_FILE_PATH: path.join(
           __dirname,
-          '../../../../algorithm-development/test-data/msr-csv-test-data/input/local0/simulatorRun/site1_data.csv',
+          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
         ),
         COVARIATE_FILE_PATH: path.join(
           __dirname,
-          '../../../../algorithm-development/test-data/msr-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
+          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
         ),
       },
     });
@@ -64,11 +64,14 @@ describe('e2e run msr-csv computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.createMsrCSVPipeline(DATA, appWindow);
+    await pipeline.createRegressionCSVPipeline(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
-    await consortium.mapDataToConsortiumMsrCSV(DATA.consortium.name, appWindow);
+    await consortium.mapDataToConsortiumRegressionCSV(
+      DATA.consortium.name,
+      appWindow,
+    );
   });
 
   it('runs a computation', async () => {

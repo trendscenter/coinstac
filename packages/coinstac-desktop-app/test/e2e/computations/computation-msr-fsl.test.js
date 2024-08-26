@@ -1,14 +1,14 @@
-const consortium = require('../lib/consortia');
-const pipeline = require('../lib/pipeline');
+const consortium = require('../../lib/consortia');
+const pipeline = require('../../lib/pipeline');
 const {
   setup,
   afterHandler,
   afterEachHandler,
   beforeHandler,
   beforeEachHandler,
-} = require('../lib/setup');
-const user = require('../lib/user');
-const { USER_1 } = require('../lib/constants');
+} = require('../../lib/setup');
+const user = require('../../lib/user');
+const { USER_1 } = require('../../lib/constants');
 
 let appWindow;
 
@@ -22,15 +22,13 @@ const DATA = {
     description: 'e2e-pipeline-description-single',
   },
   computation: {
-    name: 'Regression - VBM',
+    name: 'Regression (Multishot) - FreeSurfer Volumes',
   },
 };
 
-describe('e2e run regression-vbm computation', () => {
+describe('e2e run msr-fsl computation', () => {
   before(async () => {
-    appWindow = await setup(1, {
-      instanceData: [{ appId: 'regression-vbm' }],
-    });
+    appWindow = await setup();
     beforeHandler();
   });
 
@@ -53,7 +51,7 @@ describe('e2e run regression-vbm computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.createRegressionVBMPipeline(DATA, appWindow);
+    await pipeline.create(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
@@ -61,7 +59,7 @@ describe('e2e run regression-vbm computation', () => {
   });
 
   it('runs a computation', async () => {
-    await consortium.runRegressionVBMComputation(DATA, appWindow, 360000);
+    await consortium.runComputation(DATA, appWindow);
   });
 
   it('deletes consortium', async () => {

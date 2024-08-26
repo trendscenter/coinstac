@@ -64,7 +64,7 @@ const createPipeline = async (data, app) => {
   await savePipeline(app);
 };
 
-const createMsrCSVPipeline = async (data, app) => {
+const createRegressionCSVPipeline = async (data, app) => {
   await addPipelineCommonData(data, app);
 
   await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
@@ -94,6 +94,6 @@ const createRegressionVBMPipeline = async (data, app) => {
 
 module.exports = {
   create: createPipeline,
-  createMsrCSVPipeline,
+  createRegressionCSVPipeline,
   createRegressionVBMPipeline,
 };

@@ -149,7 +149,7 @@ const mapDataToConsortium = async (consortiumName, app) => {
   }).should.eventually.not.equal(null);
 };
 
-const mapDataToConsortiumMsrCSV = async (consortiumName, app) => {
+const mapDataToConsortiumRegressionCSV = async (consortiumName, app) => {
   await app.click('a:has-text("Map")', { timeout: EXIST_TIMEOUT });
 
   await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
@@ -267,7 +267,7 @@ module.exports = {
   setPipeline,
   join: joinConsortium,
   mapData: mapDataToConsortium,
-  mapDataToConsortiumMsrCSV,
+  mapDataToConsortiumRegressionCSV,
   runComputation,
   runRegressionVBMComputation,
   delete: deleteConsortium,
