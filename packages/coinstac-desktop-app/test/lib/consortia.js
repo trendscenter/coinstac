@@ -149,7 +149,27 @@ const mapDataToConsortium = async (consortiumName, app) => {
   }).should.eventually.not.equal(null);
 };
 
-const mapDataToConsortiumRegressionCSV = async (consortiumName, app) => {
+const mapDataToConsortiumRegressionCsv = async (consortiumName, app) => {
+  await app.click('a:has-text("Map")', { timeout: EXIST_TIMEOUT });
+
+  await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
+
+  await app.locator(':nth-match(:text("Select File(s)"), 1)').click();
+
+  await app.locator(':nth-match(:text("Select File(s)"), 2)').click();
+
+  await app.click('button:has-text("Save")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
+
+  // Assert
+  app.waitForSelector('button:has-text("Start Pipeline")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  }).should.eventually.not.equal(null);
+};
+
+const mapDataToConsortiumDpsvmCsv = async (consortiumName, app) => {
   await app.click('a:has-text("Map")', { timeout: EXIST_TIMEOUT });
 
   await app.click(`a[name="${consortiumName}"]`, { timeout: EXIST_TIMEOUT });
@@ -243,6 +263,28 @@ const runRegressionVBMComputation = async (
   ]);
 };
 
+const runDpsvmCsvComputation = async (
+  data,
+  app,
+  computationTimeout = COMPUTATION_TIMEOUT,
+) => {
+  await runComputationBasic(data, app, computationTimeout);
+
+  const { consortium, pipeline } = data;
+
+  // Assert
+  await Promise.all([
+    app.waitForSelector('h3:has-text("Differentially private SVM classifier")', {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+    app.waitForSelector(`h6:has-text("Results: ${consortium.name} | ${pipeline.name}")`, {
+      state: 'visible',
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.not.equal(null),
+  ]);
+};
+
 const deleteConsortium = async (name, app) => {
   await app.click('a:has-text("Consortia")', { timeout: EXIST_TIMEOUT });
 
@@ -267,8 +309,10 @@ module.exports = {
   setPipeline,
   join: joinConsortium,
   mapData: mapDataToConsortium,
-  mapDataToConsortiumRegressionCSV,
+  mapDataToConsortiumRegressionCsv,
+  mapDataToConsortiumDpsvmCsv,
   runComputation,
   runRegressionVBMComputation,
+  runDpsvmCsvComputation,
   delete: deleteConsortium,
 };

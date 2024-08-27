@@ -68,11 +68,11 @@ describe('e2e run ssr-csv computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.createRegressionCSVPipeline(DATA, appWindow);
+    await pipeline.createRegressionCsvPipeline(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
-    await consortium.mapDataToConsortiumRegressionCSV(
+    await consortium.mapDataToConsortiumRegressionCsv(
       DATA.consortium.name,
       appWindow,
     );

@@ -146,7 +146,7 @@
     "test:e2e-single": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run.test.js",
     "test:e2e-multi": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run-2-members.test.js",
     "test:e2e": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/*.test.js",
-    "test:comp": "npm run build:webpack && env NODE_ENV=test mocha --timeout=400000 test/e2e/computations/computation-ssr-csv.test.js",
+    "test:comp": "npm run build:webpack && env NODE_ENV=test mocha --timeout=400000 test/e2e/computations/computation-dpsvm-csv.test.js",
     "watch": "cross-env NODE_ENV=development webpack-dev-server --mode=development",
     "eslint": "eslint ./ --ext js,jsx,ts,tsx",
     "eslint-fix": "eslint ./ --ext js,jsx,ts,tsx --fix"

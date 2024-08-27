@@ -64,7 +64,7 @@ const createPipeline = async (data, app) => {
   await savePipeline(app);
 };
 
-const createRegressionCSVPipeline = async (data, app) => {
+const createRegressionCsvPipeline = async (data, app) => {
   await addPipelineCommonData(data, app);
 
   await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
@@ -92,8 +92,23 @@ const createRegressionVBMPipeline = async (data, app) => {
   await savePipeline(app);
 };
 
+const createDpsvmCsvPipeline = async (data, app) => {
+  await addPipelineCommonData(data, app);
+
+  await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Data CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Local Covariates")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Covariate CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await savePipeline(app);
+};
+
 module.exports = {
   create: createPipeline,
-  createRegressionCSVPipeline,
+  createRegressionCsvPipeline,
   createRegressionVBMPipeline,
+  createDpsvmCsvPipeline,
 };

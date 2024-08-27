@@ -12,9 +12,18 @@ function mockFileDialog() {
   const { TEST_INSTANCE } = process.env;
   let testFilePath;
 
-  if (['test-msr-csv', 'test-regression-csv', 'test-ssr-csv'].includes(TEST_INSTANCE)) {
+  if (
+    [
+      'test-msr-csv',
+      'test-regression-csv',
+      'test-ssr-csv',
+      'test-dpsvm-csv-1',
+      'test-dpsvm-csv-2',
+    ].includes(TEST_INSTANCE)
+  ) {
     testFilePath = mockFileDialogCalled === 0
-      ? process.env.DATA_FILE_PATH : process.env.COVARIATE_FILE_PATH;
+      ? process.env.DATA_FILE_PATH
+      : process.env.COVARIATE_FILE_PATH;
     mockFileDialogCalled += 1;
   } else if (TEST_INSTANCE === 'test-regression-vbm') {
     testFilePath = process.env.COVARIATE_FILE_PATH;
@@ -49,13 +58,7 @@ module.exports = {
       return mockFileDialog();
     }
 
-    return dialog.showOpenDialog(
-      mainWindow,
-      {
-        filters,
-        properties,
-      },
-    );
+    return dialog.showOpenDialog(mainWindow, { filters, properties });
   },
 
   /**
