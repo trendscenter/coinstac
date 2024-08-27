@@ -1,4 +1,3 @@
-const path = require('path');
 const consortium = require('../../lib/consortia');
 const pipeline = require('../../lib/pipeline');
 const {
@@ -23,25 +22,13 @@ const DATA = {
     description: 'e2e-pipeline-description-single',
   },
   computation: {
-    name: 'Regression - VBM',
+    name: 'Regression - FreeSurfer Volumes',
   },
 };
 
-describe('e2e run regression-vbm computation', () => {
+describe('e2e run regression-fsl computation', () => {
   before(async () => {
-    appWindow = await setup(1, {
-      instanceData: [
-        {
-          appId: 'regression-vbm',
-          env: {
-            COVARIATE_FILE_PATH: path.join(
-              __dirname,
-              '../../../../../algorithm-development/test-data/nifti-test-data/site1/covariates.csv',
-            ),
-          },
-        },
-      ],
-    });
+    appWindow = await setup();
     beforeHandler();
   });
 
@@ -64,7 +51,7 @@ describe('e2e run regression-vbm computation', () => {
   });
 
   it('creates a pipeline', async () => {
-    await pipeline.createRegressionVBMPipeline(DATA, appWindow);
+    await pipeline.create(DATA, appWindow);
   });
 
   it('map data to consortium', async () => {
@@ -72,7 +59,7 @@ describe('e2e run regression-vbm computation', () => {
   });
 
   it('runs a computation', async () => {
-    await consortium.runRegressionVBMComputation(DATA, appWindow, 360000);
+    await consortium.runComputation(DATA, appWindow, 360000);
   });
 
   it('deletes consortium', async () => {

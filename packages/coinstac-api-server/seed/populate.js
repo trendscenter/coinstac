@@ -10,11 +10,11 @@ const dlmeVBM = require('./data/coinstac-dlme-vbm.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
-const rCSV = require('./data/coinstac-regression-csv.json');
-const ssrCSV = require('./data/coinstac-ssr-csv.json');
+const rCsv = require('./data/coinstac-regression-csv.json');
+const ssrCsv = require('./data/coinstac-ssr-csv.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm.json');
-const msrCSV = require('./data/coinstac-msr-csv.json');
+const msrCsv = require('./data/coinstac-msr-csv.json');
 const dmancova = require('./data/coinstac-dmancova.json');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl.json');
@@ -25,9 +25,11 @@ const gica = require('./data/coinstac-gica-pipeline.json');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline.json');
 const dsbm = require('./data/coinstac-dsbm.json');
 const dpsvm = require('./data/coinstac-dpsvm.json');
+const dpsvmCsv = require('./data/coinstac-dpsvm-csv.json');
 const dinunet = require('./data/coinstac-dinunet.json');
 const dinunetGPU = require('./data/coinstac-dinunet-gpu.json');
 const vbm = require('./data/coinstac-vbm-pre.json');
+const distMeshnet = require('./data/coinstac-dist-meshnet.json');
 
 const fmri = require('./data/coinstac-fmri.json');
 const pLink = require('./data/coinstac-plink.json');
@@ -55,15 +57,16 @@ const COMPUTATION_DATA = [
   decentralized,
   msrFsl,
   msrVbm,
-  msrCSV,
+  msrCsv,
   vbm,
   gica,
   ddfnc,
   dsbm,
   dpsvm,
+  dpsvmCsv,
   drneVbm,
-  rCSV,
-  ssrCSV,
+  rCsv,
+  ssrCsv,
   dsneMS,
   drneFsl,
   decentralizedError,
@@ -82,6 +85,7 @@ const COMPUTATION_DATA = [
   dlmeVBM,
   transfer,
   stress,
+  distMeshnet,
 ];
 
 const COMPUTATIONS = COMPUTATION_DATA.map(comp => ({ ...comp, submittedBy: 'author', _id: database.createUniqueId() }));

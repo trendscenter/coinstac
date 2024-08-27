@@ -30,17 +30,21 @@ const DATA = {
 describe('e2e run regression-csv computation', () => {
   before(async () => {
     appWindow = await setup(1, {
-      instanceData: [{ appId: 'regression-csv' }],
-      env: {
-        DATA_FILE_PATH: path.join(
-          __dirname,
-          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
-        ),
-        COVARIATE_FILE_PATH: path.join(
-          __dirname,
-          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
-        ),
-      },
+      instanceData: [
+        {
+          appId: 'regression-csv',
+          env: {
+            DATA_FILE_PATH: path.join(
+              __dirname,
+              '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
+            ),
+            COVARIATE_FILE_PATH: path.join(
+              __dirname,
+              '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
+            ),
+          },
+        },
+      ],
     });
     beforeHandler();
   });

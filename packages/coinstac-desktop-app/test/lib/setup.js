@@ -53,15 +53,15 @@ async function createInstance(appId, env = {}) {
 
 async function setup(
   instanceCount = 1,
-  additionalInfo = { instanceData: [], env: {} },
+  additionalInfo = { instanceData: [] },
 ) {
-  const { instanceData, env } = additionalInfo;
+  const { instanceData } = additionalInfo;
 
   const promises = Array(instanceCount)
     .fill(0)
     .map((_, idx) => {
       const appId = instanceData[idx]?.appId || getNewAppId();
-      return createInstance(appId, env);
+      return createInstance(appId, instanceData[idx]?.env);
     });
 
   instances = await Promise.all(promises);

@@ -17,10 +17,7 @@ function mockFileDialog() {
       ? process.env.DATA_FILE_PATH : process.env.COVARIATE_FILE_PATH;
     mockFileDialogCalled += 1;
   } else if (TEST_INSTANCE === 'test-regression-vbm') {
-    testFilePath = path.join(
-      __dirname,
-      '../../../../../algorithm-development/test-data/nifti-test-data/site1/covariates.csv',
-    );
+    testFilePath = process.env.COVARIATE_FILE_PATH;
   } else if (TEST_INSTANCE === 'test-2') {
     testFilePath = path.join(
       __dirname,

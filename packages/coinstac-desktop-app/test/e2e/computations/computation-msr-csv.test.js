@@ -30,17 +30,21 @@ const DATA = {
 describe('e2e run msr-csv computation', () => {
   before(async () => {
     appWindow = await setup(1, {
-      instanceData: [{ appId: 'msr-csv' }],
-      env: {
-        DATA_FILE_PATH: path.join(
-          __dirname,
-          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
-        ),
-        COVARIATE_FILE_PATH: path.join(
-          __dirname,
-          '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
-        ),
-      },
+      instanceData: [
+        {
+          appId: 'msr-csv',
+          env: {
+            DATA_FILE_PATH: path.join(
+              __dirname,
+              '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_data.csv',
+            ),
+            COVARIATE_FILE_PATH: path.join(
+              __dirname,
+              '../../../../../algorithm-development/test-data/regression-csv-test-data/input/local0/simulatorRun/site1_Covariate.csv',
+            ),
+          },
+        },
+      ],
     });
     beforeHandler();
   });
