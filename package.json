@@ -26,7 +26,7 @@
   },
   "scripts": {
     "api-ci": "cd packages/coinstac-api-server/ && npm start",
-    "api-server": "cd packages/coinstac-api-server/ && docker-compose up -d && npm start",
+    "api-server": "cd packages/coinstac-api-server/ && docker compose up -d && npm start",
     "build": "lerna bootstrap",
     "build-app": "mkdir -p ./build && docker pull coinstacteam/coinstac && scripts/dockerbuild.sh $1",
     "build:server": "lerna bootstrap --ignore 'coinstac-{client-core,decentralized-algorithm-integration,simulator,storage-proxy,ui}'",

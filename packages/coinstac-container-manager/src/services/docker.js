@@ -1,12 +1,48 @@
-'use strict';
-
 const Docker = require('dockerode');
 const _ = require('lodash');
 const http = require('http');
+const path = require('path');
+const os = require('os');
+const { execSync } = require('child_process');
 const utils = require('../utils');
 const { ServiceFunctionGenerator } = require('./serviceFunction');
 
-const docker = new Docker();
+let docker;
+
+function getDockerSocketPathConfig() {
+  try {
+    // Run the command to get the Docker endpoint
+    const output = execSync('docker context ls --format "{{if eq .Current true}}{{.DockerEndpoint}}{{end}}"', { encoding: 'utf-8' });
+    const dockerEndpoint = output.trim();
+    if (dockerEndpoint.startsWith('unix://')) {
+      // Unix socket path, typically on Linux, macOS, and WSL
+      const socketPath = dockerEndpoint.replace('unix://', '');
+      return { socketPath: socketPath };
+    } else if (dockerEndpoint.startsWith('npipe://')) {
+      // Named pipe path, typically on Windows
+      return { socketPath: undefined, host: pipePath }
+      ;
+    } else {
+      utils.logger.error('Unrecognized Docker endpoint format.');
+      return null;
+    }
+  } catch (error) {
+    utils.logger.error(`Error determining the Docker socket path: ${error.message}`);
+    return null;
+  }
+}
+
+// Usage
+const pathConfig = getDockerSocketPathConfig();
+utils.logger.info(`Current Docker socket/path: ${pathConfig}`);
+
+if (pathConfig) {
+  docker = new Docker(pathConfig);
+} else {
+  utils.logger.error('Could not determine the Docker socket or named pipe path. Falling back to default Dockerode configuration.');
+  docker = new Docker();
+}
+
 const listImages = (opts, cb) => docker.listImages(opts, cb);
 const ping = () => docker.ping();
 const getImage = id => docker.getImage(id);
