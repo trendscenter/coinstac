@@ -3,6 +3,9 @@
   "version": "6.8.13",
   "description": "",
   "main": "src/index.js",
+  "bin": {
+    "coinstac-api-server": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
     "test": "docker compose down && sleep 3 && docker compose up -d && cross-env NODE_ENV=test nyc ava",
