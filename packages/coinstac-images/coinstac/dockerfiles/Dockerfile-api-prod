@@ -1,0 +1,5 @@
+FROM coinstacteam/coinstac-prod
+
+EXPOSE 3100
+RUN npm i -g coinstac-api-server
+CMD coinstac-api-server
