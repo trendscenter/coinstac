@@ -89,7 +89,7 @@ const ComputationIO = ({ compIO }) => {
         />
       )}
       <div className={classes.computationActions}>
-        {showEdit && (
+        {/* {showEdit && ( */}
           <Button
             variant="contained"
             color={isEditing ? 'secondary' : 'primary'}
@@ -97,7 +97,7 @@ const ComputationIO = ({ compIO }) => {
           >
             {isEditing ? 'Cancel' : 'Edit'}
           </Button>
-        )}
+        {/* )} */}
 
         {isEditing && (
           <Button
