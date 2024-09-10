@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /* eslint-disable no-console */
 const hapi = require('@hapi/hapi');
 const axios = require('axios');

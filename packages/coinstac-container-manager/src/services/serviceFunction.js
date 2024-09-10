@@ -38,7 +38,7 @@ const ServiceFunctionGenerator = ({
             ws.on('error', (e) => {
               if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                 ws.terminate();
-                if (count > 10) {
+                if (count > 20) {
                   reject(new Error('Container websocket server timeout exceeded'));
                 } else {
                   count += 1;

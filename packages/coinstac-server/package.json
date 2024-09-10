@@ -1,9 +1,11 @@
 {
   "name": "coinstac-server",
-  "version": "6.8.11",
+  "version": "6.8.14",
   "description": "COINSTAC core server functionality.",
+  "bin": {
+    "coinstac-server": "src/index.js"
+  },
   "main": "src/index.js",
-  "bin": "bin/coinstac-server-core",
   "scripts": {
     "clean": "npm run clean:computations && npm run clean:db",
     "clean:db": "node scripts/clean-db.js",
@@ -37,9 +39,9 @@
     "@hapi/hapi": "^20.2.1",
     "axios": "^1.6.0",
     "chalk": "4.1.2",
-    "coinstac-container-manager": "^6.8.11",
+    "coinstac-container-manager": "^6.8.13",
     "coinstac-graphql-schema": "^6.8.6",
-    "coinstac-pipeline": "^6.8.11",
+    "coinstac-pipeline": "^6.8.13",
     "commander": "^6.1.0"
   },
   "devDependencies": {

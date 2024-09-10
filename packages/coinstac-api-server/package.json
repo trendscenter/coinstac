@@ -1,11 +1,14 @@
 {
   "name": "coinstac-api-server",
-  "version": "6.8.10",
+  "version": "6.8.14",
   "description": "",
   "main": "src/index.js",
+  "bin": {
+    "coinstac-api-server": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "test": "docker-compose down && sleep 3 && docker-compose up -d && cross-env NODE_ENV=test nyc ava",
+    "test": "docker compose down && sleep 3 && docker compose up -d && cross-env NODE_ENV=test nyc ava",
     "test-setup": "docker compose up -d && node seed/test-setup.js",
     "migrate-db": "node src/database/migrations/migrate.js",
     "clear-runs": "node seed/clearRuns.js"
