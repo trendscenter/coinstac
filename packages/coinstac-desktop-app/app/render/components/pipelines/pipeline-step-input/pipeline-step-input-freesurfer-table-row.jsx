@@ -217,11 +217,12 @@ const PipelineStepInputFreesurferTableRow = ({
             />
           </div>
         </TableCell>) : <TableCell />}
-      <TableCell>
+      <TableCell style={{ verticalAlign: 'top' }}>
         <Button
           variant="contained"
           color="secondary"
           disabled={!owner || !obj.type}
+          style={{ position: 'sticky', top: 10 }}
           onClick={() => updateStep({
             ...step,
             inputMap: {
