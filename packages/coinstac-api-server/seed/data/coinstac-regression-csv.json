@@ -1,0 +1,147 @@
+{
+  "meta": {
+    "name": "Regression - CSV",
+    "id": "regression-csv",
+    "version": "v1.0.0",
+    "compspecVersion": 2,
+    "repository": "https://github.com/trendscenter/coinstac-regression-csv",
+    "description": "Input data type: CSV formatted Covariates and Measurements. Format: CSV. Source data is not shared with other sites. Emulates local Ridge regression normal equation with closed form solution, with data from various sites pooled together. Dependent variable values are read from all the voxels in the Structural MRI nifti files. Covariates and dependent variables are sent to the private secure aggregator node and beta coefficient's are calculated and sent to local sites. Simplest and fastest form of regression. Click VIEW GITHUB PROJECT PAGE above and download from the test/local0/simulatorRun directory.",
+    "preprocess": null
+  },
+  "computation": {
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "regressions",
+            "subtables": [
+              {
+                "source": "global_stats",
+                "subtitle": "ROI"
+              },
+              {
+                "source": "local_stats",
+                "subtitle": "ROI",
+                "subtables": "by-key"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "input": {
+      "data": {
+        "order": 1,
+        "label": "Local Data",
+        "type": "files",
+        "items": ["Data CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "covariates": {
+        "order": 1,
+        "label": "Local Covariates",
+        "type": "files",
+        "items": ["Covariate CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "y_headers": {
+        "order": 2,
+        "label": "y Headers",
+        "type": "object",
+        "source": "owner",
+        "default": ["Left-Lateral-Ventricle", "Right-Lateral-Ventricle"]
+      },
+      "X_headers": {
+        "order": 3,
+        "label": "X Headers",
+        "type": "object",
+        "source": "owner",
+        "default": ["isControl", "age"]
+      },
+      "lambda": {
+        "default": 1,
+        "label": "Lambda",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      }
+    },
+    "output": {
+      "regressions": {
+        "label": "Regressions",
+        "type": "array",
+        "items": {
+          "global_stats": {
+            "label": "Global Stats",
+            "type": "object",
+            "items": {
+              "avg_beta_vector": {
+                "label": "Avg Beta Vector",
+                "type": "array"
+              },
+              "r2_global": {
+                "label": "R2 Global",
+                "type": "number"
+              },
+              "ts_global": {
+                "label": "TS Global",
+                "type": "array"
+              },
+              "ps_global": {
+                "label": "PS Global",
+                "type": "number"
+              },
+              "dof_global": {
+                "label": "DOF Global",
+                "type": "array"
+              }
+            }
+          },
+          "local_stats": {
+            "label": "Local Stats",
+            "type": "object",
+            "items": {
+              "beta": {
+                "label": "Beta",
+                "type": "array"
+              },
+              "pval": {
+                "label": "PVal",
+                "type": "array"
+              },
+              "rsquared": {
+                "label": "R Squared",
+                "type": "number"
+              },
+              "sse": {
+                "label": "SSE",
+                "type": "number"
+              },
+              "tval": {
+                "label": "TVal",
+                "type": "array"
+              }
+            }
+          },
+          "ROI": {
+            "label": "Region of Interest",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/regression-csv",
+    "command": ["python", "/computation/scripts/local.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/regression-csv",
+      "command": ["python", "/computation/scripts/remote.py"]
+    }
+  }
+}

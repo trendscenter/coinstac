@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "name": "Decentralized Constrained Source Based Morphometry",
+    "id": "coinstac-dsbm",
+    "version": "v1.0.0",
+    "compspecVersion": 1,
+    "repository": "https://github.com/trendscenter/decentralized-source-based-morphometry",
+    "description": "A Demo for Decentralized Source Based Morphometry",
+    "preprocess": null
+  },
+  "computation": {
+    "display": {
+      "type": "iframe"
+    },
+    "input": {
+      "data": {
+        "label": "Data",
+        "type": "files",
+        "items": ["NiFTI"],
+        "extensions": [["nii"]],
+        "source": "member",
+        "order": 1
+      },
+      "mask": {
+        "group": "options",
+        "default": "/computation/local_data/mask.nii",
+        "label": "Mask Filename",
+        "type": "string",
+        "source": "owner",
+        "tooltip": "Nifti file name to be use as the mask",
+        "order": 2
+      },
+      "scica_template": {
+        "group": "options",
+        "default": "/computation/local_data/NeuroMark.nii",
+        "label": "Spatially Constrained ICA Template Name",
+        "type": "string",
+        "source": "owner",
+        "tooltip": "Nifti file name to be use as the template for spatially constrained ICA",
+        "order": 3
+      },
+      "covariates": {
+        "group": "reg",
+        "label": "Covariates",
+        "type": "csv",
+        "items": ["boolean", "number", "string"],
+        "source": "member",
+        "tooltip": "csv file with nifti file name, covariates information of each subject in a separate line",
+        "order": 4
+      },
+      "reference_columns": {
+        "group": "reg",
+        "label": "Regression reference column(s) and value(s)",
+        "default": {},
+        "type": "object",
+        "source": "owner",
+        "tooltip": "Used in regression for dummy encoding categorical covariate columns. Required only if specific value(s) should be used for dummy encoding a column(s); Example : { \"reference_column_name\": \"reference_value\" }",
+        "order": 5
+      },
+      "group_col_name": {
+        "group": "reg",
+        "label": "Patient/Control column name",
+        "default": "",
+        "type": "string",
+        "source": "owner",
+        "tooltip": "Column name in the covariates file that contains patients and controls information.",
+        "order": 5
+      }
+    },
+    "output": {},
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-dsbm",
+    "command": ["python", "/computation/local.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-dsbm",
+      "command": ["python", "/computation/remote.py"]
+    }
+  }
+}

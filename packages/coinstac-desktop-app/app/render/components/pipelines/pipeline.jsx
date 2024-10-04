@@ -130,6 +130,20 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
   />
 );
 
+const getDefaultMapFromComputation = (computation) => {
+  if (!computation?.input) {
+    return {};
+  }
+
+  return Object.keys(computation.input).reduce((acc, key) => {
+    const { default: defaultValue } = computation.input[key];
+    if (defaultValue !== undefined && defaultValue !== null) {
+      acc[key] = { value: defaultValue };
+    }
+    return acc;
+  }, {});
+};
+
 class Pipeline extends Component {
   mapHeadlessUsers = memoize(
     (users, pipeline) => {
@@ -329,7 +343,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: {},
+            inputMap: getDefaultMapFromComputation(computation.computation),
           },
         ],
       },

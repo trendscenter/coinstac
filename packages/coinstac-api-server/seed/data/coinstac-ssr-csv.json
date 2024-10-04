@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "name": "Regression (Singleshot) - CSV",
+    "id": "coinstac-ssr-csv",
+    "version": "v1.0.0",
+    "compspecVersion": 2,
+    "repository": "https://github.com/pixelsaurus/coinstac-ssr-csv",
+    "description": "Input data type:CSV files 1)Data file with dependent variables 2) Covariate file with independent variables. Source data is not shared with other sites. Local Beta's are calculated from covariates and dependent variables, and are sent to the private secure aggregator node. An average Beta vector is calculated and sent to local sites. One iteration between private aggregator and local sites. Expect better Goodness of fit (R square) than Regression with closed form solution - Freesurfer Volumes. Click VIEW GITHUB PROJECT PAGE above and download from the test/local0/simulatorRun directory.",
+    "preprocess": null
+  },
+  "computation": {
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "regressions",
+            "subtables": [
+              {
+                "source": "global_stats",
+                "subtitle": "ROI"
+              },
+              {
+                "source": "local_stats",
+                "subtitle": "ROI",
+                "subtables": "by-key"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "input": {
+      "data": {
+        "order": 1,
+        "label": "Local Data",
+        "type": "files",
+        "items": ["Data CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "covariates": {
+        "order": 1,
+        "label": "Local Covariates",
+        "type": "files",
+        "items": ["Covariate CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "y_headers": {
+        "order": 2,
+        "label": "y Headers",
+        "type": "object",
+        "source": "owner",
+        "default": ["Left-Lateral-Ventricle", "Right-Lateral-Ventricle"]
+      },
+      "X_headers": {
+        "order": 3,
+        "label": "X Headers",
+        "type": "object",
+        "source": "owner",
+        "default": ["isControl", "age"]
+      },
+      "lambda": {
+        "label": "Lambda",
+        "type": "number",
+        "default": 0,
+        "source": "owner"
+      }
+    },
+    "output": {
+      "regressions": {
+        "label": "Regressions",
+        "type": "array",
+        "items": {
+          "global_stats": {
+            "label": "Global Stats",
+            "type": "object",
+            "items": {
+              "avg_beta_vector": {
+                "label": "Avg Beta Vector",
+                "type": "array"
+              },
+              "r2_global": {
+                "label": "R2 Global",
+                "type": "number"
+              },
+              "ts_global": {
+                "label": "TS Global",
+                "type": "array"
+              },
+              "ps_global": {
+                "label": "PS Global",
+                "type": "number"
+              },
+              "dof_global": {
+                "label": "DOF Global",
+                "type": "array"
+              }
+            }
+          },
+          "local_stats": {
+            "label": "Local Stats",
+            "type": "object",
+            "items": {
+              "beta": {
+                "label": "Beta",
+                "type": "array"
+              },
+              "pval": {
+                "label": "PVal",
+                "type": "array"
+              },
+              "rsquared": {
+                "label": "R Squared",
+                "type": "number"
+              },
+              "sse": {
+                "label": "SSE",
+                "type": "number"
+              },
+              "tval": {
+                "label": "TVal",
+                "type": "array"
+              }
+            }
+          },
+          "ROI": {
+            "label": "Region of Interest",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-ssr-csv",
+    "command": ["python", "/computation/entry.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-ssr-csv",
+      "command": ["python", "/computation/entry.py"]
+    }
+  }
+}

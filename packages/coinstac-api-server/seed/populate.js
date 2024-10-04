@@ -10,8 +10,11 @@ const dlmeVBM = require('./data/coinstac-dlme-vbm.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
+const rCsv = require('./data/coinstac-regression-csv.json');
+const ssrCsv = require('./data/coinstac-ssr-csv.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm.json');
+const msrCsv = require('./data/coinstac-msr-csv.json');
 const dmancova = require('./data/coinstac-dmancova.json');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl.json');
@@ -20,10 +23,13 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl.json');
 
 const gica = require('./data/coinstac-gica-pipeline.json');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline.json');
+const dsbm = require('./data/coinstac-dsbm.json');
 const dpsvm = require('./data/coinstac-dpsvm.json');
+const dpsvmCsv = require('./data/coinstac-dpsvm-csv.json');
 const dinunet = require('./data/coinstac-dinunet.json');
 const dinunetGPU = require('./data/coinstac-dinunet-gpu.json');
 const vbm = require('./data/coinstac-vbm-pre.json');
+const distMeshnet = require('./data/coinstac-dist-meshnet.json');
 
 const fmri = require('./data/coinstac-fmri.json');
 const pLink = require('./data/coinstac-plink.json');
@@ -42,46 +48,59 @@ const CONSORTIA_IDS = generateUniqueIDs(2);
 
 const PIPELINE_IDS = generateUniqueIDs(4);
 
-const COMPUTATION_IDS = generateUniqueIDs(27);
-
 const USER_IDS = generateUniqueIDs(6);
 
 const RUN_IDS = generateUniqueIDs(4);
 
+const COMPUTATION_DATA = [
+  local,
+  decentralized,
+  msrFsl,
+  msrVbm,
+  msrCsv,
+  vbm,
+  gica,
+  ddfnc,
+  dsbm,
+  dpsvm,
+  dpsvmCsv,
+  drneVbm,
+  rCsv,
+  ssrCsv,
+  dsneMS,
+  drneFsl,
+  decentralizedError,
+  enigmaSans,
+  localError,
+  fmri,
+  ssrFsl,
+  dmancova,
+  dinunet,
+  dinunetGPU,
+  brainageFNC,
+  pLink,
+  dpica,
+  combatDC,
+  dlmeFS,
+  dlmeVBM,
+  transfer,
+  stress,
+  distMeshnet,
+];
+
+const COMPUTATIONS = COMPUTATION_DATA.map(comp => ({ ...comp, submittedBy: 'author', _id: database.createUniqueId() }));
+
+const LOCAL_COMP_ID = COMPUTATIONS.find(comp => comp.meta.id === 'coinstac-local-test')._id;
+
+const DRNE_VBM_COMP_ID = COMPUTATIONS.find(comp => comp.meta.id === 'regression-vbm')._id;
+
+const SSR_FSL_COMP_ID = COMPUTATIONS.find(comp => comp.meta.id === 'ssr-fsl')._id;
+
 async function populateComputations() {
   const db = database.getDbInstance();
 
-  const comps2Insert = [
-    { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
-    { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
-    { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
-    { ...msrVbm, submittedBy: 'author', _id: COMPUTATION_IDS[3] },
-    { ...vbm, submittedBy: 'author', _id: COMPUTATION_IDS[4] },
-    { ...gica, submittedBy: 'author', _id: COMPUTATION_IDS[5] },
-    { ...ddfnc, submittedBy: 'author', _id: COMPUTATION_IDS[6] },
-    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[7] },
-    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
-    { ...dsneMS, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
-    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
-    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
-    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
-    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
-    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
-    { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
-    { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
-    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
-    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
-    { ...brainageFNC, submittedBy: 'author', _id: COMPUTATION_IDS[19] },
-    { ...pLink, submittedBy: 'author', _id: COMPUTATION_IDS[20] },
-    { ...dpica, submittedBy: 'author', _id: COMPUTATION_IDS[21] },
-    { ...combatDC, submittedBy: 'author', _id: COMPUTATION_IDS[22] },
-    { ...dlmeFS, submittedBy: 'author', _id: COMPUTATION_IDS[23] },
-    { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[24] },
-    { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
-    { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
-  ];
   const currentComps = await db.collection('computations').find().toArray();
-  const operations = comps2Insert.reduce((ops, comp) => {
+  const operations = COMPUTATIONS.reduce((ops, comp) => {
     const cc = currentComps.find(cc => cc.meta.id === comp.meta.id);
     if (cc) {
       ops.update.push(Object.assign({}, comp, { _id: cc._id }));
@@ -152,7 +171,7 @@ async function populatePipelines() {
       steps: [
         {
           computations: [
-            COMPUTATION_IDS[15],
+            SSR_FSL_COMP_ID,
           ],
           controller: {
             id: null,
@@ -199,7 +218,7 @@ async function populatePipelines() {
           id: 'UIKDl-',
           controller: { type: 'decentralized' },
           computations: [
-            COMPUTATION_IDS[0],
+            LOCAL_COMP_ID,
           ],
           inputMap: {
             start: { value: 1 },
@@ -218,7 +237,7 @@ async function populatePipelines() {
           id: 'UIKDl-local1',
           controller: { type: 'local' },
           computations: [
-            COMPUTATION_IDS[0],
+            LOCAL_COMP_ID,
           ],
           inputMap: {
             start: { value: 1 },
@@ -228,7 +247,7 @@ async function populatePipelines() {
           id: 'UIKDl-local2',
           controller: { type: 'local' },
           computations: [
-            COMPUTATION_IDS[0],
+            LOCAL_COMP_ID,
           ],
           inputMap: {
             start: { fromCache: { step: 0, variable: 'sum' } },
@@ -1026,7 +1045,7 @@ async function populateHeadlessClients() {
       apiKey: await helperFunctions.hashPassword('testApiKey'),
       hasApiKey: true,
       computationWhitelist: {
-        [COMPUTATION_IDS[15]]: {
+        [SSR_FSL_COMP_ID]: {
           inputMap: {
             covariates: {
               type: 'csv',
@@ -1038,7 +1057,7 @@ async function populateHeadlessClients() {
             },
           },
         },
-        [COMPUTATION_IDS[8]]: {
+        [DRNE_VBM_COMP_ID]: {
           inputMap: {
             covariates: {
               type: 'csv',
@@ -1270,13 +1289,12 @@ async function clearRuns() {
   await database.close();
 }
 
-
 module.exports = {
   CONSORTIA_IDS,
-  COMPUTATION_IDS,
   PIPELINE_IDS,
   USER_IDS,
   RUN_IDS,
+  LOCAL_COMP_ID,
   populate,
   updateComputations,
   clearRuns,

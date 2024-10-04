@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "name": "Distributed Meshet",
+    "id": "coinstac-dist-meshnet",
+    "version": "v1.0.0",
+    "compspecVersion": 2,
+    "repository": "https://github.com/trendscenter/coinstac-dist-meshnet",
+    "description": "COINSTAC Distributed Meshet Example",
+    "preprocess": null
+  },
+  "computation": {
+    "display": [
+      {
+        "type": "iframe"
+      }
+    ],
+    "input": {
+      "data": {
+        "label": "File Path",
+        "type": "directory",
+        "items": ["File Path"],
+        "source": "member",
+        "order": 0
+      },
+      "wan": {
+        "label": "WANdb Acct ID",
+        "type": "string",
+        "default": "4249802c5215f434e814b1a6ecddf6bbcd3b8982",
+        "source": "owner",
+        "order": 1
+      },
+      "epochs": {
+        "label": "Epochs",
+        "type": "number",
+        "default": 1,
+        "source": "owner",
+        "order": 2
+      },
+      "lr": {
+        "label": "LR",
+        "type": "number",
+        "default": 0.0007,
+        "source": "owner",
+        "order": 3
+      },
+      "classes": {
+        "label": "Classes",
+        "type": "number",
+        "default": 3,
+        "source": "owner",
+        "order": 4
+      }
+    },
+    "output": {
+      "Beta": {
+        "type": "array"
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-dist-meshnet",
+    "command": ["python", "/computation/scripts/local.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-dist-meshnet",
+      "command": ["python", "/computation/scripts/remote.py"]
+    }
+  }
+}

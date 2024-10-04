@@ -1,73 +1,56 @@
 {
   "meta": {
-      "name": "Decentralized Combat",
-      "id": "coinstac-combatdc",
-      "version": "v1.0.0",
-      "compspecVersion": null,
-      "repository": "https://github.com/trendscenter/coinstac-combat",
-      "description": "Input data type: CSV. Decentralized Combat for harmonizing data across various sites.",
-      "preprocess": null
+    "name": "Decentralized Combat",
+    "id": "coinstac-combatdc",
+    "version": "v1.0.0",
+    "compspecVersion": null,
+    "repository": "https://github.com/trendscenter/coinstac-combat",
+    "description": "Decentralized Combat Test",
+    "preprocess": null
   },
   "computation": {
-      "display": {
-          "type": "table"
+    "display": {
+      "type": "table"
+    },
+    "input": {
+      "data_file": {
+        "label": "Data File",
+        "type": "files",
+        "items": ["Files"],
+        "extensions": [["csv"]],
+        "order": 0,
+        "source": "member"
       },
-      "input": {
-          "data_file": {
-              "label": "Data File",
-              "type": "files",
-              "items": [
-                  "Files"
-              ],
-              "extensions": [
-                  [
-                      "csv"
-                  ]
-              ],
-              "order": 0,
-              "source": "member"
-          },
-          "covariate_file": {
-              "label": "Covariate File",
-              "type": "files",
-              "items": [
-                  "Files"
-              ],
-              "extensions": [
-                  [
-                      "csv"
-                  ]
-              ],
-              "order": 1,
-              "source": "member"
-          },
-          "hidden": {
-              "label": " ",
-              "type": "hidden",
-              "source": "owner",
-              "default": " ",
-              "order": 3
-          }
+      "covariate_file": {
+        "label": "Covariate File",
+        "type": "files",
+        "items": ["Files"],
+        "extensions": [["csv"]],
+        "order": 0,
+        "source": "member"
       },
-      "output": {
-          "hyperparameters": {
-              "type": "array",
-              "label": "Decentralized hypermeters"
-          }
-      },
+      "combat_alg_type": {
+        "type": "select",
+        "label": "Combat Algorithm Type",
+        "default": "combatDC",
+        "values": ["combatDC", "combatMegaDC"],
+        "source": "owner",
+        "tooltip": "CombatDC runs a decentralized COMBAT algorithm (does not handle missing data). combatMegaDC handles missing data by interpolation and then runs decentralized COMBAT algorithm"
+      }
+    },
+    "output": {
+      "hyperparameters": {
+        "type": "array",
+        "label": "Decentralized hypermeters"
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-combatdc",
+    "command": ["python", "/computation/local.py"],
+    "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/coinstac-combatdc",
-      "command": [
-          "python",
-          "/computation/local.py"
-      ],
-      "remote": {
-          "type": "docker",
-          "dockerImage": "coinstacteam/coinstac-combatdc",
-          "command": [
-              "python",
-              "/computation/remote.py"
-          ]
-      }
+      "command": ["python", "/computation/remote.py"]
+    }
   }
 }

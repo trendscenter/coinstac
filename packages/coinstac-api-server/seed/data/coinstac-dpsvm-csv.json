@@ -1,0 +1,315 @@
+{
+  "meta": {
+    "name": "Differentially Private Support Vector Machines - CSV Based (*2 Sites min. to run)",
+    "id": "coinstac-dpsvm-csv",
+    "version": "v1.0.0",
+    "compspecVersion": null,
+    "repository": "https://github.com/trendscenter/coinstac-dpsvm-csv",
+    "description": "REQUIRES 2 SITES MIN. TO RUN",
+    "preprocess": null
+  },
+  "computation": {
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "measurements"
+          }
+        ]
+      }
+    ],
+    "input": {
+      "data": {
+        "order": 1,
+        "label": "Local Data",
+        "type": "files",
+        "items": ["Data CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "x_headers": {
+        "order": 2,
+        "label": "Areas of Interest",
+        "type": "object",
+        "source": "owner",
+        "default": ["Left-Lateral-Ventricle", "Right-Lateral-Ventricle"]
+      },
+      "covariates": {
+        "order": 3,
+        "label": "Local Covariates",
+        "type": "files",
+        "items": ["Covariate CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "y_headers": {
+        "order": 4,
+        "label": "Covariates",
+        "type": "object",
+        "source": "owner",
+        "default": ["isControl", "age"]
+      },
+      "label": {
+        "label": "Label",
+        "description": "The binary label to predict",
+        "type": "string",
+        "source": "owner",
+        "default": "isControl",
+        "order": 2
+      },
+      "model_local": {
+        "default": "SVM",
+        "label": "Model_local",
+        "description": "Binary classification model: SVM / LR",
+        "type": "string",
+        "source": "owner",
+        "order": 3
+      },
+      "is_private_local": {
+        "default": true,
+        "label": "Is_private_local",
+        "description": "Private or public version of model",
+        "type": "boolean",
+        "source": "owner",
+        "order": 4
+      },
+      "perturb_method_local": {
+        "default": "objective",
+        "label": "Perturb_method_local",
+        "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
+        "type": "string",
+        "source": "owner",
+        "order": 5
+      },
+      "lambda_local": {
+        "default": 0.0001,
+        "label": "Lambda_local",
+        "description": "Regularization parameter",
+        "max": 100,
+        "min": 0,
+        "step": "logrithmic",
+        "type": "number",
+        "source": "owner",
+        "order": 6
+      },
+      "epsilon_local": {
+        "default": 30,
+        "label": "Epsilon_local",
+        "description": "Privacy parameter",
+        "max": 3,
+        "min": 0.1,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 7
+      },
+      "huberconst_local": {
+        "default": 0.5,
+        "label": "Huberconst_local",
+        "description": "Constant for huber loss",
+        "max": 0.5,
+        "min": 0.001,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 8
+      },
+      "model_owner": {
+        "default": "SVM",
+        "label": "Model_owner",
+        "description": "Binary classification model: SVM / LR",
+        "type": "string",
+        "source": "owner",
+        "order": 9
+      },
+      "fit_intercept_local": {
+        "default": true,
+        "label": "Fit_intercept_local",
+        "type": "boolean",
+        "source": "owner",
+        "order": 10
+      },
+      "intercept_scaling_local": {
+        "default": true,
+        "label": "Intercept_scaling_local",
+        "type": "boolean",
+        "source": "owner",
+        "order": 11
+      },
+      "is_private_owner": {
+        "default": true,
+        "label": "Is_private_owner",
+        "description": "Private or public version of model",
+        "type": "boolean",
+        "source": "owner",
+        "order": 12
+      },
+      "perturb_method_owner": {
+        "default": "objective",
+        "label": "Perturb_method_owner",
+        "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
+        "type": "string",
+        "source": "owner",
+        "order": 13
+      },
+      "lambda_owner": {
+        "default": 0.0001,
+        "label": "Lambda_owner",
+        "description": "Regularization parameter",
+        "max": 100,
+        "min": 0,
+        "step": "logrithmic",
+        "type": "number",
+        "source": "owner",
+        "order": 14
+      },
+      "epsilon_owner": {
+        "default": 30,
+        "label": "Epsilon_owner",
+        "description": "Privacy parameter",
+        "max": 3,
+        "min": 0.1,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 15
+      },
+      "huberconst_owner": {
+        "default": 0.5,
+        "label": "Huberconst_owner",
+        "description": "Constant for huber loss",
+        "max": 0.5,
+        "min": 0.001,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 16
+      },
+      "fit_intercept_owner": {
+        "default": true,
+        "label": "Fit_intercept_owner",
+        "type": "boolean",
+        "source": "owner",
+        "order": 17
+      },
+      "intercept_scaling_owner": {
+        "default": true,
+        "label": "Intercept_scaling_owner",
+        "type": "boolean",
+        "source": "owner",
+        "order": 18
+      },
+      "train_split": {
+        "default": 0.8,
+        "label": "Train Split",
+        "description": "Percentage of data used for training at the owner site",
+        "max": 1,
+        "min": 0,
+        "step": 0.1,
+        "type": "number",
+        "source": "owner",
+        "order": 19
+      },
+      "shuffle": {
+        "default": true,
+        "label": "Shuffle",
+        "type": "boolean",
+        "source": "owner",
+        "order": 20
+      }
+    },
+    "output": {
+      "measurements": {
+        "label": "Differentially private SVM classifier",
+        "type": "object",
+        "items": {
+          "cm_test_owner": {
+            "label": "Remote site: Confusion Matrix of the test data",
+            "type": "array"
+          },
+          "cm_test_owner_normalized": {
+            "label": "Remote site: Normalized Confusion Matrix of the test data",
+            "type": "array"
+          },
+          "acc_test_owner": {
+            "label": "Remote site: Testing accuracy",
+            "type": "number"
+          },
+          "f1_test_owner": {
+            "label": "Remote site: Testing F1 score",
+            "type": "number"
+          },
+          "rocauc_test_owner": {
+            "label": "Remote site: Testing AUC score",
+            "type": "number"
+          },
+          "cm_train_owner": {
+            "label": "Remote site: Confusion Matrix of the training data",
+            "type": "array"
+          },
+          "cm_train_owner_normalized": {
+            "label": "Remote site: Normalized Confusion Matrix of the training data",
+            "type": "array"
+          },
+          "acc_train_owner": {
+            "label": "Remote site: Training accuracy",
+            "type": "number"
+          },
+          "cm_test_locals": {
+            "label": "Local sites: Confusion Matrix of the test data",
+            "type": "array"
+          },
+          "cm_test_locals_normalized": {
+            "label": "Local sites: Normalized Confusion Matrix of the test data",
+            "type": "array"
+          },
+          "acc_test_locals": {
+            "label": "Local sites: Testing accuracy",
+            "type": "array"
+          },
+          "f1_test_locals": {
+            "label": "Local sites: Testing F1 score",
+            "type": "array"
+          },
+          "rocauc_test_locals": {
+            "label": "Local sites: Testing AUC score",
+            "type": "array"
+          },
+          "cm_train_locals": {
+            "label": "Local sites: Confusion Matrix of the training data",
+            "type": "array"
+          },
+          "cm_train_locals_normalized": {
+            "label": "Local sites: Normalized Confusion Matrix of the training data",
+            "type": "array"
+          },
+          "acc_train_locals": {
+            "label": "Local sites: Training accuracy",
+            "type": "array"
+          },
+          "n_samples_owner_train": {
+            "label": "Remote site: Number of training data samples",
+            "type": "number"
+          },
+          "n_samples_owner_test": {
+            "label": "Remote site: Number of test data samples",
+            "type": "number"
+          },
+          "n_samples_locals": {
+            "label": "Local sites: Number of data samples",
+            "type": "array"
+          }
+        }
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-dpsvm-csv",
+    "command": ["python", "/computation/scripts/local.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-dpsvm-csv",
+      "command": ["python", "/computation/scripts/remote.py"]
+    }
+  }
+}

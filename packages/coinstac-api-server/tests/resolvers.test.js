@@ -11,10 +11,10 @@ const database = require('../src/database');
 const {
   populate,
   CONSORTIA_IDS,
-  COMPUTATION_IDS,
   PIPELINE_IDS,
   USER_IDS,
   RUN_IDS,
+  LOCAL_COMP_ID,
 } = require('../seed/populate');
 const helperFunctions = require('../src/auth-helpers');
 const { resolvers } = require('../src/data/resolvers');
@@ -870,7 +870,7 @@ test('savePipeline', async (t) => {
         controller: {
           type: 'decentralized',
         },
-        computations: [COMPUTATION_IDS[0]],
+        computations: [LOCAL_COMP_ID],
         inputMap: {
           start: {
             value: 1,
@@ -1072,7 +1072,7 @@ test('leaveConsortium', async (t) => {
 
 test('removeComputation', async (t) => {
   const auth1 = getAuth(USER_IDS[0], 'test1');
-  const computationId = COMPUTATION_IDS[0];
+  const computationId = LOCAL_COMP_ID[0];
 
   const error = await Mutation.removeComputation('', { computationId }, auth1);
   t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
