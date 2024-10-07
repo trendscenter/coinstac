@@ -142,9 +142,9 @@ const getDefaultMapFromComputation = (computation) => {
   }
 
   return Object.keys(computation.input).reduce((acc, key) => {
-    const { value } = computation.input[key];
-    if (value !== undefined && value !== null) {
-      acc[key] = value;
+    const { default: defaultValue } = computation.input[key];
+    if (defaultValue !== undefined && defaultValue !== null) {
+      acc[key] = { value: defaultValue, fulfilled: true };
     }
     return acc;
   }, {});
