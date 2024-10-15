@@ -1,5 +1,5 @@
-import Button from '@material-ui/core/Button';
 import Box from '@material-ui/core/Box';
+import Button from '@material-ui/core/Button';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -16,10 +16,6 @@ const useStyles = makeStyles(theme => ({
   addObjButton: {
     marginBottom: theme.spacing(1),
     marginLeft: theme.spacing(1),
-  },
-  tableContainer: {
-    maxHeight: 320,
-    overflowY: 'scroll',
   },
 }));
 
@@ -49,7 +45,7 @@ function PipelineStepInputCsv({
         <AddIcon />
         {`Add ${objParams.label}`}
       </Button>
-      <Box className={classes.tableContainer}>
+      <Box className="scrollable-table">
         {objInputMap && objInputMap.value && (
           <Table>
             <TableHead>
