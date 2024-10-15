@@ -324,3 +324,22 @@ ul#loading_list {
   left: 0em;
   z-index: 10;
 }
+
+.scrollable-table {
+  thead {
+    width: calc(100% - 1em);
+  }
+
+  tbody {
+    display: block;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+
+  thead,
+  tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+}
