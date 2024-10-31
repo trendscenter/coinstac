@@ -39,6 +39,7 @@ const createPipeline = async ({
 
   await addCovariate('isControl', 'boolean', 0);
   await addCovariate('age', 'number', 1);
+  await addCovariate('sex', 'string', 2);
 
   await app.click('button:has-text("Add Data")', { timeout: EXIST_TIMEOUT });
 
