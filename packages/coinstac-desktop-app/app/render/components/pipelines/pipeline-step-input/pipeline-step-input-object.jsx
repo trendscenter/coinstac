@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
 import { JsonEditor } from 'jsoneditor-react';
+import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
 
 function PipelineStepInputObject({
   objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
@@ -33,7 +33,9 @@ function PipelineStepInputObject({
 
   return (
     <JsonEditor
+      mode="code"
       value={value}
+      search={false}
       onChange={handleChange}
     />
   );
