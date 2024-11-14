@@ -1,0 +1,3 @@
+name,type
+age,continuous
+gender,categorical

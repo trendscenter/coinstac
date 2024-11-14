@@ -68,7 +68,7 @@ function RemoteRunsListener({ userId, consortia }) {
       return;
     }
 
-    const localRun = localRuns.find(r => r.id === remoteRunChanged.id);
+    const localRun = localRuns?.find(r => r.id === remoteRunChanged.id);
 
     // Current user is not part of the run, but is part of the consortium
     if (!localRun) {

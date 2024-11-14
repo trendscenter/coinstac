@@ -1,0 +1,177 @@
+{
+  "meta": {
+    "name": "Regression (Multishot) - CSV",
+    "id": "coinstac-msr-csv",
+    "version": "v1.0.0",
+    "compspecVersion": 2,
+    "repository": "https://github.com/pixelsaurus/coinstac-msr-csv",
+    "description": "REQUIRES >=2 SITES data to run. Input data type:CSV files 1)Data file with dependent variables 2) Covariate file with independent variables  Source data is not shared with other sites. Multiple iterations between private aggregator and local sites. Global Beta is calculated by gradient descent method by iterating between local Beta's and minimizing cost function. Global stats will have these betas - beta for intercept betas for covariates and betas for n-1 ( sites ). Expect better Goodness of fit (R square) than Decentralized Regression with Beta aggregator - Freesurfer Volumes. For more info., click VIEW GITHUB PROJECT PAGE.",
+    "preprocess": null
+  },
+  "computation": {
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "regressions",
+            "subtables": [
+              {
+                "source": "global_stats",
+                "subtitle": "ROI"
+              },
+              {
+                "source": "local_stats",
+                "subtitle": "ROI",
+                "subtables": "by-key"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "input": {
+      "data": {
+        "order": 1,
+        "label": "Local Data",
+        "type": "files",
+        "items": ["Data CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "y_headers": {
+        "order": 2,
+        "label": "Areas of Interest",
+        "type": "object",
+        "source": "owner",
+        "default": [
+          "Left-Lateral-Ventricle",
+          "Right-Lateral-Ventricle",
+          "Left-Thalamus-Proper",
+          "Right-Thalamus-Proper",
+          "Left-Caudate",
+          "Right-Caudate",
+          "Left-Putamen",
+          "Right-Putamen",
+          "Left-Pallidum",
+          "Right-Pallidum",
+          "Left-Hippocampus",
+          "Right-Hippocampus",
+          "Left-Amygdala",
+          "Right-Amygdala",
+          "Left-Accumbens-area",
+          "Right-Accumbens-area",
+          "EstimatedTotalIntraCranialVol"
+        ]
+      },
+      "covariates": {
+        "order": 3,
+        "label": "Local Covariates",
+        "type": "files",
+        "items": ["Covariate CSV File"],
+        "extensions": [["csv"]],
+        "source": "member"
+      },
+      "x_headers": {
+        "order": 4,
+        "label": "Covariates",
+        "type": "object",
+        "source": "owner",
+        "default": ["isControl", "age"]
+      },
+      "lambda": {
+        "label": "Lambda",
+        "type": "number",
+        "default": 0,
+        "source": "owner",
+        "order": 5
+      },
+      "tol": {
+        "default": 100,
+        "label": "Tolerance",
+        "tooltip": "Tolerance inital parameter setting for regression convergence. Suggested range 1e-8 to 100",
+        "type": "number",
+        "source": "owner"
+      },
+      "eta": {
+        "default": 1000,
+        "label": "ETA",
+        "tooltip": "ETA inital parameter setting for regression convergence. Suggested range 1e-5 to 100",
+        "type": "number",
+        "source": "owner"
+      }
+    },
+    "output": {
+      "regressions": {
+        "label": "Regressions",
+        "type": "array",
+        "items": {
+          "global_stats": {
+            "label": "Global Stats",
+            "type": "object",
+            "items": {
+              "avg_beta_vector": {
+                "label": "Avg Beta Vector",
+                "type": "array"
+              },
+              "r2_global": {
+                "label": "R2 Global",
+                "type": "number"
+              },
+              "ts_global": {
+                "label": "TS Global",
+                "type": "array"
+              },
+              "ps_global": {
+                "label": "PS Global",
+                "type": "number"
+              },
+              "dof_global": {
+                "label": "DOF Global",
+                "type": "array"
+              }
+            }
+          },
+          "local_stats": {
+            "label": "Local Stats",
+            "type": "object",
+            "items": {
+              "beta": {
+                "label": "Beta",
+                "type": "array"
+              },
+              "pval": {
+                "label": "PVal",
+                "type": "array"
+              },
+              "rsquared": {
+                "label": "R Squared",
+                "type": "number"
+              },
+              "sse": {
+                "label": "SSE",
+                "type": "number"
+              },
+              "tval": {
+                "label": "TVal",
+                "type": "array"
+              }
+            }
+          },
+          "covariate": {
+            "label": "Covariate",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-msr-csv",
+    "command": ["python", "/computation/scripts/entry.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-msr-csv",
+      "command": ["python", "/computation/scripts/entry.py"]
+    }
+  }
+}

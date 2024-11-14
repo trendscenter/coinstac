@@ -6,21 +6,40 @@ const path = require('path');
 // Mock file dialogue in testing environment
 // Watch the following issue for progress on dialog support
 // https://github.com/electron/spectron/issues/94
+let mockFileDialogCalled = 0;
+
 function mockFileDialog() {
-  let count;
-  switch (process.env.TEST_INSTANCE) {
-    case 'test-1':
-      count = 1;
-      break;
-    case 'test-2':
-      count = 2;
-      break;
-    default:
-      count = 1;
+  const { TEST_INSTANCE } = process.env;
+  let testFilePath;
+
+  if (
+    [
+      'test-msr-csv',
+      'test-regression-csv',
+      'test-ssr-csv',
+      'test-dpsvm-csv-1',
+      'test-dpsvm-csv-2',
+    ].includes(TEST_INSTANCE)
+  ) {
+    testFilePath = mockFileDialogCalled === 0
+      ? process.env.DATA_FILE_PATH
+      : process.env.COVARIATE_FILE_PATH;
+    mockFileDialogCalled += 1;
+  } else if (TEST_INSTANCE === 'test-regression-vbm') {
+    testFilePath = process.env.COVARIATE_FILE_PATH;
+  } else if (TEST_INSTANCE === 'test-2') {
+    testFilePath = path.join(
+      __dirname,
+      '../../../../../algorithm-development/test-data/freesurfer-test-data/site2/site2_Covariate.csv',
+    );
+  } else {
+    testFilePath = path.join(
+      __dirname,
+      '../../../../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv',
+    );
   }
 
-  const testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
-  return Promise.resolve({ filePaths: [testDataFilePath] });
+  return Promise.resolve({ filePaths: [testFilePath] });
 }
 
 module.exports = {
@@ -39,13 +58,7 @@ module.exports = {
       return mockFileDialog();
     }
 
-    return dialog.showOpenDialog(
-      mainWindow,
-      {
-        filters,
-        properties,
-      },
-    );
+    return dialog.showOpenDialog(mainWindow, { filters, properties });
   },
 
   /**

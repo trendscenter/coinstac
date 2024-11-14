@@ -1,10 +1,15 @@
 const { EXIST_TIMEOUT } = require('../lib/constants');
 
-const createPipeline = async ({
-  consortium,
-  pipeline,
-  computation,
-}, app) => {
+const addCovariate = async (name, type, index, app) => {
+  await app.click('button:has-text("Add Covariates")', { timeout: EXIST_TIMEOUT });
+
+  await app.click(`#covariates-${index}-data-dropdown`, { timeout: EXIST_TIMEOUT });
+  await app.click(`#covariates-${index}-data-dropdown-menu li:has-text("${type}")`, { timeout: EXIST_TIMEOUT });
+
+  await app.fill(`#covariates-${index}-input-name`, name);
+};
+
+const addPipelineCommonData = async ({ pipeline, consortium, computation }, app) => {
   // Go to create pipeline page
   await app.click('a:has-text("Pipelines")');
 
@@ -27,18 +32,24 @@ const createPipeline = async ({
   await app.click(`#computation-menu li:has-text("${computation.name}")`, { timeout: EXIST_TIMEOUT });
 
   await app.click('.pipeline-step', { timeout: EXIST_TIMEOUT });
+};
 
-  const addCovariate = async (name, type, index) => {
-    await app.click('button:has-text("Add Covariates")', { timeout: EXIST_TIMEOUT });
+const savePipeline = async (app) => {
+  await app.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
 
-    await app.click(`#covariates-${index}-data-dropdown`, { timeout: EXIST_TIMEOUT });
-    await app.click(`#covariates-${index}-data-dropdown-menu li:has-text("${type}")`, { timeout: EXIST_TIMEOUT });
+  // Assert
+  await app.waitForSelector('div:has-text("Pipeline Saved")', {
+    state: 'visible',
+    timeout: EXIST_TIMEOUT,
+  }).should.eventually.not.equal(null);
+};
 
-    await app.fill(`#covariates-${index}-input-name`, name);
-  };
+const createPipeline = async (data, app) => {
+  await addPipelineCommonData(data, app);
 
-  await addCovariate('isControl', 'boolean', 0);
-  await addCovariate('age', 'number', 1);
+  await addCovariate('isControl', 'boolean', 0, app);
+  await addCovariate('age', 'number', 1, app);
+  await addCovariate('gender', 'string', 2, app);
 
   await app.click('button:has-text("Add Data")', { timeout: EXIST_TIMEOUT });
 
@@ -50,15 +61,54 @@ const createPipeline = async ({
 
   await app.fill('[name="step-lambda"]', '1');
 
-  await app.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
+  await savePipeline(app);
+};
 
-  // Assert
-  await app.waitForSelector('div:has-text("Pipeline Saved")', {
-    state: 'visible',
-    timeout: EXIST_TIMEOUT,
-  }).should.eventually.not.equal(null);
+const createRegressionCsvPipeline = async (data, app) => {
+  await addPipelineCommonData(data, app);
+
+  await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Data CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Local Covariates")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Covariate CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await savePipeline(app);
+};
+
+const createRegressionVBMPipeline = async (data, app) => {
+  await addPipelineCommonData(data, app);
+
+  await addCovariate('isControl', 'boolean', 0, app);
+  await addCovariate('age', 'number', 1, app);
+  await addCovariate('sex', 'string', 2, app);
+
+  await app.click('button:has-text("Add Data")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("NiFTI")', { timeout: EXIST_TIMEOUT });
+
+  await savePipeline(app);
+};
+
+const createDpsvmCsvPipeline = async (data, app) => {
+  await addPipelineCommonData(data, app);
+
+  await app.click('button:has-text("Add Local Data")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Data CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await app.click('button:has-text("Add Local Covariates")', { timeout: EXIST_TIMEOUT });
+  await app.click('button:has-text("Data Type")', { timeout: EXIST_TIMEOUT });
+  await app.click('li:has-text("Covariate CSV File")', { timeout: EXIST_TIMEOUT });
+
+  await savePipeline(app);
 };
 
 module.exports = {
   create: createPipeline,
+  createRegressionCsvPipeline,
+  createRegressionVBMPipeline,
+  createDpsvmCsvPipeline,
 };

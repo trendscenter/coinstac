@@ -19,7 +19,7 @@ function getNewAppId() {
   return instances.length + 1;
 }
 
-async function createInstance(appId) {
+async function createInstance(appId, env = {}) {
   const deviceId = `${devicePrefix}${appId}`;
   const app = await electron.launch({
     args: [
@@ -35,6 +35,7 @@ async function createInstance(appId) {
       TEST_INSTANCE: `test-${appId}`,
       NODE_ENV: 'test',
       ...(process.env.CI ? { APP_DATA_PATH: `/tmp/${deviceId}/` } : {}),
+      ...env,
     }),
     logger: {
       isEnabled: () => true,
@@ -50,11 +51,18 @@ async function createInstance(appId) {
   return { app, appWindow };
 }
 
-async function setup(instanceCount = 1) {
-  const promises = Array(instanceCount).fill(0).map(() => {
-    const appId = getNewAppId();
-    return createInstance(appId);
-  });
+async function setup(
+  instanceCount = 1,
+  additionalInfo = { instanceData: [] },
+) {
+  const { instanceData } = additionalInfo;
+
+  const promises = Array(instanceCount)
+    .fill(0)
+    .map((_, idx) => {
+      const appId = instanceData[idx]?.appId || getNewAppId();
+      return createInstance(appId, instanceData[idx]?.env);
+    });
 
   instances = await Promise.all(promises);
 
