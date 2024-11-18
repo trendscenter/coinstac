@@ -5,16 +5,6 @@ import React from 'react';
 function PipelineStepInputBoolean({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
-  if (!step.inputMap[objKey] && objParams?.default && owner) {
-    updateStep({
-      ...step,
-      inputMap: getNewObj(
-        objKey,
-        { value: objParams.default },
-      ),
-    });
-  }
-
   const value = step.inputMap[objKey]
     && typeof step.inputMap[objKey].value === 'boolean'
     ? step.inputMap[objKey].value : objParams.default;

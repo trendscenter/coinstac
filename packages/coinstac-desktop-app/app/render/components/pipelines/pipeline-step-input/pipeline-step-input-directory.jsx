@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
-import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
+import PropTypes from 'prop-types';
+import React, { useEffect } from 'react';
 
 const useStyles = makeStyles(theme => ({
   description: {
