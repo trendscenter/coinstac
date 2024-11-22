@@ -135,13 +135,20 @@ const getDefaultMapFromComputation = (computation) => {
     return {};
   }
 
-  return Object.keys(computation.input).reduce((acc, key) => {
-    const { default: defaultValue } = computation.input[key];
-    if (defaultValue !== undefined && defaultValue !== null) {
+  const inputMap = Object.keys(computation.input).reduce((acc, key) => {
+    const { default: defaultValue, type, items } = computation.input[key];
+
+    if (type === 'csv' && Array.isArray(items) && items.length > 0) {
+      const covariates = items.map(item => ({ type: item, name: '' }));
+      acc[key] = { value: covariates, fulfilled: false };
+    } else if (defaultValue !== undefined && defaultValue !== null) {
       acc[key] = { value: defaultValue, fulfilled: true };
     }
+
     return acc;
   }, {});
+
+  return inputMap;
 };
 
 class Pipeline extends Component {
