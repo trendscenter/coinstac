@@ -17,10 +17,6 @@ const useStyles = makeStyles(theme => ({
     marginBottom: theme.spacing(1),
     marginLeft: theme.spacing(1),
   },
-  tableContainer: {
-    maxHeight: 320,
-    overflowY: 'scroll',
-  },
 }));
 
 function PipelineStepInputCsv({
@@ -49,7 +45,7 @@ function PipelineStepInputCsv({
         <AddIcon />
         {`Add ${objParams.label}`}
       </Button>
-      <Box className={classes.tableContainer}>
+      <Box className="scrollable-table">
         {objInputMap && objInputMap.value && (
           <Table>
             <TableHead>
