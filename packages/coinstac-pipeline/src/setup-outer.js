@@ -170,9 +170,11 @@ async function setupOuter({
   };
 
   const publishData = (key, data, qos = 0) => {
+    const stats = {};
+    stats.maxMemoryUsage = activePipelines[data.runId].maxMemoryUsage().string;
     mqttClient.publish(
       `${mqttSubChannel}${key}`,
-      JSON.stringify(data),
+      JSON.stringify(Object.assign({}, data, { stats })),
       { qos },
       (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
     );

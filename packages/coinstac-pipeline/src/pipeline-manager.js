@@ -165,6 +165,11 @@ module.exports = {
           outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
           transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
         };
+
+        const intervalCleanupRegistry = new FinalizationRegistry((intervalId) => {
+          clearInterval(intervalId);
+        });
+
         activePipelines[runId] = Object.assign(
           {
             state: 'created',
@@ -196,6 +201,27 @@ module.exports = {
           activePipelines[runId],
           saveState ? saveState.activePipeline : {}
         );
+
+        activePipelines[runId].maxMemoryUsage = (() => {
+          let currentMaxMem = {max: 0, string: '' };
+
+          // Start an interval to update `currentMaxMem`
+          const intervalId = setInterval(async () => {
+            let containerStats = await containerManager.getStats(runId, clientId)
+            if (containerStats) {
+              currentMaxMem.max = containerStats.memory_stats.usage > currentMaxMem.max ? containerStats.memory_stats.usage : currentMaxMem.max;
+              currentMaxMem.string = `${((currentMaxMem.max) / 1000000).toFixed(3)}MB / ${((containerStats.memory_stats.limit) / 1000000).toFixed(3)}MB`;
+              utils.logger.info(`${runId} MAXMEM: ${currentMaxMem.string}`);
+            }
+          }, 1000);
+
+          // Register the interval for cleanup when the object is garbage collected
+          intervalCleanupRegistry.register(activePipelines[runId], intervalId);
+
+          // Return the getter function
+          return () => currentMaxMem;
+        })();
+
         // remote client object creation
         Object.keys(clients).forEach((clientId) => {
           remoteClients[clientId] = Object.assign(

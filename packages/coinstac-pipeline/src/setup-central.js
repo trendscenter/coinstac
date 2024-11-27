@@ -321,8 +321,8 @@ async function setupCentral({
                 runError = Object.assign(
                   error,
                   {
-                    error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
-                    message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
+                    error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}\n Usage Stats: ${data.stats.maxMemoryUsage}`,
+                    message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message} Usage Stats: ${data.stats.maxMemoryUsage}`,
                     stack: error.stack,
                   }
                 );
