@@ -68,6 +68,7 @@ import {
 import ListDeleteModal from '../common/list-delete-modal';
 import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
+import { getInputMaps } from './helpers';
 import ItemTypes from './pipeline-item-types';
 import PipelineStep from './pipeline-step';
 import vaultDescriptions from './vault-descriptions.json';
@@ -129,27 +130,6 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
     {...other}
   />
 );
-
-const getDefaultMapFromComputation = (computation) => {
-  if (!computation?.input) {
-    return {};
-  }
-
-  const inputMap = Object.keys(computation.input).reduce((acc, key) => {
-    const { default: defaultValue, type, items } = computation.input[key];
-
-    if (type === 'csv' && Array.isArray(items) && items.length > 0) {
-      const covariates = items.map(item => ({ type: item, name: '' }));
-      acc[key] = { value: covariates, fulfilled: false };
-    } else if (defaultValue !== undefined && defaultValue !== null) {
-      acc[key] = { value: defaultValue, fulfilled: true };
-    }
-
-    return acc;
-  }, {});
-
-  return inputMap;
-};
 
 class Pipeline extends Component {
   mapHeadlessUsers = memoize(
@@ -332,6 +312,8 @@ class Pipeline extends Component {
   }
 
   addStep = (computation) => {
+    const { availableHeadlessClients } = this.props;
+
     const controllerType = computation.computation.remote ? 'decentralized' : 'local';
 
     const id = shortid.generate();
@@ -350,7 +332,12 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: getDefaultMapFromComputation(computation.computation),
+            inputMap: getInputMaps(
+              prevState.pipeline.headlessMembers,
+              availableHeadlessClients,
+              computation.computation,
+              computation.id,
+            ),
           },
         ],
       },
