@@ -134,7 +134,6 @@ class PipelineStep extends Component {
 
     if (compIO
       && step
-      && !isEqual(step, prevProps.step)
       && (!step.inputMap || Object.keys(step.inputMap).length === 0)
     ) {
       updateStep({

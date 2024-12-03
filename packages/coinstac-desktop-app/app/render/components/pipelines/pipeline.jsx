@@ -68,7 +68,6 @@ import {
 import ListDeleteModal from '../common/list-delete-modal';
 import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
-import { getInputMaps } from './helpers';
 import ItemTypes from './pipeline-item-types';
 import PipelineStep from './pipeline-step';
 import vaultDescriptions from './vault-descriptions.json';
@@ -312,8 +311,6 @@ class Pipeline extends Component {
   }
 
   addStep = (computation) => {
-    const { availableHeadlessClients } = this.props;
-
     const controllerType = computation.computation.remote ? 'decentralized' : 'local';
 
     const id = shortid.generate();
@@ -332,12 +329,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: getInputMaps(
-              prevState.pipeline.headlessMembers,
-              availableHeadlessClients,
-              computation.computation,
-              computation.id,
-            ),
+            inputMap: {},
           },
         ],
       },
