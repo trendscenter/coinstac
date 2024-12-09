@@ -16,6 +16,7 @@ import { compose } from 'redux';
 
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
+import { getInputMaps } from './helpers';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
 
@@ -78,23 +79,28 @@ class PipelineStep extends Component {
 
   componentDidMount() {
     const {
-      compIO, isEdit, updateStep, step,
+      compIO,
+      isEdit,
+      updateStep,
+      step,
+      headlessMembers,
+      headlessClientsConfig,
+      computationId,
     } = this.props;
 
     if (compIO) {
       this.groupInputs(compIO);
 
       if (!isEdit) {
-        const inputMapDefaultValues = this.fillDefaultValues(compIO);
-        const inputMapPrefill = this.prefillDataFromHeadlessClients();
-
         updateStep({
           ...step,
-          inputMap: {
-            ...step.inputMap,
-            ...inputMapDefaultValues,
-            ...inputMapPrefill,
-          },
+          inputMap: getInputMaps(
+            headlessMembers,
+            headlessClientsConfig,
+            compIO.computation,
+            computationId,
+            step.inputMap,
+          ),
         });
       }
     }
@@ -102,7 +108,13 @@ class PipelineStep extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      compIO, possibleInputs, updateStep, step,
+      compIO,
+      possibleInputs,
+      updateStep,
+      step,
+      headlessMembers,
+      headlessClientsConfig,
+      computationId,
     } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
@@ -122,19 +134,18 @@ class PipelineStep extends Component {
 
     if (compIO
       && step
-      && !isEqual(step, prevProps.step)
       && (!step.inputMap || Object.keys(step.inputMap).length === 0)
     ) {
-      const inputMapDefaultValues = this.fillDefaultValues(compIO);
-      const inputMapPrefill = this.prefillDataFromHeadlessClients();
-
       updateStep({
         ...step,
-        inputMap: {
-          ...step.inputMap,
-          ...inputMapDefaultValues,
-          ...inputMapPrefill,
-        },
+        inputMap:
+          getInputMaps(
+            headlessMembers,
+            headlessClientsConfig,
+            compIO.computation,
+            computationId,
+            step.inputMap,
+          ),
       });
     }
   }
