@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
-    "aedes": "^0.42.1",
+    "aedes": "^0.51.3",
     "axios": "^1.6.0",
     "coinstac-common": "^6.8.17",
     "coinstac-container-manager": "^6.8.17",
