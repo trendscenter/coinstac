@@ -1,6 +1,6 @@
 {
   "name": "coinstac-desktop-app",
-  "version": "6.8.16",
+  "version": "6.8.17",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -14,11 +14,11 @@
     "axios": "^1.6.0",
     "bitap": "^1.0.1",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^6.8.16",
-    "coinstac-common": "^6.8.16",
-    "coinstac-container-manager": "^6.8.16",
+    "coinstac-client-core": "^6.8.17",
+    "coinstac-common": "^6.8.17",
+    "coinstac-container-manager": "^6.8.17",
     "coinstac-graphql-schema": "^6.8.6",
-    "coinstac-pipeline": "^6.8.16",
+    "coinstac-pipeline": "^6.8.17",
     "commander": "^2.15.1",
     "convict": "^6.2.1",
     "core-js": "^3.19.1",
