@@ -130,7 +130,7 @@ class Result extends Component {
       plotData = run.results;
     }
 
-    if (run.type === 'iframe' && run.pipelineSnapshot.steps[0].inputMap.results_html_path.value) {
+    if (run.pipelineSnapshot.steps[0].inputMap.results_html_path.value) {
       this.setState({ htmlPath: run.pipelineSnapshot.steps[0].inputMap.results_html_path.value });
     }
 
