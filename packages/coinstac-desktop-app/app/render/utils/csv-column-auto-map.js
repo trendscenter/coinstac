@@ -1,52 +1,52 @@
 import bitap from 'bitap';
 
 function isAMatch(variable, column) {
-  let match = false;
-
   // Match if column and variable are equal
   if (column === variable) {
-    match = true;
+    return true;
   }
 
   // Match if column contains variable and vice versa
-  if (!match) {
-    if (column.length < variable.length) {
-      const sch = variable.replace(/[_-\s]/g, ' ');
-      if (sch.includes(column)) {
-        match = true;
-      }
-    } else {
-      const str = column.replace(/[_-\s]/gi, ' ');
-      if (str.includes(variable)) {
-        match = true;
-      }
+  if (column.length < variable.length) {
+    const sch = variable.replace(/[_-\s]/g, ' ');
+    if (sch.includes(column)) {
+      return true;
+    }
+  } else {
+    const str = column.replace(/[_-\s]/gi, ' ');
+    if (str.includes(variable)) {
+      return true;
     }
   }
 
   // Finally Fuzzy match column to variable based on which is larger
-  if (!match) {
-    let fuzzy = [];
-    const str = column.replace(/[_-\s]/gi, '');
-    const sch = variable.replace(/[_-\s]/gi, '');
-    if (str.length > sch.length) {
-      fuzzy = bitap(str, sch, 1);
-    } else {
-      fuzzy = bitap(sch, str, 1);
-    }
-
-    if (fuzzy.length > 1 && fuzzy[0] > 3) {
-      match = true;
-    }
+  let fuzzy = [];
+  const str = column.replace(/[_-\s]/gi, '');
+  const sch = variable.replace(/[_-\s]/gi, '');
+  if (str.length > sch.length) {
+    fuzzy = bitap(str, sch, 1);
+  } else {
+    fuzzy = bitap(sch, str, 1);
   }
 
-  return match;
+  if (fuzzy.length > 1 && fuzzy[0] > 3) {
+    return true;
+  }
+
+  return false;
 }
 
 function findMatchInVariables(variables, column) {
   const matches = variables
     .filter(variable => isAMatch(variable.toLowerCase(), column.toLowerCase()));
 
-  return matches.length > 0 ? matches[0] : null;
+  if (matches.length > 0) {
+    const exactMatch = matches.find(value => value.toLowerCase() === column.toLowerCase());
+
+    return exactMatch || matches[0];
+  }
+
+  return null;
 }
 
 function mapVariablesToColumns(variables, columns) {
