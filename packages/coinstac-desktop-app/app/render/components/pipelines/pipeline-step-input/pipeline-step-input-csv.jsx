@@ -55,7 +55,11 @@ function PipelineStepInputCsv({
                 <TableCell />
               </TableRow>
             </TableHead>
-            <TableBody>
+            <TableBody
+              style={{
+                overflowY: objInputMap.value.length > 5 ? 'scroll' : 'auto',
+              }}
+            >
               {objInputMap.value.map((obj, index) => (
                 <PipelineStepInputCsvTableRow
                   key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
