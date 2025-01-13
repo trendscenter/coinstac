@@ -221,7 +221,7 @@ const PipelineStepInputFreesurferTableRow = ({
         <Button
           variant="contained"
           color="secondary"
-          disabled={!owner || !obj.type}
+          disabled={!owner}
           style={{ position: 'sticky', top: 10 }}
           onClick={() => updateStep({
             ...step,

@@ -201,7 +201,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
           <Button
             variant="contained"
             color="secondary"
-            disabled={!owner || !obj.type}
+            disabled={!owner}
             onClick={() => updateStep({
               ...step,
               inputMap: {
