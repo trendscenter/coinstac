@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "6.8.17",
+  "version": "6.9.1",
   "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
@@ -38,7 +38,7 @@
     "axios": "^1.6.0",
     "coinstac-common": "^6.8.17",
     "coinstac-container-manager": "^6.8.17",
-    "coinstac-pipeline": "^6.8.17",
+    "coinstac-pipeline": "^6.9.1",
     "commander": "^2.15.1",
     "convict": "^6.2.2",
     "csv-parse": "^5.0.4",

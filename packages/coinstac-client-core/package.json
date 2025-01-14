@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-core",
-  "version": "6.8.17",
+  "version": "6.9.1",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "archiver": "^5.3.1",
     "axios": "^1.6.0",
     "coinstac-container-manager": "^6.8.17",
-    "coinstac-pipeline": "^6.8.17",
+    "coinstac-pipeline": "^6.9.1",
     "convict": "^6.2.1",
     "csv-parse": "^4.4.3",
     "form-data": "^4.0.0",

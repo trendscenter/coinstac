@@ -50,5 +50,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "6.8.17"
+  "version": "6.9.1"
 }
