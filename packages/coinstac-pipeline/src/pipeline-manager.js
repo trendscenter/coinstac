@@ -74,6 +74,7 @@ module.exports = {
      * @return {Promise}       Promise on completion
      */
     const cleanupPipeline = (runId) => {
+      activePipelines[runId].cleanupInterval();
       return Promise.all([
         rmrf(path.resolve(activePipelines[runId].transferDirectory)),
         rmrf(path.resolve(activePipelines[runId].systemDirectory)),
@@ -166,10 +167,6 @@ module.exports = {
           transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
         };
 
-        const intervalCleanupRegistry = new FinalizationRegistry((intervalId) => {
-          clearInterval(intervalId);
-        });
-
         activePipelines[runId] = Object.assign(
           {
             state: 'created',
@@ -197,6 +194,7 @@ module.exports = {
             owner: spec.owner,
             limitOutputToOwner: spec.limitOutputToOwner,
             debug: {},
+            cleanupInterval() {},
           },
           activePipelines[runId],
           saveState ? saveState.activePipeline : {}
@@ -205,7 +203,6 @@ module.exports = {
         activePipelines[runId].maxMemoryUsage = (() => {
           let currentMaxMem = {max: 0, string: '' };
 
-          // Start an interval to update `currentMaxMem`
           const intervalId = setInterval(async () => {
             let containerStats = await containerManager.getStats(runId, clientId)
             if (containerStats) {
@@ -215,9 +212,9 @@ module.exports = {
             }
           }, 1000);
 
-          // Register the interval for cleanup when the object is garbage collected
-          intervalCleanupRegistry.register(activePipelines[runId], intervalId);
-
+          activePipelines[runId].cleanupInterval = function () {
+            clearInterval(intervalId);
+          };
           // Return the getter function
           return () => currentMaxMem;
         })();
@@ -310,7 +307,9 @@ module.exports = {
               });
               debugProfile(`Total pipeline time: ${totalTime}ms`);
             }
+            
             if (!activePipelines[runId].finalTransferList
+              || activePipelines[runId].finalTransferList.size === 0
               || Object.keys(activePipelines[runId].clients)
                 .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
               || (
