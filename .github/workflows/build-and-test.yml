@@ -1,14 +1,13 @@
 name: Build and test
 
 on:
-  pull_request:
-    types: [opened, reopened]
+  branches-ignore:
+    - "master"
 
 jobs:
   build-and-test:
     name: Build and teset
     runs-on: ubuntu-latest
-    container: node:18
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,6 +16,6 @@ jobs:
         with:
           node-version: 18.19.1
       - name: Build docker and run tests
-        run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
+        run: ./scripts/dockerbuild-for-ci.sh
       - name: Finish job
-        run: cd coinstac && docker-compose up --exit-code-from ui
+        run: docker-compose up --exit-code-from ui
