@@ -19,4 +19,4 @@ jobs:
       - name: Build docker and run tests
         run: ./scripts/dockerbuild-for-ci.sh
       - name: Finish job
-        run: docker-compose up --exit-code-from ui
+        run: docker compose up --exit-code-from ui
