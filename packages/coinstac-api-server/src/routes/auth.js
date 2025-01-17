@@ -68,7 +68,7 @@ module.exports = [
         { method: helperFunctions.validateUniqueUser },
       ],
       handler: async (req, h) => {
-        const isPasswordValid = helperFunctions.validatePassword(req.payload.password);
+        const isPasswordValid = helperFunctions.validatePasswordWithRegEx(req.payload.password);
         if (!isPasswordValid) {
           return h.response('Invalid password').code(400);
         }
