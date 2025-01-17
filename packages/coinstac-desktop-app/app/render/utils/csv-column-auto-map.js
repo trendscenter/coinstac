@@ -50,17 +50,21 @@ function findMatchInVariables(variables, column) {
 }
 
 function mapVariablesToColumns(variables, columns) {
-  const map = [];
+  const map = {};
 
   columns.forEach((column) => {
     const match = findMatchInVariables(variables, column);
 
-    if (match) {
-      map.push({ variable: match, column });
+    if (match && !map[match]) {
+      map[match] = column;
     }
   });
 
-  return map.length > 0 ? map : null;
+  if (Object.keys(map).length > 0) {
+    return Object.keys(map).map(variable => ({ variable, column: map[variable] }));
+  }
+
+  return null;
 }
 
 export default mapVariablesToColumns;
