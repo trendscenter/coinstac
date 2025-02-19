@@ -108,7 +108,7 @@
     "eslint-plugin-simple-import-sort": "^12.0.0",
     "file-loader": "^6.2.0",
     "jsdoc": "^3.5.5",
-    "mocha": "^9.1.3",
+    "mocha": "^11.1.0",
     "ncp": "^2.0.0",
     "node-sass": "^9.0.0",
     "nyc": "^15.1.0",
