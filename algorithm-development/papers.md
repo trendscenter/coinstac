@@ -57,6 +57,13 @@ http://dx.doi.org/10.3389/fnins.2016.00365
 A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
 https://dx.doi.org/10.3389/fninf.2014.00035
 
+Ohib, R. #, Thapaliya, B. #, Gaggenapalli, P., Liu, J., Calhoun, V.D., Plis, S.M., 2023. SalientGrads: Sparse Models for Communication Eﬃcient and Data Aware Distributed Federated Training. ICLR Sparsity in Neural Networks workshop, https://arxiv.org/pdf/2304.07488.pdf., ICLR, 2023 # Equal Contribution
+
+Thapaliya B #, Ohib R #, Geenjaar E, Liu J, Calhoun V and Plis SM (2024) Efficient federated learning for distributed neuroimaging data. Front. Neuroinform. 18:1430987. doi: 10.3389/fninf.2024.1430987 # Equal Contribution
+
+Thapaliya, B. #, Ohib, R. #, Liu, J., Calhoun, V., & Plis, S. (2023). Decentralized Sparse Federated Learning for Efficient Training on Distributed NeuroImaging Data. NeurIPS Medical Imaging Meets NeurIPS Workshop (https://neurips.cc/virtual/2023/82522) # Equal Contribution
+Package: https://pypi.org/project/coinstac-sparse-dinunet/
+
 ## Conference Papers
 
 H. Imtiaz, A.D. Sarwate, Distributed Differentially Private Canonical Correlation Analysis, Proceedings of the 44th IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Brighton, UK, pp. 3112–3116, 12–17 May 2019.  
