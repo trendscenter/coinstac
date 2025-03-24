@@ -62,6 +62,7 @@ Ohib, R. #, Thapaliya, B. #, Gaggenapalli, P., Liu, J., Calhoun, V.D., Plis, S.M
 Thapaliya B #, Ohib R #, Geenjaar E, Liu J, Calhoun V and Plis SM (2024) Efficient federated learning for distributed neuroimaging data. Front. Neuroinform. 18:1430987. doi: 10.3389/fninf.2024.1430987 # Equal Contribution
 
 Thapaliya, B. #, Ohib, R. #, Liu, J., Calhoun, V., & Plis, S. (2023). Decentralized Sparse Federated Learning for Efficient Training on Distributed NeuroImaging Data. NeurIPS Medical Imaging Meets NeurIPS Workshop (https://neurips.cc/virtual/2023/82522) # Equal Contribution
+
 Package: https://pypi.org/project/coinstac-sparse-dinunet/
 
 ## Conference Papers
