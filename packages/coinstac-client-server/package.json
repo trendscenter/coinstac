@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-server",
-  "version": "6.9.1",
+  "version": "6.9.7-0",
   "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
@@ -36,9 +36,9 @@
   "dependencies": {
     "@hapi/hapi": "^19.1.1",
     "axios": "^1.6.0",
-    "coinstac-container-manager": "^6.8.17",
+    "coinstac-container-manager": "^6.9.7-0",
     "coinstac-graphql-schema": "^6.8.6",
-    "coinstac-pipeline": "^6.9.1",
+    "coinstac-pipeline": "^6.9.7-0",
     "nes": "^10.0.2"
   }
 }

@@ -32,7 +32,12 @@ module.exports = {
     sign: false,
   },
   win: {
-    target: 'nsis',
+    target: [
+      {
+        target: 'nsis',
+        arch: ['x64']
+      }
+    ],
     icon: 'img/icons/coinstac.ico',
   },
   nsis: {
@@ -44,7 +49,12 @@ module.exports = {
     license: 'LICENSE',
   },
   linux: {
-    target: 'AppImage',
+        target: [
+      {
+        target: 'AppImage',
+        arch: ['x64']
+      },
+    ],
     category: 'Science',
     artifactName: `COINSTAC-${packageJson.version}-linux.AppImage`,
     icon: 'img/icons/coinstac.png',
