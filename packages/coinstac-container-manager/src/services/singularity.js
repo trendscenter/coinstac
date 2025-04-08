@@ -170,8 +170,6 @@ const SingularityService = () => {
         service,
         [
           'pull',
-          // Create a .sif with your desired name. You can append “.sif” if you prefer:
-          // e.g., `${imageNameWithHash}.sif`
           path.join(imageDirectory, imageNameWithHash),
           `docker://${dockerImageName}`,
         ],
@@ -238,7 +236,7 @@ const SingularityService = () => {
       return myStream;
     };
 
-    const digest = await getLatestDockerDigest(dockerImageName);
+    const digest = '0:1';//await getLatestDockerDigest(dockerImageName);
     const imageNameWithHash = `${localImage}-${digest.split(':')[1]}`;
     if (await isSingularityImageLatest(imageNameWithHash)) {
       return createImageIsLatestStream();
