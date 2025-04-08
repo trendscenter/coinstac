@@ -1,5 +1,5 @@
 const stream = require('stream');
-const { spawn, execFile } = require('child_process');
+const { spawn, execFile, spawnSync } = require('child_process');
 const path = require('path');
 const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
