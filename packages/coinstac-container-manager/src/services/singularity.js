@@ -83,12 +83,12 @@ const SingularityService = () => {
           error,
           State,
           inspect(cb) {
-            if (State.Running === true) {
+            // if (State.Running === true) {
               cb(null, { State });
-            } else if (State.Running === false) {
-              return cb(new Error('Singularity container not running'));
-            }
-          },
+          //   } else if (State.Running === false) {
+          //     return cb(new Error('Singularity container not running'));
+          //   }
+          // },
           stop() {
             return new Promise((resolve, reject) => {
               try {
