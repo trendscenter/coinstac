@@ -61,12 +61,10 @@ const SingularityService = () => {
       );
       return new Promise((resolve, reject) => {
         instanceProcess.stderr.on('data', (data) => { 
-          stderr += data;
-          return stderr;
+          utils.logger.info(`Singularity Container: ${data.toString()}`);
         });
         instanceProcess.stdout.on('data', (data) => { 
-          stdout += data; 
-          return stdout;
+          utils.logger.info(`Singularity Container: ${data.toString()}`);
         });
         instanceProcess.on('error', e => reject(e));
         instanceProcess.on('close', (code) => {
@@ -85,7 +83,7 @@ const SingularityService = () => {
           error,
           State,
           inspect(cb) {
-            if (output.instances.length > 0) {
+            if (State.Running === true) {
               cb(null, { State });
             } else if (State.Running === false) {
               return cb(new Error('Singularity container not running'));
