@@ -13,7 +13,7 @@
   ],
   "dependencies": {
     "archiver": "^3.1.1",
-    "coinstac-container-manager": "^6.9.6-0",
+    "coinstac-container-manager": "^6.9.7-0",
     "debug": "^4.2.0",
     "decompress": "^4.2.0",
     "express": "^4.17.1",
@@ -50,5 +50,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "6.9.6-0"
+  "version": "6.9.7-0"
 }
