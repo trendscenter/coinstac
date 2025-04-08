@@ -56,13 +56,18 @@ const SingularityService = () => {
           '-B',
           `${mounts.join(',')},/tmp:/tmp:rw`, // mnt local tmp for spm fix
           path.join(imageDirectory, savedImage),
-          serviceId,
           ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : []),
         ]
       );
       return new Promise((resolve, reject) => {
-        instanceProcess.stderr.on('data', (data) => { stderr += data; });
-        instanceProcess.stdout.on('data', (data) => { stdout += data; });
+        instanceProcess.stderr.on('data', (data) => { 
+          stderr += data;
+          return stderr;
+        });
+        instanceProcess.stdout.on('data', (data) => { 
+          stdout += data; 
+          return stdout;
+        });
         instanceProcess.on('error', e => reject(e));
         instanceProcess.on('close', (code) => {
           // for whatever reason singularity is outputting
@@ -75,32 +80,32 @@ const SingularityService = () => {
           }
           State.Running = true;
 
-          resolve({
-            error,
-            State,
-            inspect(cb) {
-              if (output.instances.length > 0) {
-                cb(null, { State });
-              } else if (State.Running === false) {
-                return cb(new Error('Singularity container not running'));
-              }
-            },
-            stop() {
-              return new Promise((resolve, reject) => {
-                try {
-                  const wasKilled = instanceProcess.kill(); // returns true if success, false if the process was not running
-                  if (!wasKilled) {
-                    return reject(new Error('Failed to kill process: not running'));
-                  }
-                  State.Running = false;
-                  resolve(true);
-
-                } catch (err) {
-                  reject(err);
-                }
-              });
+        });
+        resolve({
+          error,
+          State,
+          inspect(cb) {
+            if (output.instances.length > 0) {
+              cb(null, { State });
+            } else if (State.Running === false) {
+              return cb(new Error('Singularity container not running'));
             }
-          });
+          },
+          stop() {
+            return new Promise((resolve, reject) => {
+              try {
+                const wasKilled = instanceProcess.kill(); // returns true if success, false if the process was not running
+                if (!wasKilled) {
+                  return reject(new Error('Failed to kill process: not running'));
+                }
+                State.Running = false;
+                resolve(true);
+
+              } catch (err) {
+                reject(err);
+              }
+            });
+          }
         });
       });
     });
