@@ -24,14 +24,12 @@ const finalConfig = Object.assign(
   buildConfig,
   {
     targets: [
-//      ...Platform.MAC.createTarget("dmg", Arch.universal),
-//      ...Platform.WINDOWS.createTarget('nsis', Arch.x64),
+      ...Platform.MAC.createTarget("dmg", Arch.universal),
+      ...Platform.WINDOWS.createTarget('nsis', Arch.x64),
       ...Platform.LINUX.createTarget('AppImage', Arch.x64),
     ],
     publish: DEPLOY ? 'always' : 'never'
   });
-console.log(JSON.stringify(finalConfig, null, 2))
-// process.exit()
 fs.rename('./config/local.json', './config/local-build-copy.json')
   .catch((e) => {
     if (e.code !== 'ENOENT') {
