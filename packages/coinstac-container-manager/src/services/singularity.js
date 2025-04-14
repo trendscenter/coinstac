@@ -76,18 +76,14 @@ const SingularityService = () => {
             State.Running = false;
             return reject(new Error(error));
           }
-          State.Running = true;
+          State.Running = false;
 
         });
         resolve({
           error,
           State,
           inspect(cb) {
-            // if (State.Running === true) {
-              cb(null, { State });
-          //   } else if (State.Running === false) {
-          //     return cb(new Error('Singularity container not running'));
-          //   }
+            cb(null, { State });
           },
           stop() {
             return new Promise((resolve, reject) => {
@@ -199,31 +195,6 @@ const SingularityService = () => {
           }
         }
       );
-      // const conversionProcess = execFile(
-      //   path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
-      //   [
-      //     path.join(imageDirectory, imageNameWithHash),
-      //     dockerImageName,
-      //   ],
-      //   (error, stdout, stderr) => {
-      //     /*
-      //     in order to maintain api parity with the docker service, we have to wrap
-      //     the conversion process spawn events to mimic the docker pull's returned stream
-      //     */
-      //     if (error) {
-      //       conversionProcess.emit('error', new Error(error + stdout + stderr));
-      //     } else {
-      //       removeOldImages(localImage, imageNameWithHash)
-      //         .then(() => {
-      //           conversionProcess.emit('data', stdout + stderr);
-      //           conversionProcess.emit('end');
-      //         }).catch((e) => {
-      //           conversionProcess.emit('data', stdout + stderr);
-      //           conversionProcess.emit('error', e);
-      //         });
-      //     }
-      //   }
-      // );
       return conversionProcess;
     };
 
@@ -239,7 +210,7 @@ const SingularityService = () => {
       return myStream;
     };
 
-    const digest = '0:1';//await getLatestDockerDigest(dockerImageName);
+    const digest = await getLatestDockerDigest(dockerImageName);
     const imageNameWithHash = `${localImage}-${digest.split(':')[1]}`;
     if (await isSingularityImageLatest(imageNameWithHash)) {
       return createImageIsLatestStream();

@@ -13,7 +13,8 @@ if [ $code != 0 ]; then
   exit $code
 fi
 
-DIGEST=$(curl -s -H "Authorization: Bearer ${PARSEDTOKEN}" -H "Accept: application/vnd.docker.distribution.manifest.v2+json" https://index.docker.io/v2/$REPOSITORY/manifests/latest)
+DIGEST=$(wget -q -O - --header="Authorization: Bearer ${PARSEDTOKEN}" --header="Accept: application/vnd.docker.distribution.manifest.v2+json" "https://index.docker.io/v2/$REPOSITORY/manifests/latest")
+
 PARSEDDIGEST=$(echo $DIGEST | python3 -c 'import json,sys;print(json.load(sys.stdin)["config"]["digest"])')
 
 code=$?
