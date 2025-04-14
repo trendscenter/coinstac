@@ -2,7 +2,7 @@
 
 REPOSITORY=$1
 
-JSONTOKEN=$(curl -s "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$REPOSITORY:pull")
+JSONTOKEN=$(wget -q -O - "https://auth.docker.io/token?service=registry.docker.io&scope=repository:$REPOSITORY:pull")
 
 PARSEDTOKEN=$(echo $JSONTOKEN | python3 -c 'import json,sys;print(json.load(sys.stdin)["token"])')
 
