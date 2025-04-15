@@ -1,5 +1,5 @@
 const stream = require('stream');
-const { spawn, execFile } = require('child_process');
+const { spawn, execFile, spawnSync } = require('child_process');
 const path = require('path');
 const { readdir, rm } = require('fs').promises;
 const utils = require('../utils');
@@ -9,6 +9,23 @@ const { ServiceFunctionGenerator } = require('./serviceFunction');
  * returns an instance of the singularity service for usage
  */
 const SingularityService = () => {
+
+  detectSingularityOrApptainer = () => {
+    // Check for singularity
+    const singularityCheck = spawnSync('which', ['singularity']);
+    if (singularityCheck.status === 0) {
+      return 'singularity';
+    }
+
+    // Check for apptainer
+    const apptainerCheck = spawnSync('which', ['apptainer']);
+    if (apptainerCheck.status === 0) {
+      return 'apptainer';
+    }
+  }
+
+  const service = detectSingularityOrApptainer();
+
   let imageDirectory = './';
   const Container = (
     commandArgs,
@@ -28,10 +45,9 @@ const SingularityService = () => {
       const savedImage = files.find(file => file.includes(localImage));
       if (!savedImage) throw new Error(`No singularity ${localImage} image found in ${imageDirectory}`);
       const instanceProcess = spawn(
-        'singularity',
+        service,
         [
-          'instance',
-          'start',
+          'run',
           '--containall',
           '--writable-tmpfs',
           '-e',
@@ -40,13 +56,16 @@ const SingularityService = () => {
           '-B',
           `${mounts.join(',')},/tmp:/tmp:rw`, // mnt local tmp for spm fix
           path.join(imageDirectory, savedImage),
-          serviceId,
           ...(commandArgs ? ['node', '/server/index.js', `${commandArgs.replace(/"/g, '\\"')}`] : []),
         ]
       );
       return new Promise((resolve, reject) => {
-        instanceProcess.stderr.on('data', (data) => { stderr += data; });
-        instanceProcess.stdout.on('data', (data) => { stdout += data; });
+        instanceProcess.stderr.on('data', (data) => { 
+          utils.logger.info(`Singularity Container: ${data.toString()}`);
+        });
+        instanceProcess.stdout.on('data', (data) => { 
+          utils.logger.info(`Singularity Container: ${data.toString()}`);
+        });
         instanceProcess.on('error', e => reject(e));
         instanceProcess.on('close', (code) => {
           // for whatever reason singularity is outputting
@@ -57,62 +76,30 @@ const SingularityService = () => {
             State.Running = false;
             return reject(new Error(error));
           }
-          State.Running = true;
+          State.Running = false;
 
-          resolve({
-            error,
-            State,
-            inspect(cb) {
-              let stderr = '';
-              let stdout = '';
-              const process = spawn(
-                'singularity',
-                [
-                  'instance',
-                  'list',
-                  '--json',
-                  `${serviceId}`,
-                ]
-              );
-              process.stdout.on('data', (data) => { stdout += data; });
-              process.stderr.on('data', (data) => { stderr += data; });
-              process.on('error', e => reject(e));
-              process.on('close', (code) => {
-                if (code !== 0) {
-                  utils.logger.error(stderr);
-                  return cb(new Error(stderr));
+        });
+        resolve({
+          error,
+          State,
+          inspect(cb) {
+            cb(null, { State });
+          },
+          stop() {
+            return new Promise((resolve, reject) => {
+              try {
+                const wasKilled = instanceProcess.kill(); // returns true if success, false if the process was not running
+                if (!wasKilled) {
+                  return reject(new Error('Failed to kill process: not running'));
                 }
-                const output = JSON.parse(stdout);
-                if (output.instances.length > 0) {
-                  cb(null, { State });
-                } else {
-                  return cb(new Error('Singularity container not running'));
-                }
-              });
-            },
-            stop() {
-              return new Promise((resolve, reject) => {
-                let stderr = '';
-                const process = spawn(
-                  'singularity',
-                  [
-                    'instance',
-                    'stop',
-                    `${serviceId}`,
-                  ]
-                );
-                process.stderr.on('data', (data) => { stderr += data; });
-                process.on('error', e => reject(e));
-                process.on('close', (code) => {
-                  if (code !== 0) {
-                    utils.logger.error(stderr);
-                    return reject(new Error(stderr));
-                  }
-                  resolve(true);
-                });
-              });
-            },
-          });
+                State.Running = false;
+                resolve(true);
+
+              } catch (err) {
+                reject(err);
+              }
+            });
+          }
         });
       });
     });
@@ -177,26 +164,31 @@ const SingularityService = () => {
       pull latest docker image and convert to local singularity image
       @return {stream}
      */
-    const pullAndConvertDockerToSingularity = (imageNameWithHash) => {
+    const pullAndConvertDockerToSingularity = (dockerImageName, imageNameWithHash) => {
       const conversionProcess = execFile(
-        path.join(__dirname, 'utils', 'singularity-docker-build-conversion.sh'),
+        service,
         [
+          'pull',
           path.join(imageDirectory, imageNameWithHash),
-          dockerImageName,
+          `docker://${dockerImageName}`,
         ],
         (error, stdout, stderr) => {
           /*
-          in order to maintain api parity with the docker service, we have to wrap
-          the conversion process spawn events to mimic the docker pull's returned stream
+            In order to maintain API parity with the Docker service,
+            we wrap spawn events to mimic the Docker pull's returned stream.
           */
           if (error) {
-            conversionProcess.emit('error', new Error(error + stdout + stderr));
+            conversionProcess.emit(
+              'error',
+              new Error(error + stdout + stderr)
+            );
           } else {
             removeOldImages(localImage, imageNameWithHash)
               .then(() => {
                 conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('end');
-              }).catch((e) => {
+              })
+              .catch((e) => {
                 conversionProcess.emit('data', stdout + stderr);
                 conversionProcess.emit('error', e);
               });
@@ -223,7 +215,7 @@ const SingularityService = () => {
     if (await isSingularityImageLatest(imageNameWithHash)) {
       return createImageIsLatestStream();
     }
-    return pullAndConvertDockerToSingularity(imageNameWithHash);
+    return pullAndConvertDockerToSingularity(dockerImageName, imageNameWithHash);
   };
 
   const pullImagesFromList = async (comps) => {
