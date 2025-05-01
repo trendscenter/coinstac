@@ -9,7 +9,6 @@ import values from 'lodash/values';
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 
-import useOnUpdateEffect from '../../../hooks/useOnUpdateEffect';
 import Select from '../../common/react-select';
 import freesurferDataOptions from '../freesurfer-data-options.json';
 
@@ -69,13 +68,6 @@ const PipelineStepInputFreesurferTableRow = ({
     const newFreeSurferOptions = getROIs(headlessMembers)
       .map(val => ({ label: val, value: val }));
     setFreeSurferOptions(newFreeSurferOptions);
-  }, [headlessMembers]);
-
-  useOnUpdateEffect(() => {
-    updateStep({
-      ...step,
-      inputMap: getNewObj('value', [], index, false),
-    });
   }, [headlessMembers]);
 
   const selectData = (value, index) => {
