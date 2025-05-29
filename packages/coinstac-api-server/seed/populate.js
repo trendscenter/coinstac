@@ -9,6 +9,7 @@ const dlmeFS = require('./data/coinstac-dlme-fs.json');
 const dlmeVBM = require('./data/coinstac-dlme-vbm.json');
 const dpica = require('./data/coinstac-dpica.json');
 const dsneMS = require('./data/coinstac-dsne-ms.json');
+const dcsbm = require('./data/coinstac-dcsbm.json');
 const drneVbm = require('./data/coinstac-schema-regression-vbm.json');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm.json');
@@ -43,7 +44,7 @@ const CONSORTIA_IDS = generateUniqueIDs(2);
 
 const PIPELINE_IDS = generateUniqueIDs(4);
 
-const COMPUTATION_IDS = generateUniqueIDs(28);
+const COMPUTATION_IDS = generateUniqueIDs(29);
 
 const USER_IDS = generateUniqueIDs(6);
 
@@ -81,6 +82,8 @@ async function populateComputations() {
     { ...dlmeVBM, submittedBy: 'author', _id: COMPUTATION_IDS[25] },
     { ...transfer, submittedBy: 'author', _id: COMPUTATION_IDS[26] },
     { ...stress, submittedBy: 'author', _id: COMPUTATION_IDS[27] },
+    { ...dcsbm, submittedBy: 'author', _id: COMPUTATION_IDS[28] },
+
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {

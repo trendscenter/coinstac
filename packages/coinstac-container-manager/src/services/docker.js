@@ -118,6 +118,7 @@ module.exports = {
         Image: dockerImage,
         HostConfig: {
           Binds: [...mounts],
+          SecurityOpt: ['seccomp=unconfined'],
         },
       }, containerOptions),
     };
@@ -176,6 +177,7 @@ module.exports = {
             [tcpOpt]: [{ HostPort: `${port}`, HostIp: process.env.CI ? '' : '127.0.0.1' }],
             ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: `44${portmunge}`, HostIp: '127.0.0.1' }] }),
           },
+          SecurityOpt: ['seccomp=unconfined'],
         },
         Tty: true,
       };
