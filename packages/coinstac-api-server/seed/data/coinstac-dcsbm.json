@@ -1,0 +1,109 @@
+{
+    "meta": {
+        "name": "Decentralized Source Based Morphometry",
+        "id": "coinstac-dsbm",
+        "version": "v1.0.0",
+        "compspecVersion": 2,
+        "repository": "https://github.com/trendscenter/decentralized-source-based-morphometry",
+        "description": "A Demo for Decentralized Source Based Morphometry"
+    },
+    "computation": {
+        "display": {
+            "type": "iframe"
+        },
+        "input": {
+            "data": {
+                "label": "Data",
+                "type": "files",
+                "items": [
+                    "NiFTI"
+                ],
+                "extensions": [
+                    [
+                        "nii"
+                    ]
+                ],
+                "source": "member",
+                "order": 1
+            },
+            "mask": {
+                "group": "options",
+                "default": "/computation/local_data/mask.nii",
+                "label": "Mask Filename",
+                "type": "string",
+                "source": "owner",
+                "tooltip": "Nifti file name to be use as the mask",
+                "order": 2
+            },
+            "scica_template": {
+                "group": "options",
+                "default": "/computation/local_data/Neuromark_sMRI_1.0_modelorder-30_2x2x2.nii",
+                "label": "Spatially Constrained ICA Template Name",
+                "type": "string",
+                "source": "owner",
+                "tooltip": "Nifti file name to be use as the template for spatially constrained ICA",
+                "order": 3
+            },
+            "subsample_nifti_images": {
+                "group": "options",
+                "default": "false",
+                "label": "Perform input nifti subsampling",
+                "type": "boolean",
+                "source": "owner",
+                "tooltip": "true to subsample nifti images else false",
+                "order": 4
+            },
+            "voxel_size": {
+                "group": "options",
+                "default": "2",
+                "label": "Voxel size (subsampling)",
+                "type": "number",
+                "source": "owner",
+                "tooltip": "Voxel size to subsample nifti images",
+                "order": 4
+            },
+            "covariates": {
+                "group": "Regression variables",
+                "label": "Covariates",
+                "type": "csv",
+                "items": ["boolean", "number", "string"],
+                "source": "member",
+                "tooltip": "csv file with nifti file name, covariates information of each subject in a separate line",
+                 "order": 5
+            },
+            "reference_columns": {
+                "group": "Regression variables",
+                "label": "Regression reference column(s) and value(s)",
+                "default": {},
+                "type": "object",
+                "source": "owner",
+                "tooltip": "Used in regression for dummy encoding categorical covariate columns. Required only if specific value(s) should be used for dummy encoding a column(s); Example : { \"reference_column_name\": \"reference_value\" }",
+                "order": 6
+            },
+            "group_col_name": {
+                "group": "Regression variables",
+                "label": "Patient/Control column name",
+                "default": "",
+                "type": "string",
+                "source": "owner",
+                "tooltip": "Column name in the covariates file that contains patients and controls information.",
+                "order": 6
+            }
+        },
+        "output": {},
+        "type": "docker",
+        "dockerImage": "coinstacteam/coinstac-dsbm",
+        "command": [
+            "python",
+            "/computation/local.py"
+        ],
+        "remote": {
+            "type": "docker",
+            "dockerImage": "coinstacteam/coinstac-dsbm",
+            "command": [
+                "python",
+                "/computation/remote.py"
+            ]
+        }
+    }
+}
