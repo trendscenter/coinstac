@@ -5,6 +5,18 @@ Below is a list of papers related to COINSTAC.
 
 ## Journal Papers
 
+S. Basodi, R. Kelly, J. Romero, et al. Federated Analysis of Neuroimaging Data Using COINSTAC. IEEE ISBI Conference (2025). https://doi.org/10.1109/ISBI60581.2025.10981300
+
+K. Rootes-Murdy, S. Panta, R. Kelly, et al. Cortical similarities in psychiatric and mood disorders identified in federated VBM analysis via COINSTAC. Patterns (2024). https://doi.org/10.1016/j.patter.2024.100951
+
+[Authors not listed]. Efficient Federated Learning for Distributed Neuroimaging Data. Neuroinformatics (2024). https://doi.org/10.3389/fninf.2024.1430987
+
+S. Basodi, R. Raja, H. Gazula, V. D. Calhoun. Performing Decentralized Mixed Effects Modeling in COINSTAC. Preprint/Conference (2024). DOI not available. https://www.researchgate.net/publication/359745022_Decentralized_Brain_Age_Estimation_Using_MRI_Data
+
+D. Martin, S. Basodi, S. Panta, et al. Enhancing Collaborative Neuroimaging Research: Introducing COINSTAC Vaults for Federated Analysis and Reproducibility. Frontiers in Neuroinformatics (2023). https://doi.org/10.3389/fninf.2023.1207721
+
+H. Gazula, K. Rootes-Murdy, B. Holla, et al. Federated Analysis in COINSTAC Reveals Functional Network Connectivity and Spectral Links to Smoking and Alcohol Consumption in Nearly 2,000 Adolescent Brains. Neuroinformatics (2022). https://doi.org/10.1007/s12021-022-09615-4
+
 K. Rootes-Murdy, H. Gazula, E. Verner, et al. Federated Analysis of Neuroimaging Data: A Review of the Field. Neuroinform (2021). https://doi.org/10.1007/s12021-021-09550-7
 
 H. Imtiaz et al., "A Correlated Noise-assisted Decentralized Differentially Private Estimation Protocol, and its application to fMRI Source Separation," in IEEE Transactions on Signal Processing.
